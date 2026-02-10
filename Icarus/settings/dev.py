@@ -1,5 +1,8 @@
 from .base import *
+from environs import Env
 
+env = Env()
+env.read_env() 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
 
