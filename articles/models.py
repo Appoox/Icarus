@@ -3,6 +3,7 @@ from modelcluster.fields import ParentalKey
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField
 from wagtail.admin.panels import FieldPanel, InlinePanel
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # 1. THE AUTHOR PAGE
 class Author(Page):
@@ -41,3 +42,22 @@ class Article(Page):
         InlinePanel('article_authors', label="Authors"),
         FieldPanel('body'),
     ]
+
+class ArticleIndexPage(Page):
+    intro = RichTextField(blank=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel('intro')
+    ]
+
+    # This ensures only Articles can be added under this page
+    subpage_types = ['Article']
+
+    def get_context(self, request):
+        context = super().get_context(request)
+        
+        # Get all published articles, ordered by newest first
+        all_articles = self.get_children().live().order_by('-first_published_at')
+
+        context['articles'] = all_articles
+        return context
