@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/article.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="article-container">
+    <header class="article-header">
+        {% if page.category %}
+        <span class="topic-tag">{{ page.category.name }}</span>
+        {% endif %}
+        
+        <h1>{{ page.title }}</h1>
+        
+        {% if page.subtitle %}
+        <p class="subtitle">{{ page.subtitle }}</p>
+        {% endif %}
+        
+        <div class="meta">
+            {% for author_rel in page.article_authors.all %}
+                {% with author=author_rel.author %}
+                    {% if author.profile_image %}
+                        {% image author.profile_image fill-40x40 as avatar %}
+                        <img src="{{ avatar.url }}" alt="{{ author.title }}" class="author-avatar">
+                    {% endif %}
+                    <span class="author">By {{ author.title }}</span>
+                {% endwith %}
+            {% empty %}
+                {% if page.owner %}
+                    {% if page.owner.wagtail_userprofile.avatar %}
+                        <img src="{{ page.owner.wagtail_userprofile.avatar.url }}" class="author-avatar" alt="{{ page.owner.get_full_name }}">
+                    {% endif %}
+                    <span class="author">By {{ page.owner.get_full_name }}</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page.date %}
+            <span class="date">{{ page.date|date:"F j, Y" }}</span>
+            {% elif page.last_published_at %}
+            <span class="date">{{ page.last_published_at|date:"F j, Y" }}</span>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if page.intro_image %}
+    {% image page.intro_image fill-1200x600 as hero %}
+    <figure class="hero-image">
+        <img src="{{ hero.url }}" alt="{{ hero.alt }}">
+    </figure>
+    {% endif %}
+
+    <div class="article-grid">
+        <main class="article-body">
+            {{ page.body|richtext }}
+        </main>
+
+        <aside class="article-sidebar">
+            <div class="sticky-wrapper">
+                <div class="sidebar-widget newsletter">
+                    <h4>Sign up for our newsletter</h4>
+                    <p>Get the latest science news.</p>
+                    <button>Subscribe</button>
+                </div>
+
+                <div class="sidebar-widget next-stories">
+                    <h4>Read This Next</h4>
+                    <ul>
+                        <li><a href="#">Why Time Flies When You're Having Fun</a></li>
+                        <li><a href="#">The New Telescope Images</a></li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+{% endblock %}
