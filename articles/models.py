@@ -17,6 +17,13 @@ class Author(Page):
         related_name='+',
     )
 
+
+    def get_articles(self):
+        # We look at ArticleAuthorRelationship (related_name='author_articles')
+        # and pull the 'page' (the Article) from each relationship.
+        return [rel.page for rel in self.author_articles.select_related('page').filter(page__live=True)]
+
+    
     content_panels = Page.content_panels + [
         FieldPanel('role'),
         FieldPanel('bio'),
