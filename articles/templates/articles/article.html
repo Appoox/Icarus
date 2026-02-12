@@ -26,15 +26,10 @@
                         {% image author.profile_image fill-40x40 as avatar %}
                         <img src="{{ avatar.url }}" alt="{{ author.title }}" class="author-avatar">
                     {% endif %}
-                    <span class="author">By {{ author.title }}</span>
+                    <a href="{{ author.url }}">
+                    <span class="author"> {{ author.title }}</span>
+                    </a>
                 {% endwith %}
-            {% empty %}
-                {% if page.owner %}
-                    {% if page.owner.wagtail_userprofile.avatar %}
-                        <img src="{{ page.owner.wagtail_userprofile.avatar.url }}" class="author-avatar" alt="{{ page.owner.get_full_name }}">
-                    {% endif %}
-                    <span class="author">By {{ page.owner.get_full_name }}</span>
-                {% endif %}
             {% endfor %}
             
             {% if page.date %}
