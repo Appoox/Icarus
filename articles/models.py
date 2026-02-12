@@ -14,7 +14,7 @@ class Author(Page):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='+'
+        related_name='+',
     )
 
     content_panels = Page.content_panels + [
@@ -35,10 +35,17 @@ class ArticleAuthorRelationship(Orderable):
 class Article(Page):
     date = models.DateField("Date of publishing")
     body = RichTextField(blank=True)
+    cover_image = models.ForeignKey(
+        'wagtailimages.Image',
+        null = True,
+        blank = True,
+        on_delete = models.SET_NULL,
+        related_name='+',
+    )
 
     content_panels = Page.content_panels + [
         FieldPanel('date'),
-        # We use InlinePanel to manage the relationship
+        FieldPanel('cover_image'),
         InlinePanel('article_authors', label="Authors"),
         FieldPanel('body'),
     ]
@@ -61,3 +68,20 @@ class ArticleIndexPage(Page):
 
         context['articles'] = all_articles
         return context
+
+class AuthorIndexPage(Page):
+    intro = RichTextField(blank=True)
+
+    # This ensures only Author pages can be created under this index
+    subpage_types = ['Author']
+
+    def get_context(self, request):
+        context = super().get_context(request)
+        # Fetch all child pages that are live
+        authors = self.get_children().live().order_by('title')
+        context['authors'] = authors
+        return context
+
+    content_panels = Page.content_panels + [
+        FieldPanel('intro'),
+    ]
