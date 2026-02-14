@@ -12,26 +12,26 @@
         {% if page.category %}
         <span class="topic-tag">{{ page.category.name }}</span>
         {% endif %}
-        
+
         <h1>{{ page.title }}</h1>
-        
+
         {% if page.subtitle %}
         <p class="subtitle">{{ page.subtitle }}</p>
         {% endif %}
-        
+
         <div class="meta">
             {% for author_rel in page.article_authors.all %}
-                {% with author=author_rel.author %}
-                    {% if author.profile_image %}
-                        {% image author.profile_image fill-40x40 as avatar %}
-                        <img src="{{ avatar.url }}" alt="{{ author.title }}" class="author-avatar">
-                    {% endif %}
-                    <a href="{{ author.url }}">
-                    <span class="author"> {{ author.title }}</span>
-                    </a>
-                {% endwith %}
+            {% with author=author_rel.author %}
+            {% if author.profile_image %}
+            {% image author.profile_image fill-40x40 as avatar %}
+            <img src="{{ avatar.url }}" alt="{{ author.title }}" class="author-avatar">
+            {% endif %}
+            <a href="{{ author.url }}">
+                <span class="author"> {{ author.title }}</span>
+            </a>
+            {% endwith %}
             {% endfor %}
-            
+
             {% if page.date %}
             <span class="date">{{ page.date|date:"F j, Y" }}</span>
             {% elif page.last_published_at %}
@@ -40,8 +40,8 @@
         </div>
     </header>
 
-    {% if page.intro_image %}
-    {% image page.intro_image fill-1200x600 as hero %}
+    {% if page.cover_image %}
+    {% image page.cover_image fill-1200x600 as hero %}
     <figure class="hero-image">
         <img src="{{ hero.url }}" alt="{{ hero.alt }}">
     </figure>
@@ -49,7 +49,13 @@
 
     <div class="article-grid">
         <main class="article-body">
-            {{ page.body|richtext }}
+            {% for block in page.body %}
+            {% if block.block_type == 'heading' %}
+            <h2>{{ block.value }}</h2>
+            {% else %}
+            {% include_block block %}
+            {% endif %}
+            {% endfor %}
         </main>
 
         <aside class="article-sidebar">
