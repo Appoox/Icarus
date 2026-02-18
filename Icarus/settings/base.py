@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     "home",
     "search",
     "articles",
+    "literati",
+    "issue",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.table_block",
