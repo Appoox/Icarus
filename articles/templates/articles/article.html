@@ -28,6 +28,9 @@
             {% endif %}
             <a href="{{ author.url }}">
                 <span class="author"> {{ author.title }}</span>
+                {% if author_rel.role %}
+                <span class="role">({{ author_rel.role }})</span>
+                {% endif %}
             </a>
             {% endwith %}
             {% endfor %}

@@ -5,7 +5,7 @@ from wagtail.fields import RichTextField
 from wagtail.admin.panels import FieldPanel
 
 class Literati(Page):
-    role = models.CharField("Title / Role of the author", blank=True)
+    role = models.CharField("Title / Role of the person", blank=True)
     bio = models.TextField("Bio", blank=True)
     profile_image = models.ForeignKey(
         'wagtailimages.Image',
@@ -18,8 +18,9 @@ class Literati(Page):
     def get_articles(self):
         return [rel.page for rel in self.literati_articles.select_related('page').filter(page__live=True)]
 
-    content_panels = Page.content_panels + [
-        FieldPanel('title'),
+    content_panels = [
+        FieldPanel('title', heading="Name", help_text="Enter the full name of the person"),
+        FieldPanel('role'),
         FieldPanel('profile_image'),
         FieldPanel('bio'),
     ]
@@ -30,7 +31,7 @@ class AuthorIndexPage(Page):
 
     def get_context(self, request):
         context = super().get_context(request)
-        context['literati'] = self.get_children().live().order_by('title')
+        context['authors'] = self.get_children().live().order_by('title')
         return context
 
     content_panels = Page.content_panels + [
