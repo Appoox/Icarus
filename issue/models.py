@@ -2,12 +2,21 @@ from django.db import models
 from modelcluster.fields import ParentalKey
 from wagtail.models import Page, Orderable
 from wagtail.admin.panels import FieldPanel, InlinePanel
+from wagtail.snippets.models import register_snippet
 
 class Issue(Page):
     date_of_publishing = models.DateField("Date of publishing")
     
     # Only allow Articles to be created inside an Issue
     subpage_types = ['articles.Article']
+
+    topic = models.ForeignKey(
+        'issue.Topic', 
+        null=True, 
+        blank=True, 
+        on_delete=models.SET_NULL, 
+        related_name='issues'
+    )
 
     def get_all_articles(self):
         # 1. Get articles where this is the primary issue
@@ -17,6 +26,7 @@ class Issue(Page):
         return list(primary) + reprints
 
     content_panels = Page.content_panels + [
+        FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
         InlinePanel('editorial_board_relationship', label="Editorial Board Members"),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
@@ -52,3 +62,19 @@ class IssueEditorialBoardRelationship(Orderable):
         FieldPanel('editor'),
         FieldPanel('role'),
     ]
+
+@register_snippet
+class Topic(models.Model):
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('slug'),
+    ]
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Topics"

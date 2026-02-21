@@ -2,83 +2,627 @@
 {% load wagtailcore_tags wagtailimages_tags static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/article.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Sans+3:wght@300;400;600;700&display=swap"
+  rel="stylesheet">
+
+<style>
+  /* ─────────────────────────────────────────────
+   Design Tokens
+───────────────────────────────────────────── */
+  :root {
+    --red: #c0392b;
+    --red-dark: #922b21;
+    --black: #111111;
+    --gray-dark: #333333;
+    --gray-mid: #666666;
+    --gray-light: #e8e8e8;
+    --gray-bg: #f7f7f5;
+    --white: #ffffff;
+
+    --font-display: 'Domine', Georgia, serif;
+    --font-body: 'Source Serif 4', Georgia, serif;
+    --font-ui: 'Source Sans 3', Helvetica, sans-serif;
+
+    --max-width: 1200px;
+    --article-col: 680px;
+  }
+
+  /* ─────────────────────────────────────────────
+   Reset / Base
+───────────────────────────────────────────── */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--black);
+    background: var(--white);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* ─────────────────────────────────────────────
+   Outer Container
+───────────────────────────────────────────── */
+  .article-container {
+    width: 100%;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ─────────────────────────────────────────────
+   Article Header
+───────────────────────────────────────────── */
+  .article-header {
+    max-width: var(--article-col);
+    margin: 48px auto 32px;
+  }
+
+  /* Line 1: Topic kicker → Title stacked below */
+  .header-top {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .article-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 4.5vw, 42px);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    color: var(--black);
+  }
+
+  /* Topic tag (kicker above title) */
+  .topic-tag {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--red);
+    padding: 4px 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .topic-tag:hover {
+    background: var(--red-dark);
+  }
+
+  /* Subtitle / deck */
+  .subtitle {
+    font-family: var(--font-body);
+    font-size: 20px;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--gray-dark);
+    margin-bottom: 24px;
+    border-left: 3px solid var(--red);
+    padding-left: 16px;
+  }
+
+  /* Line 2: Author left · Date right */
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0;
+    border-top: 1px solid var(--gray-light);
+    border-bottom: 1px solid var(--gray-light);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--gray-mid);
+  }
+
+  .meta-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .meta-right {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .author-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .meta .author-link {
+    color: var(--red);
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+
+  .meta .author-link:hover {
+    color: var(--red-dark);
+  }
+
+  .meta-divider {
+    color: var(--gray-light);
+  }
+
+  /* ─────────────────────────────────────────────
+   Hero Image
+───────────────────────────────────────────── */
+  .hero-image {
+    max-width: var(--article-col);
+    margin: 24px auto 32px;
+    line-height: 0;
+  }
+
+/* Change this in your article.html <style> section */
+.hero-image img {
+    width: 100%;
+    aspect-ratio: auto; /* Remove the hardcoded 3/1 */
+    object-fit: cover;
+    display: block;
+}
+
+  .hero-image figcaption {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--gray-mid);
+    padding: 8px 0 0;
+    line-height: 1.4;
+    border-top: 1px solid var(--gray-light);
+  }
+
+  /* ─────────────────────────────────────────────
+   Full-Width Article Body
+───────────────────────────────────────────── */
+  .article-body {
+    max-width: var(--article-col);
+    margin: 0 auto;
+    padding-bottom: 64px;
+  }
+
+  .article-body p {
+    margin-bottom: 1.5em;
+    color: var(--gray-dark);
+    font-size: 18px;
+    line-height: 1.75;
+  }
+
+  .article-body p:first-child::first-letter {
+    font-family: var(--font-display);
+    font-size: 4.5em;
+    font-weight: 700;
+    float: left;
+    line-height: 0.78;
+    margin: 6px 12px 0 0;
+    color: var(--black);
+  }
+
+  .article-body h2 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--black);
+    margin: 2.5em 0 0.75em;
+    padding-top: 1.5em;
+    border-top: 2px solid var(--black);
+  }
+
+  .article-body h3 {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-mid);
+    margin: 2em 0 0.75em;
+  }
+
+  .article-body a {
+    color: var(--red);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.2s;
+  }
+
+  .article-body a:hover {
+    text-decoration-color: var(--red);
+  }
+
+  .article-body figure {
+    margin: 2em 0;
+    clear: both;
+  }
+
+  .article-body figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .article-body figcaption {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--gray-mid);
+    padding: 8px 0 0;
+    line-height: 1.5;
+    border-top: 1px solid var(--gray-light);
+    font-style: italic;
+  }
+
+  /* Float left — image hugs the left, text wraps on the right */
+  .article-body figure.img-left {
+    float: left;
+    width: 45%;
+    margin: 0.5em 1.75em 1em 0;
+    clear: left;
+  }
+
+  /* Float right — image hugs the right, text wraps on the left */
+  .article-body figure.img-right {
+    float: right;
+    width: 45%;
+    margin: 0.5em 0 1em 1.75em;
+    clear: right;
+  }
+
+  /* Clearfix so the article body contains floated images */
+  .article-body::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+
+  @media (max-width: 500px) {
+
+    .article-body figure.img-left,
+    .article-body figure.img-right {
+      float: none;
+      width: 100%;
+      margin: 2em 0;
+    }
+  }
+
+  .article-body blockquote {
+    margin: 2em 0;
+    padding: 4px 0 4px 24px;
+    border-left: 4px solid var(--red);
+    font-size: 22px;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--black);
+    line-height: 1.5;
+  }
+
+  .article-body hr {
+    border: none;
+    border-top: 1px solid var(--gray-light);
+    margin: 2.5em 0;
+  }
+
+  /* Author bio */
+  .author-bio {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 2px solid var(--black);
+  }
+
+  .author-bio h4 {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-mid);
+    margin-bottom: 12px;
+  }
+
+  .author-bio .bio-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .author-bio img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .author-bio p {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--gray-dark);
+    margin-bottom: 0;
+  }
+
+  .author-bio p strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 4px;
+    color: var(--black);
+  }
+
+  .author-bio a {
+    color: var(--red);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  /* ─────────────────────────────────────────────
+   Related Articles Row
+───────────────────────────────────────────── */
+  .related-articles {
+    border-top: 2px solid var(--black);
+    padding: 40px 0 72px;
+    margin-top: 0;
+  }
+
+  .related-heading {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray-mid);
+    margin-bottom: 28px;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+
+  .related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    border-top: 1px solid var(--gray-light);
+    padding-top: 16px;
+    transition: opacity 0.2s;
+  }
+
+  .related-card:hover {
+    opacity: 0.75;
+  }
+
+  .related-card__img {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+  }
+
+  .related-card__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .related-card:hover .related-card__img img {
+    transform: scale(1.03);
+  }
+
+  .related-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .related-card__tag {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+
+  .related-card__title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--black);
+    margin: 0;
+  }
+
+  /* ─────────────────────────────────────────────
+   Responsive
+───────────────────────────────────────────── */
+  @media (max-width: 780px) {
+    .header-top {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .related-grid {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+  }
+</style>
+
 {% endblock %}
 
 {% block content %}
 
 <div class="article-container">
-    <header class="article-header">
-        {% if page.category %}
-        <span class="topic-tag">{{ page.category.name }}</span>
-        {% endif %}
 
-        <h1>{{ page.title }}</h1>
+  {# ── HEADER ─────────────────────────────────── #}
+  <header class="article-header">
 
-        {% if page.subtitle %}
-        <p class="subtitle">{{ page.subtitle }}</p>
-        {% endif %}
-
-        <div class="meta">
-            {% for author_rel in page.article_authors.all %}
-            {% with author=author_rel.author %}
-            {% if author.profile_image %}
-            {% image author.profile_image fill-40x40 as avatar %}
-            <img src="{{ avatar.url }}" alt="{{ author.title }}" class="author-avatar">
-            {% endif %}
-            <a href="{{ author.url }}">
-                <span class="author"> {{ author.title }}</span>
-                {% if author_rel.role %}
-                <span class="role">({{ author_rel.role }})</span>
-                {% endif %}
-            </a>
-            {% endwith %}
-            {% endfor %}
-
-            {% if page.date %}
-            <span class="date">{{ page.date|date:"F j, Y" }}</span>
-            {% elif page.last_published_at %}
-            <span class="date">{{ page.last_published_at|date:"F j, Y" }}</span>
-            {% endif %}
-        </div>
-    </header>
-
-    {% if page.cover_image %}
-    {% image page.cover_image fill-1200x600 as hero %}
-    <figure class="hero-image">
-        <img src="{{ hero.url }}" alt="{{ hero.alt }}">
-    </figure>
-    {% endif %}
-
-    <div class="article-grid">
-        <main class="article-body">
-            {% for block in page.body %}
-            {% if block.block_type == 'heading' %}
-            <h2>{{ block.value }}</h2>
-            {% else %}
-            {% include_block block %}
-            {% endif %}
-            {% endfor %}
-        </main>
-
-        <aside class="article-sidebar">
-            <div class="sticky-wrapper">
-                <div class="sidebar-widget newsletter">
-                    <h4>Sign up for our newsletter</h4>
-                    <p>Get the latest science news.</p>
-                    <button>Subscribe</button>
-                </div>
-
-                <div class="sidebar-widget next-stories">
-                    <h4>Read This Next</h4>
-                    <ul>
-                        <li><a href="#">Why Time Flies When You're Having Fun</a></li>
-                        <li><a href="#">The New Telescope Images</a></li>
-                    </ul>
-                </div>
-            </div>
-        </aside>
+    {# Kicker: Topic · then Title on next line #}
+    <div class="header-top">
+      {% if page.topic %}
+      <span class="topic-tag">{{ page.topic.name }}</span>
+      {% endif %}
+      <h1>{{ page.title }}</h1>
     </div>
-</div>
+
+    <div class="meta">
+      <div class="meta-left">
+        {% for author_rel in page.article_authors.all %}
+        {% with author=author_rel.author %}
+        {% if author.profile_image %}
+        {% image author.profile_image fill-72x72 as avatar %}
+        <img src="{{ avatar.url }}" alt="{{ author.title }}" class="author-avatar">
+        {% endif %}
+        <a href="{{ author.url }}" class="author-link">{{ author.title }}</a>
+        {% if not forloop.last %}<span class="meta-divider">&amp;</span>{% endif %}
+        {% endwith %}
+        {% endfor %}
+      </div>
+      <div class="meta-right">
+        {% if page.date %}
+        <span class="date">{{ page.date|date:"F j, Y" }}</span>
+        {% elif page.last_published_at %}
+        <span class="date">{{ page.last_published_at|date:"F j, Y" }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+  </header>
+
+{# ── HERO IMAGE ──────────────────────────────── #}
+{% if page.cover_image %}
+  
+  {# Bypass the dynamic string error by writing explicit image tags #}
+  {% if page.cover_image_aspect == '3x1' %}
+    {% image page.cover_image fill-1200x400 as hero %}
+  {% elif page.cover_image_aspect == '16x9' %}
+    {% image page.cover_image fill-1200x675 as hero %}
+  {% elif page.cover_image_aspect == '4x3' %}
+    {% image page.cover_image fill-1200x900 as hero %}
+  {% elif page.cover_image_aspect == '1x1' %}
+    {% image page.cover_image fill-1200x1200 as hero %}
+  {% else %}
+    {# Default fallback for '2x1' or if nothing is selected #}
+    {% image page.cover_image fill-1200x600 as hero %}
+  {% endif %}
+  
+  <figure class="hero-image">
+    <img src="{{ hero.url }}" alt="{{ hero.alt|default:page.title }}">
+    {% if page.cover_image_caption %}
+      <figcaption>{{ page.cover_image_caption }}</figcaption>
+    {% endif %}
+  </figure>
+  
+{% endif %}
+
+  {# ── FULL-WIDTH ARTICLE BODY ─────────────────── #}
+  <main class="article-body">
+    {% for block in page.body %}
+    {% if block.block_type == 'heading' %}
+    <h2>{{ block.value }}</h2>
+    {% elif block.block_type == 'image' %}
+    {% with alignment=block.value.alignment %}
+    <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
+      {% if alignment == 'left' or alignment == 'right' %}
+      {% image block.value.image width-340 as img %}
+      {% else %}
+      {% image block.value.image width-680 as img %}
+      {% endif %}
+      <img src="{{ img.url }}" alt="{{ img.alt }}">
+      {% if block.value.caption %}
+      <figcaption>{{ block.value.caption }}</figcaption>
+      {% endif %}
+    </figure>
+    {% endwith %}
+    {% else %}
+    {% include_block block %}
+    {% endif %}
+    {% endfor %}
+
+    {# ── Author Bio ── #}
+    {% for author_rel in page.article_authors.all %}
+    {% with author=author_rel.author %}
+    <div class="author-bio">
+      <h4>About the Author</h4>
+      <div class="bio-row">
+        {% if author.profile_image %}
+        {% image author.profile_image fill-112x112 as bio_avatar %}
+        <img src="{{ bio_avatar.url }}" alt="{{ author.title }}">
+        {% endif %}
+        <p>
+          <strong><a href="{{ author.url }}">{{ author.title }}</a></strong>
+          {{ author.biography }}
+        </p>
+      </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </main>
+
+  {# ── RELATED ARTICLES — siblings from the same topic ── #}
+ <section class="related-articles">
+  <h3 class="related-heading">Read This Next</h3>
+  <div class="related-grid">
+    {% for article in related_articles %}
+      <a class="related-card" href="{{ article.url }}">
+        {% if article.cover_image %}
+          {# Using specific fill for related cards #}
+          {% image article.cover_image fill-600x400 as thumb %}
+          <div class="related-card__img">
+            <img src="{{ thumb.url }}" alt="{{ thumb.alt }}">
+          </div>
+        {% endif %}
+        
+        <div class="related-card__body">
+          {% if article.topic %}
+            <span class="related-card__tag">{{ article.topic.name }}</span>
+          {% endif %}
+          <p class="related-card__title">{{ article.title }}</p>
+        </div>
+      </a>
+    {% endfor %}    
+  </div>
+</section>
+
+</div>{# /.article-container #}
 
 {% endblock %}
