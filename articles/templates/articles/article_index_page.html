@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/article_index.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="article-container">
+    <header class="article-feed-header">
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}
+        <div class="intro">{{ page.intro|richtext }}</div>
+        {% endif %}
+    </header>
+
+    <div class="article-feed">
+        {% for post in articles %}
+        {% with post=post.specific %}
+        <article class="feed-item">
+            <div class="feed-image">
+                {% if post.cover_image %}
+                {% image post.cover_image fill-300x200 as img %}
+                <a href="{{ post.url }}">
+                    <img src="{{ img.url }}" alt="{{ img.alt }}">
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="feed-content">
+                <span class="meta-date">{{ post.date|date:"F j, Y" }}</span>
+                <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
+
+                <div class="meta-author">
+                    By {% for item in post.article_authors.all %}
+                    {{ item.author.title }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </div>
+
+                <p class="excerpt">
+                    {{ post.excerpt|striptags|truncatewords:25 }}
+                </p>
+            </div>
+        </article>
+        {% endwith %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+
+{% block content %}
+<div class="issue-container">
+    <header class="issue-header">
+        <h1>{{ page.title }}</h1>
+        <p class="publish-date">Published: {{ page.date_of_publishing|date:"F j, Y" }}</p>
+    </header>
+
+    <div class="issue-layout">
+        <main class="issue-articles">
+            <h2>Articles in this Issue</h2>
+            <div class="article-grid">
+                {% for article in page.get_all_articles %}
+                <article class="article-card">
+                    <h3><a href="{{ article.url }}">{{ article.title }}</a></h3>
+                    <p class="meta">By
+                        {% for rel in article.article_authors.all %}
+                        {{ rel.author.title }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                </article>
+                {% empty %}
+                <p>No articles found for this issue.</p>
+                {% endfor %}
+            </div>
+        </main>
+
+        <aside class="issue-sidebar">
+            <div class="editorial-board">
+                <h3>Editorial Board</h3>
+                <ul>
+                    {% for rel in page.editorial_board_relationship.all %}
+                    <li>
+                        <strong>{{ rel.get_role_display }}:</strong>
+                        <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

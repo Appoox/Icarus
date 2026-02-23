@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/author.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="author-detail-container">
+
+    <header class="author-profile-header">
+        <div class="profile-flex">
+            {% if page.profile_image %}
+            {% image page.profile_image fill-150x150 as img %}
+            <img src="{{ img.url }}" alt="{{ page.title }}" class="profile-img">
+            {% endif %}
+
+            <div class="profile-text">
+                <span class="role-label">{{ page.role }}</span>
+                <h1>{{ page.title }}</h1>
+                <div class="author-bio">
+                    {{ page.bio|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <hr class="section-divider">
+
+    <section class="author-articles">
+        <h2 class="section-title">Latest from {{ page.title }}</h2>
+
+        <div class="article-feed">
+            {% for article in page.get_articles %}
+            <article class="feed-card">
+                {% if article.cover_image %}
+                {% image article.cover_image fill-250x160 as thumb %}
+                <div class="card-image">
+                    <a href="{{ article.url }}"><img src="{{ thumb.url }}" alt=""></a>
+                </div>
+                {% endif %}
+
+                <div class="card-body">
+                    <span class="card-date">{{ article.date|date:"M d, Y" }}</span>
+                    <h3><a href="{{ article.url }}">{{ article.title }}</a></h3>
+                    <p class="excerpt">
+                        {{ article.excerpt|striptags|truncatewords:25 }}
+                    </p>
+                </div>
+            </article>
+            {% empty %}
+            <p>No articles found for this author yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+</div>
+{% endblock %}
