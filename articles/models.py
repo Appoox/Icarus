@@ -12,7 +12,7 @@ from wagtail.contrib.table_block.blocks import TableBlock
 
 
 class BlockQuoteBlock(blocks.StructBlock):
-    text = blocks.TextBlock()
+    text = blocks.RichTextBlock()
     attribute_name = blocks.CharBlock(
         required=False,
         label='e.g. Mary Berry',
@@ -28,7 +28,7 @@ class BlockQuoteBlock(blocks.StructBlock):
 class ImageBlock(blocks.StructBlock):
     """Image with optional caption and text-wrap alignment."""
     image = ImageChooserBlock()
-    caption = blocks.CharBlock(
+    caption = blocks.RichTextBlock(
         required=False,
         label='Caption',
         help_text="Optional caption displayed below the image"
@@ -109,7 +109,7 @@ class Article(Page):
 
     # ── Body ───────────────────────────────────────────────────────────────
     body = StreamField([
-        ('heading',    blocks.CharBlock(form_classname="full title")),
+        ('heading',    blocks.RichTextBlock(form_classname="full title")),
         ('paragraph',  blocks.RichTextBlock()),
         ('image',      ImageBlock()),                                   # ← StructBlock with caption
         ('blockquote', BlockQuoteBlock()),

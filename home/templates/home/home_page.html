@@ -1,21 +1,466 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static wagtailcore_tags wagtailimages_tags %}
 
 {% block body_class %}template-homepage{% endblock %}
 
 {% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
 
-{% comment %}
-Delete the line below if you're just getting started and want to remove the welcome screen!
-{% endcomment %}
-<link rel="stylesheet" href="{% static 'css/welcome_page.css' %}">
+<style>
+  /* ── TOKENS ── */
+  :root {
+    --navy:       #0b1f3a;
+    --navy-mid:   #163059;
+    --red:        #c8102e;
+    --red-hover:  #a00d24;
+    --sky:        #0072ce;
+    --paper:      #fafaf8;
+    --rule:       #d4d0c8;
+    --muted:      #6b6659;
+    --ink:        #1a1612;
+    --caption:    #888070;
+    --serif:      'Playfair Display', Georgia, 'Times New Roman', serif;
+    --body-serif: 'Source Serif 4', Georgia, serif;
+    --label:      'Barlow Condensed', 'Arial Narrow', sans-serif;
+    --col-gap:    2.5rem;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body-serif);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  a:hover { color: var(--red); }
+  img { display: block; width: 100%; height: auto; }
+
+  /* ── PAGE WRAPPER ── */
+  .sa-page { max-width: 1240px; margin: 0 auto; padding: 0 2rem; }
+
+  /* ── SECTION LABEL ── */
+  .sa-label {
+    font-family: var(--label);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .6rem;
+  }
+  .sa-label::before {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 2px;
+    background: var(--red);
+    flex-shrink: 0;
+  }
+
+  /* ── HERO SECTION ── */
+  .sa-hero {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+    border-bottom: 3px double var(--rule);
+    margin-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .sa-hero__main {
+    padding-right: var(--col-gap);
+    border-right: 1px solid var(--rule);
+  }
+  .sa-hero__image-wrap {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .sa-hero__image-wrap img {
+    transition: transform .5s ease;
+  }
+  .sa-hero__image-wrap:hover img { transform: scale(1.02); }
+  .sa-hero__image-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 55%, rgba(11,31,58,.45));
+    pointer-events: none;
+  }
+
+  .sa-hero__title {
+    font-family: var(--serif);
+    font-size: clamp(1.9rem, 3vw, 2.85rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    margin-bottom: .75rem;
+    max-width: 720px;
+  }
+  .sa-hero__title a:hover { color: var(--navy-mid); }
+
+  .sa-hero__excerpt {
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.65;
+    max-width: 620px;
+    border-left: 3px solid var(--red);
+    padding-left: 1rem;
+    margin-top: .85rem;
+  }
+  .sa-hero__read-more {
+    display: inline-block;
+    margin-top: 1.25rem;
+    font-family: var(--label);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--sky);
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    transition: color .15s;
+  }
+  .sa-hero__read-more:hover { color: var(--red); }
+
+  /* ── SIDEBAR (Latest) ── */
+  .sa-sidebar {
+    padding-left: var(--col-gap);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .sa-sidebar__heading {
+    font-family: var(--label);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--navy);
+    padding-bottom: .65rem;
+    border-bottom: 2px solid var(--navy);
+    margin-bottom: 1.25rem;
+  }
+
+  .sa-sidebar-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .75rem;
+    align-items: start;
+  }
+  .sa-sidebar-item__num {
+    font-family: var(--serif);
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--rule);
+    line-height: 1;
+    min-width: 1.6rem;
+    text-align: right;
+    margin-top: .1rem;
+  }
+  .sa-sidebar-item__category {
+    font-family: var(--label);
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: .2rem;
+  }
+  .sa-sidebar-item__title {
+    font-family: var(--serif);
+    font-size: .95rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .sa-sidebar-item__title a:hover { color: var(--red); }
+  .sa-sidebar-item__date {
+    font-family: var(--label);
+    font-size: .63rem;
+    letter-spacing: .08em;
+    color: var(--caption);
+    margin-top: .3rem;
+    display: block;
+  }
+
+  /* ── SECTION DIVIDER ── */
+  .sa-section-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem 0 1.5rem;
+  }
+  .sa-section-head__title {
+    font-family: var(--label);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+  .sa-section-head__rule {
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  .sa-section-head__more {
+    font-family: var(--label);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--sky);
+    white-space: nowrap;
+    transition: color .15s;
+  }
+  .sa-section-head__more:hover { color: var(--red); }
+
+  /* ── TOPIC GRID ── */
+  .sa-topic { margin-bottom: 1rem; }
+
+  .sa-article-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem 2.5rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+  }
+
+  .sa-article-card { position: relative; }
+
+  .sa-article-card__image-wrap {
+    overflow: hidden;
+    margin-bottom: .85rem;
+    aspect-ratio: 16/10;
+    background: var(--rule);
+  }
+  .sa-article-card__image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .4s ease;
+  }
+  .sa-article-card__image-wrap:hover img { transform: scale(1.04); }
+
+  .sa-article-card__category {
+    font-family: var(--label);
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: .3rem;
+  }
+  .sa-article-card__title {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: .3rem;
+  }
+  .sa-article-card__title a:hover { color: var(--red); }
+  .sa-article-card__date {
+    font-family: var(--label);
+    font-size: .63rem;
+    letter-spacing: .08em;
+    color: var(--caption);
+  }
+
+  /* ── ISSUE SHOWCASE ── */
+  .sa-issue {
+    background: var(--navy);
+    color: #fff;
+    margin: 3rem 0;
+    padding: 3rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 3rem;
+    border-left: 6px solid var(--red);
+    position: relative;
+    overflow: hidden;
+  }
+  .sa-issue::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 40px,
+      rgba(255,255,255,.015) 40px,
+      rgba(255,255,255,.015) 41px
+    );
+    pointer-events: none;
+  }
+  .sa-issue__kicker {
+    font-family: var(--label);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: .8rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .sa-issue__kicker::before {
+    content: '';
+    width: 16px;
+    height: 2px;
+    background: var(--red);
+  }
+  .sa-issue__title {
+    font-family: var(--serif);
+    font-size: 2.2rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: .85rem;
+  }
+  .sa-issue__sub {
+    font-size: .95rem;
+    color: rgba(255,255,255,.65);
+    font-style: italic;
+    margin-bottom: 1.5rem;
+  }
+  .sa-issue__cta {
+    display: inline-block;
+    background: var(--red);
+    color: #fff;
+    font-family: var(--label);
+    font-weight: 700;
+    font-size: .78rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    padding: .75rem 1.75rem;
+    border-radius: 2px;
+    transition: background .15s;
+  }
+  .sa-issue__cta:hover { background: var(--red-hover); color: #fff; }
+
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sa-hero { grid-template-columns: 1fr; }
+    .sa-hero__main { padding-right: 0; border-right: none; border-bottom: 1px solid var(--rule); padding-bottom: 2rem; margin-bottom: 2rem; }
+    .sa-sidebar { padding-left: 0; }
+    .sa-article-grid { grid-template-columns: repeat(2, 1fr); }
+    .sa-issue { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .sa-masthead { padding: 0 1rem; }
+    .sa-masthead__nav { display: none; }
+    .sa-page { padding: 0 1rem; }
+    .sa-article-grid { grid-template-columns: 1fr; }
+    .sa-issue { padding: 1.75rem; }
+  }
+</style>
 {% endblock extra_css %}
 
 {% block content %}
 
-{% comment %}
-Delete the line below if you're just getting started and want to remove the welcome screen!
-{% endcomment %}
-{% include 'home/welcome_page.html' %}
+<div class="sa-page">
 
+  <!-- ── HERO ── -->
+  <section class="sa-hero" aria-label="Featured article">
+
+    <div class="sa-hero__main">
+      {% if hero_article %}
+        <div class="sa-label">{{ hero_article.topic.name }}</div>
+        <a href="{{ hero_article.url }}" class="sa-hero__image-wrap" aria-hidden="true" tabindex="-1">
+          {% image hero_article.cover_image fill-860x500 as hero_img %}
+          <img src="{{ hero_img.url }}" alt="{{ hero_article.title }}">
+        </a>
+        <h1 class="sa-hero__title">
+          <a href="{{ hero_article.url }}">{{ hero_article.title }}</a>
+        </h1>
+        {% if hero_article.excerpt %}
+          <p class="sa-hero__excerpt">{{ hero_article.excerpt|slice:":220" }}…</p>
+        {% endif %}
+        <a href="{{ hero_article.url }}" class="sa-hero__read-more">Read the full article →</a>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar: latest articles -->
+    <aside class="sa-sidebar" aria-label="Latest articles">
+      <div class="sa-sidebar__heading">Latest</div>
+      {% for article in latest_articles %}
+      <div class="sa-sidebar-item">
+        <span class="sa-sidebar-item__num" aria-hidden="true">{{ forloop.counter }}</span>
+        <div>
+          <div class="sa-sidebar-item__category">{{ article.topic.name }}</div>
+          <div class="sa-sidebar-item__title">
+            <a href="{{ article.url }}">{{ article.title }}</a>
+          </div>
+          <span class="sa-sidebar-item__date">{{ article.date|date:"F j, Y" }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </aside>
+
+  </section>
+
+  <!-- ── TOPIC SECTIONS ── -->
+  {% for topic in featured_topics %}
+  <section class="sa-topic" aria-labelledby="topic-{{ forloop.counter }}">
+    <div class="sa-section-head">
+      <h2 class="sa-section-head__title" id="topic-{{ forloop.counter }}">{{ topic.name }}</h2>
+      <span class="sa-section-head__rule" aria-hidden="true"></span>
+      <a href="{% url 'search' %}?query={{ topic.name|urlencode }}" class="sa-section-head__more">
+        More {{ topic.name }} →
+      </a>
+    </div>
+
+    <div class="sa-article-grid">
+      {% for article in topic.articles %}
+      <article class="sa-article-card">
+        {% if article.cover_image %}
+          <a href="{{ article.url }}" class="sa-article-card__image-wrap" aria-hidden="true" tabindex="-1">
+            {% image article.cover_image fill-440x280 as art_img %}
+            <img src="{{ art_img.url }}" alt="{{ article.title }}">
+          </a>
+        {% endif %}
+        <div class="sa-article-card__category">{{ article.topic.name }}</div>
+        <h3 class="sa-article-card__title">
+          <a href="{{ article.url }}">{{ article.title }}</a>
+        </h3>
+        <time class="sa-article-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+          {{ article.date|date:"F j, Y" }}
+        </time>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <!-- ── CURRENT ISSUE ── -->
+  {% if current_issue %}
+  <div class="sa-issue" role="complementary" aria-label="Current magazine issue">
+    <div>
+      <div class="sa-issue__kicker">From the Magazine</div>
+      <h2 class="sa-issue__title">{{ current_issue.title }}</h2>
+      <p class="sa-issue__sub">Inside the latest issue of Icarus.</p>
+      <a href="{{ current_issue.url }}" class="sa-issue__cta">Explore This Issue</a>
+    </div>
+  </div>
+  {% endif %}
+
+
+</div>
 {% endblock content %}
