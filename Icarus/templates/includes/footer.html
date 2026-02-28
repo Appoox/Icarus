@@ -1,0 +1,26 @@
+{% load header_tags %}
+{% get_site_header as header %}
+
+<footer class="site-footer">
+    <div class="site-footer__inner">
+
+        <div class="site-footer__brand">
+            {% if header %}
+            <span class="site-footer__name">{{ header.site_title }}</span>
+            {% else %}
+            <span class="site-footer__name">Icarus</span>
+            {% endif %}
+            <p class="site-footer__tagline">Exploring the frontiers of knowledge.</p>
+        </div>
+
+        <nav class="site-footer__nav" aria-label="Footer navigation">
+            <a href="/">Home</a>
+            <a href="/search/">Search</a>
+        </nav>
+
+        <div class="site-footer__copy">
+            &copy; {% now "Y" %} {% if header %}{{ header.site_title }}{% else %}Icarus{% endif %}. All rights reserved.
+        </div>
+
+    </div>
+</footer>
