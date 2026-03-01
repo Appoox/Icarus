@@ -3,7 +3,10 @@ from django.db import models
 from wagtail.admin.panels import FieldPanel
 from wagtail.models import Page
 from wagtail.snippets.models import register_snippet
-
+from modelcluster.fields import ParentalKey
+from modelcluster.models import ClusterableModel # Needed for the Parent class
+from wagtail.fields import RichTextField, StreamField
+from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 
 @register_snippet
 class SiteHeader(models.Model):
@@ -53,53 +56,69 @@ class SiteHeader(models.Model):
         return self.site_title
 
 
+class FooterLink(models.Model):
+    """A single link inside the footer."""
+
+    footer = ParentalKey(
+        "SiteFooter",
+        on_delete=models.CASCADE,
+        related_name="links",
+    )
+    label = models.CharField(max_length=100)
+    url = models.CharField(max_length=255)
+
+    panels = [
+        FieldPanel("label"),
+        FieldPanel("url"),
+    ]
+
+    def __str__(self):
+        return self.label
+
+
 @register_snippet
-class SiteFooter(models.Model):
+class SiteFooter(ClusterableModel):
     """
-    A singleton-style snippet for the global site footer.
+    Singleton-style snippet for the global site footer.
     Manage it via Wagtail Admin → Snippets → Site Footer.
     """
 
-    site_name = models.CharField(
-        max_length=100,
-        default="Icarus",
-        help_text="Site name displayed in the footer.",
+    copyright_text = models.CharField(
+        max_length=255,
+        blank=True,
+        default="© 2024 My Wagtail Site. All rights reserved.",
+        help_text="Copyright line shown at the bottom of the footer.",
     )
     tagline = models.CharField(
         max_length=255,
         blank=True,
-        default="Exploring the frontiers of knowledge.",
-        help_text="Short tagline displayed beneath the site name.",
+        help_text="Optional short tagline shown above the links.",
     )
-    copyright_text = models.CharField(
-        max_length=255,
+    body = RichTextField(
         blank=True,
-        default="All rights reserved.",
-        help_text="Copyright text (year is added automatically).",
+        help_text="Optional rich-text content (address, social links, etc.).",
     )
-
-    # Navigation links (up to 4)
-    nav_link_1_label = models.CharField(max_length=50, blank=True, default="Home")
-    nav_link_1_url = models.CharField(max_length=255, blank=True, default="/")
-    nav_link_2_label = models.CharField(max_length=50, blank=True, default="Search")
-    nav_link_2_url = models.CharField(max_length=255, blank=True, default="/search/")
-    nav_link_3_label = models.CharField(max_length=50, blank=True)
-    nav_link_3_url = models.CharField(max_length=255, blank=True)
-    nav_link_4_label = models.CharField(max_length=50, blank=True)
-    nav_link_4_url = models.CharField(max_length=255, blank=True)
 
     panels = [
-        FieldPanel("site_name"),
-        FieldPanel("tagline"),
-        FieldPanel("copyright_text"),
-        FieldPanel("nav_link_1_label"),
-        FieldPanel("nav_link_1_url"),
-        FieldPanel("nav_link_2_label"),
-        FieldPanel("nav_link_2_url"),
-        FieldPanel("nav_link_3_label"),
-        FieldPanel("nav_link_3_url"),
-        FieldPanel("nav_link_4_label"),
-        FieldPanel("nav_link_4_url"),
+        MultiFieldPanel(
+            [
+                FieldPanel("tagline"),
+                FieldPanel("body"),
+            ],
+            heading="Content",
+        ),
+        MultiFieldPanel(
+            [
+                InlinePanel("links", label="Footer Link"),
+            ],
+            heading="Links",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("copyright_text"),
+            ],
+            heading="Copyright",
+        ),
     ]
 
     class Meta:
@@ -107,18 +126,7 @@ class SiteFooter(models.Model):
         verbose_name_plural = "Site Footers"
 
     def __str__(self):
-        return self.site_name
-
-    def nav_links(self):
-        """Return a list of (label, url) tuples for non-empty nav links."""
-        links = []
-        for i in range(1, 5):
-            label = getattr(self, f"nav_link_{i}_label", "")
-            url = getattr(self, f"nav_link_{i}_url", "")
-            if label and url:
-                links.append({"label": label, "url": url})
-        return links
-
+        return "Site Footer"
 
 class HomePage(Page):
     def get_context(self, request):

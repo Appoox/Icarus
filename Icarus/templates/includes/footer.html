@@ -1,27 +1,126 @@
-{% load header_tags %}
+{% load footer_tags wagtailcore_tags %}
 {% get_site_footer as footer %}
 
+
+<style>
+.site-footer {
+  background-color: #111827;
+  color: #d1d5db;
+  margin-top: auto;             /* pushes footer to bottom in flex layouts */
+}
+
+/* ── Inner content area ───────────────────────────── */
+.site-footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+/* ── Tagline ──────────────────────────────────────── */
+.site-footer__tagline {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* ── Rich-text body ───────────────────────────────── */
+.site-footer__body {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #9ca3af;
+}
+
+.site-footer__body a {
+  color: #a5b4fc;
+  text-decoration: none;
+}
+
+.site-footer__body a:hover {
+  text-decoration: underline;
+}
+
+/* ── Links row ────────────────────────────────────── */
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1.5rem;
+}
+
+.site-footer__link {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.site-footer__link:hover {
+  color: #ffffff;
+}
+
+/* ── Copyright bar ────────────────────────────────── */
+.site-footer__copyright {
+  border-top: 1px solid #374151;
+  text-align: center;
+  padding: 1rem 1.5rem;
+}
+
+.site-footer__copyright p {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 600px) {
+  .site-footer__inner {
+    padding: 2rem 1rem 1.5rem;
+  }
+
+  .site-footer__links {
+    gap: 0.5rem 1rem;
+  }
+}
+</style>
+
+{% if footer %}
 <footer class="site-footer">
-    <div class="site-footer__inner">
 
-        <div class="site-footer__brand">
-            <span class="site-footer__name">{{ footer.site_name|default:"Icarus" }}</span>
-            {% if footer.tagline %}
-            <p class="site-footer__tagline">{{ footer.tagline }}</p>
-            {% endif %}
-        </div>
+  <div class="site-footer__inner">
 
-        {% if footer.nav_links %}
-        <nav class="site-footer__nav" aria-label="Footer navigation">
-            {% for link in footer.nav_links %}
-            <a href="{{ link.url }}">{{ link.label }}</a>
-            {% endfor %}
-        </nav>
-        {% endif %}
+    <!-- Tagline -->
+    {% if footer.tagline %}
+    <p class="site-footer__tagline">{{ footer.tagline }}</p>
+    {% endif %}
 
-        <div class="site-footer__copy">
-            &copy; {% now "Y" %} {{ footer.site_name|default:"ശാസ്ത്രഗതി" }}. {{ footer.copyright_text|default:"copyleft" }}
-        </div>
-
+    <!-- Rich-text body (address, social links, etc.) -->
+    {% if footer.body %}
+    <div class="site-footer__body">
+      {{ footer.body|richtext }}
     </div>
+    {% endif %}
+
+    <!-- Footer links -->
+    {% if footer.links.all %}
+    <nav class="site-footer__links" aria-label="Footer navigation">
+      {% for link in footer.links.all %}
+        <a href="{{ link.url }}" class="site-footer__link">{{ link.label }}</a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+
+  </div>
+
+  <!-- Copyright bar -->
+  <div class="site-footer__copyright">
+    <p>{{ footer.copyright_text }}</p>
+  </div>
+
 </footer>
+{% endif %}
