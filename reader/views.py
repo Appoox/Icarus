@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.urls import reverse
 
 from .forms import ReaderSignupForm
-from .models import Reader
+from .models import Reader, PaymentDetails
 
 
 def reader_signup(request):
@@ -44,6 +45,60 @@ def reader_profile(request):
         'interested_topics': reader.interested_topics.all(),
     }
     return render(request, 'reader/profile.html', context)
+
+
+@login_required(login_url='/reader/login/')
+def reader_checkout(request, plan_type):
+    """Render the checkout page for a specific plan."""
+    plans = {
+        '1_month': {'name': '1 Month', 'price': 299},
+        '3_months': {'name': '3 Months', 'price': 799},
+        '6_months': {'name': '6 Months', 'price': 1499},
+        '1_year': {'name': '1 Year', 'price': 2499},
+    }
+    
+    plan = plans.get(plan_type)
+    if not plan:
+        messages.error(request, "Invalid subscription plan selected.")
+        return redirect('reader_profile')
+        
+    return render(request, 'reader/checkout.html', {
+        'plan_type': plan_type,
+        'plan_name': plan['name'],
+        'price': plan['price'],
+    })
+
+
+@login_required(login_url='/reader/login/')
+def process_payment(request):
+    """Simulate payment gateway callback and activate subscription."""
+    if request.method == 'POST':
+        plan_type = request.POST.get('plan_type')
+        amount = request.POST.get('amount')
+        method = request.POST.get('payment_method', 'card')
+        
+        # 1. Create mock PaymentDetails
+        payment = PaymentDetails.objects.create(
+            gateway_name='MockGateway',
+            gateway_transaction_id=f'TXN_{timezone.now().timestamp()}',
+            gateway_order_id=f'ORD_{timezone.now().timestamp()}',
+            payment_method=method,
+            amount=amount,
+            status='completed'
+        )
+        
+        # 2. Update Reader
+        try:
+            reader = request.user.reader
+            reader.payment_details = payment
+            reader.activate_subscription(plan_type)
+            messages.success(request, f"Successfully subscribed to the {plan_type.replace('_', ' ')} plan!")
+        except Reader.DoesNotExist:
+            messages.error(request, "Reader profile not found.")
+            
+        return redirect('reader_profile')
+        
+    return redirect('reader_profile')
 
 
 def reader_logout(request):

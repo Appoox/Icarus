@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Checkout — {{ plan_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Playfair+Display:wght@700;900&display=swap"
+    rel="stylesheet">
+
+<style>
+    .checkout-page {
+        max-width: 600px;
+        margin: 60px auto;
+        padding: 0 24px 80px;
+    }
+
+    .checkout-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .checkout-header h1 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 32px;
+        font-weight: 900;
+        color: #0b1f3a;
+        margin-bottom: 8px;
+    }
+
+    .checkout-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    /* Plan Summary */
+    .summary-box {
+        background: #fafaf8;
+        border: 1px solid #d4d0c8;
+        border-radius: 8px;
+        padding: 24px;
+    }
+
+    .summary-box h2 {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6b6659;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #d4d0c8;
+        padding-bottom: 8px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-family: 'Source Sans 3', sans-serif;
+    }
+
+    .summary-row.total {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 2px solid #0b1f3a;
+        font-weight: 700;
+        font-size: 18px;
+        color: #0b1f3a;
+    }
+
+    /* Payment Form */
+    .payment-form {
+        background: #fff;
+        border: 1px solid #d4d0c8;
+        border-radius: 8px;
+        padding: 32px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6b6659;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 15px;
+        border: 1px solid #d4d0c8;
+        border-radius: 4px;
+        background: #fff;
+        color: #1a1612;
+    }
+
+    .payment-methods {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .method-option {
+        flex: 1;
+        border: 2px solid #d4d0c8;
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .method-option.active {
+        border-color: #c8102e;
+        background: #fff5f6;
+    }
+
+    .method-option input {
+        display: none;
+    }
+
+    .checkout-submit {
+        width: 100%;
+        padding: 14px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: #c8102e;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-top: 10px;
+    }
+
+    .checkout-submit:hover {
+        background: #a00d24;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-page">
+    <div class="checkout-header">
+        <h1>Complete Subscription</h1>
+    </div>
+
+    <div class="checkout-container">
+        <div class="summary-box">
+            <h2>Order Summary</h2>
+            <div class="summary-row">
+                <span>Plan</span>
+                <span>{{ plan_name }} Subscription</span>
+            </div>
+            <div class="summary-row">
+                <span>Access</span>
+                <span>Unlimited articles</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total Amount</span>
+                <span>₹{{ price }}</span>
+            </div>
+        </div>
+
+        <form action="{% url 'process_payment' %}" method="post" class="payment-form">
+            {% csrf_token %}
+            <input type="hidden" name="plan_type" value="{{ plan_type }}">
+            <input type="hidden" name="amount" value="{{ price }}">
+
+            <div class="form-group">
+                <label>Select Payment Method</label>
+                <div class="payment-methods">
+                    <label class="method-option active">
+                        <input type="radio" name="payment_method" value="card" checked>
+                        Card
+                    </label>
+                    <label class="method-option">
+                        <input type="radio" name="payment_method" value="upi">
+                        UPI
+                    </label>
+                    <label class="method-option">
+                        <input type="radio" name="payment_method" value="netbanking">
+                        Net Banking
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="card_name">Cardholder Name</label>
+                <input type="text" id="card_name" class="form-input" placeholder="Name on card" required>
+            </div>
+
+            <div class="form-group">
+                <label for="card_num">Card Number</label>
+                <input type="text" id="card_num" class="form-input" placeholder="0000 0000 0000 0000" required>
+            </div>
+
+            <div class="summary-row">
+                <div class="form-group" style="flex: 1; margin-right: 12px;">
+                    <label for="expiry">Expiry</label>
+                    <input type="text" id="expiry" class="form-input" placeholder="MM/YY" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="cvv">CVV</label>
+                    <input type="password" id="cvv" class="form-input" placeholder="123" required>
+                </div>
+            </div>
+
+            <button type="submit" class="checkout-submit">Pay ₹{{ price }} & Subscribe</button>
+            <p style="font-size: 11px; color: #888; text-align: center; margin-top: 12px;">
+                * This is a simulated checkout. No actual payment will be processed.
+            </p>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Simple JS to toggle active class on payment method selection
+    document.querySelectorAll('.method-option').forEach(option => {
+        option.addEventListener('click', function () {
+            document.querySelectorAll('.method-option').forEach(o => o.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+</script>
+{% endblock %}

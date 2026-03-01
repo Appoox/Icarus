@@ -3,7 +3,11 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
 
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel, FieldRowPanel
+from wagtail.snippets.models import register_snippet
 
+
+@register_snippet
 class Reader(models.Model):
     """
     Reader profile linked to a Django User. Tracks subscription status,
@@ -98,6 +102,27 @@ class Reader(models.Model):
         help_text="Topics this reader is interested in.",
     )
 
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('name'),
+            FieldPanel('email'),
+            FieldPanel('phone_number'),
+            FieldPanel('user'),
+        ], heading="Personal Information"),
+        MultiFieldPanel([
+            FieldPanel('subscription_plan'),
+            FieldRowPanel([
+                FieldPanel('subscription_start'),
+                FieldPanel('subscription_end'),
+            ]),
+        ], heading="Subscription Status"),
+        FieldPanel('payment_details'),
+        MultiFieldPanel([
+            FieldPanel('read_articles'),
+            FieldPanel('interested_topics'),
+        ], heading="Activity & Interests"),
+    ]
+
     class Meta:
         verbose_name = 'Reader'
         verbose_name_plural = 'Readers'
@@ -106,6 +131,7 @@ class Reader(models.Model):
         return f'{self.name} ({self.email})'
 
 
+@register_snippet
 class PaymentDetails(models.Model):
     """
     Structured payment information, designed for future integration
@@ -165,6 +191,26 @@ class PaymentDetails(models.Model):
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('gateway_name'),
+            FieldPanel('gateway_transaction_id'),
+            FieldPanel('gateway_order_id'),
+        ], heading="Gateway Reference"),
+        MultiFieldPanel([
+            FieldPanel('payment_method'),
+            FieldRowPanel([
+                FieldPanel('amount'),
+                FieldPanel('currency'),
+            ]),
+            FieldPanel('status'),
+        ], heading="Payment Info"),
+        MultiFieldPanel([
+            FieldPanel('created_at', read_only=True),
+            FieldPanel('updated_at', read_only=True),
+        ], heading="Timestamps"),
+    ]
 
     class Meta:
         verbose_name = 'Payment Details'

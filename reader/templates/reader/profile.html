@@ -225,22 +225,22 @@
         <div class="sub-card__plans">
             <p class="sub-card__label">Choose a Plan</p>
             <div class="plans-grid">
-                <div class="plan-option">
+                <a href="{% url 'reader_checkout' plan_type='1_month' %}" class="plan-option">
                     <div class="plan-option__name">1 Month</div>
-                    <div class="plan-option__price">Coming Soon</div>
-                </div>
-                <div class="plan-option">
+                    <div class="plan-option__price">₹299</div>
+                </a>
+                <a href="{% url 'reader_checkout' plan_type='3_months' %}" class="plan-option">
                     <div class="plan-option__name">3 Months</div>
-                    <div class="plan-option__price">Coming Soon</div>
-                </div>
-                <div class="plan-option">
+                    <div class="plan-option__price">₹799</div>
+                </a>
+                <a href="{% url 'reader_checkout' plan_type='6_months' %}" class="plan-option">
                     <div class="plan-option__name">6 Months</div>
-                    <div class="plan-option__price">Coming Soon</div>
-                </div>
-                <div class="plan-option">
+                    <div class="plan-option__price">₹1499</div>
+                </a>
+                <a href="{% url 'reader_checkout' plan_type='1_year' %}" class="plan-option">
                     <div class="plan-option__name">1 Year</div>
-                    <div class="plan-option__price">Coming Soon</div>
-                </div>
+                    <div class="plan-option__price">₹2499</div>
+                </a>
             </div>
         </div>
         {% endif %}
