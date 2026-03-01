@@ -1,6 +1,56 @@
 from django.db import models
 
+from wagtail.admin.panels import FieldPanel
 from wagtail.models import Page
+from wagtail.snippets.models import register_snippet
+
+
+@register_snippet
+class SiteHeader(models.Model):
+    """
+    A singleton-style snippet for the global site header.
+    Manage it via Wagtail Admin → Snippets → Site Header.
+    """
+
+    logo = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Logo displayed on the left side of the header.",
+    )
+    logo_alt_text = models.CharField(
+        max_length=100,
+        blank=True,
+        default="Site logo",
+        help_text="Alt text for the logo image (for accessibility).",
+    )
+    site_title = models.CharField(
+        max_length=100,
+        default="My Wagtail Site",
+        help_text="Title displayed in the centre of the header.",
+    )
+    site_title_url = models.CharField(
+        max_length=255,
+        blank=True,
+        default="/",
+        help_text="URL the site title links to (defaults to home page).",
+    )
+
+    panels = [
+        FieldPanel("logo"),
+        FieldPanel("logo_alt_text"),
+        FieldPanel("site_title"),
+        FieldPanel("site_title_url"),
+    ]
+
+    class Meta:
+        verbose_name = "Site Header"
+        verbose_name_plural = "Site Headers"
+
+    def __str__(self):
+        return self.site_title
 
 
 class HomePage(Page):

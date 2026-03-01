@@ -1,0 +1,32 @@
+{% load header_tags wagtailimages_tags %}
+{% get_site_header as header %}
+
+{% if header %}
+<header class="site-header">
+
+    <!-- Left: Logo -->
+    <div class="site-header__logo">
+        <a href="{{ header.site_title_url|default:'/' }}">
+            {% if header.logo %}
+            {% image header.logo height-60 as logo_img %}
+            <img src="{{ logo_img.url }}" alt="{{ header.logo_alt_text|default:'Site logo' }}"
+                class="site-header__logo-img">
+            {% else %}
+            {# Fallback placeholder when no logo is set #}
+            <span class="site-header__logo-placeholder">&#9632;</span>
+            {% endif %}
+        </a>
+    </div>
+
+    <!-- Centre: Site Title -->
+    <div class="site-header__title">
+        <a href="{{ header.site_title_url|default:'/' }}">
+            {{ header.site_title }}
+        </a>
+    </div>
+
+    <!-- Right: intentionally empty — add nav/search/CTA here -->
+    <div class="site-header__right"></div>
+
+</header>
+{% endif %}
