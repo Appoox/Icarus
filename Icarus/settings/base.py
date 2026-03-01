@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "articles",
     "literati",
     "issue",
+    "reader",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.table_block",
@@ -183,3 +184,8 @@ WAGTAILADMIN_BASE_URL = "http://example.com"
 # if untrusted users are allowed to upload files -
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
 WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
+
+# ── Reader / Paywall ──────────────────────────────────────────────────
+FREE_ARTICLE_LIMIT = 3  # Number of free articles for non-subscribed readers
+LOGIN_REDIRECT_URL = '/reader/profile/'
+LOGIN_URL = '/reader/login/'

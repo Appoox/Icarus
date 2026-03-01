@@ -94,6 +94,39 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    gap: 1rem;
+}
+
+.header-link {
+    font-family: var(--label);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.header-link:hover {
+    color: var(--red);
+}
+
+.header-link--muted {
+    color: var(--muted);
+}
+
+.header-link--cta {
+    background: var(--red);
+    color: #fff;
+    padding: 0.45rem 1rem;
+    border-radius: 3px;
+    transition: background 0.15s ease;
+}
+
+.header-link--cta:hover {
+    background: var(--red-hover);
+    color: #fff;
 }
 
 

@@ -25,8 +25,16 @@
         </a>
     </div>
 
-    <!-- Right: intentionally empty — add nav/search/CTA here -->
-    <div class="site-header__right"></div>
+    <!-- Right: Auth navigation -->
+    <div class="site-header__right">
+        {% if request.user.is_authenticated %}
+        <a href="{% url 'reader_profile' %}" class="header-link">Profile</a>
+        <a href="{% url 'reader_logout' %}" class="header-link header-link--muted">Logout</a>
+        {% else %}
+        <a href="{% url 'reader_login' %}" class="header-link">Login</a>
+        <a href="{% url 'reader_signup' %}" class="header-link header-link--cta">Subscribe</a>
+        {% endif %}
+    </div>
 
 </header>
 {% endif %}

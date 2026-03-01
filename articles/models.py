@@ -178,6 +178,7 @@ class Article(Page):
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
+        from django.conf import settings as django_settings
 
         # Query Article siblings directly (not the base Page queryset) so that
         # topic filtering and specific fields are available without extra joins.
@@ -196,6 +197,63 @@ class Article(Page):
                 siblings = same_topic
 
         context['related_articles'] = siblings[:3]
+
+        # ── Paywall Logic ─────────────────────────────────────────────
+        free_limit = getattr(django_settings, 'FREE_ARTICLE_LIMIT', 3)
+        show_paywall = False
+        truncated_body = None
+        reader = None
+
+        # 1. Admin Exemption
+        if request.user.is_superuser or request.user.is_staff:
+            show_paywall = False
+        
+        # 2. Authenticated Reader Logic
+        elif request.user.is_authenticated:
+            try:
+                reader = request.user.reader
+            except Exception:
+                reader = None
+
+            if reader and reader.is_subscribed:
+                # Subscribed reader → full access, track the read
+                show_paywall = False
+                reader.read_articles.add(self)
+            elif reader:
+                # Logged-in but not subscribed
+                if reader.read_articles.filter(pk=self.pk).exists():
+                    show_paywall = False
+                else:
+                    read_count = reader.read_articles.count()
+                    if read_count < free_limit:
+                        show_paywall = False
+                        reader.read_articles.add(self)
+                    else:
+                        show_paywall = True
+            else:
+                # Authenticated but no reader profile (shouldn't happen with signals but as fallback)
+                show_paywall = True
+        
+        # 3. Anonymous User Logic (Session-based tracking)
+        else:
+            free_reads = request.session.get('free_reads', [])
+            if self.pk in free_reads:
+                show_paywall = False
+            else:
+                if len(free_reads) < free_limit:
+                    show_paywall = False
+                    free_reads.append(self.pk)
+                    request.session['free_reads'] = free_reads
+                else:
+                    show_paywall = True
+
+        if show_paywall:
+            # Provide only the first 2 body blocks for the truncated preview
+            truncated_body = list(self.body)[:2]
+
+        context['show_paywall'] = show_paywall
+        context['truncated_body'] = truncated_body
+        context['reader'] = reader
         return context
 
     @property
