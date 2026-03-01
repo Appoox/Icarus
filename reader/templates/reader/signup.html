@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign Up — Reader Account{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Playfair+Display:wght@700;900&display=swap"
+    rel="stylesheet">
+
+<style>
+    .auth-page {
+        max-width: 480px;
+        margin: 60px auto;
+        padding: 0 24px 80px;
+    }
+
+    .auth-page h1 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 32px;
+        font-weight: 900;
+        color: #0b1f3a;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .auth-page .subtitle {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 15px;
+        color: #6b6659;
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .auth-form {
+        background: #fafaf8;
+        border: 1px solid #d4d0c8;
+        border-radius: 8px;
+        padding: 32px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6b6659;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 15px;
+        border: 1px solid #d4d0c8;
+        border-radius: 4px;
+        background: #fff;
+        color: #1a1612;
+        transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #0b1f3a;
+        box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.08);
+    }
+
+    .topics-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+    }
+
+    .topics-group label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+        color: #1a1612;
+        background: #fff;
+        border: 1px solid #d4d0c8;
+        border-radius: 20px;
+        padding: 6px 14px;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .topics-group label:hover {
+        border-color: #0b1f3a;
+    }
+
+    .topics-group input[type="checkbox"] {
+        accent-color: #c8102e;
+    }
+
+    .form-errors {
+        color: #c8102e;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    .form-errors ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .auth-submit {
+        width: 100%;
+        padding: 12px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: #c8102e;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-top: 8px;
+    }
+
+    .auth-submit:hover {
+        background: #a00d24;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        color: #6b6659;
+    }
+
+    .auth-footer a {
+        color: #c8102e;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .helptext {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        color: #888070;
+        margin-top: 4px;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <h1>Create Your Account</h1>
+    <p class="subtitle">Join to read articles and manage your subscription.</p>
+
+    <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_name">Full Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="form-errors">{{ form.name.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_username">Username</label>
+            {{ form.username }}
+            {% if form.username.errors %}<div class="form-errors">{{ form.username.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_email">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}<div class="form-errors">{{ form.email.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_phone_number">Phone Number</label>
+            {{ form.phone_number }}
+            {% if form.phone_number.errors %}<div class="form-errors">{{ form.phone_number.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_password1">Password</label>
+            {{ form.password1 }}
+            {% if form.password1.help_text %}<span class="helptext">{{ form.password1.help_text }}</span>{% endif %}
+            {% if form.password1.errors %}<div class="form-errors">{{ form.password1.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_password2">Confirm Password</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}<div class="form-errors">{{ form.password2.errors }}</div>{% endif %}
+        </div>
+
+        {% if form.interested_topics.field.queryset.exists %}
+        <div class="form-group">
+            <label>Topics You're Interested In</label>
+            <div class="topics-group">
+                {% for checkbox in form.interested_topics %}
+                {{ checkbox }}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="auth-submit">Create Account</button>
+    </form>
+
+    <p class="auth-footer">
+        Already have an account? <a href="{% url 'reader_login' %}">Sign in</a>
+    </p>
+</div>
+{% endblock %}

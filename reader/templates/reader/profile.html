@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% load static wagtailimages_tags %}
+
+{% block title %}{{ reader.name }} — Profile{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Playfair+Display:wght@700;900&display=swap"
+    rel="stylesheet">
+
+<style>
+    .profile-page {
+        max-width: 720px;
+        margin: 48px auto;
+        padding: 0 24px 80px;
+    }
+
+    .profile-header {
+        margin-bottom: 40px;
+    }
+
+    .profile-header h1 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 32px;
+        font-weight: 900;
+        color: #0b1f3a;
+        margin-bottom: 4px;
+    }
+
+    .profile-header .email {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 15px;
+        color: #6b6659;
+    }
+
+    /* ── Subscription card ── */
+    .sub-card {
+        background: #fafaf8;
+        border: 1px solid #d4d0c8;
+        border-radius: 8px;
+        padding: 28px 32px;
+        margin-bottom: 36px;
+    }
+
+    .sub-card__label {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #6b6659;
+        margin-bottom: 8px;
+    }
+
+    .sub-card__status {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .sub-card__status--active {
+        color: #2e7d32;
+    }
+
+    .sub-card__status--inactive {
+        color: #c8102e;
+    }
+
+    .sub-card__detail {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        color: #6b6659;
+        margin-bottom: 4px;
+    }
+
+    .sub-card__plans {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #d4d0c8;
+    }
+
+    .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .plan-option {
+        background: #fff;
+        border: 2px solid #d4d0c8;
+        border-radius: 6px;
+        padding: 16px;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+
+    .plan-option:hover {
+        border-color: #0b1f3a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .plan-option__name {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #0b1f3a;
+        margin-bottom: 4px;
+    }
+
+    .plan-option__price {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        color: #6b6659;
+    }
+
+    /* ── Sections ── */
+    .profile-section {
+        margin-bottom: 36px;
+    }
+
+    .profile-section h2 {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #6b6659;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #d4d0c8;
+    }
+
+    /* Topics list */
+    .topics-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .topics-list li {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+        background: #c8102e;
+        padding: 4px 12px;
+        border-radius: 20px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    /* Read articles */
+    .read-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .read-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid #e8e8e8;
+    }
+
+    .read-list li:last-child {
+        border-bottom: none;
+    }
+
+    .read-list a {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: #0b1f3a;
+        text-decoration: none;
+        transition: color 0.15s;
+    }
+
+    .read-list a:hover {
+        color: #c8102e;
+    }
+
+    .read-list .date {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        color: #888070;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .empty-state {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        color: #888070;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <div class="profile-header">
+        <h1>{{ reader.name }}</h1>
+        <p class="email">{{ reader.email }}</p>
+    </div>
+
+    {# ── Subscription Status ── #}
+    <div class="sub-card">
+        <p class="sub-card__label">Subscription</p>
+        {% if reader.is_subscribed %}
+        <p class="sub-card__status sub-card__status--active">Active — {{ reader.get_subscription_plan_display }}</p>
+        <p class="sub-card__detail">Expires: {{ reader.subscription_end|date:"F j, Y" }}</p>
+        {% else %}
+        <p class="sub-card__status sub-card__status--inactive">Not Subscribed</p>
+        <p class="sub-card__detail">Subscribe to get unlimited access to all articles.</p>
+
+        <div class="sub-card__plans">
+            <p class="sub-card__label">Choose a Plan</p>
+            <div class="plans-grid">
+                <div class="plan-option">
+                    <div class="plan-option__name">1 Month</div>
+                    <div class="plan-option__price">Coming Soon</div>
+                </div>
+                <div class="plan-option">
+                    <div class="plan-option__name">3 Months</div>
+                    <div class="plan-option__price">Coming Soon</div>
+                </div>
+                <div class="plan-option">
+                    <div class="plan-option__name">6 Months</div>
+                    <div class="plan-option__price">Coming Soon</div>
+                </div>
+                <div class="plan-option">
+                    <div class="plan-option__name">1 Year</div>
+                    <div class="plan-option__price">Coming Soon</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── Interested Topics ── #}
+    <div class="profile-section">
+        <h2>Your Interests</h2>
+        {% if interested_topics %}
+        <ul class="topics-list">
+            {% for topic in interested_topics %}
+            <li>{{ topic.name }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">No topics selected yet.</p>
+        {% endif %}
+    </div>
+
+    {# ── Read Articles ── #}
+    <div class="profile-section">
+        <h2>Reading History</h2>
+        {% if read_articles %}
+        <ul class="read-list">
+            {% for article in read_articles %}
+            <li>
+                <a href="{{ article.url }}">{{ article.title }}</a>
+                {% if article.date %}
+                <span class="date">{{ article.date|date:"F j, Y" }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">You haven't read any articles yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

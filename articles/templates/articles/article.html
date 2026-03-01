@@ -181,13 +181,14 @@
     line-height: 0;
   }
 
-/* Change this in your article.html <style> section */
-.hero-image img {
+  /* Change this in your article.html <style> section */
+  .hero-image img {
     width: 100%;
-    aspect-ratio: auto; /* Remove the hardcoded 3/1 */
+    aspect-ratio: auto;
+    /* Remove the hardcoded 3/1 */
     object-fit: cover;
     display: block;
-}
+  }
 
   .hero-image figcaption {
     font-family: var(--font-ui);
@@ -485,6 +486,119 @@
       gap: 6px;
     }
   }
+
+  /* ─────────────────────────────────────────────
+   Paywall Overlay
+  ───────────────────────────────────────────── */
+  .paywall-wrapper {
+    position: relative;
+    max-width: var(--article-col);
+    margin: 0 auto;
+    padding-bottom: 0;
+  }
+
+  .article-body--truncated {
+    overflow: hidden;
+    max-height: 500px;
+    /* Adjust to show "a few lines" more gracefully */
+    position: relative;
+    margin-bottom: 0;
+  }
+
+  .paywall-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    background: linear-gradient(to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 20%,
+        rgba(255, 255, 255, 0.8) 70%,
+        rgba(255, 255, 255, 1) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .paywall-cta {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    padding: 0 24px 64px;
+    margin-top: -40px;
+  }
+
+  .paywall-cta__card {
+    background: var(--gray-bg);
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 40px 48px;
+    text-align: center;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .paywall-cta__title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 12px;
+    border: none;
+    padding: 0;
+  }
+
+  .paywall-cta__text {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--gray-mid);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .paywall-cta__actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .paywall-btn {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .paywall-btn--primary {
+    background: var(--red, #c0392b);
+    color: #fff;
+  }
+
+  .paywall-btn--primary:hover {
+    background: #922b21;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);
+  }
+
+  .paywall-btn--secondary {
+    background: transparent;
+    color: var(--black);
+    border: 2px solid var(--gray-light);
+  }
+
+  .paywall-btn--secondary:hover {
+    border-color: var(--black);
+    transform: translateY(-1px);
+  }
 </style>
 
 {% endblock %}
@@ -528,33 +642,88 @@
 
   </header>
 
-{# ── HERO IMAGE ──────────────────────────────── #}
-{% if page.cover_image %}
-  
+  {# ── HERO IMAGE ──────────────────────────────── #}
+  {% if page.cover_image %}
+
   {# Bypass the dynamic string error by writing explicit image tags #}
   {% if page.cover_image_aspect == '3x1' %}
-    {% image page.cover_image fill-1200x400 as hero %}
+  {% image page.cover_image fill-1200x400 as hero %}
   {% elif page.cover_image_aspect == '16x9' %}
-    {% image page.cover_image fill-1200x675 as hero %}
+  {% image page.cover_image fill-1200x675 as hero %}
   {% elif page.cover_image_aspect == '4x3' %}
-    {% image page.cover_image fill-1200x900 as hero %}
+  {% image page.cover_image fill-1200x900 as hero %}
   {% elif page.cover_image_aspect == '1x1' %}
-    {% image page.cover_image fill-1200x1200 as hero %}
+  {% image page.cover_image fill-1200x1200 as hero %}
   {% else %}
-    {# Default fallback for '2x1' or if nothing is selected #}
-    {% image page.cover_image fill-1200x600 as hero %}
+  {# Default fallback for '2x1' or if nothing is selected #}
+  {% image page.cover_image fill-1200x600 as hero %}
   {% endif %}
-  
+
   <figure class="hero-image">
     <img src="{{ hero.url }}" alt="{{ hero.alt|default:page.title }}">
     {% if page.cover_image_caption %}
-      <figcaption>{{ page.cover_image_caption }}</figcaption>
+    <figcaption>{{ page.cover_image_caption }}</figcaption>
     {% endif %}
   </figure>
-  
-{% endif %}
+
+  {% endif %}
 
   {# ── FULL-WIDTH ARTICLE BODY ─────────────────── #}
+  {% if show_paywall %}
+  {# ── PAYWALLED: truncated preview + overlay ── #}
+  <div class="paywall-wrapper">
+    <main class="article-body article-body--truncated">
+      {% for block in truncated_body %}
+      {% if block.block_type == 'heading' %}
+      <h2>{{ block.value }}</h2>
+      {% elif block.block_type == 'image' %}
+      {% with alignment=block.value.alignment %}
+      <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
+        {% if alignment == 'left' or alignment == 'right' %}
+        {% image block.value.image width-340 as img %}
+        {% else %}
+        {% image block.value.image width-680 as img %}
+        {% endif %}
+        <img src="{{ img.url }}" alt="{{ img.alt }}">
+        {% if block.value.caption %}
+        <figcaption>{{ block.value.caption }}</figcaption>
+        {% endif %}
+      </figure>
+      {% endwith %}
+      {% else %}
+      {% include_block block %}
+      {% endif %}
+      {% endfor %}
+    </main>
+
+    {# Gradient fade overlay #}
+    <div class="paywall-fade"></div>
+
+    {# Subscribe CTA card #}
+    <div class="paywall-cta">
+      <div class="paywall-cta__card">
+        <h2 class="paywall-cta__title">Continue Reading</h2>
+        <p class="paywall-cta__text">
+          {% if request.user.is_authenticated %}
+          You've reached your free article limit. Subscribe to unlock full access to all articles.
+          {% else %}
+          Sign in or subscribe to read the full article and get unlimited access.
+          {% endif %}
+        </p>
+        <div class="paywall-cta__actions">
+          {% if request.user.is_authenticated %}
+          <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">Subscribe Now</a>
+          {% else %}
+          <a href="{% url 'reader_login' %}" class="paywall-btn paywall-btn--secondary">Sign In</a>
+          <a href="{% url 'reader_signup' %}" class="paywall-btn paywall-btn--primary">Subscribe</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  {# ── FULL ACCESS ── #}
   <main class="article-body">
     {% for block in page.body %}
     {% if block.block_type == 'heading' %}
@@ -597,31 +766,32 @@
     {% endwith %}
     {% endfor %}
   </main>
+  {% endif %}
 
   {# ── RELATED ARTICLES — siblings from the same topic ── #}
- <section class="related-articles">
-  <h3 class="related-heading">Read This Next</h3>
-  <div class="related-grid">
-    {% for article in related_articles %}
+  <section class="related-articles">
+    <h3 class="related-heading">Read This Next</h3>
+    <div class="related-grid">
+      {% for article in related_articles %}
       <a class="related-card" href="{{ article.url }}">
         {% if article.cover_image %}
-          {# Using specific fill for related cards #}
-          {% image article.cover_image fill-600x400 as thumb %}
-          <div class="related-card__img">
-            <img src="{{ thumb.url }}" alt="{{ thumb.alt }}">
-          </div>
+        {# Using specific fill for related cards #}
+        {% image article.cover_image fill-600x400 as thumb %}
+        <div class="related-card__img">
+          <img src="{{ thumb.url }}" alt="{{ thumb.alt }}">
+        </div>
         {% endif %}
-        
+
         <div class="related-card__body">
           {% if article.topic %}
-            <span class="related-card__tag">{{ article.topic.name }}</span>
+          <span class="related-card__tag">{{ article.topic.name }}</span>
           {% endif %}
           <p class="related-card__title">{{ article.title }}</p>
         </div>
       </a>
-    {% endfor %}    
-  </div>
-</section>
+      {% endfor %}
+    </div>
+  </section>
 
 </div>{# /.article-container #}
 
