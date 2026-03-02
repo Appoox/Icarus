@@ -1,6 +1,7 @@
 from django.db import models
 from modelcluster.fields import ParentalKey
 from wagtail.models import Page, Orderable
+from wagtail.fields import RichTextField
 from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.snippets.models import register_snippet
 
@@ -9,6 +10,7 @@ class Issue(Page):
     
     # Only allow Articles to be created inside an Issue
     subpage_types = ['articles.Article']
+    parent_page_types = ['IssueIndexPage']
 
     topic = models.ForeignKey(
         'issue.Topic', 
@@ -78,3 +80,21 @@ class Topic(models.Model):
 
     class Meta:
         verbose_name_plural = "Topics"
+
+class IssueIndexPage(Page):
+    intro = RichTextField(blank=True)
+
+    max_count = 1
+    subpage_types = ['Issue']
+    # Parent should be HomePage
+    parent_page_types = ['home.HomePage']
+
+    content_panels = Page.content_panels + [
+        FieldPanel('intro')
+    ]
+
+    def get_context(self, request):
+        context = super().get_context(request)
+        # Get all child issues, ordered by publishing date
+        context['issues'] = Issue.objects.child_of(self).live().order_by('-date_of_publishing')
+        return context

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/issue_index.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="issue-container">
+    <header class="issue-feed-header">
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}
+        <div class="intro">{{ page.intro|richtext }}</div>
+        {% endif %}
+    </header>
+
+    <div class="issue-feed">
+        {% for issue in issues %}
+        <article class="feed-item">
+            <div class="feed-content">
+                <span class="meta-date">{{ issue.date_of_publishing|date:"F j, Y" }}</span>
+                <h2><a href="{{ issue.url }}">{{ issue.title }}</a></h2>
+                {% if issue.topic %}
+                <div class="meta-topic">Topic: {{ issue.topic.name }}</div>
+                {% endif %}
+                <p class="excerpt">
+                    Covering articles published on {{ issue.date_of_publishing|date:"Y-m-d" }}.
+                </p>
+                <a href="{{ issue.url }}" class="view-issue">Explore Issue →</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

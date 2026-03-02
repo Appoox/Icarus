@@ -9,7 +9,7 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
-
+from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 
 class BlockQuoteBlock(blocks.StructBlock):
     text = blocks.RichTextBlock()
@@ -50,6 +50,8 @@ class ImageBlock(blocks.StructBlock):
 
 
 class Article(Page):
+
+    parent_page_types = ['ArticleIndexPage']
 
     # ── Relations ──────────────────────────────────────────────────────────
     main_issue = models.ForeignKey(
@@ -263,9 +265,10 @@ class Article(Page):
                 return block.value
         return ""
 
-
 class ArticleIndexPage(Page):
     intro = RichTextField(blank=True)
+
+    max_count = 1
 
     content_panels = Page.content_panels + [
         FieldPanel('intro')

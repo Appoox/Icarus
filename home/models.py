@@ -129,8 +129,11 @@ class SiteFooter(ClusterableModel):
         return "Site Footer"
 
 class HomePage(Page):
+
+    max_count = 1
+
     def get_context(self, request):
-        context = super().get_context(request)
+        context = super().get_context(request)   
         
         # Avoid circular imports by importing inside the method
         from articles.models import Article

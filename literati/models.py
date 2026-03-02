@@ -5,6 +5,9 @@ from wagtail.fields import RichTextField
 from wagtail.admin.panels import FieldPanel
 
 class Literati(Page):
+
+    parent_page_types = ['AuthorIndexPage']
+
     role = models.CharField("Title / Role of the person", blank=True)
     bio = models.TextField("Bio", blank=True)
     profile_image = models.ForeignKey(
@@ -27,6 +30,7 @@ class Literati(Page):
 
 class AuthorIndexPage(Page):
     intro = RichTextField(blank=True)
+    max_count = 1
     subpage_types = ['Literati']
 
     def get_context(self, request):
