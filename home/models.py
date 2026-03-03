@@ -139,29 +139,24 @@ class HomePage(Page):
         from articles.models import Article
         from issue.models import Issue, Topic
 
-        # 1. Hero Article: Latest article with a cover image
-        hero_article = Article.objects.live().filter(cover_image__isnull=False).order_by('-first_published_at').first()
-        context['hero_article'] = hero_article
+        # 1. Current Issue + its articles
+        current_issue = Issue.objects.live().order_by('-date_of_publishing').first()
+        context['current_issue'] = current_issue
 
-        # 2. Latest Articles (excluding hero)
-        exclude_ids = [hero_article.id] if hero_article else []
-        latest_articles = Article.objects.live().exclude(id__in=exclude_ids).order_by('-first_published_at')[:6]
+        issue_article_ids = []
+        if current_issue:
+            issue_articles = current_issue.get_all_articles()
+            context['issue_articles'] = issue_articles
+            issue_article_ids = [a.id for a in issue_articles]
+        else:
+            context['issue_articles'] = []
+
+        # 2. Latest Articles (general feed, excluding current issue articles)
+        latest_articles = (
+            Article.objects.live()
+            .exclude(id__in=issue_article_ids)
+            .order_by('-first_published_at')[:9]
+        )
         context['latest_articles'] = latest_articles
-
-        # 3. Current Issue
-        context['current_issue'] = Issue.objects.live().order_by('-date_of_publishing').first()
-
-        # 4. Featured Topics (get 4 topics with their latest 3 articles)
-        featured_topics = []
-        topics = Topic.objects.all()[:4]
-        for topic in topics:
-            topic_articles = Article.objects.live().filter(topic=topic).order_by('-first_published_at')[:3]
-            if topic_articles:
-                featured_topics.append({
-                    'name': topic.name,
-                    'slug': topic.slug,
-                    'articles': topic_articles
-                })
-        context['featured_topics'] = featured_topics
 
         return context
