@@ -1,45 +1,117 @@
 {% extends "base.html" %}
 {% load wagtailcore_tags wagtailimages_tags static %}
 
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Barlow+Condensed:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/issue.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="issue-container">
-    <header class="issue-header">
+<div class="issue-page">
+
+    {# ── HEADER ── #}
+    <header class="issue-page-header">
+        <div class="issue-page-header__kicker">Issue</div>
         <h1>{{ page.title }}</h1>
-        <p class="publish-date">Published: {{ page.date_of_publishing|date:"F j, Y" }}</p>
+        <div class="issue-page-header__date">{{ page.date_of_publishing|date:"F j, Y" }}</div>
+        {% if page.topic %}
+        <span class="issue-page-header__topic">{{ page.topic.name }}</span>
+        {% endif %}
     </header>
 
-    <div class="issue-layout">
-        <main class="issue-articles">
-            <h2>Articles in this Issue</h2>
-            <div class="article-grid">
-                {% for article in page.get_all_articles %}
-                <article class="article-card">
-                    <h3><a href="{{ article.url }}">{{ article.title }}</a></h3>
-                    <p class="meta">By
-                        {% for rel in article.article_authors.all %}
-                        {{ rel.author.title }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </p>
-                </article>
-                {% empty %}
-                <p>No articles found for this issue.</p>
+    {# ── EDITORIAL BOARD | EDITORIAL — two-column layout ── #}
+    <div class="editorial-layout">
+
+        {# LEFT COLUMN: Editorial Board #}
+        <div class="editorial-board-col">
+            <h2 class="editorial-board-col__heading">Editorial Board</h2>
+
+            {% for rel in page.editorial_board_relationship.all %}
+            <div class="board-member">
+                <div class="board-member__photo">
+                    {% if rel.editor.profile_image %}
+                    {% image rel.editor.profile_image fill-108x108 as ed_img %}
+                    <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}">
+                    {% else %}
+                    <div class="board-member__photo-placeholder">
+                        {{ rel.editor.title|first }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="board-member__info">
+                    <span class="board-member__role">{{ rel.get_role_display }}</span>
+                    <h3 class="board-member__name">
+                        <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
+                    </h3>
+                </div>
+            </div>
+            {% empty %}
+            <p class="editorial-empty">No editorial board members listed.</p>
+            {% endfor %}
+        </div>
+
+        {# RIGHT COLUMN: Editorial content (StreamField) #}
+        <div class="editorial-content-col">
+            <h2 class="editorial-content-col__heading">Editorial</h2>
+
+            {% if page.editorial %}
+            <div class="editorial-body">
+                {% for block in page.editorial %}
+                {% if block.block_type == 'heading' %}
+                <h2>{{ block.value }}</h2>
+                {% elif block.block_type == 'image' %}
+                <figure>
+                    {% image block.value.image width-600 as img %}
+                    <img src="{{ img.url }}" alt="{{ img.alt }}">
+                    {% if block.value.caption %}
+                    <figcaption>{{ block.value.caption }}</figcaption>
+                    {% endif %}
+                </figure>
+                {% else %}
+                {% include_block block %}
+                {% endif %}
                 {% endfor %}
             </div>
-        </main>
+            {% else %}
+            <p class="editorial-empty">No editorial content for this issue.</p>
+            {% endif %}
+        </div>
 
-        <aside class="issue-sidebar">
-            <div class="editorial-board">
-                <h3>Editorial Board</h3>
-                <ul>
-                    {% for rel in page.editorial_board_relationship.all %}
-                    <li>
-                        <strong>{{ rel.get_role_display }}:</strong>
-                        <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </aside>
     </div>
+
+    {# ── ARTICLES IN THIS ISSUE ── #}
+    <div class="issue-section-head">
+        <h2 class="issue-section-head__title">Articles in this Issue</h2>
+        <span class="issue-section-head__rule" aria-hidden="true"></span>
+    </div>
+
+    <div class="issue-articles-grid">
+        {% for article in page.get_all_articles %}
+        <article class="issue-article-card">
+            {% if article.cover_image %}
+            <a href="{{ article.url }}" class="issue-article-card__image-wrap" aria-hidden="true" tabindex="-1">
+                {% image article.cover_image fill-440x280 as art_img %}
+                <img src="{{ art_img.url }}" alt="{{ article.title }}">
+            </a>
+            {% endif %}
+            <h3 class="issue-article-card__title">
+                <a href="{{ article.url }}">{{ article.title }}</a>
+            </h3>
+            <p class="issue-article-card__meta">
+                By
+                {% for rel in article.article_authors.all %}
+                <a href="{{ rel.author.url }}">{{ rel.author.title }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+        </article>
+        {% empty %}
+        <p class="issue-no-articles">No articles found for this issue.</p>
+        {% endfor %}
+    </div>
+
 </div>
 {% endblock %}

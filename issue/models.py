@@ -1,9 +1,53 @@
 from django.db import models
 from modelcluster.fields import ParentalKey
 from wagtail.models import Page, Orderable
-from wagtail.fields import RichTextField
+from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.snippets.models import register_snippet
+from wagtail import blocks
+from wagtail.images.blocks import ImageChooserBlock
+from wagtail.embeds.blocks import EmbedBlock
+from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.contrib.table_block.blocks import TableBlock
+from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
+
+class BlockQuoteBlock(blocks.StructBlock):
+    text = blocks.RichTextBlock()
+    attribute_name = blocks.CharBlock(
+        required=False,
+        label='e.g. Mary Berry',
+        help_text="The person to attribute the quote to"
+    )
+
+    class Meta:
+        icon = 'openquote'
+        label = 'Blockquote'
+        template = 'blocks/blockquote_block.html'
+
+
+class ImageBlock(blocks.StructBlock):
+    """Image with optional caption and text-wrap alignment."""
+    image = ImageChooserBlock()
+    caption = blocks.RichTextBlock(
+        required=False,
+        label='Caption',
+        help_text="Optional caption displayed below the image"
+    )
+    alignment = blocks.ChoiceBlock(
+        choices=[
+            ('full',  'Full width - image fills the entire text column, no wrap'),
+            ('left',  'Float left - image sits left, text flows around the right side'),
+            ('right', 'Float right - image sits right, text flows around the left side'),
+        ],
+        default='full',
+        label='Image placement',
+        help_text="Choose how the image sits relative to the surrounding text"
+    )
+
+    class Meta:
+        icon = 'image'
+        label = 'Image'
+
 
 class Issue(Page):
     date_of_publishing = models.DateField("Date of publishing")
@@ -12,6 +56,14 @@ class Issue(Page):
     subpage_types = ['articles.Article']
     parent_page_types = ['IssueIndexPage']
 
+    cover_image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+
     topic = models.ForeignKey(
         'issue.Topic', 
         null=True, 
@@ -19,6 +71,43 @@ class Issue(Page):
         on_delete=models.SET_NULL, 
         related_name='issues'
     )
+
+    editorial = StreamField([
+        ('heading',    blocks.RichTextBlock(form_classname="full title")),
+        ('paragraph',  blocks.RichTextBlock()),
+        ('image',      ImageBlock()),                                   # ← StructBlock with caption
+        ('blockquote', BlockQuoteBlock()),
+        ('embed',      EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
+        ('document',   DocumentChooserBlock()),
+        ('table',      TableBlock()),
+        ('raw_html',   blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
+        ('text',       blocks.TextBlock()),
+        ('email',      blocks.EmailBlock()),
+        ('url',        blocks.URLBlock()),
+        ('boolean',    blocks.BooleanBlock(required=False)),
+        ('integer',    blocks.IntegerBlock()),
+        ('float',      blocks.FloatBlock()),
+        ('decimal',    blocks.DecimalBlock()),
+        ('date',       blocks.DateBlock()),
+        ('time',       blocks.TimeBlock()),
+        ('datetime',   blocks.DateTimeBlock()),
+        ('rich_text',  blocks.RichTextBlock(label="Rich Text (Full)")),
+        ('choice',     blocks.ChoiceBlock(choices=[
+            ('left',   'Left'),
+            ('center', 'Centre'),
+            ('right',  'Right'),
+        ], help_text="Alignment choice")),
+        ('page',       blocks.PageChooserBlock()),
+        ('static',     blocks.StaticBlock(
+            admin_text="This is a placeholder block — content is defined in the template.",
+            label="Divider / Separator",
+        )),
+        ('list',       blocks.ListBlock(blocks.CharBlock(), label="List of items")),
+        ('stream',     blocks.StreamBlock([
+            ('text',  blocks.CharBlock()),
+            ('image', ImageChooserBlock()),
+        ], label="Nested Stream")),
+    ], use_json_field=True, null=True, blank=True)
 
     def get_all_articles(self):
         # 1. Get articles where this is the primary issue
@@ -30,8 +119,10 @@ class Issue(Page):
     content_panels = Page.content_panels + [
         FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
+        FieldPanel('cover_image'),
         InlinePanel('editorial_board_relationship', label="Editorial Board Members"),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
+        FieldPanel('editorial'),
     ]
 
 class IssueArticleReprint(Orderable):
