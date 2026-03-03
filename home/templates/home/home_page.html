@@ -519,7 +519,7 @@
 
     {# Left: Issue cover #}
     <div class="sa-issue-cover">
-      <div class="sa-issue-cover__label">Featured Issue</div>
+      <div class="sa-issue-cover__label">വിശേഷലക്കം</div>
 
       {% if current_issue.cover_image %}
       <a href="{{ current_issue.url }}" class="sa-issue-cover__image-wrap" aria-hidden="true" tabindex="-1">
@@ -537,7 +537,7 @@
 
     {# Right: Issue articles #}
     <div class="sa-issue-articles">
-      <div class="sa-issue-articles__heading">In This Issue</div>
+      <div class="sa-issue-articles__heading">ഈ ലക്കത്തില്‍...</div>
 
       <div class="sa-issue-articles__grid">
         {% for article in issue_articles %}

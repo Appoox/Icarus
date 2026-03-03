@@ -15,7 +15,7 @@
 
     {# ── HEADER ── #}
     <header class="issue-page-header">
-        <div class="issue-page-header__kicker">Issue</div>
+        <div class="issue-page-header__kicker">ലക്കം</div>
         <h1>{{ page.title }}</h1>
         <div class="issue-page-header__date">{{ page.date_of_publishing|date:"F j, Y" }}</div>
         {% if page.topic %}
@@ -28,7 +28,7 @@
 
         {# LEFT COLUMN: Editorial Board #}
         <div class="editorial-board-col">
-            <h2 class="editorial-board-col__heading">Editorial Board</h2>
+            <h2 class="editorial-board-col__heading">പ്രസാധകര്‍</h2>
 
             {% for rel in page.editorial_board_relationship.all %}
             <div class="board-member">
@@ -56,7 +56,7 @@
 
         {# RIGHT COLUMN: Editorial content (StreamField) #}
         <div class="editorial-content-col">
-            <h2 class="editorial-content-col__heading">Editorial</h2>
+            <h2 class="editorial-content-col__heading">മുഖക്കുറിപ്പ്</h2>
 
             {% if page.editorial %}
             <div class="editorial-body">
@@ -85,7 +85,7 @@
 
     {# ── ARTICLES IN THIS ISSUE ── #}
     <div class="issue-section-head">
-        <h2 class="issue-section-head__title">Articles in this Issue</h2>
+        <h2 class="issue-section-head__title">ഈ ലക്കത്തിലെ ലേഖനങ്ങള്‍</h2>
         <span class="issue-section-head__rule" aria-hidden="true"></span>
     </div>
 
