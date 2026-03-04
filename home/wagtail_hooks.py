@@ -6,6 +6,7 @@ from wagtail.models import Page
 from articles.models import ArticleIndexPage  # Import your models here
 from literati.models import AuthorIndexPage
 from issue.models import IssueIndexPage
+from django.utils.html import format_html, mark_safe
 
 class CreatePagePanel(Component):
     order = 50
@@ -64,7 +65,7 @@ class CreatePagePanel(Component):
                 </div>
             </section>
             """,
-            format_html(buttons_html)
+            mark_safe(buttons_html)
         )
 
 @hooks.register("construct_homepage_panels")
