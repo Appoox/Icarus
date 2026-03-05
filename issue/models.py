@@ -11,6 +11,8 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 
+
+
 class BlockQuoteBlock(blocks.StructBlock):
     text = blocks.RichTextBlock()
     attribute_name = blocks.CharBlock(
@@ -49,9 +51,47 @@ class ImageBlock(blocks.StructBlock):
         label = 'Image'
 
 
+@register_snippet
+class Volume(models.Model):
+    number = models.PositiveIntegerField(unique=True, help_text="Volume number (e.g. 1, 2, 3…)")
+    year_start = models.PositiveIntegerField(help_text="Starting year of the volume (e.g. 2024)")
+    year_end = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Ending year if the volume spans multiple years. Leave blank for a single-year volume."
+    )
+
+    panels = [
+        FieldPanel('number'),
+        FieldPanel('year_start'),
+        FieldPanel('year_end'),
+    ]
+
+    def __str__(self):
+        if self.year_end and self.year_end != self.year_start:
+            return f"Volume {self.number} ({self.year_start}–{self.year_end})"
+        return f"Volume {self.number} ({self.year_start})"
+
+    class Meta:
+        ordering = ['-number']
+        verbose_name_plural = "Volumes"
+
+
 class Issue(Page):
+    volume = models.ForeignKey(
+        'Volume',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='issues',
+        help_text="The volume this issue belongs to"
+    )
+    issue_number = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Issue number within the volume (e.g. 1, 2, 3…)"
+    )
     date_of_publishing = models.DateField("Date of publishing")
-    
+
     # Only allow Articles to be created inside an Issue
     subpage_types = ['articles.Article']
     parent_page_types = ['IssueIndexPage']
@@ -117,6 +157,8 @@ class Issue(Page):
         return list(primary) + reprints
 
     content_panels = Page.content_panels + [
+        FieldPanel('volume'),
+        FieldPanel('issue_number'),
         FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
         FieldPanel('cover_image'),

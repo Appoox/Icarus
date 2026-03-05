@@ -19,6 +19,11 @@
         <article class="feed-item">
             <div class="feed-content">
                 <span class="meta-date">{{ issue.date_of_publishing|date:"F j, Y" }}</span>
+                {% if issue.volume %}
+                <span class="meta-volume">{% if issue.volume.title %}{{ issue.volume.title }}{% else %}Vol. {{
+                    issue.volume.number }}{% endif %}{% if issue.issue_number %}, No. {{ issue.issue_number }}{% endif
+                    %}</span>
+                {% endif %}
                 <h2><a href="{{ issue.url }}">{{ issue.title }}</a></h2>
                 {% if issue.topic %}
                 <div class="meta-topic">Topic: {{ issue.topic.name }}</div>

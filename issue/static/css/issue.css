@@ -33,7 +33,7 @@
 
 .issue-page-header__kicker {
     font-family: var(--label);
-    font-size: .72rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: .22em;
     text-transform: uppercase;
@@ -83,6 +83,21 @@
     background: var(--navy);
     padding: .3rem .9rem;
     border-radius: 2px;
+}
+
+.issue-page-header__volume {
+    font-family: var(--label);
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--navy);
+    margin-bottom: .5rem;
+}
+
+.issue-page-header__year {
+    font-weight: 400;
+    color: var(--caption);
 }
 
 /* ── SECTION DIVIDER ── */
