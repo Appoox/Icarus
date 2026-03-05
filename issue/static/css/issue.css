@@ -427,6 +427,97 @@
     padding: 2rem 0;
 }
 
+/* ── DESKTOP TYPOGRAPHY SCALE (1024px+) ── */
+@media (min-width: 1024px) {
+
+    /* Header */
+    .issue-page-header__kicker {
+        font-size: 1.15rem;
+        letter-spacing: .25em;
+    }
+
+    .issue-page-header h1 {
+        font-size: clamp(2.8rem, 4.5vw, 3.8rem);
+    }
+
+    .issue-page-header__date {
+        font-size: .92rem;
+        letter-spacing: .13em;
+    }
+
+    .issue-page-header__topic {
+        font-size: .82rem;
+        letter-spacing: .16em;
+        padding: .35rem 1.1rem;
+    }
+
+    /* Section heading */
+    .issue-section-head__title {
+        font-size: 1.15rem;
+        letter-spacing: .22em;
+    }
+
+    /* Editorial board column */
+    .editorial-board-col__heading,
+    .editorial-content-col__heading {
+        font-size: .92rem;
+        letter-spacing: .25em;
+    }
+
+    .board-member__role {
+        font-size: .72rem;
+        letter-spacing: .17em;
+    }
+
+    .board-member__name {
+        font-size: 1.1rem;
+    }
+
+    .board-member__photo img,
+    .board-member__photo-placeholder {
+        width: 64px;
+        height: 64px;
+    }
+
+    /* Editorial body text */
+    .editorial-body {
+        font-size: 1.5rem;
+        line-height: 1.50;
+    }
+
+    .editorial-body h2 {
+        font-size: 1.65rem;
+    }
+
+    .editorial-body h3 {
+        font-size: .92rem;
+    }
+
+    .editorial-body blockquote {
+        font-size: 1.3rem;
+    }
+
+    .editorial-body figcaption {
+        font-size: .8rem;
+    }
+
+    /* Article cards */
+    .issue-article-card__title {
+        font-size: 1.2rem;
+        line-height: 1.35;
+    }
+
+    .issue-article-card__meta {
+        font-size: .78rem;
+        letter-spacing: .09em;
+    }
+
+    .editorial-empty,
+    .issue-no-articles {
+        font-size: 1.1rem;
+    }
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
     .editorial-layout {
