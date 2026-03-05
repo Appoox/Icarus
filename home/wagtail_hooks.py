@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from wagtail import hooks
 from wagtail.admin.ui.components import Component
 from wagtail.models import Page
-from articles.models import ArticleIndexPage  # Import your models here
+from articles.models import ArticleIndexPage
 from literati.models import AuthorIndexPage
 from issue.models import IssueIndexPage
 from django.utils.html import format_html, mark_safe
@@ -12,7 +12,9 @@ class CreatePagePanel(Component):
     order = 50
 
     def render_html(self, parent_context=None):
-
+        # 1. Extract the request object from the context to check user permissions
+        request = parent_context.get('request') if parent_context else None
+        
         article_parent = ArticleIndexPage.objects.first()
         literati_parent = AuthorIndexPage.objects.first()
         issue_parent = IssueIndexPage.objects.first()
@@ -70,5 +72,4 @@ class CreatePagePanel(Component):
 
 @hooks.register("construct_homepage_panels")
 def add_create_page_panel(request, panels):
-    if request.user.is_staff:
         panels.insert(0, CreatePagePanel())
