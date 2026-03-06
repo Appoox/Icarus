@@ -10,6 +10,7 @@ from wagtail.embeds.blocks import EmbedBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
+from articles.wagtail_widgets import ColorPickerWidget
 
 
 
@@ -202,10 +203,16 @@ class IssueEditorialBoardRelationship(Orderable):
 class Topic(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
+    color = models.CharField(
+        max_length=7,
+        default="#000000",
+        help_text="Choose a color for this topic (hex format, e.g., #FF0000)"
+    )
 
     panels = [
         FieldPanel('name'),
         FieldPanel('slug'),
+        FieldPanel('color', widget=ColorPickerWidget),
     ]
 
     def __str__(self):

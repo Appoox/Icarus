@@ -101,14 +101,17 @@
     text-transform: uppercase;
     color: var(--white);
     background: var(--red);
-    padding: 4px 10px;
-    border-radius: 2px;
+    padding: 6px 14px;
+    border-radius: 20px;
     white-space: nowrap;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .topic-tag:hover {
-    background: var(--red-dark);
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
   }
 
   /* Subtitle / deck */
@@ -446,12 +449,18 @@
   }
 
   .related-card__tag {
+    display: inline-block;
+    align-self: flex-start;
     font-family: var(--font-ui);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--red);
+    color: var(--white);
+    background: var(--red);
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 4px;
   }
 
   .related-card__title {
@@ -613,7 +622,9 @@
     {# Kicker: Topic · then Title on next line #}
     <div class="header-top">
       {% if page.topic %}
-      <span class="topic-tag">{{ page.topic.name }}</span>
+      <a href="{% url 'topic_detail' slug=page.topic.slug %}" class="topic-tag"
+        style="background-color: {{ page.topic.color|default:'#c0392b' }};">
+        {{ page.topic.name }}</a>
       {% endif %}
       <h1>{{ page.title }}</h1>
     </div>
@@ -784,7 +795,9 @@
 
         <div class="related-card__body">
           {% if article.topic %}
-          <span class="related-card__tag">{{ article.topic.name }}</span>
+          <span class="related-card__tag" style="background-color: {{ article.topic.color|default:'#c0392b' }};"
+            onclick="window.location.href='{% url 'topic_detail' slug=article.topic.slug %}'; return false;">
+            {{ article.topic.name }}</span>
           {% endif %}
           <p class="related-card__title">{{ article.title }}</p>
         </div>

@@ -61,7 +61,7 @@ class CreatePagePanel(Component):
             <section class="panel summary-panel">
                 <div class="panel-content">
                     <h2 class="panel-title">Quick Actions</h2>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap; padding: 12px 0; justify-content: flex-start;">
+                    <span style="display: flex; gap: 12px; flex-wrap: wrap; padding: 12px 0; justify-content: flex-start;">
                         {}
                     </div>
                 </div>

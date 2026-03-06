@@ -1,7 +1,36 @@
 from django.utils.safestring import mark_safe
 from wagtail import hooks
 from wagtail.admin.panels import Panel
+import wagtail.admin.rich_text.editors.draftail.features as draftail_features
+from wagtail.admin.rich_text.converters.html_to_contentstate import InlineStyleElementHandler
 
+@hooks.register('register_rich_text_features')
+def register_text_color_features(features):
+    colors = [
+        ('red', 'Red', '#E53E3E'),
+        ('blue', 'Blue', '#3182CE'),
+        ('green', 'Green', '#38A169'),
+        ('yellow', 'Yellow', '#D69E2E'),
+        ('orange', 'Orange', '#DD6B20'),
+        ('purple', 'Purple', '#805AD5'),
+        ('gray', 'Gray', '#718096'),
+    ]
+
+    for name, label, hex_code in colors:
+        feature_name = f'color-{name}'
+        type_ = f'COLOR_{name.upper()}'
+        control = {
+            'type': type_,
+            'label': label,
+            'description': f'{label} Text',
+            'style': {'color': hex_code},
+        }
+        features.register_editor_plugin('draftail', feature_name, draftail_features.InlineStyleFeature(control))
+        features.register_converter_rule('contentstate', feature_name, {
+            'from_database_format': {f'span[style="color: {hex_code};"]': InlineStyleElementHandler(type_)},
+            'to_database_format': {'style_map': {type_: {'element': 'span', 'props': {'style': f'color: {hex_code};'}}}},
+        })
+        features.default_features.append(feature_name)
 
 class CoverImagePreviewPanel(Panel):
     """

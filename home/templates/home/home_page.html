@@ -239,13 +239,18 @@
   }
 
   .sa-issue-card__category {
+    display: inline-block;
     font-family: var(--label);
     font-size: .6rem;
     font-weight: 800;
-    letter-spacing: .2em;
+    letter-spacing: .15em;
     text-transform: uppercase;
-    color: var(--red);
-    margin-bottom: .2rem;
+    color: #fff;
+    background: var(--red);
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: .4rem;
+    align-self: flex-start;
   }
 
   .sa-issue-card__title {
@@ -416,13 +421,18 @@
   }
 
   .sa-article-card__category {
+    display: inline-block;
     font-family: var(--label);
-    font-size: .65rem;
+    font-size: .63rem;
     font-weight: 800;
-    letter-spacing: .2em;
+    letter-spacing: .15em;
     text-transform: uppercase;
-    color: var(--red);
-    margin-bottom: .3rem;
+    color: #fff;
+    background: var(--red);
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: .5rem;
+    align-self: flex-start;
   }
 
   .sa-article-card__title {
@@ -549,7 +559,10 @@
           </a>
           {% endif %}
           {% if article.topic %}
-          <div class="sa-issue-card__category">{{ article.topic.name }}</div>
+          <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sa-issue-card__category"
+            style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+            {{ article.topic.name }}
+          </a>
           {% endif %}
           <h3 class="sa-issue-card__title">
             <a href="{{ article.url }}">{{ article.title }}</a>
@@ -597,7 +610,10 @@
       </a>
       {% endif %}
       {% if article.topic %}
-      <div class="sa-article-card__category">{{ article.topic.name }}</div>
+      <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sa-article-card__category"
+        style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+        {{ article.topic.name }}
+      </a>
       {% endif %}
       <h3 class="sa-article-card__title">
         <a href="{{ article.url }}">{{ article.title }}</a>

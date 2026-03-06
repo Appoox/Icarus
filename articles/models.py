@@ -10,6 +10,22 @@ from wagtail.embeds.blocks import EmbedBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
+from .wagtail_widgets import ColorPickerBlock
+
+class ColoredHeadingBlock(blocks.StructBlock):
+    text = blocks.CharBlock()
+    heading_level = blocks.ChoiceBlock(choices=[
+        ('h2', 'Heading 2'),
+        ('h3', 'Heading 3'),
+        ('h4', 'Heading 4'),
+    ], default='h2')
+    text_color = ColorPickerBlock(required=False, default="#000000", help_text="Pick a color for the heading text (e.g. #FF0000).")
+
+    class Meta:
+        icon = 'title'
+        template = 'blocks/colored_heading_block.html'
+        label = 'Colored Heading'
+
 
 class BlockQuoteBlock(blocks.StructBlock):
     text = blocks.RichTextBlock()
@@ -112,6 +128,7 @@ class Article(Page):
     # ── Body ───────────────────────────────────────────────────────────────
     body = StreamField([
         ('heading',    blocks.RichTextBlock(form_classname="full title")),
+        ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
         ('paragraph',  blocks.RichTextBlock()),
         ('image',      ImageBlock()),                                   # ← StructBlock with caption
         ('blockquote', BlockQuoteBlock()),

@@ -1,3 +1,4 @@
+
 from django.conf import settings
 from django.urls import include, path
 from django.contrib import admin
@@ -14,6 +15,7 @@ urlpatterns = [
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),
     path("reader/", include("reader.urls")),
+    path("issues/", include("issue.urls")),
 ]
 
 
