@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block title %}{{ topic.name }} | Topic{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/issue.css' %}">
+<style>
+    .topic-header {
+        background-color: {
+                {
+                topic.color|default: '#0b1f3a'
+            }
+        }
+
+        ;
+        color: #fff;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .topic-header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .topic-header__inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+
+    .topic-header__kicker {
+        font-family: var(--label);
+        font-size: 0.9rem;
+        font-weight: 800;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        opacity: 0.9;
+        display: block;
+    }
+
+    .topic-header h1 {
+        font-family: var(--serif);
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 900;
+        margin: 0;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+    }
+
+    .topic-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem 5rem;
+    }
+
+    .topic-section {
+        margin-bottom: 4rem;
+    }
+
+    .topic-section__title {
+        font-family: var(--label);
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--navy);
+        border-bottom: 2px solid var(--navy);
+        padding-bottom: 0.75rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .topic-section__title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--rule);
+    }
+
+    .topic-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2.5rem;
+    }
+
+    .topic-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .topic-card__image-wrap {
+        overflow: hidden;
+        aspect-ratio: 16 / 10;
+        background: var(--rule);
+        margin-bottom: 1.25rem;
+    }
+
+    .topic-card__image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .topic-card:hover .topic-card__image-wrap img {
+        transform: scale(1.05);
+    }
+
+    .topic-card__meta {
+        font-family: var(--label);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--caption);
+        margin-bottom: 0.5rem;
+    }
+
+    .topic-card__title {
+        font-family: var(--serif);
+        font-size: 1.35rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin: 0 0 0.75rem;
+    }
+
+    .topic-card__title a {
+        color: var(--ink);
+        transition: color 0.2s;
+    }
+
+    .topic-card__title a:hover {
+        color: {
+                {
+                topic.color|default: '#c8102e'
+            }
+        }
+
+        ;
+    }
+
+    .topic-card__excerpt {
+        font-family: var(--body-serif);
+        font-size: 1rem;
+        color: var(--muted);
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .empty-msg {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem 0;
+        font-style: italic;
+        color: var(--caption);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="topic-header" style="background-color: {{ topic.color|default:'#0b1f3a' }};">
+    <div class="topic-header__inner">
+        <span class="topic-header__kicker">Exploring</span>
+        <h1>{{ topic.name|default:"Topic Detail" }}</h1>
+    </div>
+</header>
+
+<main class="topic-content">
+    {% if articles %}
+    <section class="topic-section">
+        <h2 class="topic-section__title">Articles</h2>
+        <div class="topic-grid">
+            {% for article in articles %}
+            <article class="topic-card">
+                {% if article.cover_image %}
+                <a href="{{ article.url }}" class="topic-card__image-wrap">
+                    {% image article.cover_image fill-600x375 as img %}
+                    <img src="{{ img.url }}" alt="{{ article.title }}">
+                </a>
+                {% endif %}
+                <div class="topic-card__meta">{{ article.date|date:"F j, Y" }}</div>
+                <h3 class="topic-card__title"><a href="{{ article.url }}">{{ article.title }}</a></h3>
+                <div class="topic-card__excerpt">{{ article.excerpt|striptags }}</div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if issues %}
+    <section class="topic-section">
+        <h2 class="topic-section__title">Issues</h2>
+        <div class="topic-grid">
+            {% for issue in issues %}
+            <article class="topic-card">
+                {% if issue.cover_image %}
+                <a href="{{ issue.url }}" class="topic-card__image-wrap">
+                    {% image issue.cover_image fill-600x375 as img %}
+                    <img src="{{ img.url }}" alt="{{ issue.title }}">
+                </a>
+                {% endif %}
+                <div class="topic-card__meta">{{ issue.date_of_publishing|date:"F j, Y" }}</div>
+                <h3 class="topic-card__title"><a href="{{ issue.url }}">{{ issue.title }}</a></h3>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if not articles and not issues %}
+    <div class="empty-msg">
+        <p>No articles or issues found for this topic yet.</p>
+    </div>
+    {% endif %}
+</main>
+{% endblock %}

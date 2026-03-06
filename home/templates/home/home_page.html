@@ -559,9 +559,10 @@
           </a>
           {% endif %}
           {% if article.topic %}
-          <div class="sa-issue-card__category" style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+          <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sa-issue-card__category"
+            style="background-color: {{ article.topic.color|default:'#c8102e' }};">
             {{ article.topic.name }}
-          </div>
+          </a>
           {% endif %}
           <h3 class="sa-issue-card__title">
             <a href="{{ article.url }}">{{ article.title }}</a>
@@ -609,9 +610,10 @@
       </a>
       {% endif %}
       {% if article.topic %}
-      <div class="sa-article-card__category" style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+      <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sa-article-card__category"
+        style="background-color: {{ article.topic.color|default:'#c8102e' }};">
         {{ article.topic.name }}
-      </div>
+      </a>
       {% endif %}
       <h3 class="sa-article-card__title">
         <a href="{{ article.url }}">{{ article.title }}</a>

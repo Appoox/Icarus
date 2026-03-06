@@ -622,8 +622,9 @@
     {# Kicker: Topic · then Title on next line #}
     <div class="header-top">
       {% if page.topic %}
-      <span class="topic-tag" style="background-color: {{ page.topic.color|default:'#c0392b' }};">
-        {{ page.topic.name }}</span>
+      <a href="{% url 'topic_detail' slug=page.topic.slug %}" class="topic-tag"
+        style="background-color: {{ page.topic.color|default:'#c0392b' }};">
+        {{ page.topic.name }}</a>
       {% endif %}
       <h1>{{ page.title }}</h1>
     </div>
@@ -794,7 +795,8 @@
 
         <div class="related-card__body">
           {% if article.topic %}
-          <span class="related-card__tag" style="background-color: {{ article.topic.color|default:'#c0392b' }};">
+          <span class="related-card__tag" style="background-color: {{ article.topic.color|default:'#c0392b' }};"
+            onclick="window.location.href='{% url 'topic_detail' slug=article.topic.slug %}'; return false;">
             {{ article.topic.name }}</span>
           {% endif %}
           <p class="related-card__title">{{ article.title }}</p>
