@@ -24,7 +24,7 @@ class CreatePagePanel(Component):
         actions = [
             ('articles', 'article', '+ പുതിയ ലേഖനം', article_parent),
             ('literati', 'literati', '+ പുതിയ ലേഖകര്‍', literati_parent),
-            ('issue', 'issue', '+ പുതിയ പംക്തി', issue_parent),
+            ('issue', 'issue', '+ പുതിയ ലക്കം', issue_parent),
         ]
 
         buttons_html = ""
