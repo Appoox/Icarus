@@ -65,6 +65,46 @@ class ImageBlock(blocks.StructBlock):
         label = 'Image'
 
 
+# ── Reusable StreamField Blocks ─────────────────────────────────────────
+
+STREAM_BLOCKS = [
+    ('heading',    blocks.RichTextBlock(form_classname="full title")),
+    ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
+    ('paragraph',  blocks.RichTextBlock()),
+    ('image',      ImageBlock()),
+    ('blockquote', BlockQuoteBlock()),
+    ('embed',      EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
+    ('document',   DocumentChooserBlock()),
+    ('table',      TableBlock()),
+    ('raw_html',   blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
+    ('text',       blocks.TextBlock()),
+    ('email',      blocks.EmailBlock()),
+    ('url',        blocks.URLBlock()),
+    ('boolean',    blocks.BooleanBlock(required=False)),
+    ('integer',    blocks.IntegerBlock()),
+    ('float',      blocks.FloatBlock()),
+    ('decimal',    blocks.DecimalBlock()),
+    ('date',       blocks.DateBlock()),
+    ('time',       blocks.TimeBlock()),
+    ('datetime',   blocks.DateTimeBlock()),
+    ('rich_text',  blocks.RichTextBlock(label="Rich Text (Full)")),
+    ('choice',     blocks.ChoiceBlock(choices=[
+        ('left',   'Left'),
+        ('center', 'Centre'),
+        ('right',  'Right'),
+    ], help_text="Alignment choice")),
+    ('page',       blocks.PageChooserBlock()),
+    ('static',     blocks.StaticBlock(
+        admin_text="This is a placeholder block — content is defined in the template.",
+        label="Divider / Separator",
+    )),
+    ('list',       blocks.ListBlock(blocks.CharBlock(), label="List of items")),
+    ('stream',     blocks.StreamBlock([
+        ('text',  blocks.CharBlock()),
+        ('image', ImageChooserBlock()),
+    ], label="Nested Stream")),
+]
+
 class Article(Page):
 
     parent_page_types = ['ArticleIndexPage']
@@ -125,44 +165,18 @@ class Article(Page):
         help_text="Short description or credit shown beneath the cover photo. e.g. 'Photo: Jane Smith / Reuters'"
     )
 
-    # ── Body ───────────────────────────────────────────────────────────────
-    body = StreamField([
-        ('heading',    blocks.RichTextBlock(form_classname="full title")),
-        ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
-        ('paragraph',  blocks.RichTextBlock()),
-        ('image',      ImageBlock()),                                   # ← StructBlock with caption
-        ('blockquote', BlockQuoteBlock()),
-        ('embed',      EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
-        ('document',   DocumentChooserBlock()),
-        ('table',      TableBlock()),
-        ('raw_html',   blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
-        ('text',       blocks.TextBlock()),
-        ('email',      blocks.EmailBlock()),
-        ('url',        blocks.URLBlock()),
-        ('boolean',    blocks.BooleanBlock(required=False)),
-        ('integer',    blocks.IntegerBlock()),
-        ('float',      blocks.FloatBlock()),
-        ('decimal',    blocks.DecimalBlock()),
-        ('date',       blocks.DateBlock()),
-        ('time',       blocks.TimeBlock()),
-        ('datetime',   blocks.DateTimeBlock()),
-        ('rich_text',  blocks.RichTextBlock(label="Rich Text (Full)")),
-        ('choice',     blocks.ChoiceBlock(choices=[
-            ('left',   'Left'),
-            ('center', 'Centre'),
-            ('right',  'Right'),
-        ], help_text="Alignment choice")),
-        ('page',       blocks.PageChooserBlock()),
-        ('static',     blocks.StaticBlock(
-            admin_text="This is a placeholder block — content is defined in the template.",
-            label="Divider / Separator",
-        )),
-        ('list',       blocks.ListBlock(blocks.CharBlock(), label="List of items")),
-        ('stream',     blocks.StreamBlock([
-            ('text',  blocks.CharBlock()),
-            ('image', ImageChooserBlock()),
-        ], label="Nested Stream")),
-    ], use_json_field=True, null=True, blank=True)
+    # ── Body (Default) ─────────────────────────────────────────────────────
+    body = StreamField(STREAM_BLOCKS, use_json_field=True, null=True, blank=True)
+
+    # ── Translations (Optional) ────────────────────────────────────────────
+    title_en = models.CharField(max_length=255, blank=True, verbose_name="Title (English)")
+    body_en = StreamField(STREAM_BLOCKS, use_json_field=True, null=True, blank=True, verbose_name="Body (English)")
+
+    title_hi = models.CharField(max_length=255, blank=True, verbose_name="Title (Hindi)")
+    body_hi = StreamField(STREAM_BLOCKS, use_json_field=True, null=True, blank=True, verbose_name="Body (Hindi)")
+
+    title_ta = models.CharField(max_length=255, blank=True, verbose_name="Title (Tamil)")
+    body_ta = StreamField(STREAM_BLOCKS, use_json_field=True, null=True, blank=True, verbose_name="Body (Tamil)")
 
     # ── Admin panels ───────────────────────────────────────────────────────
     content_panels = Page.content_panels + [
@@ -177,6 +191,14 @@ class Article(Page):
         ], heading="Cover Image"),
         InlinePanel('article_authors', label="Authors"),
         FieldPanel('body'),
+        MultiFieldPanel([
+            FieldPanel('title_en'),
+            FieldPanel('body_en'),
+            FieldPanel('title_hi'),
+            FieldPanel('body_hi'),
+            FieldPanel('title_ta'),
+            FieldPanel('body_ta'),
+        ], heading="Translations (Optional)", classname="collapsible collapsed"),
     ]
 
     # ── Helpers ────────────────────────────────────────────────────────────

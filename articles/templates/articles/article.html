@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link
-  href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Sans+3:wght@300;400;600;700&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Sans+3:wght@300;400;600;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap"
   rel="stylesheet">
 
 <style>
@@ -608,6 +608,80 @@
     border-color: var(--black);
     transform: translateY(-1px);
   }
+
+  /* ─────────────────────────────────────────────
+   Language Switcher
+  ───────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────
+   Modern Language Slider
+  ───────────────────────────────────────────── */
+  .lang-switcher-container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .lang-slider {
+    position: relative;
+    display: inline-flex;
+    background: var(--gray-bg);
+    padding: 4px;
+    border-radius: 40px;
+    border: 1px solid var(--gray-light);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    user-select: none;
+  }
+
+  .lang-slider__item {
+    position: relative;
+    z-index: 2;
+    padding: 8px 20px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-mid);
+    cursor: pointer;
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 36px;
+    white-space: nowrap;
+  }
+
+  .lang-slider__item.active {
+    color: var(--white);
+  }
+
+  .lang-slider__indicator {
+    position: absolute;
+    z-index: 1;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    background: var(--red);
+    border-radius: 36px;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);
+  }
+
+  /* Language-specific typography */
+  [data-lang="hi"] { font-family: 'Noto Sans Devanagari', sans-serif; }
+  [data-lang="ta"] { font-family: 'Noto Sans Tamil', sans-serif; }
+
+  .lang-content {
+    display: none;
+    animation: fadeIn 0.4s ease forwards;
+  }
+
+  .lang-content.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 
 {% endblock %}
@@ -626,7 +700,25 @@
         style="background-color: {{ page.topic.color|default:'#c0392b' }};">
         {{ page.topic.name }}</a>
       {% endif %}
-      <h1>{{ page.title }}</h1>
+      
+      <div id="title-ml" class="lang-content active" data-lang="ml">
+        <h1>{{ page.title }}</h1>
+      </div>
+      {% if page.title_en %}
+      <div id="title-en" class="lang-content" data-lang="en">
+        <h1>{{ page.title_en }}</h1>
+      </div>
+      {% endif %}
+      {% if page.title_hi %}
+      <div id="title-hi" class="lang-content" data-lang="hi">
+        <h1>{{ page.title_hi }}</h1>
+      </div>
+      {% endif %}
+      {% if page.title_ta %}
+      <div id="title-ta" class="lang-content" data-lang="ta">
+        <h1>{{ page.title_ta }}</h1>
+      </div>
+      {% endif %}
     </div>
 
     <div class="meta">
@@ -650,6 +742,20 @@
         {% endif %}
       </div>
     </div>
+
+    
+    {# ── MODERN LANGUAGE SLIDER ────────────────── #}
+    {% if page.body_en or page.body_hi or page.body_ta %}
+    <div class="lang-switcher-container">
+      <nav class="lang-slider" aria-label="Language selection">
+        <div class="lang-slider__indicator"></div>
+        <div class="lang-slider__item active" data-lang-target="ml">മലയാളം</div>
+        {% if page.body_en %}<div class="lang-slider__item" data-lang-target="en">English</div>{% endif %}
+        {% if page.body_hi %}<div class="lang-slider__item" data-lang-target="hi">हिन्दी</div>{% endif %}
+        {% if page.body_ta %}<div class="lang-slider__item" data-lang-target="ta">தமிழ்</div>{% endif %}
+      </nav>
+    </div>
+    {% endif %}
 
   </header>
 
@@ -679,133 +785,222 @@
 
   {% endif %}
 
-  {# ── FULL-WIDTH ARTICLE BODY ─────────────────── #}
-  {% if show_paywall %}
-  {# ── PAYWALLED: truncated preview + overlay ── #}
-  <div class="paywall-wrapper">
-    <main class="article-body article-body--truncated">
-      {% for block in truncated_body %}
-      {% if block.block_type == 'heading' %}
-      <h2>{{ block.value }}</h2>
-      {% elif block.block_type == 'image' %}
-      {% with alignment=block.value.alignment %}
-      <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
-        {% if alignment == 'left' or alignment == 'right' %}
-        {% image block.value.image width-340 as img %}
+    {# ── FULL-WIDTH ARTICLE BODY ─────────────────── #}
+    {% if show_paywall %}
+    {# ── PAYWALLED: truncated preview + overlay ── #}
+    <div class="paywall-wrapper">
+      <main class="article-body article-body--truncated">
+        {% for block in truncated_body %}
+        {% if block.block_type == 'heading' %}
+        <h2>{{ block.value }}</h2>
+        {% elif block.block_type == 'image' %}
+        {% with alignment=block.value.alignment %}
+        <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
+          {% if alignment == 'left' or alignment == 'right' %}
+          {% image block.value.image width-340 as img %}
+          {% else %}
+          {% image block.value.image width-680 as img %}
+          {% endif %}
+          <img src="{{ img.url }}" alt="{{ img.alt }}">
+          {% if block.value.caption %}
+          <figcaption>{{ block.value.caption }}</figcaption>
+          {% endif %}
+        </figure>
+        {% endwith %}
         {% else %}
-        {% image block.value.image width-680 as img %}
+        {% include_block block %}
         {% endif %}
-        <img src="{{ img.url }}" alt="{{ img.alt }}">
-        {% if block.value.caption %}
-        <figcaption>{{ block.value.caption }}</figcaption>
-        {% endif %}
-      </figure>
-      {% endwith %}
-      {% else %}
-      {% include_block block %}
-      {% endif %}
-      {% endfor %}
-    </main>
+        {% endfor %}
+      </main>
 
-    {# Gradient fade overlay #}
-    <div class="paywall-fade"></div>
+      {# Gradient fade overlay #}
+      <div class="paywall-fade"></div>
 
-    {# Subscribe CTA card #}
-    <div class="paywall-cta">
-      <div class="paywall-cta__card">
-        <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
-        <p class="paywall-cta__text">
-          {% if request.user.is_authenticated %}
-          You've reached your free article limit. Subscribe to unlock full access to all articles.
-          {% else %}
-          Sign in or subscribe to read the full article and get unlimited access.
-          {% endif %}
-        </p>
-        <div class="paywall-cta__actions">
-          {% if request.user.is_authenticated %}
-          <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">Subscribe Now</a>
-          {% else %}
-          <a href="{% url 'reader_login' %}" class="paywall-btn paywall-btn--secondary">Sign In</a>
-          <a href="{% url 'reader_signup' %}" class="paywall-btn paywall-btn--primary">Subscribe</a>
-          {% endif %}
+      {# Subscribe CTA card #}
+      <div class="paywall-cta">
+        <div class="paywall-cta__card">
+          <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
+          <p class="paywall-cta__text">
+            {% if request.user.is_authenticated %}
+            You've reached your free article limit. Subscribe to unlock full access to all articles.
+            {% else %}
+            Sign in or subscribe to read the full article and get unlimited access.
+            {% endif %}
+          </p>
+          <div class="paywall-cta__actions">
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">Subscribe Now</a>
+            {% else %}
+            <a href="{% url 'reader_login' %}" class="paywall-btn paywall-btn--secondary">Sign In</a>
+            <a href="{% url 'reader_signup' %}" class="paywall-btn paywall-btn--primary">Subscribe</a>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  {% else %}
-  {# ── FULL ACCESS ── #}
-  <main class="article-body">
-    {% for block in page.body %}
-    {% if block.block_type == 'heading' %}
-    <h2>{{ block.value }}</h2>
-    {% elif block.block_type == 'image' %}
-    {% with alignment=block.value.alignment %}
-    <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
-      {% if alignment == 'left' or alignment == 'right' %}
-      {% image block.value.image width-340 as img %}
-      {% else %}
-      {% image block.value.image width-680 as img %}
-      {% endif %}
-      <img src="{{ img.url }}" alt="{{ img.alt }}">
-      {% if block.value.caption %}
-      <figcaption>{{ block.value.caption }}</figcaption>
-      {% endif %}
-    </figure>
-    {% endwith %}
     {% else %}
-    {% include_block block %}
-    {% endif %}
-    {% endfor %}
-
-    {# ── Author Bio ── #}
-    {% for author_rel in page.article_authors.all %}
-    {% with author=author_rel.author %}
-    <div class="author-bio">
-      <h4>About the Author</h4>
-      <div class="bio-row">
-        {% if author.profile_image %}
-        {% image author.profile_image fill-112x112 as bio_avatar %}
-        <img src="{{ bio_avatar.url }}" alt="{{ author.title }}">
-        {% endif %}
-        <p>
-          <strong><a href="{{ author.url }}">{{ author.title }}</a></strong>
-          {{ author.biography }}
-        </p>
-      </div>
-    </div>
-    {% endwith %}
-    {% endfor %}
-  </main>
-  {% endif %}
-
-  {# ── RELATED ARTICLES — siblings from the same topic ── #}
-  <section class="related-articles">
-    <h3 class="related-heading">Read This Next</h3>
-    <div class="related-grid">
-      {% for article in related_articles %}
-      <a class="related-card" href="{{ article.url }}">
-        {% if article.cover_image %}
-        {# Using specific fill for related cards #}
-        {% image article.cover_image fill-600x400 as thumb %}
-        <div class="related-card__img">
-          <img src="{{ thumb.url }}" alt="{{ thumb.alt }}">
-        </div>
-        {% endif %}
-
-        <div class="related-card__body">
-          {% if article.topic %}
-          <span class="related-card__tag" style="background-color: {{ article.topic.color|default:'#c0392b' }};"
-            onclick="window.location.href='{% url 'topic_detail' slug=article.topic.slug %}'; return false;">
-            {{ article.topic.name }}</span>
+    {# ── FULL ACCESS ── #}
+    <div id="body-ml" class="lang-content active" data-lang="ml">
+      <main class="article-body">
+        {% for block in page.body %}
+        {% if block.block_type == 'heading' %}
+        <h2>{{ block.value }}</h2>
+        {% elif block.block_type == 'image' %}
+        {% with alignment=block.value.alignment %}
+        <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
+          {% if alignment == 'left' or alignment == 'right' %}
+          {% image block.value.image width-340 as img %}
+          {% else %}
+          {% image block.value.image width-680 as img %}
           {% endif %}
-          <p class="related-card__title">{{ article.title }}</p>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-  </section>
+          <img src="{{ img.url }}" alt="{{ img.alt }}">
+          {% if block.value.caption %}
+          <figcaption>{{ block.value.caption }}</figcaption>
+          {% endif %}
+        </figure>
+        {% endwith %}
+        {% else %}
+        {% include_block block %}
+        {% endif %}
+        {% endfor %}
 
-</div>{# /.article-container #}
+        {# ── Author Bio ── #}
+        {% for author_rel in page.article_authors.all %}
+        {% with author=author_rel.author %}
+        <div class="author-bio">
+          <h4>About the Author</h4>
+          <div class="bio-row">
+            {% if author.profile_image %}
+            {% image author.profile_image fill-112x112 as bio_avatar %}
+            <img src="{{ bio_avatar.url }}" alt="{{ author.title }}">
+            {% endif %}
+            <p>
+              <strong><a href="{{ author.url }}">{{ author.title }}</a></strong>
+              {{ author.biography }}
+            </p>
+          </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </main>
+    </div>
+
+    {% if page.body_en %}
+    <div id="body-en" class="lang-content" data-lang="en">
+      <main class="article-body">
+        {% for block in page.body_en %}
+        {% include_block block %}
+        {% endfor %}
+      </main>
+    </div>
+    {% endif %}
+
+    {% if page.body_hi %}
+    <div id="body-hi" class="lang-content" data-lang="hi">
+      <main class="article-body">
+        {% for block in page.body_hi %}
+        {% include_block block %}
+        {% endfor %}
+      </main>
+    </div>
+    {% endif %}
+
+    {% if page.body_ta %}
+    <div id="body-ta" class="lang-content" data-lang="ta">
+      <main class="article-body">
+        {% for block in page.body_ta %}
+        {% include_block block %}
+        {% endfor %}
+      </main>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+    {# ── RELATED ARTICLES — siblings from the same topic ── #}
+    <section class="related-articles">
+      <h3 class="related-heading">Read This Next</h3>
+      <div class="related-grid">
+        {% for article in related_articles %}
+        <a class="related-card" href="{{ article.url }}">
+          {% if article.cover_image %}
+          {# Using specific fill for related cards #}
+          {% image article.cover_image fill-600x400 as thumb %}
+          <div class="related-card__img">
+            <img src="{{ thumb.url }}" alt="{{ thumb.alt }}">
+          </div>
+          {% endif %}
+
+          <div class="related-card__body">
+            {% if article.topic %}
+            <span class="related-card__tag" style="background-color: {{ article.topic.color|default:'#c0392b' }};"
+              onclick="window.location.href='{% url 'topic_detail' slug=article.topic.slug %}'; return false;">
+              {{ article.topic.name }}</span>
+            {% endif %}
+            <p class="related-card__title">{{ article.title }}</p>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+  </div>{# /.article-container #}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const slider = document.querySelector('.lang-slider');
+      if (!slider) return;
+
+      const items = slider.querySelectorAll('.lang-slider__item');
+      const indicator = slider.querySelector('.lang-slider__indicator');
+      const langContents = document.querySelectorAll('.lang-content');
+
+      function updateSlider(activeItem) {
+        // Position and width the indicator
+        indicator.style.width = activeItem.offsetWidth + 'px';
+        indicator.style.left = activeItem.offsetLeft + 'px';
+
+        // Update item classes
+        items.forEach(item => item.classList.remove('active'));
+        activeItem.classList.add('active');
+
+        // Update content visibility
+        const target = activeItem.getAttribute('data-lang-target');
+        langContents.forEach(content => {
+          if (content.getAttribute('data-lang') === target) {
+            content.classList.add('active');
+          } else {
+            content.classList.remove('active');
+          }
+        });
+      }
+
+      // Initial positioning
+      const initialActive = slider.querySelector('.lang-slider__item.active');
+      if (initialActive) {
+        // Small delay to ensure clientWidth/offsetLeft are ready if fonts are loading
+        setTimeout(() => updateSlider(initialActive), 50);
+      }
+
+      items.forEach(item => {
+        item.addEventListener('click', function() {
+          updateSlider(this);
+          
+          // Optional: Scroll to top of article if user switched deep in the page
+          const header = document.querySelector('.article-header');
+          if (window.scrollY > header.offsetTop + 100) {
+            header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+
+      // Handle window resize to keep indicator position correct
+      window.addEventListener('resize', () => {
+        const currentActive = slider.querySelector('.lang-slider__item.active');
+        if (currentActive) updateSlider(currentActive);
+      });
+    });
+  </script>
 
 {% endblock %}
