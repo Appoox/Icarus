@@ -22,19 +22,23 @@ class CreatePagePanel(Component):
  
         
         actions = [
-            ('articles', 'article', '+ പുതിയ ലേഖനം', article_parent),
-            ('literati', 'literati', '+ പുതിയ ലേഖകര്‍', literati_parent),
-            ('issue', 'issue', '+ പുതിയ ലക്കം', issue_parent),
+            ('articles', 'article', '+ പുതിയ ലേഖനം', article_parent, 'page'),
+            ('literati', 'literati', '+ പുതിയ ലേഖകര്‍', literati_parent, 'page'),
+            ('issue', 'issue', '+ പുതിയ ലക്കം', issue_parent, 'page'),
+            ('issue', 'volume', '+ പുതിയ വാല്യം', None, 'snippet'),
+            ('issue', 'topic', '+ പുതിയ വിഷയം', None, 'snippet'),
         ]
 
         buttons_html = ""
-        for app, model, label, parent in actions:
-            if parent:
+        for app, model, label, parent, type_ in actions:
+            if type_ == 'page' and parent:
                 url = reverse('wagtailadmin_pages:add', args=(app, model, parent.pk))
-                # The 'custom-center' class handles the internal button alignment
-                buttons_html += f'<a href="{url}" class="button button-primary bicolor icon icon-plus custom-center">{label}</a>'
+            elif type_ == 'snippet':
+                url = reverse(f'wagtailsnippets_{app}_{model}:add')
             else:
                 continue
+            # The 'custom-center' class handles the internal button alignment
+            buttons_html += f'<a href="{url}" class="button button-primary bicolor icon icon-plus custom-center">{label}</a>'
         return format_html(
             """
             <style>
