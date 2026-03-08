@@ -1,8 +1,10 @@
 from django.db import models
+from django import forms
 from modelcluster.fields import ParentalKey
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel
+from wagtail.admin.forms import WagtailAdminPageForm
 from wagtail.snippets.models import register_snippet
 from wagtail import blocks
 from wagtail.images.blocks import ImageChooserBlock
@@ -77,7 +79,21 @@ class Volume(models.Model):
         verbose_name_plural = "Volumes"
 
 
+class IssueForm(WagtailAdminPageForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            latest_volume = Volume.objects.order_by('-number').first()
+            if latest_volume:
+                self.fields['volume'].queryset = Volume.objects.filter(pk=latest_volume.pk)
+                self.fields['volume'].initial = latest_volume.pk
+                self.initial['volume'] = latest_volume.pk
+                self.fields['volume'].widget = forms.Select(choices=self.fields['volume'].choices)
+                self.fields['volume'].required = False
+
+
 class Issue(Page):
+    base_form_class = IssueForm
     volume = models.ForeignKey(
         'Volume',
         null=True,

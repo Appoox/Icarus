@@ -1,8 +1,10 @@
 from django.db import models
+from django import forms
 from modelcluster.fields import ParentalKey
 from wagtail.models import Page
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
+from wagtail.admin.forms import WagtailAdminPageForm
 from .wagtail_hooks import CoverImagePreviewPanel
 from wagtail import blocks
 from wagtail.images.blocks import ImageChooserBlock
@@ -105,7 +107,24 @@ STREAM_BLOCKS = [
     ], label="Nested Stream")),
 ]
 
+class ArticleForm(WagtailAdminPageForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            # We use apps.get_model to avoid circular imports
+            from django.apps import apps
+            Issue = apps.get_model('issue', 'Issue')
+            latest_issue = Issue.objects.live().order_by('-date_of_publishing').first()
+            if latest_issue:
+                self.fields['main_issue'].queryset = Issue.objects.filter(pk=latest_issue.pk)
+                self.fields['main_issue'].initial = latest_issue.pk
+                self.initial['main_issue'] = latest_issue.pk
+                self.fields['main_issue'].widget = forms.Select(choices=self.fields['main_issue'].choices)
+                self.fields['main_issue'].required = False
+
+
 class Article(Page):
+    base_form_class = ArticleForm
 
     parent_page_types = ['ArticleIndexPage']
 
