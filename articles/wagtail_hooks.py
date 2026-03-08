@@ -32,6 +32,37 @@ def register_text_color_features(features):
         })
         features.default_features.append(feature_name)
 
+@hooks.register('register_rich_text_features')
+def register_alignment_features(features):
+    alignments = [
+        ('left', 'Left', 'left'),
+        ('center', 'Center', 'center'),
+        ('right', 'Right', 'right'),
+        ('justify', 'Justify', 'justify'),
+    ]
+
+    for name, label, value in alignments:
+        feature_name = f'align-{name}'
+        type_ = f'ALIGN_{name.upper()}'
+        
+        # Mapping to CSS text-align property
+        control = {
+            'type': type_,
+            'label': label,
+            'description': f'Align {label}',
+            # Using an icon name if available, or just the label
+            'icon': f'align-{name}',
+        }
+
+        features.register_editor_plugin('draftail', feature_name, draftail_features.InlineStyleFeature(control))
+        features.register_converter_rule('contentstate', feature_name, {
+            'from_database_format': {f'div[style="text-align: {value};"]': InlineStyleElementHandler(type_)},
+            'to_database_format': {'style_map': {type_: {'element': 'div', 'props': {'style': f'text-align: {value};'}}}},
+        })
+        # Note: We don't append to default_features automatically to avoid cluttering all editors.
+        # But for this project, the user likely wants them everywhere.
+        features.default_features.append(feature_name)
+
 class CoverImagePreviewPanel(Panel):
     """
     A read-only panel that shows a live cropped preview of the cover image.

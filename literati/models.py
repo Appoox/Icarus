@@ -1,15 +1,34 @@
 from django.db import models
-from modelcluster.fields import ParentalKey
+from modelcluster.fields import ParentalKey, ParentalManyToManyField
 from wagtail.models import Page, Orderable
-from wagtail.fields import RichTextField
-from wagtail.admin.panels import FieldPanel
+from wagtail.fields import RichTextField, StreamField
+from wagtail import blocks
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel
+from phonenumber_field.modelfields import PhoneNumberField
+
+class SocialMediaBlock(blocks.StructBlock):
+    platform = blocks.ChoiceBlock(choices=[
+        ('facebook', 'Facebook'),
+        ('twitter', 'Twitter'),
+        ('linkedin', 'LinkedIn'),
+        ('instagram', 'Instagram'),
+        ('github', 'GitHub'),
+        ('website', 'Website'),
+    ])
+    url = blocks.URLBlock()
+
+    class Meta:
+        icon = 'link'
+        label = 'Social Media Link'
+
+from django import forms
 
 class Literati(Page):
 
     parent_page_types = ['AuthorIndexPage']
 
     role = models.CharField("Title / Role of the person", blank=True)
-    bio = models.TextField("Bio", blank=True)
+    bio = RichTextField("Bio", blank=True)
     profile_image = models.ForeignKey(
         'wagtailimages.Image',
         null=True,
@@ -17,6 +36,13 @@ class Literati(Page):
         on_delete=models.SET_NULL,
         related_name='+',
     )
+    
+    email = models.EmailField("Email", blank=True)
+    phone_number = PhoneNumberField("Phone Number", blank=True)
+    areas_of_interest = ParentalManyToManyField('issue.Topic', blank=True)
+    social_media_links = StreamField([
+        ('social_link', SocialMediaBlock()),
+    ], blank=True, use_json_field=True)
 
     def get_articles(self):
         return [rel.page for rel in self.literati_articles.select_related('page').filter(page__live=True)]
@@ -26,6 +52,12 @@ class Literati(Page):
         FieldPanel('role'),
         FieldPanel('profile_image'),
         FieldPanel('bio'),
+        MultiFieldPanel([
+            FieldPanel('email'),
+            FieldPanel('phone_number'),
+        ], heading="Contact Information"),
+        FieldPanel('areas_of_interest', widget=forms.CheckboxSelectMultiple),
+        FieldPanel('social_media_links'),
     ]
 
 class AuthorIndexPage(Page):

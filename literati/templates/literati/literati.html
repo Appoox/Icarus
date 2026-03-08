@@ -19,11 +19,52 @@
                 <span class="role-label">{{ page.role }}</span>
                 <h1>{{ page.title }}</h1>
                 <div class="author-bio">
-                    {{ page.bio|linebreaks }}
+                    {{ page.bio|richtext }}
+                </div>
+
+                <div class="author-contact-social">
+                    {% if page.email or page.phone_number %}
+                    <div class="contact-info">
+                        {% if page.email %}
+                        <a href="mailto:{{ page.email }}" class="contact-link"><i class="fas fa-envelope"></i> {{ page.email }}</a>
+                        {% endif %}
+                        {% if page.phone_number %}
+                        <span class="contact-item"><i class="fas fa-phone"></i> {{ page.phone_number }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if page.social_media_links %}
+                    <div class="social-links">
+                        {% for block in page.social_media_links %}
+                        <a href="{{ block.value.url }}" target="_blank" class="social-icon" title="{{ block.value.platform|title }}">
+                            {% if block.value.platform == 'facebook' %}<i class="fab fa-facebook-f"></i>
+                            {% elif block.value.platform == 'twitter' %}<i class="fab fa-x-twitter"></i>
+                            {% elif block.value.platform == 'linkedin' %}<i class="fab fa-linkedin-in"></i>
+                            {% elif block.value.platform == 'instagram' %}<i class="fab fa-instagram"></i>
+                            {% elif block.value.platform == 'github' %}<i class="fab fa-github"></i>
+                            {% else %}<i class="fas fa-globe"></i>{% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </header>
+
+    {% if page.areas_of_interest.all %}
+    <section class="author-interests">
+        <h2 class="section-title">Areas of Interest</h2>
+        <div class="interest-tags">
+            {% for topic in page.areas_of_interest.all %}
+            <a href="{% url 'topic_detail' topic.slug %}" class="topic-tag" style="background-color: {{ topic.color }}22; color: {{ topic.color }}; border: 1px solid {{ topic.color }};">
+                {{ topic.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 
     <hr class="section-divider">
 
