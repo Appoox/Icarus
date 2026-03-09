@@ -142,7 +142,7 @@ class RecentActivityPanel(Component):
                     </div>
                     <div>
                         <div style="font-weight: 600;">{user} {action_label.lower()} "{obj_name}"</div>
-                        <div style="font-size: 0.85rem; color: var(--w-color-grey-500);">{obj_type}</div>
+                        <div style="font-size: 0.85rem; color: var(--w-color-white-500);">{obj_type}</div>
                     </div>
                 </li>
             """

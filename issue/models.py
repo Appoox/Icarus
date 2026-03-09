@@ -7,6 +7,7 @@ from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.admin.forms import WagtailAdminPageForm
 from wagtail.snippets.models import register_snippet
 from wagtail import blocks
+from wagtail.search import index
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.documents.blocks import DocumentChooserBlock
@@ -55,13 +56,17 @@ class ImageBlock(blocks.StructBlock):
 
 
 @register_snippet
-class Volume(models.Model):
+class Volume(index.Indexed, models.Model):
     number = models.PositiveIntegerField(unique=True, help_text="Volume number (e.g. 1, 2, 3…)")
     year_start = models.PositiveIntegerField(help_text="Starting year of the volume (e.g. 2024)")
     year_end = models.PositiveIntegerField(
         null=True, blank=True,
         help_text="Ending year if the volume spans multiple years. Leave blank for a single-year volume."
     )
+
+    search_fields = [
+        index.SearchField('number'),
+    ]
 
     panels = [
         FieldPanel('number'),
@@ -216,7 +221,7 @@ class IssueEditorialBoardRelationship(Orderable):
     ]
 
 @register_snippet
-class Topic(models.Model):
+class Topic(index.Indexed, models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     color = models.CharField(
@@ -224,6 +229,11 @@ class Topic(models.Model):
         default="#000000",
         help_text="Choose a color for this topic (hex format, e.g., #FF0000)"
     )
+
+    search_fields = [
+        index.SearchField('name'),
+        index.SearchField('slug'),
+    ]
 
     panels = [
         FieldPanel('name'),
