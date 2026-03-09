@@ -5,10 +5,11 @@ from datetime import timedelta
 
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, FieldRowPanel
 from wagtail.snippets.models import register_snippet
+from wagtail.search import index
 
 
 @register_snippet
-class Reader(models.Model):
+class Reader(index.Indexed, models.Model):
     """
     Reader profile linked to a Django User. Tracks subscription status,
     payment details, reading history, and topic interests.
@@ -22,6 +23,11 @@ class Reader(models.Model):
         on_delete=models.CASCADE,
         related_name='reader',
     )
+
+    search_fields = [
+        index.SearchField('name'),
+        index.SearchField('email'),
+    ]
 
     # ── Subscription ──────────────────────────────────────────────────
     SUBSCRIPTION_PLANS = [
