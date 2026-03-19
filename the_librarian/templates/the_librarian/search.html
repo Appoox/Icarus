@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive Search — The Librarian</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        /* Search form */
+        .search-form {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+        .search-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .search-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Results */
+        .results-count {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .result-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s;
+        }
+        .result-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .result-doc {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .result-page {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .result-score {
+            font-size: 0.85rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+        .result-text {
+            color: var(--text);
+            font-size: 0.95rem;
+            margin: 0.75rem 0;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .result-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .result-link:hover {
+            text-decoration: underline;
+        }
+        .no-results {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem;
+        }
+
+        /* Top-K selector */
+        .topk-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .topk-select {
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Archive Search</h1>
+        <p class="subtitle">Search through ingested archive documents using semantic similarity</p>
+
+        <form method="get" class="search-form">
+            <input type="text"
+                   name="q"
+                   class="search-input"
+                   placeholder="Search the archive…"
+                   value="{{ query }}"
+                   autofocus>
+            <div class="topk-wrapper">
+                <select name="top_k" class="topk-select" title="Number of results">
+                    <option value="3" {% if top_k == 3 %}selected{% endif %}>3</option>
+                    <option value="5" {% if top_k == 5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if top_k == 10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if top_k == 20 %}selected{% endif %}>20</option>
+                </select>
+            </div>
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+
+        {% if query %}
+            {% if results %}
+                <p class="results-count">{{ results|length }} result{{ results|length|pluralize }} for "{{ query }}"</p>
+
+                {% for result in results %}
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-doc">{{ result.document_name }}</span>
+                        <span class="result-page">Page {{ result.page_number }}</span>
+                    </div>
+                    <div class="result-score">Similarity: {{ result.score }}</div>
+                    <p class="result-text">{{ result.chunk_text }}</p>
+                    <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number }}"
+                       class="result-link"
+                       target="_blank">
+                        📖 Open PDF at page {{ result.page_number }} →
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-results">
+                    <p>No results found for "{{ query }}"</p>
+                    <p>Try different search terms or ingest more documents.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>

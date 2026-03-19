@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "issue",
     "reader",
     "hitcount",
+    "the_librarian",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.table_block",
@@ -204,3 +205,10 @@ WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'tx
 FREE_ARTICLE_LIMIT = 3  # Number of free articles for non-subscribed readers
 LOGIN_REDIRECT_URL = '/reader/profile/'
 LOGIN_URL = '/reader/login/'
+
+# ── The Librarian ─────────────────────────────────────────────────────
+ARCHIVE_DIR = BASE_DIR / "archive"
+LIBRARIAN_EMBEDDER_TYPE = env.str("EMBEDDER_TYPE", "HuggingFace")
+LIBRARIAN_EMBEDDING_MODEL = env.str("EMBEDDING_MODEL_NAME", "all-mpnet-base-v2")
+LIBRARIAN_COLLECTION_NAME = env.str("COLLECTION_NAME", "sg-archive")
+LIBRARIAN_EMBEDDING_DIM = env.int("EMBEDDING_DIM", 768)

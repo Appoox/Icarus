@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.filename }} — Page {{ page }} — The Librarian</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1e293b;
+            color: #f8fafc;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top bar */
+        .viewer-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            background: #0f172a;
+            border-bottom: 1px solid #334155;
+            flex-shrink: 0;
+        }
+        .viewer-bar h2 {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+        .viewer-bar .meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .viewer-bar a {
+            color: #818cf8;
+            text-decoration: none;
+        }
+        .viewer-bar a:hover {
+            text-decoration: underline;
+        }
+
+        /* PDF iframe */
+        .viewer-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-bar">
+        <h2>📄 {{ document.filename }}</h2>
+        <div class="meta">
+            <span>Page {{ page }} of {{ document.total_pages }}</span>
+            <a href="{% url 'the_librarian:search' %}">← Back to search</a>
+        </div>
+    </div>
+
+    <!--
+        ViewerJS viewer: loads the PDF via the ViewerJS index.html.
+        The #page=N fragment tells the viewer to open at the specified page.
+    -->
+    <iframe
+        class="viewer-frame"
+        src="{% static 'the_librarian/ViewerJS/index.html' %}#{{ pdf_url }}#page={{ page }}"
+        allowfullscreen>
+    </iframe>
+</body>
+</html>
