@@ -1,0 +1,7 @@
+LOAD DATABASE
+    FROM sqlite:///home/appu/Techgentia_Internship/Icarus/db.sqlite3
+    INTO postgresql://appu:Valavalappan2004@localhost/icarus
+
+WITH include drop, create tables, create indexes, reset sequences
+
+SET work_mem to '16MB', maintenance_work_mem to '1GB';
