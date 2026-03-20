@@ -6,9 +6,23 @@ Pipeline: PDF → images (pdf2image) → YOLO segmentation → Surya OCR
 
 Each chunk retains its source page number so that ViewerJS can open
 the PDF to the exact page.
+
+Improvements applied
+--------------------
+#4  Per-page OCR results are written to a file cache keyed by
+    (filename, mtime).  A crashed or interrupted ingest resumes from the
+    last completed page instead of re-OCR-ing the whole document.
+
+#5  image_height is forwarded to custom_sort so its row-grouping tolerance
+    scales with the scan resolution rather than using a fixed 5 px constant.
+
+#8  The stop-signal mechanism now combines a threading.Event (for fast
+    in-process signalling, checked between every page) with the original
+    file-based flag (retained for cross-process / management-command use).
 """
 import os
 import logging
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -22,59 +36,107 @@ from the_librarian.models import ArchiveDocument, DocumentChunk
 from the_librarian.services.embedder import embed_texts
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# #8: Stop signal — threading.Event + file hybrid
+# ---------------------------------------------------------------------------
+# The Event gives immediate, zero-latency stop within the same process.
+# The file is retained so that a separate web-request process (or a shell
+# command) can also signal a stop, which the ingestion process will detect
+# at its next page boundary.
+
+_STOP_EVENT = threading.Event()
 STOP_SIGNAL_FILE = getattr(settings, "BASE_DIR") / ".stop_ingest"
 
-def is_stop_requested():
-    """Check if the user has requested to stop ingestion."""
-    return STOP_SIGNAL_FILE.exists()
 
-def clear_stop_signal():
-    """Clear the stop signal."""
+def is_stop_requested() -> bool:
+    """Return True if either the in-process event or the file flag is set."""
+    return _STOP_EVENT.is_set() or STOP_SIGNAL_FILE.exists()
+
+
+def clear_stop_signal() -> None:
+    """Clear both the in-process event and the on-disk flag."""
+    _STOP_EVENT.clear()
     if STOP_SIGNAL_FILE.exists():
         STOP_SIGNAL_FILE.unlink()
 
-def request_stop():
-    """Request the ingestion to stop."""
-    STOP_SIGNAL_FILE.touch()
+
+def request_stop() -> None:
+    """Request ingestion to stop as soon as the current page finishes."""
+    _STOP_EVENT.set()
+    STOP_SIGNAL_FILE.touch()  # also write the file for cross-process visibility
 
 
-# ── OCR helpers ───────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# #4: Per-page OCR cache
+# ---------------------------------------------------------------------------
 
-def _ocr_page(pil_image):
+def _ocr_cache_dir(file_path: Path) -> Path:
+    """
+    Return the cache directory for a specific version of a PDF file.
+
+    The directory name encodes the filename stem and the file's mtime so that
+    any edit to the PDF (which changes mtime) automatically invalidates the
+    old cache without manual intervention.
+    """
+    cache_root = Path(settings.BASE_DIR) / ".ocr_cache"
+    mtime = int(file_path.stat().st_mtime)
+    safe_stem = file_path.stem.replace(" ", "_")[:60]
+    return cache_root / f"{safe_stem}_{mtime}"
+
+
+def _load_cached_page(cache_dir: Path, page_num: int):
+    """Return cached OCR text for *page_num*, or None if not yet cached."""
+    page_file = cache_dir / f"page_{page_num}.txt"
+    if page_file.exists():
+        return page_file.read_text(encoding="utf-8")
+    return None
+
+
+def _save_cached_page(cache_dir: Path, page_num: int, text: str) -> None:
+    """Persist the OCR result for *page_num* to the cache directory."""
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    (cache_dir / f"page_{page_num}.txt").write_text(text, encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# OCR helpers
+# ---------------------------------------------------------------------------
+
+def _ocr_page(pil_image: Image.Image) -> str:
     """
     Run the full OCR pipeline on a single page image:
     skew correction → YOLO segmentation → Surya OCR per region.
 
     Returns the concatenated text for the entire page.
+
+    #5: corrected image height is passed to custom_sort so that the
+    row-grouping tolerance scales with the scan resolution.
     """
     from the_librarian.services.ocr_processing import (
         get_skew_corrected_image,
         process_image_for_ocr,
     )
-    from the_librarian.services.yolo_segmentation import (
-        get_masks,
-        custom_sort,
-        general_model,
-        image_model,
-        configs,
-    )
+    from the_librarian.services.yolo_segmentation import get_masks, custom_sort
 
     # Skew correction
     img_np = np.array(pil_image)
     corrected_np = get_skew_corrected_image(img_np)
     corrected_pil = Image.fromarray(corrected_np.astype("uint8"))
 
-    # YOLO segmentation to find text regions
-    yolo_result = get_masks(corrected_pil, general_model, image_model, configs)
+    # YOLO segmentation — models are loaded lazily inside get_masks()
+    yolo_result = get_masks(corrected_pil)
 
     if yolo_result["status"] != 1:
-        # Fallback: run OCR on the full page without segmentation
         logger.warning("YOLO segmentation failed, running OCR on full page")
         return process_image_for_ocr(corrected_pil) or ""
 
-    sorted_boxes = custom_sort(yolo_result["boxes1"])
+    # #5: forward image height so tolerance scales with resolution
+    sorted_boxes = custom_sort(
+        yolo_result["boxes1"],
+        image_height=corrected_pil.height,
+    )
 
-    # OCR each detected region and concatenate
     page_text = ""
     for bbox in sorted_boxes:
         cropped_np = corrected_np[bbox[1]:bbox[3], bbox[0]:bbox[2]]
@@ -87,7 +149,9 @@ def _ocr_page(pil_image):
     return page_text.strip()
 
 
-# ── Semantic chunking ─────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Semantic chunking
+# ---------------------------------------------------------------------------
 
 def _chunk_pages(page_texts):
     """
@@ -98,10 +162,21 @@ def _chunk_pages(page_texts):
 
     Returns:
         list of dicts: {chunk_text, page_number, chunk_index}
+
+    Note on embedding cost (#3): SemanticChunker calls the embedder
+    internally on individual sentences to find split points, then
+    embed_texts() is called again on the resulting chunks.  Because chunks
+    are merged sentences (not individual sentences), the two embedding sets
+    rarely overlap.  The CachingEmbeddings wrapper in embedder.py ensures
+    that any verbatim overlap *is* served from cache, and also provides
+    batching (#10) for the final embed_texts() call.
     """
     from langchain_experimental.text_splitter import SemanticChunker
+    from langchain_core.documents import Document
     from the_librarian.services.embedder import get_embedder
 
+    # get_embedder() returns a CachingEmbeddings instance, so SemanticChunker
+    # benefits from caching and batching automatically.
     chunker = SemanticChunker(get_embedder())
 
     all_chunks = []
@@ -111,8 +186,6 @@ def _chunk_pages(page_texts):
         if not text or not text.strip():
             continue
 
-        # Create a LangChain-style document for the chunker
-        from langchain_core.documents import Document
         doc = Document(
             page_content=text,
             metadata={"page_number": page_number},
@@ -121,22 +194,25 @@ def _chunk_pages(page_texts):
         try:
             chunks = chunker.split_documents([doc])
         except Exception as e:
-            # If semantic chunking fails (e.g. too short), keep the whole page
             logger.warning(f"Semantic chunking failed for page {page_number}: {e}")
             chunks = [doc]
 
         for chunk in chunks:
-            all_chunks.append({
-                "chunk_text": chunk.page_content,
-                "page_number": page_number,
-                "chunk_index": global_index,
-            })
+            all_chunks.append(
+                {
+                    "chunk_text": chunk.page_content,
+                    "page_number": page_number,
+                    "chunk_index": global_index,
+                }
+            )
             global_index += 1
 
     return all_chunks
 
 
-# ── Main ingestion ────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Main ingestion
+# ---------------------------------------------------------------------------
 
 def ingest_single_pdf(file_path, force=False):
     """
@@ -153,7 +229,6 @@ def ingest_single_pdf(file_path, force=False):
     file_path = Path(file_path)
     filename = file_path.name
 
-    # Check if already ingested
     if not force and ArchiveDocument.objects.filter(filename=filename).exists():
         return {
             "filename": filename,
@@ -170,11 +245,36 @@ def ingest_single_pdf(file_path, force=False):
         total_pages = len(images)
         logger.info(f"  {total_pages} pages found")
 
-        # 2. OCR each page
+        # #4: resolve the per-document cache directory once
+        cache_dir = _ocr_cache_dir(file_path)
+
+        # 2. OCR each page (with per-page cache)
         page_texts = []
         for page_num, pil_image in enumerate(images, start=1):
+            # #8: check stop signal between every page, not just between files
+            if is_stop_requested():
+                logger.info(
+                    f"Ingestion of {filename} stopped at page {page_num}/{total_pages}."
+                )
+                return {
+                    "filename": filename,
+                    "status": "error",
+                    "chunks_created": 0,
+                    "message": f"Stopped by user at page {page_num}/{total_pages}",
+                }
+
+            # #4: serve from cache if this page was already processed
+            cached = _load_cached_page(cache_dir, page_num)
+            if cached is not None:
+                logger.info(f"  Page {page_num}/{total_pages} (from cache)")
+                page_texts.append((page_num, cached))
+                continue
+
             logger.info(f"  OCR page {page_num}/{total_pages}")
             text = _ocr_page(pil_image)
+
+            # #4: persist result so a restart can resume from here
+            _save_cached_page(cache_dir, page_num, text)
             page_texts.append((page_num, text))
 
         # 3. Semantic chunking (preserves page numbers)
@@ -188,7 +288,7 @@ def ingest_single_pdf(file_path, force=False):
                 "message": "No text extracted from PDF",
             }
 
-        # 4. Embed all chunk texts in one batch
+        # 4. Embed all chunk texts — batching handled inside CachingEmbeddings
         chunk_texts = [c["chunk_text"] for c in chunks]
         embeddings = embed_texts(chunk_texts)
 
@@ -196,7 +296,6 @@ def ingest_single_pdf(file_path, force=False):
         relative_path = str(file_path.relative_to(settings.ARCHIVE_DIR))
 
         with transaction.atomic():
-            # Remove old data if force re-ingesting
             if force:
                 old_doc = ArchiveDocument.objects.filter(filename=filename).first()
                 if old_doc:
@@ -208,17 +307,16 @@ def ingest_single_pdf(file_path, force=False):
                 total_pages=total_pages,
             )
 
-            chunk_objects = []
-            for chunk_data, embedding in zip(chunks, embeddings):
-                chunk_objects.append(
-                    DocumentChunk(
-                        document=archive_doc,
-                        page_number=chunk_data["page_number"],
-                        chunk_text=chunk_data["chunk_text"],
-                        embedding=embedding,
-                        chunk_index=chunk_data["chunk_index"],
-                    )
+            chunk_objects = [
+                DocumentChunk(
+                    document=archive_doc,
+                    page_number=chunk_data["page_number"],
+                    chunk_text=chunk_data["chunk_text"],
+                    embedding=embedding,
+                    chunk_index=chunk_data["chunk_index"],
                 )
+                for chunk_data, embedding in zip(chunks, embeddings)
+            ]
 
             DocumentChunk.objects.bulk_create(chunk_objects)
 
@@ -227,7 +325,9 @@ def ingest_single_pdf(file_path, force=False):
             "filename": filename,
             "status": "processed",
             "chunks_created": len(chunk_objects),
-            "message": f"Successfully ingested {total_pages} pages → {len(chunk_objects)} chunks",
+            "message": (
+                f"Successfully ingested {total_pages} pages → {len(chunk_objects)} chunks"
+            ),
         }
 
     except Exception as e:
@@ -241,9 +341,7 @@ def ingest_single_pdf(file_path, force=False):
 
 
 def get_pending_pdfs(force=False):
-    """
-    Get a list of PDF filenames that need to be ingested.
-    """
+    """Return a list of PDF filenames in ARCHIVE_DIR that need ingestion."""
     archive_dir = Path(settings.ARCHIVE_DIR)
     if not archive_dir.exists():
         return []
@@ -253,13 +351,12 @@ def get_pending_pdfs(force=False):
         return [f.name for f in pdf_files]
 
     already_ingested = set(ArchiveDocument.objects.values_list("filename", flat=True))
-    pending = [f.name for f in pdf_files if f.name not in already_ingested]
-    return pending
+    return [f.name for f in pdf_files if f.name not in already_ingested]
 
 
 def ingest_archive(force=False, filename=None):
     """
-    Scan settings.ARCHIVE_DIR for PDF files and ingest.
+    Scan settings.ARCHIVE_DIR for PDF files and ingest them.
     If filename is provided, only ingest that specific file.
     """
     archive_dir = Path(settings.ARCHIVE_DIR)
@@ -276,15 +373,14 @@ def ingest_archive(force=False, filename=None):
         logger.info("No PDF files found in archive directory")
         return {"processed": [], "skipped": [], "errors": []}
 
-    results = {"processed": [], "skipped": [], "errors": []}
+    results: dict[str, list] = {"processed": [], "skipped": [], "errors": []}
 
     for pdf_path in pdf_files:
         if is_stop_requested():
             logger.info("Ingestion stopped by user request.")
             break
-            
+
         result = ingest_single_pdf(pdf_path, force=force)
-        # Map 'error' status to 'errors' key in the results dict
         key = "errors" if result["status"] == "error" else result["status"]
         results[key].append(result)
 
