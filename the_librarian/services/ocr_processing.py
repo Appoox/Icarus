@@ -18,26 +18,26 @@ except ImportError:
     from skimage.transform import hough_line, hough_line_peaks, rotate
 
 from scipy.stats import mode
-from surya.ocr import run_ocr
-from surya.model.detection import segformer
-from surya.model.recognition.model import load_model
-from surya.model.recognition.processor import load_processor, SuryaProcessor
-from surya.input.processing import slice_polys_from_image
-from surya.detection import batch_text_detection
+from surya.detection import DetectionPredictor
+from surya.recognition import RecognitionPredictor
+from surya.foundation import FoundationPredictor
 
+_det_predictor = None
+_rec_predictor = None
+_foundation_predictor = None
 
-# Use CPU for compatibility
-device = "cpu"
-langs = ["ml", "en"]
+def get_predictors():
+    """Lazy initialization of Surya predictors."""
+    global _det_predictor, _rec_predictor, _foundation_predictor
+    if _foundation_predictor is None:
+        # Initializing the shared foundation predictor required by 0.17.1
+        _foundation_predictor = FoundationPredictor()
+        # DetectionPredictor() takes an optional string checkpoint, not a FoundationPredictor object.
+        _det_predictor = DetectionPredictor()
+        # RecognitionPredictor strictly requires the FoundationPredictor object.
+        _rec_predictor = RecognitionPredictor(_foundation_predictor)
+    return _det_predictor, _rec_predictor
 
-det_processor, det_model = segformer.load_processor(), segformer.load_model(
-    device=device, dtype=torch.float32 if device == "cpu" else torch.float16
-)
-
-rec_model, rec_processor = (
-    load_model(device=device, dtype=torch.float32 if device == "cpu" else torch.float16),
-    load_processor(),
-)
 
 # Manual grayscale conversion (instead of deprecated skimage.rgb2gray)
 def rgb2gray_manual(image: np.ndarray) -> np.ndarray:
@@ -88,40 +88,47 @@ def get_skew_corrected_image(image: np.ndarray) -> np.ndarray:
 
 def surya_ocr(image):
     torch.cuda.empty_cache()
+    det_predictor, rec_predictor = get_predictors()
     try:
-        predictions = run_ocr(
-            [image], [langs], det_model, det_processor, rec_model, rec_processor
-        )
-        output = " ".join([p.text for p in predictions[0].text_lines])
-        predictions = None
-        return output
+        # Use RecognitionPredictor directly (wrapped in a list for batch processing)
+        # In Surya 0.17.1,langs are not passed here; it uses the foundation model's capabilities.
+        results = rec_predictor([image])
+        if results and len(results) > 0:
+            output = " ".join([line.text for line in results[0].text_lines])
+            return output
+        return ""
     except Exception as e:
         print(f"Surya OCR failed: {e}")
         return ""
 
 def process_image_for_ocr(yolo_image: Image.Image):
-    detection_results = batch_text_detection([yolo_image], det_model, det_processor)
-    detection_bboxes = [r.bbox for r in detection_results[0].bboxes]
-
-    extracted_text = ""
-    for detection_index, bbox in enumerate(detection_bboxes):
-        height, _, __ = np.array(yolo_image).shape
-        y1, y2 = bbox[1], bbox[3]
-
-        pad = 10
-        y1_padded = max(0, int(y1 - pad))
-        y2_padded = min(height, int(y2 + pad))
-
-        line_image_np = np.array(yolo_image)[
-            y1_padded:y2_padded,
-            int(bbox[0]):int(bbox[2]),
-        ]
-
-        if line_image_np.size == 0:
-            continue
-
-        line_image = Image.fromarray(line_image_np)
-        text = surya_ocr(line_image)
-        extracted_text += text + "\n"
-
+    det_predictor, rec_predictor = get_predictors()
+    
+    # Detect text lines first
+    detection_results = det_predictor([yolo_image])
+    
+    # Prepare bboxes for batch recognition
+    # We add a small padding (5px) to each box to ensure characters aren't clipped
+    bboxes = []
+    width, height = yolo_image.size
+    for r in detection_results:
+        per_image_bboxes = []
+        for b in r.bboxes:
+            # Padding
+            pad = 5
+            x1, y1, x2, y2 = b.bbox
+            x1 = max(0, x1 - pad)
+            y1 = max(0, y1 - pad)
+            x2 = min(width, x2 + pad)
+            y2 = min(height, y2 + pad)
+            per_image_bboxes.append([x1, y1, x2, y2])
+        bboxes.append(per_image_bboxes)
+    
+    # Batch recognition for all detected lines
+    # bboxes is List[List[List[int]]] matching the [yolo_image] list
+    results = rec_predictor([yolo_image], bboxes=bboxes)
+    
+    # Join text lines with newlines
+    extracted_text = "\n".join([line.text for line in results[0].text_lines])
+    
     return extracted_text.strip()

@@ -22,6 +22,20 @@ from the_librarian.models import ArchiveDocument, DocumentChunk
 from the_librarian.services.embedder import embed_texts
 
 logger = logging.getLogger(__name__)
+STOP_SIGNAL_FILE = getattr(settings, "BASE_DIR") / ".stop_ingest"
+
+def is_stop_requested():
+    """Check if the user has requested to stop ingestion."""
+    return STOP_SIGNAL_FILE.exists()
+
+def clear_stop_signal():
+    """Clear the stop signal."""
+    if STOP_SIGNAL_FILE.exists():
+        STOP_SIGNAL_FILE.unlink()
+
+def request_stop():
+    """Request the ingestion to stop."""
+    STOP_SIGNAL_FILE.touch()
 
 
 # ── OCR helpers ───────────────────────────────────────────────────────────
@@ -226,23 +240,37 @@ def ingest_single_pdf(file_path, force=False):
         }
 
 
-def ingest_archive(force=False):
+def get_pending_pdfs(force=False):
     """
-    Scan settings.ARCHIVE_DIR for PDF files and ingest any that
-    haven't been processed yet.
+    Get a list of PDF filenames that need to be ingested.
+    """
+    archive_dir = Path(settings.ARCHIVE_DIR)
+    if not archive_dir.exists():
+        return []
 
-    Args:
-        force: bool — if True, re-ingest all PDFs.
+    pdf_files = sorted(archive_dir.glob("*.pdf"))
+    if force:
+        return [f.name for f in pdf_files]
 
-    Returns:
-        dict with keys: processed, skipped, errors (lists of result dicts)
+    already_ingested = set(ArchiveDocument.objects.values_list("filename", flat=True))
+    pending = [f.name for f in pdf_files if f.name not in already_ingested]
+    return pending
+
+
+def ingest_archive(force=False, filename=None):
+    """
+    Scan settings.ARCHIVE_DIR for PDF files and ingest.
+    If filename is provided, only ingest that specific file.
     """
     archive_dir = Path(settings.ARCHIVE_DIR)
     if not archive_dir.exists():
         logger.error(f"Archive directory does not exist: {archive_dir}")
         return {"processed": [], "skipped": [], "errors": []}
 
-    pdf_files = sorted(archive_dir.glob("*.pdf"))
+    if filename:
+        pdf_files = [archive_dir / filename]
+    else:
+        pdf_files = sorted(archive_dir.glob("*.pdf"))
 
     if not pdf_files:
         logger.info("No PDF files found in archive directory")
@@ -251,7 +279,13 @@ def ingest_archive(force=False):
     results = {"processed": [], "skipped": [], "errors": []}
 
     for pdf_path in pdf_files:
+        if is_stop_requested():
+            logger.info("Ingestion stopped by user request.")
+            break
+            
         result = ingest_single_pdf(pdf_path, force=force)
-        results[result["status"]].append(result)
+        # Map 'error' status to 'errors' key in the results dict
+        key = "errors" if result["status"] == "error" else result["status"]
+        results[key].append(result)
 
     return results
