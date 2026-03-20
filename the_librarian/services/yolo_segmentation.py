@@ -8,7 +8,7 @@ from PIL import Image
 # Use device from main file
 device = "cpu"
 
-model_path = "model"
+model_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model")
 general_model_name = "e50_aug.pt"
 image_model_name = "e100_img.pt"
 

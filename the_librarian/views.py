@@ -105,12 +105,17 @@ def trigger_ingestion(request):
     Admin-only endpoint to trigger archive ingestion.
     Called via the dashboard button.
     """
-    from the_librarian.services.ingestion import ingest_archive
+    from the_librarian.services.ingestion import ingest_archive, clear_stop_signal
+    
+    # Clear stop signal before starting
+    if not request.POST.get("filename"):
+        clear_stop_signal()
 
     force = request.POST.get("force", "false").lower() == "true"
-
+    filename = request.POST.get("filename")
+    
     try:
-        results = ingest_archive(force=force)
+        results = ingest_archive(force=force, filename=filename)
         return JsonResponse({
             "success": True,
             "processed": len(results["processed"]),
@@ -124,3 +129,20 @@ def trigger_ingestion(request):
             "success": False,
             "error": str(e),
         }, status=500)
+
+@staff_member_required
+@require_POST
+def stop_ingestion(request):
+    """Admin-only endpoint to request a stop to ingestion."""
+    from the_librarian.services.ingestion import request_stop
+    request_stop()
+    return JsonResponse({"success": True, "message": "Stop requested"})
+
+@staff_member_required
+@require_GET
+def get_pending_pdfs_view(request):
+    """Admin-only endpoint to get list of pending PDFs."""
+    from the_librarian.services.ingestion import get_pending_pdfs
+    force = request.GET.get("force", "false").lower() == "true"
+    pending = get_pending_pdfs(force=force)
+    return JsonResponse({"success": True, "pending": pending})
