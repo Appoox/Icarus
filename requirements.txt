@@ -1,5 +1,8 @@
-Django>=6,<6.1
+# Django>=6,<6.1
+Django==5.2.11
 wagtail==7.3rc1
 environs==14.5.0
 django-phonenumber-field==8.4.0
+psycopg[binary]==3.2.5
+dj-database-url==2.3.0
 gunicorn==20.0.4
