@@ -1,0 +1,28 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+<article class="sg-issue-card" {% if is_clone %}aria-hidden="true"{% endif %}>
+  {% if article.cover_image %}
+  <a href="{{ article.url }}" class="sg-issue-card__image-wrap" aria-hidden="true" tabindex="-1">
+    {% image article.cover_image fill-320x200 as art_img %}
+    <img src="{{ art_img.url }}" alt="{{ article.title }}">
+  </a>
+  {% endif %}
+  {% if article.topic %}
+  <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-card__category"
+    style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+    {{ article.topic.name }}
+  </a>
+  {% endif %}
+  <h3 class="sg-issue-card__title">
+    <a href="{{ article.url }}">{{ article.title }}</a>
+  </h3>
+  
+  {% if article.article_authors.all %}
+  <span class="sg-card-author">
+    {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+  </span>
+  {% endif %}
+
+  <time class="sg-issue-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+    {{ article.date|date:"F j, Y" }}
+  </time>
+</article>
