@@ -187,7 +187,7 @@
     background: var(--navy);
     color: #fff;
     font-family: var(--label);
-    font-size: .8rem;
+    font-size: 1rem;
     font-weight: 700;
     letter-spacing: .16em;
     text-transform: uppercase;
@@ -654,11 +654,15 @@
     }
 
     .sg-issue-cover {
-      padding-right: 0;
+      display: flex; /* Maintain card layout on tablet */
+      padding: 1.25rem;
       border-right: none;
-      border-bottom: 1px solid var(--rule);
-      padding-bottom: 2rem;
-      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--rule);
+      margin-bottom: 2.5rem;
+    }
+
+    .sg-issue-cover__image-wrap {
+      margin: -1.25rem -1.25rem 1.25rem -1.25rem;
     }
 
     .sg-issue-articles {
@@ -704,6 +708,14 @@
   @media (max-width: 600px) {
     .sg-page {
       padding: 0 1rem;
+    }
+
+    .sg-issue-cover {
+      padding: 1rem; /* Matched to page padding to prevent overflow */
+    }
+
+    .sg-issue-cover__image-wrap {
+      margin: -1rem -1rem 1rem -1rem;
     }
 
     .sg-issue-articles__grid {
@@ -859,6 +871,7 @@
   {% endif %}
 
   {# ── SUBSCRIBE BANNER ── #}
+  {% if not request.user.is_authenticated or not request.user.reader or not request.user.reader.is_subscribed %}
   <div class="sg-subscribe" role="complementary" aria-label="Subscribe">
     <div class="sg-subscribe__text">
       <div class="sg-subscribe__kicker">വരിക്കാരാകൂ</div>
@@ -871,6 +884,7 @@
       {% endif %}
     </div>
   </div>
+  {% endif %}
 
   {# ── LATEST ARTICLES ── #}
   <div class="sg-section-head">
