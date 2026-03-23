@@ -69,7 +69,7 @@
   .sg-page {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 1rem; /* Reduced from 2rem */
     flex: 1 0 auto; /* Ensure content pushes footer down */
   }
 
@@ -100,18 +100,21 @@
   .sg-featured-issue {
     display: grid;
     grid-template-columns: 420px minmax(300px, 1fr) 280px;
-    gap: 2.5rem;
+    gap: 2rem; /* Increased for better breathing room */
     border-bottom: 3px double var(--rule);
     margin-top: 2.5rem;
-    padding-bottom: 3rem;
+    padding-bottom: 3.5rem;
   }
 
   /* Left: Issue cover */
   .sg-issue-cover {
-    padding-right: 2rem;
-    border-right: 1px solid var(--rule);
     display: flex;
     flex-direction: column;
+    background: #fff;
+    padding: 1.5rem; /* Reduced for a tighter look */
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); /* Softened shadow */
+    transition: transform 0.3s ease;
   }
 
   .sg-issue-cover__label {
@@ -122,7 +125,7 @@
     text-transform: uppercase;
     color: var(--navy);
     padding-bottom: .75rem;
-    border-bottom: 3px solid var(--navy);
+    /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.5rem;
   }
 
@@ -131,9 +134,9 @@
     overflow: hidden;
     flex: 1;
     background: var(--rule);
-    margin-bottom: 1.5rem;
-    box-shadow: 0 15px 35px rgba(11, 31, 58, 0.15);
-    border-radius: 2px;
+    margin: -1.5rem -1.5rem 1.25rem -1.5rem; /* Full-width image in card */
+    box-shadow: 0 8px 20px rgba(11, 31, 58, 0.1);
+    border-radius: 2px 2px 0 0;
   }
 
   .sg-issue-cover__image-wrap img {
@@ -204,19 +207,20 @@
     display: flex;
     flex-direction: column;
     max-height: 700px;
-    padding-right: 1.5rem;
-    border-right: 1px solid var(--rule);
+    padding-top: 1.65rem; /* Aligned with updated 1.5rem card padding */
+    padding-right: 0;
+    /* border-right: 1px solid var(--rule); */
   }
 
   .sg-issue-articles__heading {
     font-family: var(--label);
-    font-size: .78rem;
+    font-size: .8rem;
     font-weight: 800;
     letter-spacing: .22em;
     text-transform: uppercase;
     color: var(--navy);
-    padding-bottom: .65rem;
-    border-bottom: 2px solid var(--navy);
+    padding-bottom: .6rem;
+    /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.25rem;
     background: var(--paper); /* Keep heading above scrolling content */
     z-index: 2;
@@ -226,6 +230,8 @@
     flex: 1;
     overflow: hidden;
     position: relative;
+    padding: 2rem 1.25rem; /* Adjusted internal marquee padding */
+    margin: 0 -1.25rem;
   }
 
   .sg-issue-articles__grid {
@@ -248,13 +254,23 @@
   .sg-issue-card {
     display: flex;
     flex-direction: column;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08); /* Softened shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .sg-issue-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   }
 
   .sg-issue-card__image-wrap {
     overflow: hidden;
     aspect-ratio: 16 / 10;
     background: var(--rule);
-    margin-bottom: .65rem;
+    margin: -1rem -1rem .75rem -1rem; /* Full-width image in card */
   }
 
   .sg-issue-card__image-wrap img {
@@ -306,7 +322,7 @@
   /* Author Credit */
   .sg-card-author {
     font-family: var(--label);
-    font-size: 1rem;
+    font-size: .75rem; /* Reduced from 1rem for cleaner look */
     font-weight: 700;
     color: var(--muted);
     margin-bottom: .2rem;
@@ -322,6 +338,7 @@
     flex-direction: column;
     max-height: 700px;
     overflow-y: auto;
+    padding-top: 1.65rem; /* Aligned with updated 1.5rem card padding */
     padding-right: .5rem;
   }
   
@@ -335,13 +352,13 @@
 
   .sg-issue-other-topics__heading {
     font-family: var(--label);
-    font-size: .78rem;
+    font-size: .8rem;
     font-weight: 800;
     letter-spacing: .22em;
     text-transform: uppercase;
-    color: var(--muted);
-    padding-bottom: .65rem;
-    border-bottom: 1px solid var(--rule);
+    color: var(--navy);
+    padding-bottom: .6rem;
+    /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.25rem;
   }
 
@@ -354,13 +371,23 @@
   .sg-issue-small-card {
     display: flex;
     flex-direction: column;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); /* Increased shadow visibility */
+    transition: transform 0.2s ease;
+  }
+
+  .sg-issue-small-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
   }
 
   .sg-issue-small-card__image-wrap {
     overflow: hidden;
     aspect-ratio: 16 / 10;
     background: var(--rule);
-    margin-bottom: .5rem;
+    margin: -1rem -1rem .75rem -1rem; /* Full-width image */
   }
 
   .sg-issue-small-card__image-wrap img {
@@ -442,7 +469,7 @@
 
   .sg-subscribe__kicker {
     font-family: var(--label);
-    font-size: .7rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: .22em;
     text-transform: uppercase;
@@ -456,6 +483,7 @@
 
   .sg-subscribe__kicker::before,
   .sg-subscribe__kicker::after {
+    
     content: '';
     width: 20px;
     height: 2px;
@@ -483,7 +511,7 @@
     color: #fff;
     font-family: var(--label);
     font-weight: 700;
-    font-size: .75rem;
+    font-size: 1.5rem;
     letter-spacing: .16em;
     text-transform: uppercase;
     padding: .7rem 2rem;
@@ -524,21 +552,23 @@
   }
 
   .sg-article-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 2rem;
     padding: 2.5rem 0 4rem;
   }
 
   .sg-article-card {
+    flex: 1 1 340px; /* Base width for centering */
+    max-width: 380px; /* Prevent overly wide cards on very large screens */
     background: #fff;
-    border: 1px solid var(--rule);
     border-radius: 4px;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08); /* Softened shadow */
   }
 
   .sg-article-card:hover {
@@ -551,7 +581,6 @@
     aspect-ratio: 16/10;
     background: var(--rule);
     margin-bottom: 0;
-    border-bottom: 1px solid var(--rule);
   }
 
   .sg-article-card__image-wrap img {
@@ -717,7 +746,7 @@
         <a href="{{ current_issue.url }}">{{ current_issue.title }}</a>
       </h2>
       <span class="sg-issue-cover__date">{{ current_issue.date_of_publishing|date:"F j, Y" }}</span>
-      <a href="{{ current_issue.url }}" class="sg-issue-cover__cta">Explore This Issue →</a>
+      <a href="{{ current_issue.url }}" class="sg-issue-cover__cta">ലക്കം പരിശോദിക്കാം</a>
     </div>
 
     {# Middle: Issue articles (same topic) #}
@@ -746,7 +775,7 @@
             
             {% if article.article_authors.all %}
             <span class="sg-card-author">
-              By {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+              {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
             </span>
             {% endif %}
 
@@ -776,7 +805,7 @@
               <h3 class="sg-issue-card__title">{{ article.title }}</h3>
               {% if article.article_authors.all %}
               <span class="sg-card-author">
-                By {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
               </span>
               {% endif %}
               <time class="sg-issue-card__date">{{ article.date|date:"F j, Y" }}</time>
@@ -789,7 +818,7 @@
 
     {# Right: Other topics #}
     <div class="sg-issue-other-topics">
-      <div class="sg-issue-other-topics__heading">Other Topics</div>
+      <div class="sg-issue-other-topics__heading">മറ്റുള്ള വിഷയങ്ങള്‍</div>
       
       <div class="sg-issue-other-topics__grid">
         {% for article in other_topic_articles %}
@@ -812,7 +841,7 @@
 
           {% if article.article_authors.all %}
           <span class="sg-card-author" style="font-size: .55rem;">
-            By {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
           </span>
           {% endif %}
 
@@ -832,20 +861,20 @@
   {# ── SUBSCRIBE BANNER ── #}
   <div class="sg-subscribe" role="complementary" aria-label="Subscribe">
     <div class="sg-subscribe__text">
-      <div class="sg-subscribe__kicker">Subscribe</div>
-      <h2 class="sg-subscribe__title">Stay Informed. Stay Ahead.</h2>
-      <p class="sg-subscribe__sub">Get unlimited access to every article, issue, and exclusive content.</p>
+      <div class="sg-subscribe__kicker">വരിക്കാരാകൂ</div>
+      {# <h2 class="sg-subscribe__title">Stay Informed. Stay Ahead.</h2> #}
+      {# <p class="sg-subscribe__sub">Get unlimited access to every article, issue, and exclusive content.</p> #}
       {% if request.user.is_authenticated %}
-      <a href="{% url 'reader_profile' %}" class="sg-subscribe__cta">Manage Subscription</a>
+      <a href="{% url 'reader_profile' %}" class="sg-subscribe__cta">സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക</a>
       {% else %}
-      <a href="{% url 'reader_signup' %}" class="sg-subscribe__cta">Subscribe Now</a>
+      <a href="{% url 'reader_signup' %}" class="sg-subscribe__cta">ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ</a>
       {% endif %}
     </div>
   </div>
 
   {# ── LATEST ARTICLES ── #}
   <div class="sg-section-head">
-    <h2 class="sg-section-head__title">Latest Articles</h2>
+    <h2 class="sg-section-head__title">മറ്റുള്ള ലേഖനങ്ങള്‍</h2>
     <span class="sg-section-head__rule" aria-hidden="true"></span>
   </div>
 
@@ -872,7 +901,7 @@
 
         {% if article.article_authors.all %}
         <span class="sg-card-author">
-          By {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </span>
         {% endif %}
 
