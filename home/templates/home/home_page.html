@@ -95,16 +95,16 @@
   /* ── FEATURED ISSUE SECTION ── */
   .sg-featured-issue {
     display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: 0;
+    grid-template-columns: 420px minmax(300px, 1fr) 280px;
+    gap: 2.5rem;
     border-bottom: 3px double var(--rule);
     margin-top: 2.5rem;
-    padding-bottom: 2.5rem;
+    padding-bottom: 3rem;
   }
 
   /* Left: Issue cover */
   .sg-issue-cover {
-    padding-right: var(--col-gap);
+    padding-right: 2rem;
     border-right: 1px solid var(--rule);
     display: flex;
     flex-direction: column;
@@ -112,14 +112,14 @@
 
   .sg-issue-cover__label {
     font-family: var(--label);
-    font-size: .78rem;
+    font-size: .85rem;
     font-weight: 800;
-    letter-spacing: .22em;
+    letter-spacing: .25em;
     text-transform: uppercase;
     color: var(--navy);
-    padding-bottom: .65rem;
-    border-bottom: 2px solid var(--navy);
-    margin-bottom: 1.25rem;
+    padding-bottom: .75rem;
+    border-bottom: 3px solid var(--navy);
+    margin-bottom: 1.5rem;
   }
 
   .sg-issue-cover__image-wrap {
@@ -127,72 +127,81 @@
     overflow: hidden;
     flex: 1;
     background: var(--rule);
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 15px 35px rgba(11, 31, 58, 0.15);
+    border-radius: 2px;
   }
 
   .sg-issue-cover__image-wrap img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform .5s ease;
+    transition: transform .6s cubic-bezier(0.165, 0.84, 0.44, 1);
   }
 
   .sg-issue-cover__image-wrap:hover img {
-    transform: scale(1.03);
+    transform: scale(1.05);
   }
 
   .sg-issue-cover__image-wrap::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, transparent 55%, rgba(11, 31, 58, .5));
+    background: linear-gradient(to bottom, transparent 60%, rgba(11, 31, 58, .4));
     pointer-events: none;
   }
 
   .sg-issue-cover__title {
     font-family: var(--serif);
-    font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+    font-size: clamp(2rem, 3.5vw, 2.5rem);
     font-weight: 900;
-    line-height: 1.15;
-    letter-spacing: -.02em;
-    margin-bottom: .35rem;
+    line-height: 1.1;
+    letter-spacing: -.03em;
+    margin-bottom: .5rem;
   }
 
   .sg-issue-cover__title a:hover {
-    color: var(--navy-mid);
+    color: var(--red);
   }
 
   .sg-issue-cover__date {
     font-family: var(--label);
-    font-size: .68rem;
-    letter-spacing: .1em;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .12em;
     color: var(--caption);
-    margin-bottom: .75rem;
+    margin-bottom: 1.25rem;
     display: block;
+    text-transform: uppercase;
   }
 
   .sg-issue-cover__cta {
     display: inline-block;
+    background: var(--navy);
+    color: #fff;
     font-family: var(--label);
-    font-size: .72rem;
+    font-size: .8rem;
     font-weight: 700;
-    letter-spacing: .14em;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--sky);
-    border-bottom: 1px solid currentColor;
-    padding-bottom: 1px;
-    transition: color .15s;
+    padding: .85rem 2rem;
+    border-radius: 2px;
+    transition: background .2s, transform .2s;
   }
 
   .sg-issue-cover__cta:hover {
-    color: var(--red);
+    background: var(--red);
+    color: #fff;
+    transform: translateX(5px);
   }
 
-  /* Right: Issue articles grid */
+  /* Middle: Issue articles (same topic) */
   .sg-issue-articles {
-    padding-left: var(--col-gap);
     display: flex;
     flex-direction: column;
+    max-height: 700px;
+    padding-right: 1.5rem;
+    border-right: 1px solid var(--rule);
   }
 
   .sg-issue-articles__heading {
@@ -205,13 +214,30 @@
     padding-bottom: .65rem;
     border-bottom: 2px solid var(--navy);
     margin-bottom: 1.25rem;
+    background: var(--paper); /* Keep heading above scrolling content */
+    z-index: 2;
+  }
+
+  .sg-issue-articles__scroll-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
   }
 
   .sg-issue-articles__grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem 1.75rem;
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: marquee-vertical 40s linear infinite;
+  }
+
+  .sg-issue-articles__grid:hover {
+    animation-play-state: paused;
+  }
+
+  @keyframes marquee-vertical {
+    from { transform: translateY(0); }
+    to { transform: translateY(-50%); }
   }
 
   /* Issue article card */
@@ -271,6 +297,98 @@
     letter-spacing: .08em;
     color: var(--caption);
     margin-top: .2rem;
+  }
+
+  /* Right: Other topics */
+  .sg-issue-other-topics {
+    display: flex;
+    flex-direction: column;
+    max-height: 700px;
+    overflow-y: auto;
+    padding-right: .5rem;
+  }
+  
+  .sg-issue-other-topics::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sg-issue-other-topics::-webkit-scrollbar-thumb {
+    background-color: var(--rule);
+    border-radius: 4px;
+  }
+
+  .sg-issue-other-topics__heading {
+    font-family: var(--label);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: .65rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 1.25rem;
+  }
+
+  .sg-issue-other-topics__grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .sg-issue-small-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sg-issue-small-card__image-wrap {
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    background: var(--rule);
+    margin-bottom: .5rem;
+  }
+
+  .sg-issue-small-card__image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .4s ease;
+  }
+
+  .sg-issue-small-card__image-wrap:hover img {
+    transform: scale(1.04);
+  }
+
+  .sg-issue-small-card__category {
+    font-family: var(--label);
+    font-size: .60rem;
+    font-weight: 800;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--muted);
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-bottom: .3rem;
+    align-self: flex-start;
+  }
+
+  .sg-issue-small-card__title {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .sg-issue-small-card__title a:hover {
+    color: var(--red);
+  }
+
+  .sg-issue-small-card__date {
+    font-family: var(--label);
+    font-size: .55rem;
+    letter-spacing: .08em;
+    color: var(--caption);
+    margin-top: .15rem;
   }
 
   /* ── SUBSCRIBE BANNER ── */
@@ -480,10 +598,32 @@
     }
 
     .sg-issue-articles {
-      padding-left: 0;
+      padding-right: 0;
+      border-right: none;
+      max-height: none;
+    }
+
+    .sg-issue-articles__scroll-wrapper {
+        overflow: visible;
+        height: auto;
     }
 
     .sg-issue-articles__grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      animation: none;
+    }
+    
+    .sg-issue-other-topics {
+      padding-right: 0;
+      max-height: none;
+      margin-top: 2rem;
+      border-top: 1px solid var(--rule);
+      padding-top: 2rem;
+    }
+
+    .sg-issue-other-topics__grid {
+      display: grid;
       grid-template-columns: repeat(2, 1fr);
     }
 
@@ -545,34 +685,89 @@
       <a href="{{ current_issue.url }}" class="sg-issue-cover__cta">Explore This Issue →</a>
     </div>
 
-    {# Right: Issue articles #}
+    {# Middle: Issue articles (same topic) #}
     <div class="sg-issue-articles">
       <div class="sg-issue-articles__heading">ഈ ലക്കത്തില്‍...</div>
 
-      <div class="sg-issue-articles__grid">
-        {% for article in issue_articles %}
-        <article class="sg-issue-card">
+      <div class="sg-issue-articles__scroll-wrapper">
+        <div class="sg-issue-articles__grid">
+          {% for article in same_topic_articles %}
+          <article class="sg-issue-card">
+            {% if article.cover_image %}
+            <a href="{{ article.url }}" class="sg-issue-card__image-wrap" aria-hidden="true" tabindex="-1">
+              {% image article.cover_image fill-320x200 as art_img %}
+              <img src="{{ art_img.url }}" alt="{{ article.title }}">
+            </a>
+            {% endif %}
+            {% if article.topic %}
+            <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-card__category"
+              style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+              {{ article.topic.name }}
+            </a>
+            {% endif %}
+            <h3 class="sg-issue-card__title">
+              <a href="{{ article.url }}">{{ article.title }}</a>
+            </h3>
+            <time class="sg-issue-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+              {{ article.date|date:"F j, Y" }}
+            </time>
+          </article>
+          {% empty %}
+          <p class="sg-empty">No main topic articles in this issue yet.</p>
+          {% endfor %}
+          
+          {# Duplicate for seamless scroll loop #}
+          {% if same_topic_articles|length > 2 %}
+            {% for article in same_topic_articles %}
+            <article class="sg-issue-card" aria-hidden="true">
+              {% if article.cover_image %}
+              <div class="sg-issue-card__image-wrap">
+                {% image article.cover_image fill-320x200 as art_img %}
+                <img src="{{ art_img.url }}" alt="{{ article.title }}">
+              </div>
+              {% endif %}
+              {% if article.topic %}
+              <span class="sg-issue-card__category" style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+                {{ article.topic.name }}
+              </span>
+              {% endif %}
+              <h3 class="sg-issue-card__title">{{ article.title }}</h3>
+              <time class="sg-issue-card__date">{{ article.date|date:"F j, Y" }}</time>
+            </article>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Right: Other topics #}
+    <div class="sg-issue-other-topics">
+      <div class="sg-issue-other-topics__heading">Other Topics</div>
+      
+      <div class="sg-issue-other-topics__grid">
+        {% for article in other_topic_articles %}
+        <article class="sg-issue-small-card">
           {% if article.cover_image %}
-          <a href="{{ article.url }}" class="sg-issue-card__image-wrap" aria-hidden="true" tabindex="-1">
-            {% image article.cover_image fill-320x200 as art_img %}
+          <a href="{{ article.url }}" class="sg-issue-small-card__image-wrap" aria-hidden="true" tabindex="-1">
+            {% image article.cover_image fill-200x125 as art_img %}
             <img src="{{ art_img.url }}" alt="{{ article.title }}">
           </a>
           {% endif %}
           {% if article.topic %}
-          <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-card__category"
-            style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+          <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-small-card__category"
+            style="background-color: {{ article.topic.color|default:'#6b6659' }};">
             {{ article.topic.name }}
           </a>
           {% endif %}
-          <h3 class="sg-issue-card__title">
+          <h3 class="sg-issue-small-card__title">
             <a href="{{ article.url }}">{{ article.title }}</a>
           </h3>
-          <time class="sg-issue-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+          <time class="sg-issue-small-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
             {{ article.date|date:"F j, Y" }}
           </time>
         </article>
         {% empty %}
-        <p class="sg-empty">No articles in this issue yet.</p>
+        <p class="sg-empty">No other topics.</p>
         {% endfor %}
       </div>
     </div>

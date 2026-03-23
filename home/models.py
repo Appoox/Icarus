@@ -147,9 +147,26 @@ class HomePage(Page):
         if current_issue:
             issue_articles = current_issue.get_all_articles()
             context['issue_articles'] = issue_articles
+            
+            same_topic_articles = []
+            other_topic_articles = []
+            if current_issue.topic:
+                for a in issue_articles:
+                    if a.topic == current_issue.topic:
+                        same_topic_articles.append(a)
+                    else:
+                        other_topic_articles.append(a)
+            else:
+                same_topic_articles = issue_articles
+
+            context['same_topic_articles'] = same_topic_articles
+            context['other_topic_articles'] = other_topic_articles
+            
             issue_article_ids = [a.id for a in issue_articles]
         else:
             context['issue_articles'] = []
+            context['same_topic_articles'] = []
+            context['other_topic_articles'] = []
 
         # 2. Latest Articles (general feed, excluding current issue articles)
         latest_articles = (
