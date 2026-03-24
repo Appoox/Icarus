@@ -779,10 +779,19 @@
       </a>
       {% endif %}
 
+
+
       <h2 class="sg-issue-cover__title">
         <a href="{{ current_issue.url }}">{{ current_issue.title }}</a>
       </h2>
-      <span class="sg-issue-cover__date">{{ current_issue.date_of_publishing|date:"F j, Y" }}</span>
+      <span class="sg-issue-cover__date">{{ current_issue.date_of_publishing|date:"F j, Y" }}
+              {% if current_issue.topic %}
+      <a href="{% url 'topic_detail' slug=current_issue.topic.slug %}" class="sg-issue-card__category"
+        style="background-color: {{ current_issue.topic.color|default:'#c8102e' }}; margin-bottom: 0.75rem;">
+        {{ current_issue.topic.name }}
+      </a>
+      {% endif %}
+      </span>
       <a href="{{ current_issue.url }}" class="sg-issue-cover__cta">ലക്കം പരിശോദിക്കാം</a>
     </div>
 
