@@ -17,6 +17,7 @@ urlpatterns = [
     path("search/", search_views.search, name="search"),
     path("reader/", include("reader.urls")),
     path("issues/", include("issue.urls")),
+    path("articles/", include("articles.urls")),
 ]
 
 

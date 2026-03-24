@@ -3,6 +3,7 @@ from wagtail import hooks
 from wagtail.admin.panels import Panel
 import wagtail.admin.rich_text.editors.draftail.features as draftail_features
 from wagtail.admin.rich_text.converters.html_to_contentstate import InlineStyleElementHandler
+from wagtail.admin.ui.tables import Column
 
 @hooks.register('register_rich_text_features')
 def register_text_color_features(features):
@@ -188,3 +189,20 @@ def cover_image_preview_js():
 })();
 </script>
 """)
+
+
+class AnalyticsColumn(Column):
+    def __init__(self, name, field_name, **kwargs):
+        super().__init__(name, **kwargs)
+        self.field_name = field_name
+
+    def get_value(self, instance):
+        specific_instance = instance.specific
+        if hasattr(specific_instance, self.field_name):
+            return getattr(specific_instance, self.field_name)
+        return "-"
+
+@hooks.register('construct_page_listing_columns')
+def add_analytics_columns(columns, page_list_kwargs):
+    columns.append(AnalyticsColumn("opened_count", "opened_count", label="Opened"))
+    columns.append(AnalyticsColumn("read_fully_count", "read_fully_count", label="Read Fully"))

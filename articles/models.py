@@ -196,7 +196,9 @@ class Article(Page):
 
     title_ta = models.CharField(max_length=255, blank=True, verbose_name="Title (Tamil)")
     body_ta = StreamField(STREAM_BLOCKS, use_json_field=True, null=True, blank=True, verbose_name="Body (Tamil)")
-
+    # ── Analytics ─────────────────────────────────────────────────────────
+    opened_count = models.PositiveIntegerField(default=0, editable=False)
+    read_fully_count = models.PositiveIntegerField(default=0, editable=False)
     # ── Admin panels ───────────────────────────────────────────────────────
     content_panels = Page.content_panels + [
         FieldPanel('main_issue'),
@@ -210,6 +212,10 @@ class Article(Page):
         ], heading="Cover Image"),
         InlinePanel('article_authors', label="Authors"),
         FieldPanel('body'),
+        MultiFieldPanel([
+            FieldPanel('opened_count', read_only=True),
+            FieldPanel('read_fully_count', read_only=True),
+        ], heading="Analytics"),
         MultiFieldPanel([
             FieldPanel('title_en'),
             FieldPanel('body_en'),
@@ -239,6 +245,16 @@ class Article(Page):
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
         from django.conf import settings as django_settings
+
+        # ── Analytics: Increment Opened Count ──────────────────────────
+        if not (request.user.is_superuser or request.user.is_staff):
+            opened_articles = request.session.get('opened_articles', [])
+            if self.pk not in opened_articles:
+                # Use F() expression to avoid race conditions
+                from django.db.models import F
+                Article.objects.filter(pk=self.pk).update(opened_count=F('opened_count') + 1)
+                opened_articles.append(self.pk)
+                request.session['opened_articles'] = opened_articles
 
         # Query Article siblings directly (not the base Page queryset) so that
         # topic filtering and specific fields are available without extra joins.
