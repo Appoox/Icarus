@@ -171,15 +171,39 @@
     color: var(--red);
   }
 
+  .sg-issue-cover__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
   .sg-issue-cover__date {
     font-family: var(--label);
     font-size: .75rem;
     font-weight: 600;
     letter-spacing: .12em;
     color: var(--caption);
-    margin-bottom: 1.25rem;
-    display: block;
     text-transform: uppercase;
+  }
+
+  .sg-issue-cover__topic {
+    display: inline-block;
+    font-family: var(--label);
+    font-size: .9rem;
+    font-weight: 800;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: #fff;
+    padding: 4px 14px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .sg-issue-cover__topic:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
   }
 
   .sg-issue-cover__cta {
@@ -784,14 +808,16 @@
       <h2 class="sg-issue-cover__title">
         <a href="{{ current_issue.url }}">{{ current_issue.title }}</a>
       </h2>
-      <span class="sg-issue-cover__date">{{ current_issue.date_of_publishing|date:"F j, Y" }}
-              {% if current_issue.topic %}
-      <a href="{% url 'topic_detail' slug=current_issue.topic.slug %}" class="sg-issue-card__category"
-        style="background-color: {{ current_issue.topic.color|default:'#c8102e' }}; margin-bottom: 0.75rem;">
-        {{ current_issue.topic.name }}
-      </a>
-      {% endif %}
-      </span>
+      <div class="sg-issue-cover__meta">
+        <span class="sg-issue-cover__date">{{ current_issue.date_of_publishing|date:"F j, Y" }}</span>
+
+        {% if current_issue.topic %}
+        <a href="{% url 'topic_detail' slug=current_issue.topic.slug %}" class="sg-issue-cover__topic"
+          style="background-color: {{ current_issue.topic.color|default:'#c8102e' }};">
+          {{ current_issue.topic.name }}
+        </a>
+        {% endif %}
+      </div>
       <a href="{{ current_issue.url }}" class="sg-issue-cover__cta">ലക്കം പരിശോദിക്കാം</a>
     </div>
 
