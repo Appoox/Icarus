@@ -1000,6 +1000,47 @@
         const currentActive = slider.querySelector('.lang-slider__item.active');
         if (currentActive) updateSlider(currentActive);
       });
+
+      // ── Scroll Tracking (Read Fully) ──────────────────────────
+      let readTracked = false;
+      const articleId = "{{ page.id }}";
+      const trackUrl = "{% url 'articles:track_read_fully' %}";
+      const csrfToken = "{{ csrf_token }}";
+
+      window.addEventListener('scroll', function() {
+        if (readTracked) return;
+
+        const scrollHeight = document.documentElement.scrollHeight;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const clientHeight = document.documentElement.clientHeight;
+        
+        // Calculate scroll percentage
+        const scrollPct = (scrollTop + clientHeight) / scrollHeight;
+
+        if (scrollPct > 0.9) {
+          readTracked = true;
+          
+          const formData = new FormData();
+          formData.append('article_id', articleId);
+          
+          fetch(trackUrl, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Read tracking:', data.message);
+          })
+          .catch(error => {
+            console.error('Error tracking read:', error);
+            readTracked = false; // Retry on failure if needed, or keep as false
+          });
+        }
+      }, { passive: true });
     });
   </script>
 
