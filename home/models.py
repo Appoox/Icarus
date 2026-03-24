@@ -29,6 +29,11 @@ class SiteHeader(models.Model):
         default="Site logo",
         help_text="Alt text for the logo image (for accessibility).",
     )
+    organization_title = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Organization name displayed to the right of the logo.",
+    )
     site_title = models.CharField(
         max_length=100,
         default="My Wagtail Site",
@@ -40,11 +45,21 @@ class SiteHeader(models.Model):
         default="/",
         help_text="URL the site title links to (defaults to home page).",
     )
+    site_title_image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Image displayed in the centre of the header (replaces site_title text if set).",
+    )
 
     panels = [
         FieldPanel("logo"),
         FieldPanel("logo_alt_text"),
+        FieldPanel("organization_title"),
         FieldPanel("site_title"),
+        FieldPanel("site_title_image"),
         FieldPanel("site_title_url"),
     ]
 
