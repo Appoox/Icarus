@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "literati",
     "issue",
     "reader",
+    "hitcount",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.table_block",
