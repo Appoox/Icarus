@@ -44,7 +44,6 @@
   body {
     font-family: var(--font-body);
     font-size: 18px;
-    /* line-height: 1.7; */
     color: var(--black);
     background: var(--white);
     -webkit-font-smoothing: antialiased;
@@ -84,9 +83,9 @@
 
   .article-header h1 {
     font-family: var(--font-display);
-    font-size: clamp(26px, 4.5vw, 42px);
+    font-size: clamp(32px, 5vw, 48px);
     font-weight: 700;
-    line-height: 1.18;
+    line-height: 1.15;
     letter-spacing: -0.02em;
     color: var(--black);
   }
@@ -114,7 +113,6 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
   }
 
-  /* Subtitle / deck */
   .subtitle {
     font-family: var(--font-body);
     font-size: 20px;
@@ -137,7 +135,7 @@
     border-top: 1px solid var(--gray-light);
     border-bottom: 1px solid var(--gray-light);
     font-family: var(--font-ui);
-    font-size: 13px;
+    font-size: 14px;
     color: var(--gray-mid);
   }
 
@@ -184,26 +182,26 @@
     line-height: 0;
   }
 
-  /* Change this in your article.html <style> section */
   .hero-image img {
     width: 100%;
     aspect-ratio: auto;
-    /* Remove the hardcoded 3/1 */
     object-fit: cover;
     display: block;
+    border-radius: 6px;
   }
 
   .hero-image figcaption {
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 13px;
     color: var(--gray-mid);
-    padding: 8px 0 0;
+    padding: 10px 0 0;
     line-height: 1.4;
     border-top: 1px solid var(--gray-light);
+    margin-top: 8px;
   }
 
   /* ─────────────────────────────────────────────
-   Full-Width Article Body
+   Full-Width Article Body & Content
 ───────────────────────────────────────────── */
   .article-body {
     max-width: var(--article-col);
@@ -211,16 +209,17 @@
     padding-bottom: 64px;
   }
 
-  .article-body p {
+  .article-content p {
     margin-bottom: 1.5em;
     color: var(--gray-dark);
-    font-size: 18px;
-    line-height: 1.75;
+    font-size: 19px;
+    line-height: 1.7;
   }
 
-  .article-body p:first-child::first-letter {
+  /* Dropcap scoped explicitly to the article content paragraphs ONLY */
+  .article-content > p:first-of-type::first-letter {
     font-family: var(--font-display);
-    font-size: 4.5em;
+    font-size: 4.5em; /* Restored original slightly larger dropcap size */
     font-weight: 700;
     float: left;
     line-height: 0.78;
@@ -228,28 +227,29 @@
     color: var(--black);
   }
 
-  .article-body h2 {
+  /* Removed the huge empty space and borders on Headings */
+  .article-content h2 {
     font-family: var(--font-display);
     font-size: 26px;
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.3;
     color: var(--black);
-    margin: 2.5em 0 0.75em;
-    padding-top: 1.5em;
-    border-top: 2px solid var(--black);
+    margin: 1.5em 0 0.5em;
+    padding-top: 0;
+    border-top: none;
   }
 
-  .article-body h3 {
+  .article-content h3 {
     font-family: var(--font-ui);
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--gray-mid);
-    margin: 2em 0 0.75em;
+    color: var(--gray-dark);
+    margin: 1.5em 0 0.5em;
   }
 
-  .article-body a {
+  .article-content a {
     color: var(--red);
     text-decoration: underline;
     text-decoration-color: transparent;
@@ -257,24 +257,25 @@
     transition: text-decoration-color 0.2s;
   }
 
-  .article-body a:hover {
+  .article-content a:hover {
     text-decoration-color: var(--red);
   }
 
-  .article-body figure {
+  .article-content figure {
     margin: 2em 0;
     clear: both;
   }
 
-  .article-body figure img {
+  .article-content figure img {
     width: 100%;
     height: auto;
     display: block;
+    border-radius: 4px;
   }
 
-  .article-body figcaption {
+  .article-content figcaption {
     font-family: var(--font-ui);
-    font-size: 12px;
+    font-size: 13px;
     color: var(--gray-mid);
     padding: 8px 0 0;
     line-height: 1.5;
@@ -282,122 +283,154 @@
     font-style: italic;
   }
 
-  /* Float left — image hugs the left, text wraps on the right */
-  .article-body figure.img-left {
+  /* Float left / right */
+  .article-content figure.img-left {
     float: left;
     width: 45%;
     margin: 0.5em 1.75em 1em 0;
     clear: left;
   }
 
-  /* Float right — image hugs the right, text wraps on the left */
-  .article-body figure.img-right {
+  .article-content figure.img-right {
     float: right;
     width: 45%;
     margin: 0.5em 0 1em 1.75em;
     clear: right;
   }
 
-  /* Clearfix so the article body contains floated images */
-  .article-body::after {
+  .article-content::after {
     content: '';
     display: table;
     clear: both;
   }
 
   @media (max-width: 500px) {
-
-    .article-body figure.img-left,
-    .article-body figure.img-right {
+    .article-content figure.img-left,
+    .article-content figure.img-right {
       float: none;
       width: 100%;
       margin: 2em 0;
     }
   }
 
-  .article-body blockquote {
+  .article-content blockquote {
     margin: 2em 0;
-    padding: 4px 0 4px 24px;
+    padding: 0 0 0 24px;
     border-left: 4px solid var(--red);
-    font-size: 22px;
+    font-size: 24px;
     font-style: italic;
     font-weight: 300;
     color: var(--black);
     line-height: 1.5;
   }
 
-  .article-body hr {
+  .article-content hr {
     border: none;
     border-top: 1px solid var(--gray-light);
     margin: 2.5em 0;
   }
 
-  /* Author bio */
-  .author-bio {
+  /* ─────────────────────────────────────────────
+   Author Cards Section
+───────────────────────────────────────────── */
+  .author-section {
     margin-top: 56px;
-    padding-top: 24px;
-    border-top: 2px solid var(--black);
+    padding-top: 32px;
+    border-top: 1px solid var(--gray-light);
   }
 
-  .author-bio h4 {
+  .author-section-title {
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--gray-mid);
-    margin-bottom: 12px;
+    margin-bottom: 24px;
   }
 
-  .author-bio .bio-row {
+  .author-cards {
     display: flex;
-    gap: 16px;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
   }
 
-  .author-bio img {
-    width: 56px;
-    height: 56px;
+  .author-card {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    background: var(--gray-bg);
+    padding: 24px;
+    border-radius: 12px;
+  }
+
+  .author-avatar-large {
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
-  .author-bio p {
-    font-family: var(--font-ui);
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--gray-dark);
-    margin-bottom: 0;
+  .author-details {
+    flex: 1;
   }
 
-  .author-bio p strong {
-    display: block;
-    font-size: 15px;
-    margin-bottom: 4px;
+  .author-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .author-name a {
     color: var(--black);
+    text-decoration: none;
   }
 
-  .author-bio a {
+  .author-name a:hover {
+    color: var(--red);
+  }
+
+  .author-role {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 13px;
     color: var(--red);
     font-weight: 600;
-    text-decoration: none;
+    margin-bottom: 12px;
+  }
+
+  .author-bio-text {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--gray-dark);
+  }
+
+  .author-bio-text p {
+    margin-bottom: 0.5em;
+  }
+
+  .author-bio-text p:last-child {
+    margin-bottom: 0;
   }
 
   /* ─────────────────────────────────────────────
    Related Articles Row
 ───────────────────────────────────────────── */
   .related-articles {
-    border-top: 2px solid var(--black);
-    padding: 40px 0 72px;
+    border-top: 1px solid var(--gray-light);
+    padding: 56px 0 72px;
     margin-top: 0;
   }
 
   .related-heading {
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--gray-mid);
     margin-bottom: 28px;
@@ -415,19 +448,18 @@
     gap: 12px;
     text-decoration: none;
     color: inherit;
-    border-top: 1px solid var(--gray-light);
-    padding-top: 16px;
     transition: opacity 0.2s;
   }
 
   .related-card:hover {
-    opacity: 0.75;
+    opacity: 0.85;
   }
 
   .related-card__img {
     width: 100%;
     aspect-ratio: 3 / 2;
     overflow: hidden;
+    border-radius: 6px;
   }
 
   .related-card__img img {
@@ -452,20 +484,20 @@
     display: inline-block;
     align-self: flex-start;
     font-family: var(--font-ui);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--white);
     background: var(--red);
-    padding: 3px 10px;
+    padding: 4px 10px;
     border-radius: 12px;
     margin-bottom: 4px;
   }
 
   .related-card__title {
     font-family: var(--font-display);
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     line-height: 1.35;
     color: var(--black);
@@ -485,6 +517,12 @@
     .related-grid {
       grid-template-columns: 1fr;
       gap: 24px;
+    }
+
+    .author-card {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
   }
 
@@ -509,7 +547,6 @@
   .article-body--truncated {
     overflow: hidden;
     max-height: 500px;
-    /* Adjust to show "a few lines" more gracefully */
     position: relative;
     margin-bottom: 0;
   }
@@ -612,9 +649,6 @@
   /* ─────────────────────────────────────────────
    Language Switcher
   ───────────────────────────────────────────── */
-  /* ─────────────────────────────────────────────
-   Modern Language Slider
-  ───────────────────────────────────────────── */
   .lang-switcher-container {
     margin-top: 20px;
     margin-bottom: 20px;
@@ -683,11 +717,9 @@
     to { opacity: 1; transform: translateY(0); }
   }
 </style>
-
 {% endblock %}
 
 {% block content %}
-
 <div class="article-container">
 
   {# ── HEADER ─────────────────────────────────── #}
@@ -743,7 +775,6 @@
       </div>
     </div>
 
-    
     {# ── MODERN LANGUAGE SLIDER ────────────────── #}
     {% if page.body_en or page.body_hi or page.body_ta %}
     <div class="lang-switcher-container">
@@ -761,8 +792,6 @@
 
   {# ── HERO IMAGE ──────────────────────────────── #}
   {% if page.cover_image %}
-
-  {# Bypass the dynamic string error by writing explicit image tags #}
   {% if page.cover_image_aspect == '3x1' %}
   {% image page.cover_image fill-1200x400 as hero %}
   {% elif page.cover_image_aspect == '16x9' %}
@@ -772,7 +801,6 @@
   {% elif page.cover_image_aspect == '1x1' %}
   {% image page.cover_image fill-1200x1200 as hero %}
   {% else %}
-  {# Default fallback for '2x1' or if nothing is selected #}
   {% image page.cover_image fill-1200x600 as hero %}
   {% endif %}
 
@@ -782,266 +810,265 @@
     <figcaption>{{ page.cover_image_caption }}</figcaption>
     {% endif %}
   </figure>
-
   {% endif %}
 
-    {# ── FULL-WIDTH ARTICLE BODY ─────────────────── #}
-    {% if show_paywall %}
-    {# ── PAYWALLED: truncated preview + overlay ── #}
-    <div class="paywall-wrapper">
-      <main class="article-body article-body--truncated">
+  {# ── FULL-WIDTH ARTICLE BODY ─────────────────── #}
+  {% if show_paywall %}
+  
+  {# ── PAYWALLED: truncated preview + overlay ── #}
+  <div class="paywall-wrapper">
+    <main class="article-body article-body--truncated">
+      <div class="article-content">
         {% for block in truncated_body %}
-        {% if block.block_type == 'heading' %}
-        <h2>{{ block.value }}</h2>
-        {% elif block.block_type == 'image' %}
-        {% with alignment=block.value.alignment %}
-        <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
-          {% if alignment == 'left' or alignment == 'right' %}
-          {% image block.value.image width-340 as img %}
+          {% if block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+          {% elif block.block_type == 'image' %}
+            {% with alignment=block.value.alignment %}
+            <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
+              {% if alignment == 'left' or alignment == 'right' %}
+              {% image block.value.image width-340 as img %}
+              {% else %}
+              {% image block.value.image width-680 as img %}
+              {% endif %}
+              <img src="{{ img.url }}" alt="{{ img.alt }}">
+              {% if block.value.caption %}
+              <figcaption>{{ block.value.caption }}</figcaption>
+              {% endif %}
+            </figure>
+            {% endwith %}
           {% else %}
-          {% image block.value.image width-680 as img %}
+            {% include_block block %}
           {% endif %}
-          <img src="{{ img.url }}" alt="{{ img.alt }}">
-          {% if block.value.caption %}
-          <figcaption>{{ block.value.caption }}</figcaption>
-          {% endif %}
-        </figure>
-        {% endwith %}
-        {% else %}
-        {% include_block block %}
-        {% endif %}
         {% endfor %}
-      </main>
+      </div>
+    </main>
 
-      {# Gradient fade overlay #}
-      <div class="paywall-fade"></div>
+    {# Gradient fade overlay #}
+    <div class="paywall-fade"></div>
 
-      {# Subscribe CTA card #}
-      <div class="paywall-cta">
-        <div class="paywall-cta__card">
-          <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
-          <p class="paywall-cta__text">
-            {% if request.user.is_authenticated %}
-            You've reached your free article limit. Subscribe to unlock full access to all articles.
-            {% else %}
-            Sign in or subscribe to read the full article and get unlimited access.
-            {% endif %}
-          </p>
-          <div class="paywall-cta__actions">
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">Subscribe Now</a>
-            {% else %}
-            <a href="{% url 'reader_login' %}" class="paywall-btn paywall-btn--secondary">Sign In</a>
-            <a href="{% url 'reader_signup' %}" class="paywall-btn paywall-btn--primary">Subscribe</a>
-            {% endif %}
-          </div>
+    {# Subscribe CTA card #}
+    <div class="paywall-cta">
+      <div class="paywall-cta__card">
+        <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
+        <p class="paywall-cta__text">
+          {% if request.user.is_authenticated %}
+          You've reached your free article limit. Subscribe to unlock full access to all articles.
+          {% else %}
+          Sign in or subscribe to read the full article and get unlimited access.
+          {% endif %}
+        </p>
+        <div class="paywall-cta__actions">
+          {% if request.user.is_authenticated %}
+          <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">Subscribe Now</a>
+          {% else %}
+          <a href="{% url 'reader_login' %}" class="paywall-btn paywall-btn--secondary">Sign In</a>
+          <a href="{% url 'reader_signup' %}" class="paywall-btn paywall-btn--primary">Subscribe</a>
+          {% endif %}
         </div>
       </div>
     </div>
+  </div>
 
-    {% else %}
-    {# ── FULL ACCESS ── #}
+  {% else %}
+  
+  {# ── FULL ACCESS ── #}
+  <main class="article-body">
+    
     <div id="body-ml" class="lang-content active" data-lang="ml">
-      <main class="article-body">
+      <div class="article-content">
         {% for block in page.body %}
-        {% if block.block_type == 'heading' %}
-        <h2>{{ block.value }}</h2>
-        {% elif block.block_type == 'image' %}
-        {% with alignment=block.value.alignment %}
-        <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
-          {% if alignment == 'left' or alignment == 'right' %}
-          {% image block.value.image width-340 as img %}
+          {% if block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+          {% elif block.block_type == 'image' %}
+            {% with alignment=block.value.alignment %}
+            <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
+              {% if alignment == 'left' or alignment == 'right' %}
+              {% image block.value.image width-340 as img %}
+              {% else %}
+              {% image block.value.image width-680 as img %}
+              {% endif %}
+              <img src="{{ img.url }}" alt="{{ img.alt }}">
+              {% if block.value.caption %}
+              <figcaption>{{ block.value.caption }}</figcaption>
+              {% endif %}
+            </figure>
+            {% endwith %}
           {% else %}
-          {% image block.value.image width-680 as img %}
+            {% include_block block %}
           {% endif %}
-          <img src="{{ img.url }}" alt="{{ img.alt }}">
-          {% if block.value.caption %}
-          <figcaption>{{ block.value.caption }}</figcaption>
-          {% endif %}
-        </figure>
-        {% endwith %}
-        {% else %}
-        {% include_block block %}
-        {% endif %}
         {% endfor %}
-
-        {# ── Author Bio ── #}
-        {% for author_rel in page.article_authors.all %}
-        {% with author=author_rel.author %}
-        <div class="author-bio">
-          <h4>About the Author</h4>
-          <div class="bio-row">
-            {% if author.profile_image %}
-            {% image author.profile_image fill-112x112 as bio_avatar %}
-            <img src="{{ bio_avatar.url }}" alt="{{ author.title }}">
-            {% endif %}
-            <p>
-              <strong><a href="{{ author.url }}">{{ author.title }}</a></strong>
-              {{ author.biography }}
-            </p>
-          </div>
-        </div>
-        {% endwith %}
-        {% endfor %}
-      </main>
+      </div>
     </div>
 
     {% if page.body_en %}
     <div id="body-en" class="lang-content" data-lang="en">
-      <main class="article-body">
+      <div class="article-content">
         {% for block in page.body_en %}
-        {% include_block block %}
+          {% include_block block %}
         {% endfor %}
-      </main>
+      </div>
     </div>
     {% endif %}
 
     {% if page.body_hi %}
     <div id="body-hi" class="lang-content" data-lang="hi">
-      <main class="article-body">
+      <div class="article-content">
         {% for block in page.body_hi %}
-        {% include_block block %}
+          {% include_block block %}
         {% endfor %}
-      </main>
+      </div>
     </div>
     {% endif %}
 
     {% if page.body_ta %}
     <div id="body-ta" class="lang-content" data-lang="ta">
-      <main class="article-body">
+      <div class="article-content">
         {% for block in page.body_ta %}
-        {% include_block block %}
+          {% include_block block %}
         {% endfor %}
-      </main>
+      </div>
     </div>
     {% endif %}
 
-    {% endif %}
-
-    {# ── RELATED ARTICLES — siblings from the same topic ── #}
-    <section class="related-articles">
-      <h3 class="related-heading">Read This Next</h3>
-      <div class="related-grid">
-        {% for article in related_articles %}
-        <a class="related-card" href="{{ article.url }}">
-          {% if article.cover_image %}
-          {# Using specific fill for related cards #}
-          {% image article.cover_image fill-600x400 as thumb %}
-          <div class="related-card__img">
-            <img src="{{ thumb.url }}" alt="{{ thumb.alt }}">
-          </div>
+    {# ── Author Info Cards (Placed universally so they show in all languages) ── #}
+    <section class="author-section">
+      <h3 class="author-section-title">About the Author{% if page.article_authors.count > 1 %}s{% endif %}</h3>
+      
+      <div class="author-cards">
+        {% for author_rel in page.article_authors.all %}
+        {% with author=author_rel.author %}
+        <div class="author-card">
+          {% if author.profile_image %}
+          {% image author.profile_image fill-120x120 as bio_avatar %}
+          <img src="{{ bio_avatar.url }}" alt="{{ author.title }}" class="author-avatar-large">
           {% endif %}
-
-          <div class="related-card__body">
-            {% if article.topic %}
-            <span class="related-card__tag" style="background-color: {{ article.topic.color|default:'#c0392b' }};"
-              onclick="window.location.href='{% url 'topic_detail' slug=article.topic.slug %}'; return false;">
-              {{ article.topic.name }}</span>
+          
+          <div class="author-details">
+            <h4 class="author-name"><a href="{{ author.url }}">{{ author.title }}</a></h4>
+            {% if author.role %}
+            <span class="author-role">{{ author.role }}</span>
             {% endif %}
-            <p class="related-card__title">{{ article.title }}</p>
+            
+            <div class="author-bio-text">
+              {{ author.bio|richtext }}
+            </div>
           </div>
-        </a>
+        </div>
+        {% endwith %}
         {% endfor %}
       </div>
     </section>
 
-  </div>{# /.article-container #}
+  </main>
+  {% endif %}
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const slider = document.querySelector('.lang-slider');
-      if (!slider) return;
+  {# ── RELATED ARTICLES — siblings from the same topic ── #}
+  <section class="related-articles">
+    <h3 class="related-heading">Read This Next</h3>
+    <div class="related-grid">
+      {% for article in related_articles %}
+      <a class="related-card" href="{{ article.url }}">
+        {% if article.cover_image %}
+        {% image article.cover_image fill-600x400 as thumb %}
+        <div class="related-card__img">
+          <img src="{{ thumb.url }}" alt="{{ thumb.alt }}">
+        </div>
+        {% endif %}
 
-      const items = slider.querySelectorAll('.lang-slider__item');
-      const indicator = slider.querySelector('.lang-slider__indicator');
-      const langContents = document.querySelectorAll('.lang-content');
+        <div class="related-card__body">
+          {% if article.topic %}
+          <span class="related-card__tag" style="background-color: {{ article.topic.color|default:'#c0392b' }};"
+            onclick="window.location.href='{% url 'topic_detail' slug=article.topic.slug %}'; return false;">
+            {{ article.topic.name }}</span>
+          {% endif %}
+          <p class="related-card__title">{{ article.title }}</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
 
-      function updateSlider(activeItem) {
-        // Position and width the indicator
-        indicator.style.width = activeItem.offsetWidth + 'px';
-        indicator.style.left = activeItem.offsetLeft + 'px';
+</div>{# /.article-container #}
 
-        // Update item classes
-        items.forEach(item => item.classList.remove('active'));
-        activeItem.classList.add('active');
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.querySelector('.lang-slider');
+    if (!slider) return;
 
-        // Update content visibility
-        const target = activeItem.getAttribute('data-lang-target');
-        langContents.forEach(content => {
-          if (content.getAttribute('data-lang') === target) {
-            content.classList.add('active');
-          } else {
-            content.classList.remove('active');
-          }
-        });
-      }
+    const items = slider.querySelectorAll('.lang-slider__item');
+    const indicator = slider.querySelector('.lang-slider__indicator');
+    const langContents = document.querySelectorAll('.lang-content');
 
-      // Initial positioning
-      const initialActive = slider.querySelector('.lang-slider__item.active');
-      if (initialActive) {
-        // Small delay to ensure clientWidth/offsetLeft are ready if fonts are loading
-        setTimeout(() => updateSlider(initialActive), 50);
-      }
+    function updateSlider(activeItem) {
+      indicator.style.width = activeItem.offsetWidth + 'px';
+      indicator.style.left = activeItem.offsetLeft + 'px';
 
-      items.forEach(item => {
-        item.addEventListener('click', function() {
-          updateSlider(this);
-          
-          // Optional: Scroll to top of article if user switched deep in the page
-          const header = document.querySelector('.article-header');
-          if (window.scrollY > header.offsetTop + 100) {
-            header.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        });
-      });
+      items.forEach(item => item.classList.remove('active'));
+      activeItem.classList.add('active');
 
-      // Handle window resize to keep indicator position correct
-      window.addEventListener('resize', () => {
-        const currentActive = slider.querySelector('.lang-slider__item.active');
-        if (currentActive) updateSlider(currentActive);
-      });
-
-      // ── Scroll Tracking (Read Fully) ──────────────────────────
-      let readTracked = false;
-      const articleId = "{{ page.id }}";
-      const trackUrl = "{% url 'articles:track_read_fully' %}";
-      const csrfToken = "{{ csrf_token }}";
-
-      window.addEventListener('scroll', function() {
-        if (readTracked) return;
-
-        const scrollHeight = document.documentElement.scrollHeight;
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const clientHeight = document.documentElement.clientHeight;
-        
-        // Calculate scroll percentage
-        const scrollPct = (scrollTop + clientHeight) / scrollHeight;
-
-        if (scrollPct > 0.9) {
-          readTracked = true;
-          
-          const formData = new FormData();
-          formData.append('article_id', articleId);
-          
-          fetch(trackUrl, {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': csrfToken,
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-          })
-          .then(response => response.json())
-          .then(data => {
-            console.log('Read tracking:', data.message);
-          })
-          .catch(error => {
-            console.error('Error tracking read:', error);
-            readTracked = false; // Retry on failure if needed, or keep as false
-          });
+      const target = activeItem.getAttribute('data-lang-target');
+      langContents.forEach(content => {
+        if (content.getAttribute('data-lang') === target) {
+          content.classList.add('active');
+        } else {
+          content.classList.remove('active');
         }
-      }, { passive: true });
+      });
+    }
+
+    const initialActive = slider.querySelector('.lang-slider__item.active');
+    if (initialActive) {
+      setTimeout(() => updateSlider(initialActive), 50);
+    }
+
+    items.forEach(item => {
+      item.addEventListener('click', function() {
+        updateSlider(this);
+        const header = document.querySelector('.article-header');
+        if (window.scrollY > header.offsetTop + 100) {
+          header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
     });
-  </script>
+
+    window.addEventListener('resize', () => {
+      const currentActive = slider.querySelector('.lang-slider__item.active');
+      if (currentActive) updateSlider(currentActive);
+    });
+
+    // ── Scroll Tracking (Read Fully) ──────────────────────────
+    let readTracked = false;
+    const articleId = "{{ page.id }}";
+    const trackUrl = "{% url 'articles:track_read_fully' %}";
+    const csrfToken = "{{ csrf_token }}";
+
+    window.addEventListener('scroll', function() {
+      if (readTracked) return;
+
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
+      const scrollPct = (scrollTop + clientHeight) / scrollHeight;
+
+      if (scrollPct > 0.9) {
+        readTracked = true;
+        const formData = new FormData();
+        formData.append('article_id', articleId);
+        
+        fetch(trackUrl, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => { console.log('Read tracking:', data.message); })
+        .catch(error => { console.error('Error tracking read:', error); });
+      }
+    }, { passive: true });
+  });
+</script>
 
 {% endblock %}

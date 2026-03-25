@@ -191,6 +191,13 @@ def cover_image_preview_js():
 """)
 
 
+class HitCountColumn(Column):
+    def get_value(self, instance):
+        specific_instance = instance.specific
+        if hasattr(specific_instance, 'hit_count'):
+            return specific_instance.hit_count.hits
+        return "-"
+
 class AnalyticsColumn(Column):
     def __init__(self, name, field_name, **kwargs):
         super().__init__(name, **kwargs)
@@ -202,7 +209,23 @@ class AnalyticsColumn(Column):
             return getattr(specific_instance, self.field_name)
         return "-"
 
-@hooks.register('construct_page_listing_columns')
-def add_analytics_columns(columns, page_list_kwargs):
-    columns.append(AnalyticsColumn("opened_count", "opened_count", label="Opened"))
-    columns.append(AnalyticsColumn("read_fully_count", "read_fully_count", label="Read Fully"))
+from wagtail.admin.viewsets.pages import PageListingViewSet
+
+class ArticlePageListingViewSet(PageListingViewSet):
+    icon = 'doc-full'
+    menu_label = 'Articles'
+    menu_order = 200
+    add_to_admin_menu = True # Add this so it shows on the sidebar menu
+
+    @property
+    def columns(self):
+        return super().columns + [
+            HitCountColumn("hit_count", label="Views", sort_key="hit_count_generic__hits"),
+            AnalyticsColumn("read_fully_count", "read_fully_count", label="Read Fully", sort_key="read_fully_count")
+        ]
+
+@hooks.register('register_admin_viewset')
+def register_article_viewset():
+    from .models import Article
+    ArticlePageListingViewSet.model = Article
+    return ArticlePageListingViewSet('article_admin')
