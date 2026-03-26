@@ -120,12 +120,10 @@ class ArticleForm(WagtailAdminPageForm):
             Issue = apps.get_model('issue', 'Issue')
             latest_issue = Issue.objects.live().order_by('-date_of_publishing').first()
             if latest_issue:
-                self.fields['main_issue'].queryset = Issue.objects.filter(pk=latest_issue.pk)
+                # Set the initial default value to the latest issue
                 self.fields['main_issue'].initial = latest_issue.pk
                 self.initial['main_issue'] = latest_issue.pk
-                self.fields['main_issue'].widget = forms.Select(choices=self.fields['main_issue'].choices)
-                self.fields['main_issue'].required = False
-
+                
 
 class Article(Page, HitCountMixin):
     base_form_class = ArticleForm
