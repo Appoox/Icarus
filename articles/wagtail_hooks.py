@@ -228,4 +228,4 @@ class ArticlePageListingViewSet(PageListingViewSet):
 def register_article_viewset():
     from .models import Article
     ArticlePageListingViewSet.model = Article
-    return ArticlePageListingViewSet('article_admin')
+    return ArticlePageListingViewSet('articles')
