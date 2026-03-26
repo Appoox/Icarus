@@ -34,7 +34,7 @@
     {# ── EDITORIAL BOARD | EDITORIAL — two-column layout ── #}
     <div class="editorial-layout">
 
-        {# LEFT COLUMN: Editorial Board #}
+        {# LEFT COLUMN: Editorial Board (Moved to bottom on mobile via CSS) #}
         <div class="editorial-board-col">
             <h2 class="editorial-board-col__heading">പ്രസാധകര്‍</h2>
 
@@ -62,7 +62,7 @@
             {% endfor %}
         </div>
 
-        {# RIGHT COLUMN: Editorial content (StreamField) #}
+        {# RIGHT COLUMN: Editorial content (Moved to top on mobile via CSS) #}
         <div class="editorial-content-col">
             <h2 class="editorial-content-col__heading">മുഖക്കുറിപ്പ്</h2>
 
@@ -97,29 +97,51 @@
         <span class="issue-section-head__rule" aria-hidden="true"></span>
     </div>
 
-    <div class="issue-articles-grid">
-        {% for article in page.get_all_articles %}
-        <article class="issue-article-card">
-            {% if article.cover_image %}
-            <a href="{{ article.url }}" class="issue-article-card__image-wrap" aria-hidden="true" tabindex="-1">
-                {% image article.cover_image fill-440x280 as art_img %}
-                <img src="{{ art_img.url }}" alt="{{ article.title }}">
-            </a>
-            {% endif %}
-            <h3 class="issue-article-card__title">
-                <a href="{{ article.url }}">{{ article.title }}</a>
-            </h3>
-            <p class="issue-article-card__meta">
-                By
-                {% for rel in article.article_authors.all %}
-                <a href="{{ rel.author.url }}">{{ rel.author.title }}</a>{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-            </p>
-        </article>
-        {% empty %}
-        <p class="issue-no-articles">No articles found for this issue.</p>
-        {% endfor %}
-    </div>
+    {# <div class="issue-articles-grid"> #}
+        {# {% for article in page.get_all_articles %} #}
+            {# Using the global carousel card component #}
+            {# {% include "includes/carousel_card.html" with article=article %} #}
+        {# {% empty %} #}
+        {# <p class="issue-no-articles">No articles found for this issue.</p> #}
+        {# {% endfor %} #}
+    {# </div> #}
+    
+    <div class="sg-article-grid">
+    {% for article in page.get_all_articles %}
+    <article class="sg-article-card">
+      {% if article.cover_image %}
+      <a href="{{ article.url }}" class="sg-article-card__image-wrap" aria-hidden="true" tabindex="-1">
+        {% image article.cover_image fill-440x280 as art_img %}
+        <img src="{{ art_img.url }}" alt="{{ article.title }}">
+      </a>
+      {% endif %}
+      
+      <div class="sg-article-card__content">
+        {% if article.topic %}
+        <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-article-card__category"
+          style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+          {{ article.topic.name }}
+        </a>
+        {% endif %}
+        <h3 class="sg-article-card__title">
+          <a href="{{ article.url }}">{{ article.title }}</a>
+        </h3>
+
+        {% if article.article_authors.all %}
+        <span class="sg-card-author">
+          {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </span>
+        {% endif %}
+
+        <time class="sg-article-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+          {{ article.date|date:"F j, Y" }}
+        </time>
+      </div>
+    </article>
+    {% empty %}
+    <p class="sg-empty">No articles published yet.</p>
+    {% endfor %}
+  </div>
 
 </div>
 {% endblock %}
