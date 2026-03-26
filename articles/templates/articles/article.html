@@ -1039,7 +1039,7 @@
     // ── Scroll Tracking (Read Fully) ──────────────────────────
     let readTracked = false;
     const articleId = "{{ page.id }}";
-    const trackUrl = "{% url 'articles:track_read_fully' %}";
+    const trackUrl = "/articles/track-read-fully/";
     const csrfToken = "{{ csrf_token }}";
 
     window.addEventListener('scroll', function() {
