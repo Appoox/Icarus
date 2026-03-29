@@ -61,13 +61,9 @@
         margin-bottom: 6px;
     }
 
-    .sub-card__status--active {
-        color: #2e7d32;
-    }
-
-    .sub-card__status--inactive {
-        color: #c8102e;
-    }
+    .sub-card__status--active  { color: #2e7d32; }
+    .sub-card__status--grace   { color: #e65100; }
+    .sub-card__status--inactive { color: #c8102e; }
 
     .sub-card__detail {
         font-family: 'Source Sans 3', sans-serif;
@@ -76,6 +72,31 @@
         margin-bottom: 4px;
     }
 
+    /* ── Cancel button ── */
+    .cancel-form {
+        margin-top: 16px;
+    }
+
+    .btn-cancel {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: transparent;
+        color: #c8102e;
+        border: 1px solid #c8102e;
+        border-radius: 4px;
+        padding: 7px 16px;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .btn-cancel:hover {
+        background: #fce4ec;
+    }
+
+    /* ── Plan picker ── */
     .sub-card__plans {
         margin-top: 20px;
         padding-top: 20px;
@@ -102,7 +123,7 @@
     .plan-option:hover {
         border-color: #0b1f3a;
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
 
     .plan-option__name {
@@ -124,19 +145,36 @@
         margin-bottom: 36px;
     }
 
-    .profile-section h2 {
+    .profile-section__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #d4d0c8;
+    }
+
+    .profile-section__header h2 {
         font-family: 'Source Sans 3', sans-serif;
         font-size: 12px;
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         color: #6b6659;
-        margin-bottom: 16px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #d4d0c8;
+        margin: 0;
     }
 
-    /* Topics list */
+    .link-edit {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: #c8102e;
+        text-decoration: none;
+    }
+
+    .link-edit:hover { text-decoration: underline; }
+
+    /* Topics */
     .topics-list {
         display: flex;
         flex-wrap: wrap;
@@ -170,9 +208,7 @@
         border-bottom: 1px solid #e8e8e8;
     }
 
-    .read-list li:last-child {
-        border-bottom: none;
-    }
+    .read-list li:last-child { border-bottom: none; }
 
     .read-list a {
         font-family: 'Playfair Display', Georgia, serif;
@@ -183,9 +219,7 @@
         transition: color 0.15s;
     }
 
-    .read-list a:hover {
-        color: #c8102e;
-    }
+    .read-list a:hover { color: #c8102e; }
 
     .read-list .date {
         font-family: 'Source Sans 3', sans-serif;
@@ -201,6 +235,18 @@
         color: #888070;
         font-style: italic;
     }
+
+    /* Grace period banner */
+    .grace-banner {
+        background: #fff3e0;
+        border: 1px solid #ffb74d;
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        color: #e65100;
+        margin-bottom: 16px;
+    }
 </style>
 {% endblock %}
 
@@ -212,43 +258,68 @@
         <p class="email">{{ reader.email }}</p>
     </div>
 
+    {# ── Grace period warning ── #}
+    {% if reader.is_in_grace_period %}
+    <div class="grace-banner">
+        ⚠️ Your subscription expired recently. You're in a grace period — renew now to keep your access.
+    </div>
+    {% endif %}
+
     {# ── Subscription Status ── #}
     <div class="sub-card">
         <p class="sub-card__label">Subscription</p>
-        {% if reader.is_subscribed %}
-        <p class="sub-card__status sub-card__status--active">Active — {{ reader.get_subscription_plan_display }}</p>
-        <p class="sub-card__detail">Expires: {{ reader.subscription_end|date:"F j, Y" }}</p>
-        {% else %}
-        <p class="sub-card__status sub-card__status--inactive">Not Subscribed</p>
-        <p class="sub-card__detail">Subscribe to get unlimited access to all articles.</p>
 
-        <div class="sub-card__plans">
-            <p class="sub-card__label">Choose a Plan</p>
-            <div class="plans-grid">
-                <a href="{% url 'reader_checkout' plan_type='1_month' %}" class="plan-option">
-                    <div class="plan-option__name">1 Month</div>
-                    <div class="plan-option__price">₹299</div>
-                </a>
-                <a href="{% url 'reader_checkout' plan_type='3_months' %}" class="plan-option">
-                    <div class="plan-option__name">3 Months</div>
-                    <div class="plan-option__price">₹799</div>
-                </a>
-                <a href="{% url 'reader_checkout' plan_type='6_months' %}" class="plan-option">
-                    <div class="plan-option__name">6 Months</div>
-                    <div class="plan-option__price">₹1499</div>
-                </a>
-                <a href="{% url 'reader_checkout' plan_type='1_year' %}" class="plan-option">
-                    <div class="plan-option__name">1 Year</div>
-                    <div class="plan-option__price">₹2499</div>
-                </a>
+        {% if reader.is_subscribed %}
+            <p class="sub-card__status sub-card__status--active">
+                Active — {{ reader.get_subscription_plan_display }}
+            </p>
+
+            {# ✅ Show both start and end dates #}
+            {% if reader.subscription_start %}
+            <p class="sub-card__detail">Started: {{ reader.subscription_start|date:"F j, Y" }}</p>
+            {% endif %}
+            <p class="sub-card__detail">
+                Expires: {{ reader.subscription_end|date:"F j, Y" }}
+                {% if reader.days_until_expiry is not None %}
+                    — {{ reader.days_until_expiry }} day{{ reader.days_until_expiry|pluralize }} remaining
+                {% endif %}
+            </p>
+
+            {# ✅ Cancel button — POST form, not a plain link #}
+            <div class="cancel-form">
+                <form method="post" action="{% url 'cancel_subscription' %}"
+                      onsubmit="return confirm('Are you sure you want to cancel your subscription?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-cancel">Cancel Subscription</button>
+                </form>
             </div>
-        </div>
+
+        {% else %}
+            <p class="sub-card__status sub-card__status--inactive">Not Subscribed</p>
+            <p class="sub-card__detail">Subscribe to get unlimited access to all articles.</p>
+
+            <div class="sub-card__plans">
+                <p class="sub-card__label">Choose a Plan</p>
+                <div class="plans-grid">
+                    {# ✅ Prices now come from the view's PLANS dict — no hardcoding #}
+                    {% for plan_key, plan in plans.items %}
+                    <a href="{% url 'reader_checkout' plan_type=plan_key %}" class="plan-option">
+                        <div class="plan-option__name">{{ plan.name }}</div>
+                        <div class="plan-option__price">₹{{ plan.price }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
         {% endif %}
     </div>
 
     {# ── Interested Topics ── #}
     <div class="profile-section">
-        <h2>Your Interests</h2>
+        <div class="profile-section__header">
+            <h2>Your Interests</h2>
+            {# ✅ Link to update interests page #}
+            <a href="{% url 'update_interests' %}" class="link-edit">Edit</a>
+        </div>
         {% if interested_topics %}
         <ul class="topics-list">
             {% for topic in interested_topics %}
@@ -256,13 +327,15 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="empty-state">No topics selected yet.</p>
+        <p class="empty-state">No topics selected yet. <a href="{% url 'update_interests' %}" class="link-edit">Add some</a></p>
         {% endif %}
     </div>
 
     {# ── Read Articles ── #}
     <div class="profile-section">
-        <h2>Reading History</h2>
+        <div class="profile-section__header">
+            <h2>Reading History</h2>
+        </div>
         {% if read_articles %}
         <ul class="read-list">
             {% for article in read_articles %}
