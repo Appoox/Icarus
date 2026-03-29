@@ -7,7 +7,7 @@ from issue.models import Topic
 
 class ReaderSignupForm(UserCreationForm):
     """
-    Extends Django's UserCreationForm with the Reader-specific fields.
+    Extends Django's UserCreationForm with Reader-specific fields.
     Creates both the User and the linked Reader profile.
     """
     name = forms.CharField(
@@ -52,7 +52,6 @@ class ReaderSignupForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Style the password fields
         self.fields['password1'].widget.attrs.update({
             'placeholder': 'Password',
             'class': 'form-input',
@@ -85,3 +84,19 @@ class ReaderSignupForm(UserCreationForm):
             if topics:
                 reader.interested_topics.set(topics)
         return user
+
+
+# ✅ NEW: Lets existing readers update their interests from the profile page
+class UpdateInterestsForm(forms.ModelForm):
+    interested_topics = forms.ModelMultipleChoiceField(
+        queryset=Topic.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'topic-checkbox',
+        }),
+        label='Topics You\'re Interested In',
+    )
+
+    class Meta:
+        model = Reader
+        fields = ('interested_topics',)

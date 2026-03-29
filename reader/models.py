@@ -39,11 +39,11 @@ class Reader(index.Indexed, models.Model):
     ]
 
     PLAN_DURATIONS = {
-        'none': timedelta(days=0),
-        '1_month': timedelta(days=30),
+        'none':     timedelta(days=0),
+        '1_month':  timedelta(days=30),
         '3_months': timedelta(days=90),
         '6_months': timedelta(days=180),
-        '1_year': timedelta(days=365),
+        '1_year':   timedelta(days=365),
     }
 
     subscription_plan = models.CharField(
@@ -53,15 +53,16 @@ class Reader(index.Indexed, models.Model):
         help_text='Active subscription plan.',
     )
     subscription_start = models.DateTimeField(
-        null=True,
-        blank=True,
+        null=True, blank=True,
         help_text='When the current subscription period began.',
     )
     subscription_end = models.DateTimeField(
-        null=True,
-        blank=True,
+        null=True, blank=True,
         help_text='When the current subscription period expires.',
     )
+
+    # ✅ NEW: Grace period for failed/lapsed renewals (e.g. 3 days leeway)
+    GRACE_PERIOD = timedelta(days=3)
 
     @property
     def is_subscribed(self):
@@ -72,15 +73,48 @@ class Reader(index.Indexed, models.Model):
             return False
         return timezone.now() < self.subscription_end
 
+    @property
+    def is_in_grace_period(self):
+        """
+        True if the subscription has just expired but is within the grace window.
+        Useful to show a softer 'renew now' prompt instead of hard-locking content.
+        """
+        if self.subscription_plan == 'none' or self.subscription_end is None:
+            return False
+        now = timezone.now()
+        return self.subscription_end <= now < (self.subscription_end + self.GRACE_PERIOD)
+
+    @property
+    def days_until_expiry(self):
+        """Returns the number of days left in the subscription, or None."""
+        if not self.is_subscribed:
+            return None
+        delta = self.subscription_end - timezone.now()
+        return max(delta.days, 0)
+
     def activate_subscription(self, plan):
-        """Start or renew a subscription with the given plan key."""
+        """
+        Start or renew a subscription with the given plan key.
+
+        ✅ Renewal stacking: if the reader still has time left on their current
+        subscription, the new period starts from subscription_end (not now),
+        so they never lose paid days.
+        """
         duration = self.PLAN_DURATIONS.get(plan)
         if not duration or plan == 'none':
             return
+
         now = timezone.now()
+
+        # ✅ Stack on top of existing subscription if still active
+        if self.is_subscribed and self.subscription_end:
+            new_start = self.subscription_end
+        else:
+            new_start = now
+
         self.subscription_plan = plan
-        self.subscription_start = now
-        self.subscription_end = now + duration
+        self.subscription_start = new_start
+        self.subscription_end = new_start + duration
         self.save(update_fields=[
             'subscription_plan', 'subscription_start', 'subscription_end',
         ])
@@ -88,8 +122,7 @@ class Reader(index.Indexed, models.Model):
     # ── Payment ───────────────────────────────────────────────────────
     payment_details = models.OneToOneField(
         'PaymentDetails',
-        null=True,
-        blank=True,
+        null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='reader',
     )
@@ -159,42 +192,19 @@ class PaymentDetails(models.Model):
         ('refunded', 'Refunded'),
     ]
 
-    # Gateway reference
-    gateway_name = models.CharField(
-        max_length=50,
-        blank=True,
-        help_text='Payment gateway used, e.g. "cashfree", "billdesk".',
-    )
-    gateway_transaction_id = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text='Transaction ID returned by the payment gateway.',
-    )
-    gateway_order_id = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text='Order ID sent to the payment gateway.',
-    )
+    gateway_name = models.CharField(max_length=50, blank=True)
+    gateway_transaction_id = models.CharField(max_length=255, blank=True)
+    gateway_order_id = models.CharField(max_length=255, blank=True)
 
-    # Payment info
     payment_method = models.CharField(
-        max_length=20,
-        choices=PAYMENT_METHODS,
-        default='card',
+        max_length=20, choices=PAYMENT_METHODS, default='card',
     )
-    amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     currency = models.CharField(max_length=3, default='INR')
     status = models.CharField(
-        max_length=20,
-        choices=PAYMENT_STATUSES,
-        default='pending',
+        max_length=20, choices=PAYMENT_STATUSES, default='pending',
     )
 
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
