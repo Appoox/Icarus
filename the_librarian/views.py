@@ -9,7 +9,12 @@ import logging
 from pathlib import Path
 
 from the_librarian.models import ArchiveDocument, DocumentChunk
-from the_librarian.services.search import search_similar, search_by_document
+from the_librarian.services.search import (
+    search_similar,
+    search_keyword,
+    search_hybrid,
+    search_by_document,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +25,22 @@ def search_view(request):
     """Render the search page with optional results."""
     query = request.GET.get("q", "").strip()
     top_k = int(request.GET.get("top_k", 5))
+    mode = request.GET.get("mode", "hybrid").lower()
     results = []
 
     if query:
-        results = search_similar(query, top_k=top_k)
+        if mode == "keyword":
+            results = search_keyword(query, top_k=top_k)
+        elif mode == "similarity":
+            results = search_similar(query, top_k=top_k)
+        else:
+            results = search_hybrid(query, top_k=top_k)
 
     return render(request, "the_librarian/search.html", {
         "query": query,
         "results": results,
         "top_k": top_k,
+        "mode": mode,
     })
 
 
@@ -44,7 +56,13 @@ def search_api(request):
     if document:
         results = search_by_document(document, query, top_k=top_k)
     else:
-        results = search_similar(query, top_k=top_k)
+        mode = request.GET.get("mode", "hybrid").lower()
+        if mode == "keyword":
+            results = search_keyword(query, top_k=top_k)
+        elif mode == "similarity":
+            results = search_similar(query, top_k=top_k)
+        else:
+            results = search_hybrid(query, top_k=top_k)
 
     return JsonResponse({"query": query, "results": results})
 

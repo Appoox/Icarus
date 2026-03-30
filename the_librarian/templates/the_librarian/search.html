@@ -135,19 +135,51 @@
             padding: 3rem;
         }
 
-        /* Top-K selector */
-        .topk-wrapper {
+        /* Top-K and Mode selectors */
+        .search-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .control-group {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        .topk-select {
-            padding: 0.75rem;
+        .control-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .select-input {
+            padding: 0.6rem 0.75rem;
             border: 2px solid var(--border);
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             outline: none;
+            background: #fff;
+            cursor: pointer;
         }
+        .select-input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Badge for search type */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-hybrid { background: #e0e7ff; color: #4338ca; }
+        .badge-similarity { background: #fef3c7; color: #92400e; }
+        .badge-keyword { background: #d1fae5; color: #065f46; }
     </style>
 </head>
 <body>
@@ -159,18 +191,35 @@
             <input type="text"
                    name="q"
                    class="search-input"
-                   placeholder="Search the archive…"
+                   placeholder="Search the archive (e.g. climate change, physics experiments)…"
                    value="{{ query }}"
                    autofocus>
-            <div class="topk-wrapper">
-                <select name="top_k" class="topk-select" title="Number of results">
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+
+        <div class="search-controls">
+            <div class="control-group">
+                <span class="control-label">Search Mode</span>
+                <select name="mode" class="select-input" onchange="this.form.submit()" form="search-form-proxy">
+                    <option value="hybrid" {% if mode == 'hybrid' %}selected{% endif %}>Hybrid (Recommended)</option>
+                    <option value="similarity" {% if mode == 'similarity' %}selected{% endif %}>Semantic Similarity</option>
+                    <option value="keyword" {% if mode == 'keyword' %}selected{% endif %}>Keyword Match</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <span class="control-label">Results</span>
+                <select name="top_k" class="select-input" onchange="this.form.submit()" form="search-form-proxy">
                     <option value="3" {% if top_k == 3 %}selected{% endif %}>3</option>
                     <option value="5" {% if top_k == 5 %}selected{% endif %}>5</option>
                     <option value="10" {% if top_k == 10 %}selected{% endif %}>10</option>
                     <option value="20" {% if top_k == 20 %}selected{% endif %}>20</option>
                 </select>
             </div>
-            <button type="submit" class="search-btn">Search</button>
+        </div>
+
+        <!-- Hidden form inputs for auto-submit on select change -->
+        <form id="search-form-proxy" method="get" style="display:none">
+            <input type="hidden" name="q" value="{{ query }}">
         </form>
 
         {% if query %}
@@ -181,9 +230,12 @@
                 <div class="result-card">
                     <div class="result-header">
                         <span class="result-doc">{{ result.document_name }}</span>
+                        <span class="badge badge-{{ result.search_type|default:'similarity' }}">
+                            {{ result.search_type|default:'similarity' }}
+                        </span>
                         <span class="result-page">Page {{ result.page_number }}</span>
                     </div>
-                    <div class="result-score">Similarity: {{ result.score }}</div>
+                    <div class="result-score">Relevance: {{ result.score }}</div>
                     <p class="result-text">{{ result.chunk_text }}</p>
                     <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number }}"
                        class="result-link"

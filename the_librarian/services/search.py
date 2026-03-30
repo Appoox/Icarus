@@ -15,6 +15,8 @@ Improvements applied
 """
 import logging
 
+from django.db.models import F
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from pgvector.django import CosineDistance
 
 from the_librarian.models import DocumentChunk
@@ -64,9 +66,90 @@ def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
                 "file_path": chunk.document.file_path,
                 "page_number": chunk.page_number,
                 "score": score,
+                "search_type": "similarity",
             }
         )
     return output
+
+
+def search_keyword(query_text: str, top_k: int = 5, min_score: float = 0.0001):
+    """
+    Search for chunks using PostgreSQL Full-Text Search.
+
+    Returns:
+        list of dicts (same format as search_similar).
+    """
+    vector = SearchVector("chunk_text")
+    query = SearchQuery(query_text)
+
+    results = (
+        DocumentChunk.objects.annotate(rank=SearchRank(vector, query))
+        .filter(rank__gte=min_score)
+        .order_by("-rank")
+        .select_related("document")[:top_k]
+    )
+
+    output = []
+    for chunk in results:
+        output.append(
+            {
+                "chunk_id": chunk.id,
+                "chunk_text": chunk.chunk_text,
+                "document_name": chunk.document.filename,
+                "document_id": chunk.document.id,
+                "file_path": chunk.document.file_path,
+                "page_number": chunk.page_number,
+                "score": round(float(chunk.rank), 4),
+                "search_type": "keyword",
+            }
+        )
+    return output
+
+
+def search_hybrid(query_text: str, top_k: int = 5, k: int = 60):
+    """
+    Hybrid search combining similarity and keyword results using
+    Reciprocal Rank Fusion (RRF).
+
+    Formula: score = Σ 1 / (k + rank)
+    """
+    # 1. Fetch more results than requested to allow for meaningful fusion
+    fetch_k = top_k * 4
+
+    sim_results = search_similar(query_text, top_k=fetch_k)
+    kw_results = search_keyword(query_text, top_k=fetch_k)
+
+    # 2. Apply RRF
+    rrf_scores = {}  # chunk_id -> combined_score
+    chunk_map = {}  # chunk_id -> result_dict
+
+    for rank, res in enumerate(sim_results, 1):
+        cid = res["chunk_id"]
+        rrf_scores[cid] = rrf_scores.get(cid, 0) + 1.0 / (k + rank)
+        chunk_map[cid] = res
+        chunk_map[cid]["search_type"] = "similarity"
+
+    for rank, res in enumerate(kw_results, 1):
+        cid = res["chunk_id"]
+        rrf_scores[cid] = rrf_scores.get(cid, 0) + 1.0 / (k + rank)
+        if cid in chunk_map:
+            chunk_map[cid]["search_type"] = "hybrid"
+        else:
+            chunk_map[cid] = res
+            chunk_map[cid]["search_type"] = "keyword"
+
+    # 3. Sort by RRF score
+    sorted_ids = sorted(rrf_scores.keys(), key=lambda x: rrf_scores[x], reverse=True)[
+        :top_k
+    ]
+
+    final_output = []
+    for cid in sorted_ids:
+        res = chunk_map[cid]
+        res["score"] = round(rrf_scores[cid], 6)
+        final_output.append(res)
+
+    return final_output
 
 
 def search_by_document(
