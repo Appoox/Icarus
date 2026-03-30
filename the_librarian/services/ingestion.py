@@ -71,6 +71,33 @@ def request_stop() -> None:
 # #4: Per-page OCR cache
 # ---------------------------------------------------------------------------
 
+import re
+
+def preprocess_malayalam_pdf_text(text):
+    if not isinstance(text, str):
+        return text
+        
+    # 1. Remove HTML tags (including <br>, <b>, <math> etc.)
+    text = re.sub(r'<[^>]+>', ' ', text)
+    
+    # 2. Fix broken Malayalam words caused by PDF line breaks
+    # Matches a Malayalam char, a newline (with optional spaces), and another Malayalam char
+    text = re.sub(r'([ഀ-ൿ])\s*\n\s*([ഀ-ൿ])', r'\1\2', text)
+    
+    # 3. Remove repeating punctuation/OCR noise (e.g., _____, ....., ----, ~~~)
+    text = re.sub(r'[-_.=~]{3,}', ' ', text)
+    
+    # 4. Remove isolated garbage characters (bullets, random OCR symbols)
+    # This removes lines that are just scattered single characters/symbols
+    text = re.sub(r'(?m)^[\s\W0-9a-zA-Z]{1,5}$', '', text)
+    
+    # 5. Normalize whitespace (convert multiple spaces/newlines to a single space/newline)
+    text = re.sub(r' +', ' ', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = text.strip()
+    
+    return text
+
 def _ocr_cache_dir(file_path: Path) -> Path:
     """
     Return the cache directory for a specific version of a PDF file.
@@ -146,7 +173,7 @@ def _ocr_page(pil_image: Image.Image) -> str:
         region_text = process_image_for_ocr(cropped_pil) or ""
         page_text += region_text + "\n"
 
-    return page_text.strip()
+    return preprocess_malayalam_pdf_text(page_text)
 
 
 # ---------------------------------------------------------------------------
