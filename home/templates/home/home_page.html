@@ -132,7 +132,6 @@
   .sg-issue-cover__image-wrap {
     position: relative;
     overflow: hidden;
-    flex: 1;
     background: var(--rule);
     margin: -1.5rem -1.5rem 1.25rem -1.5rem; /* Full-width image in card */
     box-shadow: 0 8px 20px rgba(11, 31, 58, 0.1);
@@ -141,8 +140,9 @@
 
   .sg-issue-cover__image-wrap img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
+    display: block;
     transition: transform .6s cubic-bezier(0.165, 0.84, 0.44, 1);
   }
 
@@ -252,17 +252,23 @@
 
   .sg-issue-articles__scroll-wrapper {
     flex: 1;
-    overflow: hidden;
+    overflow: auto; /* Allow scrolling in both directions, logic handled by JS */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
     position: relative;
-    padding: 2rem 1.25rem; /* Adjusted internal marquee padding */
+    padding: 2rem 1.25rem;
     margin: 0 -1.25rem;
+  }
+
+  .sg-issue-articles__scroll-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
   }
 
   .sg-issue-articles__grid {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    animation: marquee-vertical 40s linear infinite;
+    /* animation: marquee-vertical 40s linear infinite; Removed in favor of JS control */
   }
 
   .sg-issue-articles__grid:hover {
@@ -392,19 +398,40 @@
     gap: 1.25rem;
   }
 
-  .sg-issue-small-card {
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-    padding: 1rem;
+  .sg-issue-thumbnail {
+    width: 48px;
+    height: 48px;
     border-radius: 4px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); /* Increased shadow visibility */
-    transition: transform 0.2s ease;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent; /* Slightly thicker for better visibility */
+    transition: transform 0.2s, border-color 0.2s;
+    background: var(--rule);
+    position: relative;
   }
 
-  .sg-issue-small-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  .sg-issue-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8; /* Increased from 0.6 for better visibility */
+    transition: opacity 0.2s;
+  }
+
+  .sg-issue-thumbnail:hover img {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+
+  .sg-issue-thumbnail.is-active {
+    border-color: var(--red);
+    transform: scale(1.15);
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(200, 16, 46, 0.3);
+  }
+
+  .sg-issue-thumbnail.is-active img {
+    opacity: 1 !important; /* Fully opaque when active */
   }
 
   .sg-issue-small-card__image-wrap {
@@ -690,7 +717,7 @@
 
     .sg-issue-cover__image-wrap {
       margin: -1.25rem -1.25rem 1.25rem -1.25rem;
-      max-height: 450px; /* Constrain cover size on mobile */
+      max-height: none; /* Removed constraint to ensure full cover visibility */
     }
 
     .sg-issue-articles {
@@ -798,8 +825,8 @@
 
       {% if current_issue.cover_image %}
       <a href="{{ current_issue.url }}" class="sg-issue-cover__image-wrap" aria-hidden="true" tabindex="-1">
-        {% image current_issue.cover_image fill-760x960 as issue_img %}
-        <img src="{{ issue_img.url }}" alt="{{ current_issue.title }}">
+          {% image current_issue.cover_image width-800 as cover_img %}
+        <img src="{{ cover_img.url }}" alt="{{ current_issue.title }}">
       </a>
       {% endif %}
 
@@ -836,6 +863,21 @@
             {% for article in same_topic_articles %}{% include "includes/carousel_card.html" with article=article is_clone=False %}{% endfor %}
           {% endif %}
         </div>
+      </div>
+      {# Thumbnails navigation #}
+      <div class="sg-issue-thumbnails">
+        {% for article in same_topic_articles %}
+        <div class="sg-issue-thumbnail" data-index="{{ forloop.counter0 }}" aria-label="Go to article {{ forloop.counter }}">
+          {% if article.cover_image %}
+            {% image article.cover_image fill-150x150 as thumb_img %}
+            <img src="{{ thumb_img.url }}" alt="{{ article.title }}" width="48" height="48">
+          {% else %}
+            <div class="sg-issue-thumbnail__placeholder">
+              <span>{{ article.title|slice:":1" }}</span> {# Fallback letter if no image #}
+            </div>
+          {% endif %}
+        </div>
+        {% endfor %}
       </div>
     </div>
 
@@ -949,69 +991,107 @@ document.addEventListener('DOMContentLoaded', () => {
     const wrapper = document.querySelector('.sg-issue-articles__scroll-wrapper');
     const grid = document.querySelector('.sg-issue-articles__grid');
     const cards = grid ? grid.querySelectorAll('.sg-issue-card') : [];
+    const thumbs = document.querySelectorAll('.sg-issue-thumbnail');
     
     const totalCards = cards.length;
     if (wrapper && grid && totalCards >= 3) {
-        // Calculate section width based on the distance between the first card of original set 
-        // and first card of the first clone set. This is most robust against gaps.
         const numArticles = totalCards / 3;
         
-        const getSectionWidth = () => {
-            if (cards.length >= numArticles * 2) {
-                return cards[numArticles].offsetLeft - cards[0].offsetLeft;
-            }
-            return grid.scrollWidth / 3;
+        let isVertical = window.innerWidth > 900;
+        
+        const updateOrientation = () => {
+            isVertical = window.innerWidth > 900;
         };
 
-        let sectionWidth = getSectionWidth();
+        const getSectionSize = () => {
+            if (cards.length >= numArticles * 2) {
+                if (isVertical) {
+                    return cards[numArticles].offsetTop - cards[0].offsetTop;
+                } else {
+                    return cards[numArticles].offsetLeft - cards[0].offsetLeft;
+                }
+            }
+            return isVertical ? grid.scrollHeight / 3 : grid.scrollWidth / 3;
+        };
+
+        let sectionSize = getSectionSize();
         
         // Recalculate on resize
         window.addEventListener('resize', () => {
-            sectionWidth = getSectionWidth();
+            updateOrientation();
+            sectionSize = getSectionSize();
+            initialCenter();
         });
 
         // Center on the middle (Original) section
         const initialCenter = () => {
-            wrapper.scrollLeft = sectionWidth;
+            if (isVertical) {
+                wrapper.scrollTop = sectionSize;
+            } else {
+                wrapper.scrollLeft = sectionSize;
+            }
         };
-
         setTimeout(initialCenter, 50);
 
-        // Infinite loop jump-sync
+        // --- Thumbnail highlight logic (CENTERED) ---
+        const updateActiveThumb = () => {
+            if (!thumbs.length) return;
+            const scrollPos = isVertical ? wrapper.scrollTop : wrapper.scrollLeft;
+            const containerDim = isVertical ? wrapper.offsetHeight : wrapper.offsetWidth;
+            
+            // Calculate which card is currently in the center of the carousel
+            const centerPos = scrollPos + containerDim / 2;
+            
+            // Normalize relative to the middle section (Original)
+            const relativeCenter = (centerPos - sectionSize + sectionSize) % sectionSize;
+            
+            // Index calculation
+            const activeIndex = Math.floor((relativeCenter / sectionSize) * numArticles);
+            const safeIndex = (activeIndex + numArticles) % numArticles;
+            
+            thumbs.forEach((t, i) => {
+                t.classList.toggle('is-active', i === safeIndex);
+            });
+        };
+
+        // --- Consolidated Scroll Listener ---
         wrapper.addEventListener('scroll', () => {
-            const scrollLeft = wrapper.scrollLeft;
+            const scrollPos = isVertical ? wrapper.scrollTop : wrapper.scrollLeft;
             
-            // Symmetrical jump logic:
-            // When we leave the middle set (sectionWidth to 2*sectionWidth), 
-            // jump to the corresponding spot in the middle set.
-            
-            if (scrollLeft < sectionWidth) {
-                // We've scrolled into the first clone set (Right Swipe)
-                // Jump forward by one section width
-                wrapper.scrollLeft += sectionWidth;
+            // Infinite loop jump-sync
+            if (scrollPos < sectionSize) {
+                // Scrolled into first clone set -> Jump forward
+                if (isVertical) wrapper.scrollTop += sectionSize;
+                else wrapper.scrollLeft += sectionSize;
             } 
-            else if (scrollLeft >= sectionWidth * 2) {
-                // We've scrolled into the third clone set (Left Swipe)
-                // Jump backward by one section width
-                wrapper.scrollLeft -= sectionWidth;
+            else if (scrollPos >= sectionSize * 2) {
+                // Scrolled into third clone set -> Jump backward
+                if (isVertical) wrapper.scrollTop -= sectionSize;
+                else wrapper.scrollLeft -= sectionSize;
             }
+            
+            updateActiveThumb();
         }, { passive: true });
 
-        // Auto-scroll logic for mobile
+        // Auto-scroll logic
         let isPaused = false;
         let pauseTimeout;
-        const scrollSpeed = 0.6; // Adjust for desired speed (pixels per frame)
+        const scrollSpeed = 0.6; // Adjust speed
 
         const autoScroll = () => {
-            if (!isPaused && window.innerWidth <= 900) {
-                wrapper.scrollLeft += scrollSpeed;
+            if (!isPaused) {
+                if (isVertical) {
+                    wrapper.scrollTop += scrollSpeed;
+                } else {
+                    wrapper.scrollLeft += scrollSpeed;
+                }
             }
             requestAnimationFrame(autoScroll);
         };
 
         const pauseAutoScroll = () => {
             isPaused = true;
-            wrapper.style.scrollSnapType = 'x mandatory';
+            wrapper.style.scrollSnapType = isVertical ? 'y mandatory' : 'x mandatory';
             clearTimeout(pauseTimeout);
         };
 
@@ -1019,22 +1099,41 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(pauseTimeout);
             pauseTimeout = setTimeout(() => {
                 isPaused = false;
-                // Disable snapping for smooth auto-scroll, 
-                // but keep it on during manual interaction
                 wrapper.style.scrollSnapType = 'none';
-            }, 3000); // Resume auto-scroll after 3 seconds of inactivity
+            }, 3000); 
         };
 
+        // Thumbnail Click Interaction
+        thumbs.forEach((thumb, i) => {
+            thumb.addEventListener('click', () => {
+                pauseAutoScroll();
+                const targetCard = cards[numArticles + i];
+                let targetScroll;
+                
+                if (isVertical) {
+                    targetScroll = targetCard.offsetTop - (wrapper.offsetHeight - targetCard.offsetHeight) / 2;
+                    wrapper.scrollTo({ top: targetScroll, behavior: 'smooth' });
+                } else {
+                    targetScroll = targetCard.offsetLeft - (wrapper.offsetWidth - targetCard.offsetWidth) / 2;
+                    wrapper.scrollTo({ left: targetScroll, behavior: 'smooth' });
+                }
+                
+                resumeAutoScroll();
+            });
+        });
+
+        // Interaction Listeners
         wrapper.addEventListener('touchstart', pauseAutoScroll, { passive: true });
         wrapper.addEventListener('touchend', resumeAutoScroll, { passive: true });
         wrapper.addEventListener('mousedown', pauseAutoScroll);
         wrapper.addEventListener('mouseup', resumeAutoScroll);
 
-        // Initial state for mobile
-        if (window.innerWidth <= 900) {
-            wrapper.style.scrollSnapType = 'none';
-            requestAnimationFrame(autoScroll);
-        }
+        // Start auto-scroll
+        wrapper.style.scrollSnapType = 'none';
+        requestAnimationFrame(autoScroll);
+
+        // Initialize thumbnails
+        updateActiveThumb();
     }
 });
 </script>
