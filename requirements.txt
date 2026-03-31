@@ -24,3 +24,4 @@ pdfplumber==0.11.0
 sentence-transformers==3.0.0
 surya-ocr==0.17.1
 ultralytics==8.4.24
+langchain-text-splitters==1.1.1
