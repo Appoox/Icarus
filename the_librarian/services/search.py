@@ -25,6 +25,49 @@ from the_librarian.services.embedder import embed_query
 logger = logging.getLogger(__name__)
 
 
+def _format_chunk_result(chunk, score=None, search_type=None):
+    """
+    Unified formatter for search results across PDFs, Articles, and Authors.
+    """
+    res = {
+        "chunk_id": chunk.id,
+        "chunk_text": chunk.chunk_text,
+        "score": score,
+        "search_type": search_type,
+        "language": getattr(chunk, 'language', 'ml'),
+    }
+
+    if chunk.document_id:
+        res.update({
+            "type": "pdf",
+            "title": chunk.document.filename,
+            "document_id": chunk.document.id,
+            "file_path": chunk.document.file_path,
+            "page_number": chunk.page_number,
+        })
+    elif chunk.article_id:
+        res.update({
+            "type": "article",
+            "title": chunk.article.title,
+            "url": chunk.article.url,
+            "article_id": chunk.article.id,
+        })
+    elif chunk.author_id:
+        res.update({
+            "type": "author",
+            "title": chunk.author.title,
+            "url": chunk.author.url,
+            "author_id": chunk.author.id,
+        })
+    else:
+        res.update({
+            "type": "unknown",
+            "title": "Unknown Source",
+        })
+    
+    return res
+
+
 def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
     """
     Embed a query and find the most similar document chunks.
@@ -48,27 +91,15 @@ def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
         DocumentChunk.objects
         .annotate(distance=CosineDistance("embedding", query_embedding))
         .order_by("distance")
-        .select_related("document")[:top_k]
+        .select_related("document", "article", "author")[:top_k]
     )
 
     output = []
     for chunk in results:
         score = round(1 - chunk.distance, 4)
-        # #7: skip chunks below the caller's minimum relevance threshold
         if score < min_score:
             continue
-        output.append(
-            {
-                "chunk_id": chunk.id,
-                "chunk_text": chunk.chunk_text,
-                "document_name": chunk.document.filename,
-                "document_id": chunk.document.id,
-                "file_path": chunk.document.file_path,
-                "page_number": chunk.page_number,
-                "score": score,
-                "search_type": "similarity",
-            }
-        )
+        output.append(_format_chunk_result(chunk, score=score, search_type="similarity"))
     return output
 
 
@@ -86,22 +117,17 @@ def search_keyword(query_text: str, top_k: int = 5, min_score: float = 0.0001):
         DocumentChunk.objects.annotate(rank=SearchRank(vector, query))
         .filter(rank__gte=min_score)
         .order_by("-rank")
-        .select_related("document")[:top_k]
+        .select_related("document", "article", "author")[:top_k]
     )
 
     output = []
     for chunk in results:
         output.append(
-            {
-                "chunk_id": chunk.id,
-                "chunk_text": chunk.chunk_text,
-                "document_name": chunk.document.filename,
-                "document_id": chunk.document.id,
-                "file_path": chunk.document.file_path,
-                "page_number": chunk.page_number,
-                "score": round(float(chunk.rank), 4),
-                "search_type": "keyword",
-            }
+            _format_chunk_result(
+                chunk, 
+                score=round(float(chunk.rank), 4), 
+                search_type="keyword"
+            )
         )
     return output
 
@@ -177,24 +203,13 @@ def search_by_document(
         .filter(document__filename=document_name)
         .annotate(distance=CosineDistance("embedding", query_embedding))
         .order_by("distance")
-        .select_related("document")[:top_k]
+        .select_related("document", "article", "author")[:top_k]
     )
 
     output = []
     for chunk in results:
         score = round(1 - chunk.distance, 4)
-        # #7: apply minimum score filter
         if score < min_score:
             continue
-        output.append(
-            {
-                "chunk_id": chunk.id,
-                "chunk_text": chunk.chunk_text,
-                "document_name": chunk.document.filename,
-                "document_id": chunk.document.id,
-                "file_path": chunk.document.file_path,
-                "page_number": chunk.page_number,
-                "score": score,
-            }
-        )
+        output.append(_format_chunk_result(chunk, score=score))
     return output

@@ -239,3 +239,24 @@ class LibrarianIngestPanel(Component):
 def add_ingest_panel(request, panels):
     """Add the ingestion control panel to the Wagtail admin dashboard."""
     panels.append(LibrarianIngestPanel())
+
+
+# ── Auto-indexing hooks ──────────────────────────────────────────────────
+
+@hooks.register("after_publish_page")
+def auto_index_content(request, page):
+    """
+    Automatically (re)index Articles and Literati profiles when published.
+    """
+    from django.db import transaction
+    from articles.models import Article
+    from literati.models import Literati
+    from the_librarian.services.indexing import index_article, index_author
+
+    # Check for Article (or a more specific subclass if needed)
+    if isinstance(page.specific, Article):
+        transaction.on_commit(lambda: index_article(page.specific))
+        
+    # Check for Literati (Author Profile)
+    elif isinstance(page.specific, Literati):
+        transaction.on_commit(lambda: index_author(page.specific))
