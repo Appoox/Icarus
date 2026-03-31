@@ -104,6 +104,16 @@
             </svg>
         </button>
     </form>
+    <div class="search-overlay__options">
+        <label class="search-option">
+            <input type="radio" name="search_type" value="site" checked>
+            <span>Everything on శాസ്ത്രഗതി</span>
+        </label>
+        <label class="search-option">
+            <input type="radio" name="search_type" value="archive">
+            <span>Deep Archive (PDF Search)</span>
+        </label>
+    </div>
 </div>
 
 <style>
@@ -244,9 +254,38 @@
 }
 
 .search-overlay.is-open {
-    max-height: 80px;
+    max-height: 140px;
     opacity: 1;
     pointer-events: auto;
+}
+
+.search-overlay__options {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0 1.25rem 1rem 3.1rem;
+}
+
+.search-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.search-option:hover { color: #111; }
+
+.search-option input[type="radio"] {
+    margin: 0;
+    accent-color: #c0392b;
+}
+
+.search-option input:checked + span {
+    color: #111;
+    font-weight: 600;
 }
 
 .search-overlay__form {
@@ -344,6 +383,8 @@
     const overlay  = document.getElementById('searchOverlay');
     const closeBtn = document.getElementById('searchClose');
     const input    = document.getElementById('searchOverlayInput');
+    const form     = overlay.querySelector('.search-overlay__form');
+    const typeRadios = overlay.querySelectorAll('input[name="search_type"]');
 
     function openSearch() {
         overlay.classList.add('is-open');
@@ -357,6 +398,22 @@
         overlay.setAttribute('aria-hidden', 'true');
         toggle.setAttribute('aria-expanded', 'false');
     }
+
+    // Dynamic search target
+    form.addEventListener('submit', function(e) {
+        let isArchive = false;
+        typeRadios.forEach(radio => {
+            if (radio.checked && radio.value === 'archive') isArchive = true;
+        });
+
+        if (isArchive) {
+            form.action = "{% url 'the_librarian:search' %}";
+            input.name = "q";
+        } else {
+            form.action = "{% url 'search' %}";
+            input.name = "query";
+        }
+    });
 
     toggle.addEventListener('click', function (e) {
         e.stopPropagation();
