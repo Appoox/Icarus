@@ -398,19 +398,40 @@
     gap: 1.25rem;
   }
 
-  .sg-issue-small-card {
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-    padding: 1rem;
+  .sg-issue-thumbnail {
+    width: 48px;
+    height: 48px;
     border-radius: 4px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); /* Increased shadow visibility */
-    transition: transform 0.2s ease;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent; /* Slightly thicker for better visibility */
+    transition: transform 0.2s, border-color 0.2s;
+    background: var(--rule);
+    position: relative;
   }
 
-  .sg-issue-small-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  .sg-issue-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8; /* Increased from 0.6 for better visibility */
+    transition: opacity 0.2s;
+  }
+
+  .sg-issue-thumbnail:hover img {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+
+  .sg-issue-thumbnail.is-active {
+    border-color: var(--red);
+    transform: scale(1.15);
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(200, 16, 46, 0.3);
+  }
+
+  .sg-issue-thumbnail.is-active img {
+    opacity: 1 !important; /* Fully opaque when active */
   }
 
   .sg-issue-small-card__image-wrap {
@@ -848,10 +869,12 @@
         {% for article in same_topic_articles %}
         <div class="sg-issue-thumbnail" data-index="{{ forloop.counter0 }}" aria-label="Go to article {{ forloop.counter }}">
           {% if article.cover_image %}
-            {% image article.cover_image fill-100x100 as thumb_img %}
-            <img src="{{ thumb_img.url }}" alt="{{ article.title }}">
+            {% image article.cover_image fill-150x150 as thumb_img %}
+            <img src="{{ thumb_img.url }}" alt="{{ article.title }}" width="48" height="48">
           {% else %}
-            <div class="sg-issue-thumbnail__placeholder"></div>
+            <div class="sg-issue-thumbnail__placeholder">
+              <span>{{ article.title|slice:":1" }}</span> {# Fallback letter if no image #}
+            </div>
           {% endif %}
         </div>
         {% endfor %}
@@ -1010,14 +1033,20 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         setTimeout(initialCenter, 50);
 
-        // --- Thumbnail highlight logic ---
+        // --- Thumbnail highlight logic (CENTERED) ---
         const updateActiveThumb = () => {
             if (!thumbs.length) return;
             const scrollPos = isVertical ? wrapper.scrollTop : wrapper.scrollLeft;
+            const containerDim = isVertical ? wrapper.offsetHeight : wrapper.offsetWidth;
             
-            // Calculate which card is currently "most" in view relative to the middle section
-            const relativePos = (scrollPos - sectionSize + (sectionSize / numArticles / 2)) % sectionSize;
-            const activeIndex = Math.floor((relativePos / sectionSize) * numArticles);
+            // Calculate which card is currently in the center of the carousel
+            const centerPos = scrollPos + containerDim / 2;
+            
+            // Normalize relative to the middle section (Original)
+            const relativeCenter = (centerPos - sectionSize + sectionSize) % sectionSize;
+            
+            // Index calculation
+            const activeIndex = Math.floor((relativeCenter / sectionSize) * numArticles);
             const safeIndex = (activeIndex + numArticles) % numArticles;
             
             thumbs.forEach((t, i) => {
