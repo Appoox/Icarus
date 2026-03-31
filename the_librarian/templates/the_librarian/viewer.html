@@ -65,11 +65,11 @@
 
     <!--
         ViewerJS viewer: loads the PDF via the ViewerJS index.html.
-        The #page=N fragment tells the viewer to open at the specified page.
+        The ?startpage=N parameter tells ViewerJS to open at the specified page.
     -->
     <iframe
         class="viewer-frame"
-        src="{% static 'the_librarian/ViewerJS/index.html' %}#{{ pdf_url }}#page={{ page }}"
+        src="{% static 'the_librarian/ViewerJS/index.html' %}?startpage={{ page }}#{{ pdf_url }}"
         allowfullscreen>
     </iframe>
 </body>
