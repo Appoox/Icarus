@@ -80,39 +80,45 @@
     </a>
 </div>
 
-<!-- Full-width search overlay (slides down from header) -->
-<div class="search-overlay" id="searchOverlay" role="search" aria-hidden="true">
-    <form action="{% url 'search' %}" method="get" class="search-overlay__form">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input
-            type="text"
-            name="query"
-            placeholder="Search…"
-            class="search-overlay__input"
-            id="searchOverlayInput"
-            autocomplete="off"
-            aria-label="Search"
-        >
-        <button type="button" class="search-overlay__close" id="searchClose" aria-label="Close search">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+<!-- Full-screen search overlay -->
+<div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="Search" aria-hidden="true">
+    <div class="search-overlay__content">
+        <button type="button" class="search-overlay__close-btn" id="searchClose" aria-label="Close search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
         </button>
-    </form>
-    <div class="search-overlay__options">
-        <label class="search-option">
-            <input type="radio" name="search_type" value="site" checked>
-            <span>Everything on శాസ്ത്രഗതി</span>
-        </label>
-        <label class="search-option">
-            <input type="radio" name="search_type" value="archive">
-            <span>Deep Archive (PDF Search)</span>
-        </label>
+
+        <div class="search-overlay__container">
+            <form action="{% url 'the_librarian:search' %}" method="get" class="search-overlay__form" id="searchForm">
+                <div class="search-overlay__input-wrapper">
+                    <svg class="search-overlay__search-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                         stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input
+                        type="text"
+                        name="q"
+                        placeholder="Search the archive, articles, and authors..."
+                        class="search-overlay__input"
+                        id="searchOverlayInput"
+                        autocomplete="off"
+                        autofocus
+                    >
+                    <div class="search-overlay__loading-spinner" id="searchSpinner"></div>
+                </div>
+            </form>
+
+            <!-- Results Area -->
+            <div class="search-results" id="searchResults">
+                <div class="search-results__status" id="searchStatus">
+                    Type to start searching...
+                </div>
+                <div class="search-results__list" id="resultsList"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -129,205 +135,252 @@
     height: 64px;
     gap: 1rem;
     position: relative;
-    z-index: 100;
+    z-index: 1000;
 }
 
 /* ── Left ── */
-.site-header__logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-}
-
-.site-header__logo-link {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.site-header__logo-img {
-    height: 48px;
-    width: auto;
-    display: block;
-}
-
-.site-header__org-name {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    font-weight: bold;
-    line-height: 1.3;
-    font-size: 0.78rem;
-    white-space: nowrap;
-}
-
-.site-header__org-name span {
-    display: block;
-}
+.site-header__logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.site-header__logo-img { height: 48px; width: auto; display: block; }
+.site-header__org-name { display: flex; flex-direction: column; font-weight: bold; line-height: 1.3; font-size: 0.78rem; white-space: nowrap; }
 
 /* ── Centre ── */
-.site-header__title {
-    flex: 1;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 0;
-}
-
-.site-header__title a {
-    display: inline-flex;
-    align-items: center;
-}
-
-.site-header__title-img {
-    height: 52px;
-    width: auto;
-    max-width: 100%;
-}
+.site-header__title { flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; min-width: 0; }
+.site-header__title-img { height: 52px; width: auto; max-width: 100%; }
 
 /* ── Right ── */
-.site-header__right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-}
+.site-header__right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.header-link { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-decoration: none; color: inherit; white-space: nowrap; }
+.header-link--cta { background: #c0392b; color: #fff !important; padding: 5px 12px; border-radius: 4px; }
 
-.header-link {
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-decoration: none;
-    color: inherit;
-    white-space: nowrap;
-}
-
-.header-link--muted { opacity: 0.6; }
-
-.header-link--cta {
-    background: #c0392b;
-    color: #fff !important;
-    padding: 5px 12px;
-    border-radius: 4px;
-}
-
-/* ── Search icon ── */
 .search-icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: inherit;
-    padding: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background 0.2s;
+    background: none; border: none; cursor: pointer; color: inherit; padding: 8px;
+    display: flex; align-items: center; justify-content: center; border-radius: 50%;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.search-icon-btn:hover { background: rgba(0,0,0,0.07); }
+.search-icon-btn:hover { background: rgba(0,0,0,0.08); transform: scale(1.1); }
 
 /* ── Mobile title bar — hidden on desktop ── */
 .site-header__mobile-title { display: none; }
 
 /* ═══════════════════════════════════════════════
-   SEARCH OVERLAY
+   SEARCH OVERLAY — MODERN GLASSMORPHISM
 ═══════════════════════════════════════════════ */
 
 .search-overlay {
-    position: absolute;
-    top: 64px;
+    position: fixed;
+    top: 0;
     left: 0;
     width: 100%;
-    background: #fff;
-    border-top: 1px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    z-index: 99;
-    max-height: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 9999;
     opacity: 0;
-    overflow: hidden;
-    pointer-events: none;
-    transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    display: flex;
+    justify-content: center;
+    padding-top: 80px;
 }
 
 .search-overlay.is-open {
-    max-height: 140px;
     opacity: 1;
-    pointer-events: auto;
+    visibility: visible;
 }
 
-.search-overlay__options {
-    display: flex;
-    gap: 1.5rem;
-    padding: 0 1.25rem 1rem 3.1rem;
+.search-overlay__content {
+    width: 90%;
+    max-width: 800px;
+    position: relative;
 }
 
-.search-option {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    font-weight: 500;
+.search-overlay__close-btn {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: none;
+    border: none;
     color: #6b7280;
     cursor: pointer;
-    transition: color 0.2s;
+    padding: 10px;
+    transition: color 0.2s, transform 0.2s;
 }
 
-.search-option:hover { color: #111; }
-
-.search-option input[type="radio"] {
-    margin: 0;
-    accent-color: #c0392b;
-}
-
-.search-option input:checked + span {
+.search-overlay__close-btn:hover {
     color: #111;
-    font-weight: 600;
+    transform: rotate(90deg);
 }
 
-.search-overlay__form {
+.search-overlay__container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.search-overlay__input-wrapper {
     display: flex;
     align-items: center;
-    padding: 12px 1.25rem;
-    gap: 10px;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 2px solid #e5e7eb;
+    position: relative;
+    transition: border-color 0.3s;
+}
+
+.search-overlay__input-wrapper:focus-within {
+    border-color: #c0392b;
 }
 
 .search-overlay__input {
     flex: 1;
+    background: transparent;
     border: none;
     outline: none;
-    font-size: 1rem;
-    background: transparent;
+    font-size: 1.75rem;
+    font-family: 'Playfair Display', serif;
     color: #111;
+    font-weight: 700;
+}
+
+.search-overlay__input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+/* Loading Spinner */
+.search-overlay__loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #c0392b;
+    border-radius: 50%;
+    display: none;
+    animation: search-spin 0.6s linear infinite;
+}
+
+@keyframes search-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Results Area */
+.search-results {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Scrollbar styling */
+.search-results::-webkit-scrollbar { width: 6px; }
+.search-results::-webkit-scrollbar-track { background: transparent; }
+.search-results::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+.search-results__status {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.search-results__list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.search-result-item {
+    display: flex;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    background: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.search-result-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    border-color: #f3f4f6;
+}
+
+.search-result-item__icon {
+    width: 44px;
+    height: 44px;
+    background: #f9fafb;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #4b5563;
+}
+
+.search-result-item:hover .search-result-item__icon {
+    background: #fee2e2;
+    color: #c0392b;
+}
+
+.search-result-item__content {
+    flex: 1;
     min-width: 0;
 }
 
-.search-overlay__input::placeholder { color: #9ca3af; }
-
-.search-overlay__close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #6b7280;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    border-radius: 50%;
-    transition: background 0.15s, color 0.15s;
-    flex-shrink: 0;
+.search-result-item__title {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #111;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.search-overlay__close:hover { background: rgba(0,0,0,0.06); color: #111; }
+.search-result-item__snippet {
+    display: block;
+    font-size: 0.9rem;
+    color: #4b5563;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 
-/* ═══════════════════════════════════════════════
-   MOBILE  ≤ 640 px
-═══════════════════════════════════════════════ */
+.search-result-item__meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+}
+
+.search-result-item__badge {
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.search-result-item__page {
+    color: #c0392b;
+}
+
+/* Highlight search terms */
+mark {
+    background: #fff3cd;
+    color: #856404;
+    padding: 0 2px;
+    border-radius: 2px;
+}
 
 @media (max-width: 640px) {
-
     /* Shorter header row */
     .site-header {
         height: 56px;
@@ -362,13 +415,12 @@
         width: auto;
     }
 
-    /* Overlay sits below the 56px mobile header */
-    .search-overlay { top: 56px; }
+    .search-overlay { padding-top: 60px; }
+    .search-overlay__input { font-size: 1.25rem; }
+    .search-result-item { padding: 1rem; gap: 0.75rem; }
+    .search-result-item__icon { width: 36px; height: 36px; }
+    .search-overlay__close-btn { top: -45px; }
 }
-
-/* ═══════════════════════════════════════════════
-   TABLET  641 – 900 px
-═══════════════════════════════════════════════ */
 
 @media (min-width: 641px) and (max-width: 900px) {
     .site-header__org-name { font-size: 0.72rem; }
@@ -383,52 +435,133 @@
     const overlay  = document.getElementById('searchOverlay');
     const closeBtn = document.getElementById('searchClose');
     const input    = document.getElementById('searchOverlayInput');
-    const form     = overlay.querySelector('.search-overlay__form');
-    const typeRadios = overlay.querySelectorAll('input[name="search_type"]');
+    const resultsList = document.getElementById('resultsList');
+    const status      = document.getElementById('searchStatus');
+    const spinner     = document.getElementById('searchSpinner');
+
+    let debounceTimer;
 
     function openSearch() {
         overlay.classList.add('is-open');
         overlay.setAttribute('aria-hidden', 'false');
-        toggle.setAttribute('aria-expanded', 'true');
-        setTimeout(() => input.focus(), 50);
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+        setTimeout(() => input.focus(), 300);
     }
 
     function closeSearch() {
         overlay.classList.remove('is-open');
         overlay.setAttribute('aria-hidden', 'true');
-        toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
     }
 
-    // Dynamic search target
-    form.addEventListener('submit', function(e) {
-        let isArchive = false;
-        typeRadios.forEach(radio => {
-            if (radio.checked && radio.value === 'archive') isArchive = true;
-        });
-
-        if (isArchive) {
-            form.action = "{% url 'the_librarian:search' %}";
-            input.name = "q";
-        } else {
-            form.action = "{% url 'search' %}";
-            input.name = "query";
+    function performSearch(query) {
+        if (!query || query.length < 2) {
+            resultsList.innerHTML = '';
+            status.textContent = 'Type at least 2 characters...';
+            spinner.style.display = 'none';
+            return;
         }
+
+        spinner.style.display = 'block';
+        status.textContent = 'Searching across archive, articles, and authors...';
+
+        const url = `/librarian/api/search/?q=${encodeURIComponent(query)}&top_k=10&mode=hybrid`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                spinner.style.display = 'none';
+                renderResults(data.results, query);
+            })
+            .catch(err => {
+                spinner.style.display = 'none';
+                status.textContent = 'Error fetching results. Please try again.';
+                console.error('Search error:', err);
+            });
+    }
+
+    function renderResults(results, query) {
+        if (!results || results.length === 0) {
+            resultsList.innerHTML = '';
+            status.textContent = `No results found for "${query}"`;
+            return;
+        }
+
+        status.textContent = `Found ${results.length} results for "${query}"`;
+        
+        resultsList.innerHTML = results.map(res => {
+            const icon = getIcon(res.type);
+            const title = highlightMatch(res.title, query);
+            const snippet = highlightMatch(res.chunk_text, query);
+            const url = getUrl(res);
+            const typeLabel = res.type.charAt(0).toUpperCase() + res.type.slice(1);
+
+            return `
+                <a href="${url}" class="search-result-item">
+                    <div class="search-result-item__icon">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="search-result-item__content">
+                        <span class="search-result-item__title">${title}</span>
+                        <span class="search-result-item__snippet">${snippet}</span>
+                        <div class="search-result-item__meta">
+                            <span class="search-result-item__badge">${typeLabel}</span>
+                            ${res.page_number ? `<span class="search-result-item__page">Page ${res.page_number}</span>` : ''}
+                        </div>
+                    </div>
+                </a>
+            `;
+        }).join('');
+    }
+
+    function getIcon(type) {
+        switch(type) {
+            case 'pdf': return 'fa-file-pdf';
+            case 'article': return 'fa-newspaper';
+            case 'author': return 'fa-user-circle';
+            default: return 'fa-search';
+        }
+    }
+
+    function getUrl(res) {
+        if (res.type === 'pdf') {
+            return `/librarian/viewer/${res.document_id}/?page=${res.page_number || 1}`;
+        }
+        return res.url || '#';
+    }
+
+    function highlightMatch(text, query) {
+        if (!text || !query) return text;
+        const words = query.trim().split(/\s+/);
+        let highlighted = text;
+        
+        words.forEach(word => {
+            if (word.length < 2) return;
+            const regex = new RegExp(`(${word})`, 'gi');
+            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+        });
+        
+        return highlighted;
+    }
+
+    input.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+        debounceTimer = setTimeout(() => performSearch(query), 300);
     });
 
-    toggle.addEventListener('click', function (e) {
+    toggle.addEventListener('click', (e) => {
         e.stopPropagation();
-        overlay.classList.contains('is-open') ? closeSearch() : openSearch();
+        openSearch();
     });
 
     closeBtn.addEventListener('click', closeSearch);
 
-    document.addEventListener('click', function (e) {
-        if (!overlay.contains(e.target) && !toggle.contains(e.target)) {
-            closeSearch();
-        }
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeSearch();
     });
 
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeSearch();
     });
 })();

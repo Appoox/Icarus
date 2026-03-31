@@ -16,7 +16,14 @@ Improvements applied
 #10 embed_documents processes texts in batches of EMBED_BATCH_SIZE (default 64)
     to prevent OOM errors and keep inference latency predictable when thousands
     of chunks are embedded at once.
+
 """
+
+import os
+# Force CPU usage and disable GPU detection to prevent meta-tensor loading issues (#77)
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["ACCELERATE_USE_CPU"] = "true"
+
 from django.conf import settings
 
 batch_size = settings.LIBRARIAN_EMBED_BATCH_SIZE
@@ -80,7 +87,13 @@ def get_embedder() -> CachingEmbeddings:
 
     if embedder_type == "HuggingFace":
         from langchain_huggingface import HuggingFaceEmbeddings
-        base = HuggingFaceEmbeddings(model_name=model_name)
+        base = HuggingFaceEmbeddings(
+            model_name=model_name,
+            model_kwargs={
+                'device': 'cpu'
+            },
+            encode_kwargs={'normalize_embeddings': True}
+        )
     else:
         raise ValueError(
             f"Unknown LIBRARIAN_EMBEDDER_TYPE: '{embedder_type}'. "
