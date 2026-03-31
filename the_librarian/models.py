@@ -29,9 +29,27 @@ class DocumentChunk(models.Model):
     document = models.ForeignKey(
         ArchiveDocument,
         on_delete=models.CASCADE,
-        related_name='chunks'
+        related_name='chunks',
+        null=True,
+        blank=True
+    )
+    article = models.ForeignKey(
+        'articles.Article',
+        on_delete=models.CASCADE,
+        related_name='chunks',
+        null=True,
+        blank=True
+    )
+    author = models.ForeignKey(
+        'literati.Literati',
+        on_delete=models.CASCADE,
+        related_name='chunks',
+        null=True,
+        blank=True
     )
     page_number = models.IntegerField(
+        null=True,
+        blank=True,
         help_text="Source page number in the PDF (1-indexed)"
     )
     chunk_text = models.TextField()
@@ -39,9 +57,14 @@ class DocumentChunk(models.Model):
         dimensions=settings.LIBRARIAN_EMBEDDING_DIM,
         help_text="pgvector embedding of the chunk text"
     )
+    language = models.CharField(
+        max_length=10,
+        default='ml',
+        help_text="ISO language code of the chunk text"
+    )
     chunk_index = models.IntegerField(
         default=0,
-        help_text="Order of this chunk within the document"
+        help_text="Order of this chunk within the document/article/author"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
