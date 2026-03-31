@@ -184,8 +184,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>📚 Archive Search</h1>
-        <p class="subtitle">Search through ingested archive documents using semantic similarity</p>
+        <h1>Search The Archive</h1>
+        <p class="subtitle">Semantic & Keyword search across PDFs, Articles, and Author profiles</p>
 
         <form method="get" class="search-form">
             <input type="text"
@@ -229,19 +229,44 @@
                 {% for result in results %}
                 <div class="result-card">
                     <div class="result-header">
-                        <span class="result-doc">{{ result.document_name }}</span>
+                        <span class="result-doc">
+                            {% if result.type == 'pdf' %}
+                                📄 {{ result.title }}
+                            {% elif result.type == 'article' %}
+                                📰 {{ result.title }}
+                            {% elif result.type == 'author' %}
+                                👤 {{ result.title }}
+                            {% else %}
+                                {{ result.title|default:result.document_name }}
+                            {% endif %}
+                        </span>
                         <span class="badge badge-{{ result.search_type|default:'similarity' }}">
                             {{ result.search_type|default:'similarity' }}
                         </span>
-                        <span class="result-page">Page {{ result.page_number }}</span>
+                        {% if result.type == 'pdf' or result.page_number %}
+                            <span class="result-page">Page {{ result.page_number }}</span>
+                        {% elif result.type == 'article' %}
+                            <span class="result-page">Article</span>
+                        {% elif result.type == 'author' %}
+                            <span class="result-page">Author Profile</span>
+                        {% endif %}
                     </div>
                     <div class="result-score">Relevance: {{ result.score }}</div>
                     <p class="result-text">{{ result.chunk_text }}</p>
-                    <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number }}"
-                       class="result-link"
-                       target="_blank">
-                        📖 Open PDF at page {{ result.page_number }} →
-                    </a>
+                    
+                    {% if result.type == 'pdf' or result.document_id %}
+                        <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}"
+                           class="result-link"
+                           target="_blank">
+                            📖 Open PDF at page {{ result.page_number|default:1 }} →
+                        </a>
+                    {% elif result.url %}
+                        <a href="{{ result.url }}"
+                           class="result-link"
+                           target="_blank">
+                            🔗 View Full Page →
+                        </a>
+                    {% endif %}
                 </div>
                 {% endfor %}
             {% else %}
