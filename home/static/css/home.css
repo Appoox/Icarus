@@ -184,3 +184,49 @@ body.template-homepage {
         font-size: 2rem;
     }
 }
+
+
+  /* ── THUMBNAILS ── */
+  .sg-issue-thumbnails {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 1rem 0;
+    margin-top: 0.5rem;
+  }
+
+  .sg-issue-thumbnail {
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.2s, border-color 0.2s, opacity 0.2s;
+    opacity: 0.5;
+    background: var(--rule);
+  }
+
+  .sg-issue-thumbnail:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+
+  .sg-issue-thumbnail.is-active {
+    border-color: var(--red);
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(200, 16, 46, 0.2);
+  }
+
+  .sg-issue-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .sg-issue-thumbnail__placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--rule);
+  }
