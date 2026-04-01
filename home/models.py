@@ -151,7 +151,7 @@ class HomePage(Page):
         context = super().get_context(request)   
         
         # Avoid circular imports by importing inside the method
-        from articles.models import Article
+        from articles.models import Article, ArticleIndexPage
         from issue.models import Issue, Topic
 
         # 1. Current Issue + its articles
@@ -187,8 +187,9 @@ class HomePage(Page):
         latest_articles = (
             Article.objects.live()
             .exclude(id__in=issue_article_ids)
-            .order_by('-first_published_at')[:9]
+            .order_by('-first_published_at')[:6]
         )
         context['latest_articles'] = latest_articles
+        context['article_index_page'] = ArticleIndexPage.objects.live().first()
 
         return context
