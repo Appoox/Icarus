@@ -28,14 +28,14 @@ urlpatterns = [
             subject_template_name='reader/password_reset_subject.txt',
             success_url='/reader/password-reset/done/'
         ),
-        name='password_reset'
+        name='reader_password_reset'
     ),
     path(
         'password-reset/done/',
         auth_views.PasswordResetDoneView.as_view(
             template_name='reader/password_reset_done.html'
         ),
-        name='password_reset_done'
+        name='reader_password_reset_done'
     ),
     path(
         'reset/<uidb64>/<token>/',
@@ -43,13 +43,30 @@ urlpatterns = [
             template_name='reader/password_reset_confirm.html',
             success_url='/reader/reset/done/'
         ),
-        name='password_reset_confirm'
+        name='reader_password_reset_confirm'
     ),
     path(
         'reset/done/',
         auth_views.PasswordResetCompleteView.as_view(
             template_name='reader/password_reset_complete.html'
         ),
-        name='password_reset_complete'
+        name='reader_password_reset_complete'
+    ),
+
+    # ── Change Password (Logged In) ──────────────────────────────────
+    path(
+        'password-change/',
+        auth_views.PasswordChangeView.as_view(
+            template_name='reader/password_change_form.html',
+            success_url='/reader/password-change/done/'
+        ),
+        name='reader_password_change'
+    ),
+    path(
+        'password-change/done/',
+        auth_views.PasswordChangeDoneView.as_view(
+            template_name='reader/password_change_done.html'
+        ),
+        name='reader_password_change_done'
     ),
 ]
