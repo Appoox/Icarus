@@ -190,6 +190,7 @@ body.template-homepage {
   .sg-issue-thumbnails {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap; /* Added to prevent overflow */
     gap: 12px;
     padding: 1rem 0;
     margin-top: 0.5rem;
