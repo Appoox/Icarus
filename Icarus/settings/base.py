@@ -214,3 +214,16 @@ LIBRARIAN_EMBEDDING_MODEL = env.str("EMBEDDING_MODEL_NAME", "all-mpnet-base-v2")
 LIBRARIAN_COLLECTION_NAME = env.str("COLLECTION_NAME", "sg-archive")
 LIBRARIAN_EMBEDDING_DIM = env.int("EMBEDDING_DIM", 768)
 LIBRARIAN_EMBED_BATCH_SIZE = env.int("EMBED_BATCH_SIZE", 64)
+
+# ── Email & Password Reset ───────────────────────────────────────────
+# Default to console backend for local testing, can be toggled via .env
+EMAIL_BACKEND = env.str(
+    "EMAIL_BACKEND", 
+    default="django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = env.str("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=25)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="ശാസ്ത്രഗതി <noreply@example.com>")
