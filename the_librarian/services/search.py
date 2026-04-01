@@ -16,7 +16,7 @@ Improvements applied
 import logging
 
 from django.db.models import F
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from pgvector.django import CosineDistance
 
 from the_librarian.models import DocumentChunk
@@ -34,7 +34,7 @@ def _format_chunk_result(chunk, score=None, search_type=None):
         "chunk_text": chunk.chunk_text,
         "score": score,
         "search_type": search_type,
-        "language": getattr(chunk, 'language', 'ml'),
+        "language": getattr(chunk, "language", "ml"),
     }
 
     if chunk.document_id:
@@ -64,57 +64,70 @@ def _format_chunk_result(chunk, score=None, search_type=None):
             "type": "unknown",
             "title": "Unknown Source",
         })
-    
+
     return res
 
 
-from django.db.models import F
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
-from pgvector.django import CosineDistance
-
 def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
+    """
+    Embed a query and find the most similar document chunks.
+
+    Args:
+        query_text: str — the natural-language query.
+        top_k: int — maximum number of results to return.
+        min_score: float — discard results with similarity below this value.
+            Range is [0, 1]; 0 means no filtering (original behaviour).
+
+    Returns:
+        list of dicts with chunk metadata and similarity score.
+        The list may be shorter than top_k if min_score filters some out.
+    """
     query_embedding = embed_query(query_text)
 
     results = (
         DocumentChunk.objects
-        .defer("embedding")  # 1. HUGE memory/network saving
+        .defer("embedding")                              # Avoid fetching large vectors into memory
         .annotate(distance=CosineDistance("embedding", query_embedding))
-        .filter(distance__lte=1.0 - min_score)  # 2. Database-level filtering
+        .filter(distance__lte=1.0 - min_score)          # DB-level filtering
         .order_by("distance")
         .select_related("document", "article", "author")[:top_k]
     )
 
-    output =[]
+    output = []
     for chunk in results:
         score = round(1 - chunk.distance, 4)
         output.append(_format_chunk_result(chunk, score=score, search_type="similarity"))
     return output
 
-from django.db.models import F
-from django.contrib.postgres.search import SearchQuery, SearchRank
 
 def search_keyword(query_text: str, top_k: int = 5, min_score: float = 0.0001):
-    # Use 'simple' config to match the generated field (crucial for Malayalam text)
+    """
+    Search for chunks using PostgreSQL Full-Text Search via a pre-computed
+    tsvector column (search_vector) backed by a GIN index.
+
+    Returns:
+        list of dicts (same format as search_similar).
+    """
+    # 'simple' config matches the generated search_vector field; important for Malayalam text
     query = SearchQuery(query_text, config="simple")
 
     results = (
         DocumentChunk.objects
-        .defer("embedding")           # Stop fetching massive vectors into memory
-        .filter(search_vector=query)  # Uses the lightning-fast GIN index
+        .defer("embedding")                    # Stop fetching massive vectors into memory
+        .filter(search_vector=query)           # Uses the GIN index
         .annotate(rank=SearchRank(F("search_vector"), query))
         .filter(rank__gte=min_score)
         .order_by("-rank")
         .select_related("document", "article", "author")[:top_k]
     )
 
-
     output = []
     for chunk in results:
         output.append(
             _format_chunk_result(
-                chunk, 
-                score=round(float(chunk.rank), 4), 
-                search_type="keyword"
+                chunk,
+                score=round(float(chunk.rank), 4),
+                search_type="keyword",
             )
         )
     return output
@@ -133,34 +146,31 @@ def search_hybrid(query_text: str, top_k: int = 5, k: int = 60):
     sim_results = search_similar(query_text, top_k=fetch_k)
     kw_results = search_keyword(query_text, top_k=fetch_k)
 
-    # 2. Apply RRF
-    rrf_scores = {}  # chunk_id -> combined_score
-    chunk_map = {}  # chunk_id -> result_dict
+    # 2. Apply RRF — track search_type separately to avoid mutating shared dicts
+    rrf_scores = {}   # chunk_id -> combined RRF score
+    chunk_map = {}    # chunk_id -> result dict
+    search_types = {} # chunk_id -> search_type label
 
     for rank, res in enumerate(sim_results, 1):
         cid = res["chunk_id"]
         rrf_scores[cid] = rrf_scores.get(cid, 0) + 1.0 / (k + rank)
         chunk_map[cid] = res
-        chunk_map[cid]["search_type"] = "similarity"
+        search_types[cid] = "similarity"
 
     for rank, res in enumerate(kw_results, 1):
         cid = res["chunk_id"]
         rrf_scores[cid] = rrf_scores.get(cid, 0) + 1.0 / (k + rank)
-        if cid in chunk_map:
-            chunk_map[cid]["search_type"] = "hybrid"
-        else:
-            chunk_map[cid] = res
-            chunk_map[cid]["search_type"] = "keyword"
+        chunk_map.setdefault(cid, res)
+        search_types[cid] = "hybrid" if cid in search_types else "keyword"
 
-    # 3. Sort by RRF score
-    sorted_ids = sorted(rrf_scores.keys(), key=lambda x: rrf_scores[x], reverse=True)[
-        :top_k
-    ]
+    # 3. Sort by RRF score and build output
+    sorted_ids = sorted(rrf_scores.keys(), key=lambda x: rrf_scores[x], reverse=True)[:top_k]
 
     final_output = []
     for cid in sorted_ids:
-        res = chunk_map[cid]
+        res = chunk_map[cid].copy()  # copy to avoid mutating the cached result dict
         res["score"] = round(rrf_scores[cid], 6)
+        res["search_type"] = search_types[cid]
         final_output.append(res)
 
     return final_output
@@ -188,8 +198,10 @@ def search_by_document(
 
     results = (
         DocumentChunk.objects
+        .defer("embedding")                              # Avoid fetching large vectors into memory
         .filter(document__filename=document_name)
         .annotate(distance=CosineDistance("embedding", query_embedding))
+        .filter(distance__lte=1.0 - min_score)          # DB-level filtering, mirrors search_similar
         .order_by("distance")
         .select_related("document", "article", "author")[:top_k]
     )
@@ -197,7 +209,5 @@ def search_by_document(
     output = []
     for chunk in results:
         score = round(1 - chunk.distance, 4)
-        if score < min_score:
-            continue
-        output.append(_format_chunk_result(chunk, score=score))
+        output.append(_format_chunk_result(chunk, score=score, search_type="similarity"))
     return output
