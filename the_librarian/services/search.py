@@ -68,57 +68,45 @@ def _format_chunk_result(chunk, score=None, search_type=None):
     return res
 
 
+from django.db.models import F
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from pgvector.django import CosineDistance
+
 def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
-    """
-    Embed a query and find the most similar document chunks.
-
-    Args:
-        query_text: str — the natural-language query.
-        top_k: int — maximum number of results to return.
-        min_score: float — discard results with similarity below this value.
-            Range is [0, 1]; 0 means no filtering (original behaviour).
-
-    Returns:
-        list of dicts: {
-            chunk_text, document_name, file_path,
-            page_number, score, chunk_id
-        }
-        The list may be shorter than top_k if min_score filters some out.
-    """
     query_embedding = embed_query(query_text)
 
     results = (
         DocumentChunk.objects
+        .defer("embedding")  # 1. HUGE memory/network saving
         .annotate(distance=CosineDistance("embedding", query_embedding))
+        .filter(distance__lte=1.0 - min_score)  # 2. Database-level filtering
         .order_by("distance")
         .select_related("document", "article", "author")[:top_k]
     )
 
-    output = []
+    output =[]
     for chunk in results:
         score = round(1 - chunk.distance, 4)
-        if score < min_score:
-            continue
         output.append(_format_chunk_result(chunk, score=score, search_type="similarity"))
     return output
 
+from django.db.models import F
+from django.contrib.postgres.search import SearchQuery, SearchRank
 
 def search_keyword(query_text: str, top_k: int = 5, min_score: float = 0.0001):
-    """
-    Search for chunks using PostgreSQL Full-Text Search.
-
-    Returns:
-        list of dicts (same format as search_similar).
-    """
-    vector = SearchVector("chunk_text")
-    query = SearchQuery(query_text)
+    # Use 'simple' config to match the generated field (crucial for Malayalam text)
+    query = SearchQuery(query_text, config="simple")
 
     results = (
-        DocumentChunk.objects.annotate(rank=SearchRank(vector, query))
+        DocumentChunk.objects
+        .defer("embedding")           # Stop fetching massive vectors into memory
+        .filter(search_vector=query)  # Uses the lightning-fast GIN index
+        .annotate(rank=SearchRank(F("search_vector"), query))
         .filter(rank__gte=min_score)
         .order_by("-rank")
         .select_related("document", "article", "author")[:top_k]
     )
+
 
     output = []
     for chunk in results:
