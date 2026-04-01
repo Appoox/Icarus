@@ -1,5 +1,8 @@
 from django.db import models
 from django.conf import settings
+from django.db.models import GeneratedField
+from django.contrib.postgres.search import SearchVector, SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 from pgvector.django import VectorField
 
 # Create your models here.
@@ -16,7 +19,7 @@ class ArchiveDocument(models.Model):
     ingested_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-ingested_at']
+        ordering =['-ingested_at']
         verbose_name = "Archive Document"
         verbose_name_plural = "Archive Documents"
 
@@ -53,6 +56,14 @@ class DocumentChunk(models.Model):
         help_text="Source page number in the PDF (1-indexed)"
     )
     chunk_text = models.TextField()
+    
+    # --- NEW: Pre-computed Search Vector for fast Full-Text Search ---
+    search_vector = GeneratedField(
+        expression=SearchVector("chunk_text", config="simple"),
+        output_field=SearchVectorField(),
+        db_persist=True,
+    )
+    
     embedding = VectorField(
         dimensions=settings.LIBRARIAN_EMBEDDING_DIM,
         help_text="pgvector embedding of the chunk text"
@@ -74,7 +85,16 @@ class DocumentChunk(models.Model):
         verbose_name_plural = "Document Chunks"
         indexes = [
             models.Index(fields=['document', 'page_number']),
+            # --- NEW: GIN Index to make the keyword search lightning fast ---
+            GinIndex(fields=["search_vector"]), 
         ]
 
     def __str__(self):
-        return f"{self.document.filename} — p.{self.page_number} chunk#{self.chunk_index}"
+        # Fixed: Prevent AttributeError if this chunk belongs to an Article or Author
+        if self.document_id:
+            return f"{self.document.filename} — p.{self.page_number} chunk#{self.chunk_index}"
+        elif self.article_id:
+            return f"Article: {self.article.title} — chunk#{self.chunk_index}"
+        elif self.author_id:
+            return f"Author: {self.author.title} — chunk#{self.chunk_index}"
+        return f"Unknown Source — chunk#{self.chunk_index}"
