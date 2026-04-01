@@ -99,8 +99,8 @@
   /* ── FEATURED ISSUE SECTION ── */
   .sg-featured-issue {
     display: grid;
-    grid-template-columns: 420px minmax(300px, 1fr) 280px;
-    gap: 2rem; /* Increased for better breathing room */
+    grid-template-columns: 400px minmax(300px, 1fr) 280px;
+    gap: 1.25rem; /* Reduced for better breathing room */
     border-bottom: 3px double var(--rule);
     margin-top: 2.5rem;
     padding-bottom: 3.5rem;
@@ -432,6 +432,22 @@
 
   .sg-issue-thumbnail.is-active img {
     opacity: 1 !important; /* Fully opaque when active */
+  }
+
+  /* Right column small cards */
+  .sg-issue-small-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .sg-issue-small-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   }
 
   .sg-issue-small-card__image-wrap {
