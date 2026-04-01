@@ -253,9 +253,14 @@
 {% block content %}
 <div class="profile-page">
 
-    <div class="profile-header">
-        <h1>{{ reader.name }}</h1>
-        <p class="email">{{ reader.email }}</p>
+    <div class="profile-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h1>{{ reader.name }}</h1>
+            <p class="email">{{ reader.email }}</p>
+        </div>
+        <div style="margin-top: 12px;">
+            <a href="{% url 'reader_password_change' %}" class="link-edit">Change Password</a>
+        </div>
     </div>
 
     {# ── Grace period warning ── #}
