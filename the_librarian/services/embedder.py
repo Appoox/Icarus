@@ -61,7 +61,8 @@ class CachingEmbeddings:
             # #10: iterate in fixed-size batches
             for i in range(0, len(uncached), batch_size):
                 batch = uncached[i : i + batch_size]
-                new_embeddings.extend(self._base.embed_documents(batch))
+                prefixed_batch = ["passage: " + t for t in batch]
+                new_embeddings.extend(self._base.embed_documents(prefixed_batch))
             for text, emb in zip(uncached, new_embeddings):
                 self._cache[text] = emb
 
@@ -69,7 +70,7 @@ class CachingEmbeddings:
 
     # embed_query uses a separate asymmetric path — no batching needed.
     def embed_query(self, text: str) -> list[float]:
-        return self._base.embed_query(text)
+        return self._base.embed_query("query: " + text)
 
 
 # ---------------------------------------------------------------------------

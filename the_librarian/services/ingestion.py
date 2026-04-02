@@ -259,6 +259,7 @@ def preprocess_malayalam_pdf_text(text: str, chunk_id: int = None) -> str | None
         return None
 
     # ── Step 1: HTML tags & Math/LaTeX artifacts ──────────────────────────
+    text = re.sub(r'\n', '', text)
     text = re.sub(r'<[^>]+>', ' ', text)
     text = re.sub(r'\\overline\{[^\}]+\}', '', text)
 
