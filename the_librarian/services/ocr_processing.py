@@ -2,6 +2,12 @@ import torch
 import cv2
 import numpy as np
 from PIL import Image
+import os
+import logging
+
+# Force CPU for all OCR processing
+os.environ.setdefault("TORCH_DEVICE", "cpu")
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
 
 # --- scikit-image compatibility imports ---
 try:
@@ -25,6 +31,8 @@ from surya.foundation import FoundationPredictor
 _det_predictor = None
 _rec_predictor = None
 _foundation_predictor = None
+
+logger = logging.getLogger(__name__)
 
 def get_predictors():
     """Lazy initialization of Surya predictors."""
@@ -86,6 +94,37 @@ def get_skew_corrected_image(image: np.ndarray) -> np.ndarray:
         return image
 
 
+def preprocess_image(img_np: np.ndarray) -> np.ndarray:
+    """
+    Preprocess image for better OCR accuracy on scanned documents.
+    Applies CLAHE contrast enhancement in LAB color space and light denoising.
+    """
+    if img_np.ndim == 2:
+        # Grayscale input — apply CLAHE directly
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(img_np)
+        denoised = cv2.fastNlMeansDenoising(enhanced, h=10)
+        return cv2.cvtColor(denoised, cv2.COLOR_GRAY2RGB)
+
+    if img_np.ndim == 3 and img_np.shape[2] == 3:
+        # Apply CLAHE to the L channel in LAB color space (preserves color)
+        lab = cv2.cvtColor(img_np, cv2.COLOR_RGB2LAB)
+        l_channel, a_channel, b_channel = cv2.split(lab)
+
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        l_enhanced = clahe.apply(l_channel)
+
+        lab_enhanced = cv2.merge([l_enhanced, a_channel, b_channel])
+        result = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2RGB)
+
+        # Light denoising
+        result = cv2.fastNlMeansDenoisingColored(result, None, 10, 10)
+
+        return result
+
+    return img_np
+
+
 def surya_ocr(image):
     torch.cuda.empty_cache()
     det_predictor, rec_predictor = get_predictors()
@@ -101,7 +140,15 @@ def surya_ocr(image):
         print(f"Surya OCR failed: {e}")
         return ""
 
-def process_image_for_ocr(yolo_image: Image.Image):
+def process_image_for_ocr(yolo_image: Image.Image, confidence_threshold: float = 0.3):
+    """
+    OCR a single image region using Surya detection + recognition.
+    Filters out low-confidence text lines to reduce OCR noise.
+
+    Args:
+        yolo_image: PIL Image of the text region
+        confidence_threshold: minimum confidence to keep a line (0.0–1.0)
+    """
     det_predictor, rec_predictor = get_predictors()
     
     # Detect text lines first
@@ -123,12 +170,84 @@ def process_image_for_ocr(yolo_image: Image.Image):
             y2 = min(height, y2 + pad)
             per_image_bboxes.append([x1, y1, x2, y2])
         bboxes.append(per_image_bboxes)
+
+    if not bboxes or not bboxes[0]:
+        # No text lines detected — fall back to recognition without detection
+        return surya_ocr(yolo_image)
     
     # Batch recognition for all detected lines
     # bboxes is List[List[List[int]]] matching the [yolo_image] list
     results = rec_predictor([yolo_image], bboxes=bboxes)
     
-    # Join text lines with newlines
-    extracted_text = "\n".join([line.text for line in results[0].text_lines])
+    # Filter by confidence and join text lines
+    lines = []
+    for line in results[0].text_lines:
+        conf = getattr(line, 'confidence', 1.0)
+        if conf < confidence_threshold:
+            logger.debug(
+                f"Low-confidence OCR line dropped (conf={conf:.2f}): "
+                f"{line.text[:60]!r}"
+            )
+            continue
+        lines.append(line.text)
     
-    return extracted_text.strip()
+    return "\n".join(lines).strip()
+
+
+def process_page(pil_image: Image.Image, confidence_threshold: float = 0.3) -> str:
+    """
+    Full OCR pipeline for a single PDF page.
+
+    Pipeline: per-page skew correction → YOLO segmentation → column-aware
+              sorting → image preprocessing → Surya OCR with confidence filtering
+
+    Args:
+        pil_image: PIL Image of the full page (at 300 DPI)
+        confidence_threshold: minimum confidence to keep a text line (0.0–1.0)
+
+    Returns:
+        Extracted text from the page
+    """
+    from the_librarian.services.yolo_segmentation import get_masks, custom_sort
+
+    img_np = np.array(pil_image)
+
+    # Step 1: Detect and correct skew on the full page (once, not per-crop)
+    corrected_page = get_skew_corrected_image(img_np)
+    corrected_pil = Image.fromarray(corrected_page)
+
+    # Step 2: YOLO segmentation to find text regions
+    response = get_masks(corrected_page)
+
+    if response["status"] <= 0 or "boxes1" not in response or response["boxes1"].size == 0:
+        # Fallback: OCR the full page without segmentation
+        logger.info("  YOLO found no text regions — OCR-ing full page as fallback")
+        preprocessed = preprocess_image(corrected_page)
+        preprocessed_pil = Image.fromarray(preprocessed)
+        return process_image_for_ocr(preprocessed_pil, confidence_threshold)
+
+    # Step 3: Column-aware reading order sort
+    boxes = custom_sort(
+        response["boxes1"],
+        image_height=corrected_page.shape[0],
+        page_width=corrected_page.shape[1],
+    )
+
+    # Step 4: OCR each text region with preprocessing
+    page_texts = []
+    for box in boxes:
+        x1, y1, x2, y2 = box[:4]
+        crop = corrected_page[y1:y2, x1:x2]
+
+        if crop.size == 0:
+            continue
+
+        # Preprocess the crop for better OCR (CLAHE + denoising)
+        preprocessed = preprocess_image(crop)
+        crop_pil = Image.fromarray(preprocessed)
+
+        text = process_image_for_ocr(crop_pil, confidence_threshold)
+        if text.strip():
+            page_texts.append(text)
+
+    return "\n".join(page_texts)
