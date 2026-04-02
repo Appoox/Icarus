@@ -99,8 +99,8 @@
   /* ── FEATURED ISSUE SECTION ── */
   .sg-featured-issue {
     display: grid;
-    grid-template-columns: 420px minmax(300px, 1fr) 280px;
-    gap: 2rem; /* Increased for better breathing room */
+    grid-template-columns: 400px minmax(300px, 1fr) 280px;
+    gap: 1.25rem; /* Reduced for better breathing room */
     border-bottom: 3px double var(--rule);
     margin-top: 2.5rem;
     padding-bottom: 3.5rem;
@@ -434,6 +434,22 @@
     opacity: 1 !important; /* Fully opaque when active */
   }
 
+  /* Right column small cards */
+  .sg-issue-small-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .sg-issue-small-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  }
+
   .sg-issue-small-card__image-wrap {
     overflow: hidden;
     aspect-ratio: 16 / 10;
@@ -603,16 +619,13 @@
   }
 
   .sg-article-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
-    padding: 2.5rem 0 4rem;
+    padding: 2.5rem 0 2rem;
   }
 
   .sg-article-card {
-    flex: 1 1 340px; /* Base width for centering */
-    max-width: 380px; /* Prevent overly wide cards on very large screens */
     background: #fff;
     border-radius: 4px;
     overflow: hidden;
@@ -774,6 +787,9 @@
     .sg-article-grid {
       grid-template-columns: repeat(2, 1fr);
     }
+    .sg-article-grid .sg-article-card:nth-child(n+4) {
+      display: none;
+    }
 
     .sg-subscribe {
       margin: 2rem -1rem;
@@ -807,6 +823,45 @@
       gap: 1.5rem;
       margin: 2rem -1rem;
     }
+  }
+
+  /* ── MORE ARTICLES ── */
+  .sg-more-articles {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 0 5rem;
+  }
+
+  .sg-btn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: var(--navy);
+    color: #fff;
+    font-family: var(--label);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 1rem 2.5rem;
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 4px 15px rgba(11, 31, 58, 0.15);
+  }
+
+  .sg-btn-more:hover {
+    background: var(--red);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(200, 16, 46, 0.25);
+  }
+
+  .sg-btn-more svg {
+    transition: transform 0.3s ease;
+  }
+
+  .sg-btn-more:hover svg {
+    transform: translateX(5px);
   }
 </style>
 {% endblock extra_css %}
@@ -981,6 +1036,15 @@
     <p class="sg-empty">No articles published yet.</p>
     {% endfor %}
   </div>
+
+  {% if article_index_page %}
+  <div class="sg-more-articles">
+    <a href="{{ article_index_page.url }}" class="sg-btn-more">
+      <span>കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക</span>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+    </a>
+  </div>
+  {% endif %}
 
 </div>
 {% endblock content %}
