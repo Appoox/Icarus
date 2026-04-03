@@ -227,3 +227,6 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
 EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="ശാസ്ത്രഗതി <noreply@example.com>")
+
+# Enable framing from SAMEORIGIN to allow PDF rendering within search interface
+X_FRAME_OPTIONS = "SAMEORIGIN"

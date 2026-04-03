@@ -27,7 +27,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
-from pdf2image import convert_from_path
+from pdf2image import convert_from_path, pdfinfo_from_path
 
 from django.conf import settings
 from django.db import transaction
@@ -71,18 +71,14 @@ def request_stop() -> None:
 # #4: Per-page OCR cache
 # ---------------------------------------------------------------------------
 import re
-import unicodedata
+import regex
+import hashlib
 
-# ── Characters confirmed as OCR noise in your actual data ─────────────────
-# Arabic-Indic digits, misc symbols seen in your chunks
-# ── Characters confirmed as OCR noise in your actual data ─────────────────
-NOISE_CHARS_PATTERN = re.compile(
-    r'[٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹'   # Arabic-Indic / Extended Arabic-Indic digits
-    r'εξζηθυφχψωΎΩΛΨ'               # Greek letters used as OCR noise
-    r'ŉŤŽźξžĸĊŚŹı'                  # Latin Extended used as OCR noise (added 'ı')
-    r'вЫтЮОы'                       # Cyrillic used as OCR noise (added Ю, О, ы)
-    r'เกວดใ]',                      # Thai/Lao used as OCR noise
-    re.UNICODE
+# ── Characters confirmed as OCR noise: whitelist by Unicode script ────────
+# Valid scripts for a Malayalam magazine: Malayalam, Latin, Common, Inherited.
+# Anything else (Arabic, Greek, Cyrillic, Thai/Lao, etc.) is OCR garbage.
+NOISE_SCRIPT_PATTERN = regex.compile(
+    r'[^\p{Script=Malayalam}\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}\s]+'
 )
 
 # Signals that a chunk is an advertisement or publication metadata
@@ -106,8 +102,8 @@ def _is_metadata_chunk(text: str) -> bool:
 
 
 def _remove_noise_chars(text: str) -> str:
-    """Remove confirmed OCR garbage unicode characters."""
-    return NOISE_CHARS_PATTERN.sub('', text)
+    """Remove characters not belonging to valid scripts (Malayalam, Latin, Common, Inherited)."""
+    return NOISE_SCRIPT_PATTERN.sub('', text)
 
 
 def _fix_broken_malayalam_words(text: str) -> str:
@@ -263,6 +259,7 @@ def preprocess_malayalam_pdf_text(text: str, chunk_id: int = None) -> str | None
         return None
 
     # ── Step 1: HTML tags & Math/LaTeX artifacts ──────────────────────────
+    text = re.sub(r'\n', '', text)
     text = re.sub(r'<[^>]+>', ' ', text)
     text = re.sub(r'\\overline\{[^\}]+\}', '', text)
 
@@ -334,18 +331,31 @@ def preprocess_chunks(
 
 
 
+def _file_content_hash(file_path: Path) -> str:
+    """Generate a short content hash for reliable cache invalidation."""
+    h = hashlib.sha256()
+    file_size = file_path.stat().st_size
+    with open(file_path, 'rb') as f:
+        h.update(f.read(65536))           # First 64KB
+        if file_size > 65536:
+            f.seek(-min(65536, file_size), 2)  # Last 64KB
+            h.update(f.read())
+    return h.hexdigest()[:16]
+
+
 def _ocr_cache_dir(file_path: Path) -> Path:
     """
     Return the cache directory for a specific version of a PDF file.
 
-    The directory name encodes the filename stem and the file's mtime so that
-    any edit to the PDF (which changes mtime) automatically invalidates the
-    old cache without manual intervention.
+    The directory name encodes the filename stem and a content hash so that
+    any edit to the PDF automatically invalidates the old cache without
+    manual intervention.  Unlike mtime, a content hash is stable across
+    file copies and backups.
     """
     cache_root = Path(settings.BASE_DIR) / ".ocr_cache"
-    mtime = int(file_path.stat().st_mtime)
+    content_hash = _file_content_hash(file_path)
     safe_stem = file_path.stem.replace(" ", "_")[:60]
-    return cache_root / f"{safe_stem}_{mtime}"
+    return cache_root / f"{safe_stem}_{content_hash}"
 
 
 def _load_cached_page(cache_dir: Path, page_num: int):
@@ -360,6 +370,17 @@ def _save_cached_page(cache_dir: Path, page_num: int, text: str) -> None:
     """Persist the OCR result for *page_num* to the cache directory."""
     cache_dir.mkdir(parents=True, exist_ok=True)
     (cache_dir / f"page_{page_num}.txt").write_text(text, encoding="utf-8")
+
+
+
+# ---------------------------------------------------------------------------
+# Per-page OCR
+# ---------------------------------------------------------------------------
+
+def _ocr_page(pil_image):
+    """OCR a single PDF page using the full pipeline."""
+    from the_librarian.services.ocr_processing import process_page
+    return process_page(pil_image)
 
 
 # ---------------------------------------------------------------------------
@@ -517,17 +538,17 @@ def ingest_single_pdf(file_path, force=False):
     logger.info(f"Ingesting: {filename}")
 
     try:
-        # 1. Convert PDF pages to images
-        images = convert_from_path(str(file_path))
-        total_pages = len(images)
+        # 1. Get page count without loading images (memory-efficient)
+        pdf_info = pdfinfo_from_path(str(file_path))
+        total_pages = pdf_info['Pages']
         logger.info(f"  {total_pages} pages found")
 
         # #4: resolve the per-document cache directory once
         cache_dir = _ocr_cache_dir(file_path)
 
-        # 2. OCR each page (with per-page cache)
+        # 2. OCR each page one at a time (memory-efficient, CPU-optimized)
         page_texts = []
-        for page_num, pil_image in enumerate(images, start=1):
+        for page_num in range(1, total_pages + 1):
             # #8: check stop signal between every page, not just between files
             if is_stop_requested():
                 logger.info(
@@ -547,8 +568,20 @@ def ingest_single_pdf(file_path, force=False):
                 page_texts.append((page_num, cached))
                 continue
 
+            # Load only this page at 300 DPI for better Malayalam ligature recognition
             logger.info(f"  OCR page {page_num}/{total_pages}")
+            page_images = convert_from_path(
+                str(file_path),
+                first_page=page_num,
+                last_page=page_num,
+                dpi=300,
+            )
+            pil_image = page_images[0]
+
             text = _ocr_page(pil_image)
+
+            # Free memory immediately
+            del page_images, pil_image
 
             # #4: persist result so a restart can resume from here
             _save_cached_page(cache_dir, page_num, text)

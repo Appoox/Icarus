@@ -33,9 +33,9 @@ def get_models():
 
 
 configs = {}
-configs["paratext"] = {"sz": 640, "conf": 0.25, "rm": True, "classes": [0, 1]}
-configs["imgtab"] = {"sz": 640, "conf": 0.35, "rm": True, "classes": [2, 3]}
-configs["image"]   = {"sz": 640, "conf": 0.35, "rm": True, "classes": [0]}
+configs["paratext"] = {"sz": 1280, "conf": 0.25, "rm": True, "classes": [0, 1]}
+configs["imgtab"] = {"sz": 1280, "conf": 0.35, "rm": True, "classes": [2, 3]}
+configs["image"]   = {"sz": 1280, "conf": 0.35, "rm": True, "classes": [0]}
 
 
 def get_predictions(model, img2, config):
@@ -86,7 +86,7 @@ def get_masks(img):
     res = get_predictions(
         general_model,
         img,
-        {"sz": 640, "conf": 0.25, "rm": True, "classes": [0, 1]},
+        {"sz": 1280, "conf": 0.25, "rm": True, "classes": [0, 1]},
     )
 
     if res["status"] == -1:
@@ -102,9 +102,69 @@ def get_masks(img):
     return response
 
 
-def custom_sort(arr, image_height=None):
+def detect_columns(boxes, page_width):
     """
-    Sort bounding boxes in reading order (top-to-bottom, then left-to-right).
+    Detect column boundaries from bounding box X-coordinates.
+
+    Uses the horizontal distribution of box centers to find gaps
+    between columns in multi-column magazine layouts.
+
+    Args:
+        boxes: numpy array of shape (N, 4+) with [x1, y1, x2, y2, ...]
+        page_width: width of the page image in pixels
+
+    Returns:
+        list of (col_start, col_end) tuples defining column boundaries,
+        sorted left to right. Returns [(0, page_width)] for single column.
+    """
+    if len(boxes) < 2:
+        return [(0, page_width)]
+
+    # Compute center X of each box
+    centers_x = ((boxes[:, 0] + boxes[:, 2]) / 2.0).astype(int)
+
+    # Sort centers
+    sorted_centers = np.sort(centers_x)
+
+    # Find gaps between consecutive sorted centers
+    # A gap larger than 8% of page width indicates a column boundary
+    min_gap = page_width * 0.08
+    gaps = np.diff(sorted_centers)
+
+    # Find indices where gaps exceed the threshold
+    gap_indices = np.where(gaps > min_gap)[0]
+
+    if len(gap_indices) == 0:
+        # Single column
+        return [(0, page_width)]
+
+    # Build column boundaries from gap positions
+    columns = []
+    prev_end = 0
+
+    for idx in gap_indices:
+        # Column boundary is the midpoint of the gap
+        boundary = int((sorted_centers[idx] + sorted_centers[idx + 1]) / 2)
+        columns.append((prev_end, boundary))
+        prev_end = boundary
+
+    # Last column extends to page width
+    columns.append((prev_end, page_width))
+
+    return columns
+
+
+def custom_sort(arr, image_height=None, page_width=None):
+    """
+    Sort bounding boxes in reading order for multi-column layouts.
+
+    For multi-column pages (detected automatically):
+      1. Detect column boundaries from box X-coordinates
+      2. Assign each box to its column
+      3. Sort columns left-to-right
+      4. Within each column, sort boxes top-to-bottom
+
+    Falls back to the original row-tolerance sort for single-column pages.
 
     #5: The row-grouping tolerance scales with the image height (0.3 % of
     height, minimum 5 px) so that the same physical gap maps to the correct
@@ -115,6 +175,27 @@ def custom_sort(arr, image_height=None):
     if arr.size == 0:
         return arr
 
+    # Multi-column detection and sorting
+    if page_width is not None and len(arr) >= 2:
+        columns = detect_columns(arr, page_width)
+
+        if len(columns) > 1:
+            # Assign each box to its column, sort within each column top-to-bottom
+            sorted_boxes = []
+            for col_start, col_end in columns:
+                centers_x = (arr[:, 0] + arr[:, 2]) / 2.0
+                in_column = (centers_x >= col_start) & (centers_x < col_end)
+                col_boxes = arr[in_column]
+
+                if col_boxes.size > 0:
+                    # Sort top-to-bottom within this column
+                    col_boxes = col_boxes[col_boxes[:, 1].argsort()]
+                    sorted_boxes.append(col_boxes)
+
+            if sorted_boxes:
+                return np.vstack(sorted_boxes)
+
+    # Fallback: original row-tolerance sort for single-column layouts
     # #5: resolution-aware tolerance
     if image_height is not None:
         row_tolerance = max(5, int(image_height * 0.003))
