@@ -237,8 +237,9 @@ class LibrarianIngestPanel(Component):
 
 @hooks.register("construct_homepage_panels")
 def add_ingest_panel(request, panels):
-    """Add the ingestion control panel to the Wagtail admin dashboard."""
-    panels.append(LibrarianIngestPanel())
+    """Add the ingestion control panel to the Wagtail admin dashboard (superusers only)."""
+    if request.user.is_superuser:
+        panels.append(LibrarianIngestPanel())
 
 
 # ── Auto-indexing hooks ──────────────────────────────────────────────────
