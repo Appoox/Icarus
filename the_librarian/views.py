@@ -1,3 +1,5 @@
+from functools import wraps
+
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
 from django.conf import settings
@@ -17,6 +19,19 @@ from the_librarian.services.search import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def superuser_required(view_func):
+    """Decorator that restricts access to superusers only."""
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_superuser:
+            return JsonResponse(
+                {"error": "Only administrators can perform this action."},
+                status=403,
+            )
+        return view_func(request, *args, **kwargs)
+    return _wrapped
 
 
 # ── Search views ──────────────────────────────────────────────────────────
@@ -116,7 +131,7 @@ def serve_pdf(request, document_id):
 
 # ── Admin ingestion trigger ──────────────────────────────────────────────
 
-@staff_member_required
+@superuser_required
 @require_POST
 def trigger_ingestion(request):
     """
@@ -148,7 +163,7 @@ def trigger_ingestion(request):
             "error": str(e),
         }, status=500)
 
-@staff_member_required
+@superuser_required
 @require_POST
 def stop_ingestion(request):
     """Admin-only endpoint to request a stop to ingestion."""
@@ -156,7 +171,7 @@ def stop_ingestion(request):
     request_stop()
     return JsonResponse({"success": True, "message": "Stop requested"})
 
-@staff_member_required
+@superuser_required
 @require_GET
 def get_pending_pdfs_view(request):
     """Admin-only endpoint to get list of pending PDFs."""
