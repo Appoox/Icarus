@@ -65,6 +65,7 @@ class Literati(Page, HitCountMixin):
 
     content_panels = [
         FieldPanel('title', heading="Name", help_text="Enter the full name of the person"),
+        FieldPanel('slug'),
         FieldPanel('role'),
         FieldPanel('profile_image'),
         FieldPanel('bio'),
