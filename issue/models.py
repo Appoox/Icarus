@@ -138,6 +138,20 @@ class IssueForm(WagtailAdminPageForm):
                 self.fields['title'].initial = next_title
                 self.fields['title'].widget.attrs['value'] = next_title
 
+            from issue.models import Issue as IssueModel
+            latest_issue = IssueModel.objects.order_by('-pk').first()
+            next_issue_num = 1
+            if latest_issue and latest_issue.issue_number is not None:
+                if latest_volume and latest_issue.volume != latest_volume:
+                    next_issue_num = 1
+                else:
+                    next_issue_num = latest_issue.issue_number + 1
+
+            if 'issue_number' in self.fields:
+                self.initial['issue_number'] = next_issue_num
+                self.fields['issue_number'].initial = next_issue_num
+                self.fields['issue_number'].widget.attrs['value'] = next_issue_num
+
 
 class Issue(Page):
     base_form_class = IssueForm
