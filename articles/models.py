@@ -207,6 +207,7 @@ class Article(Page, HitCountMixin):
     read_fully_count = models.PositiveIntegerField(default=0, editable=False)
     # ── Admin panels ───────────────────────────────────────────────────────
     content_panels = Page.content_panels + [
+        FieldPanel('slug'),
         FieldPanel('main_issue'),
         FieldPanel('date'),
         FieldPanel('topic'),

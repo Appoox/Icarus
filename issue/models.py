@@ -221,6 +221,7 @@ class Issue(Page):
         return list(primary) + reprints
 
     content_panels = Page.content_panels + [
+        FieldPanel('slug'),
         FieldPanel('volume'),
         FieldPanel('issue_number'),
         FieldPanel('topic'),
