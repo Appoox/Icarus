@@ -113,6 +113,12 @@ class IssueForm(WagtailAdminPageForm):
                 self.fields['volume'].widget = forms.Select(choices=self.fields['volume'].choices)
                 self.fields['volume'].required = False
 
+            latest_issue = Issue.objects.order_by('-pk').first()
+            if latest_issue and 'title' in self.fields:
+                self.initial['title'] = latest_issue.title
+                self.fields['title'].initial = latest_issue.title
+                self.fields['title'].widget.attrs['value'] = latest_issue.title
+
 
 class Issue(Page):
     base_form_class = IssueForm
