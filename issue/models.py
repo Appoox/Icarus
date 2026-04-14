@@ -4,7 +4,7 @@ from modelcluster.fields import ParentalKey
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel
-from wagtail.admin.forms import WagtailAdminPageForm
+from wagtail.admin.forms import WagtailAdminPageForm, WagtailAdminModelForm
 from wagtail.snippets.models import register_snippet
 from wagtail import blocks
 from wagtail.search import index
@@ -55,6 +55,21 @@ class ImageBlock(blocks.StructBlock):
         label = 'Image'
 
 
+class VolumeForm(WagtailAdminModelForm):
+    """Pre-fills the number field with the next volume number (last + 1)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only pre-fill when creating a new volume (no pk yet)
+        if not self.instance.pk:
+            from issue.models import Volume as VolModel
+            latest = VolModel.objects.order_by('-number').first()
+            next_number = (latest.number + 1) if latest else 1
+            self.fields['number'].initial = next_number
+            self.initial['number'] = next_number
+            # Force the value into the widget so it renders in the HTML input
+            self.fields['number'].widget.attrs['value'] = next_number
+
+
 @register_snippet
 class Volume(index.Indexed, models.Model):
     number = models.PositiveIntegerField(unique=True, help_text="Volume number (e.g. 1, 2, 3…)")
@@ -73,6 +88,8 @@ class Volume(index.Indexed, models.Model):
         FieldPanel('year_start'),
         FieldPanel('year_end'),
     ]
+
+    base_form_class = VolumeForm
 
     def __str__(self):
         if self.year_end and self.year_end != self.year_start:
