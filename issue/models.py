@@ -113,6 +113,31 @@ class IssueForm(WagtailAdminPageForm):
                 self.fields['volume'].widget = forms.Select(choices=self.fields['volume'].choices)
                 self.fields['volume'].required = False
 
+            # Pre-fill title with the next month's Malayalam name
+            from datetime import date
+            MALAYALAM_MONTHS = {
+                1: 'ജനുവരി',
+                2: 'ഫെബ്രുവരി',
+                3: 'മാര്ച്ച്',
+                4: 'ഏപ്രില്',
+                5: 'മെയ്',
+                6: 'ജൂണ്',
+                7: 'ജൂലൈ',
+                8: 'ആഗസ്റ്റ്',
+                9: 'സെപ്തംബര്',
+                10: 'ഒക്ടോബര്',
+                11: 'നവംബര്',
+                12: 'ഡിസംബര്',
+            }
+            today = date.today()
+            next_month = today.month % 12 + 1
+            next_year = today.year + 1 if today.month == 12 else today.year
+            next_title = f"{MALAYALAM_MONTHS[next_month]} {next_year}"
+            if 'title' in self.fields:
+                self.initial['title'] = next_title
+                self.fields['title'].initial = next_title
+                self.fields['title'].widget.attrs['value'] = next_title
+
 
 class Issue(Page):
     base_form_class = IssueForm
