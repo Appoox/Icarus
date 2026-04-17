@@ -230,3 +230,6 @@ DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="ശാസ്ത്�
 
 # Enable framing from SAMEORIGIN to allow PDF rendering within search interface
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+
+TAGGIT_CASE_INSENSITIVE = True
