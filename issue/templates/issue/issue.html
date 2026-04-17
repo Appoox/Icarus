@@ -29,6 +29,19 @@
             {{ page.topic.name }}</a>
         {% endif %}
     </header>
+    
+    {# ── Tags ── #}
+    {% if page.tags.all %}
+    <div class="issue-tags" style="max-width: 1200px; margin: 0 auto 2.5rem; padding: 0 2rem; display: flex; justify-content: center;">
+        <div class="tags-list" style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center;">
+            {% for tag in page.tags.all %}
+            <span class="tag-item" style="font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #6b6659; background: #fafaf8; padding: 0.4rem 1.1rem; border-radius: 4px; border: 1px solid #d4d0c8;">
+                {{ tag.name }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
 
     {# ── EDITORIAL BOARD | EDITORIAL — two-column layout ── #}

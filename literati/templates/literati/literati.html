@@ -66,6 +66,19 @@
     </section>
     {% endif %}
 
+    {% if page.tags.all %}
+    <section class="author-tags" style="margin: 24px 0;">
+        <h2 class="section-title" style="font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">Tags</h2>
+        <div class="tags-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            {% for tag in page.tags.all %}
+            <span class="tag-item" style="font-family: inherit; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #555; background: #f0f0f0; padding: 4px 10px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                {{ tag.name }}
+            </span>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
     <hr class="section-divider">
 
     <section class="author-articles">

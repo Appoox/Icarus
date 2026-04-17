@@ -1,10 +1,17 @@
 from django.db import models
+from django import forms
 from modelcluster.fields import ParentalKey, ParentalManyToManyField
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
 from wagtail import blocks
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from phonenumber_field.modelfields import PhoneNumberField
+from hitcount.models import HitCountMixin, HitCount
+from django.contrib.contenttypes.fields import GenericRelation
+from hitcount.views import HitCountMixin as HitCountViewMixin
+
 
 class SocialMediaBlock(blocks.StructBlock):
     platform = blocks.ChoiceBlock(choices=[
@@ -21,10 +28,19 @@ class SocialMediaBlock(blocks.StructBlock):
         icon = 'link'
         label = 'Social Media Link'
 
-from django import forms
-from hitcount.models import HitCountMixin, HitCount
-from django.contrib.contenttypes.fields import GenericRelation
-from hitcount.views import HitCountMixin as HitCountViewMixin
+class LiteratiTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'Literati',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
+
+class AuthorIndexPageTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'AuthorIndexPage',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
 
 class Literati(Page, HitCountMixin):
 
@@ -47,6 +63,8 @@ class Literati(Page, HitCountMixin):
         ('social_link', SocialMediaBlock()),
     ], blank=True, use_json_field=True)
 
+    tags = ClusterTaggableManager(through=LiteratiTag, blank=True)
+
     hit_count_generic = GenericRelation(
         HitCount, object_id_field='object_pk',
         related_query_name='hit_count_generic_relation'
@@ -66,6 +84,7 @@ class Literati(Page, HitCountMixin):
     content_panels = [
         FieldPanel('title', heading="Name", help_text="Enter the full name of the person"),
         FieldPanel('slug'),
+        FieldPanel('tags'),
         FieldPanel('role'),
         FieldPanel('profile_image'),
         FieldPanel('bio'),
@@ -79,6 +98,7 @@ class Literati(Page, HitCountMixin):
 
 class AuthorIndexPage(Page):
     intro = RichTextField(blank=True)
+    tags = ClusterTaggableManager(through=AuthorIndexPageTag, blank=True)
     max_count = 1
     subpage_types = ['Literati']
 
@@ -89,6 +109,7 @@ class AuthorIndexPage(Page):
 
     content_panels = Page.content_panels + [
         FieldPanel('intro'),
+        FieldPanel('tags'),
     ]
 
 class ArticleAuthorRelationship(Orderable):
