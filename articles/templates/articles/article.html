@@ -117,6 +117,47 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
   }
 
+  /* Tags */
+  .tags-container {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--gray-light);
+  }
+
+  .tags-title {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-mid);
+    margin-bottom: 16px;
+  }
+
+  .tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tag-item {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-dark);
+    background: var(--gray-bg);
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--gray-light);
+    transition: all 0.2s ease;
+  }
+
+  .tag-item:hover {
+    background: var(--gray-light);
+    color: var(--black);
+    border-color: var(--gray-mid);
+  }
+
   .subtitle {
     font-family: var(--font-body);
     font-size: 20px;
@@ -929,6 +970,19 @@
       <div class="article-content">
         {% for block in page.body_ta %}
           {% include_block block %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+
+    {# ── Tags ── #}
+    {% if page.tags.all %}
+    <div class="tags-container">
+      <h3 class="tags-title">Tags</h3>
+      <div class="tags-list">
+        {% for tag in page.tags.all %}
+        <span class="tag-item">{{ tag.name }}</span>
         {% endfor %}
       </div>
     </div>

@@ -1,6 +1,8 @@
 from django.db import models
 from django import forms
 from modelcluster.fields import ParentalKey
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase
 from wagtail.models import Page
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
@@ -17,6 +19,20 @@ from .wagtail_widgets import ColorPickerBlock
 from hitcount.models import HitCountMixin, HitCount
 from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.views import HitCountMixin as HitCountViewMixin
+
+class ArticleTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'Article',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
+
+class ArticleIndexPageTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'ArticleIndexPage',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
 
 class ColoredHeadingBlock(blocks.StructBlock):
     text = blocks.CharBlock()
@@ -133,6 +149,8 @@ class Article(Page, HitCountMixin):
         related_query_name='hit_count_generic_relation'
     )
 
+    tags = ClusterTaggableManager(through=ArticleTag, blank=True)
+
     parent_page_types = ['ArticleIndexPage']
 
     # ── Relations ──────────────────────────────────────────────────────────
@@ -208,6 +226,7 @@ class Article(Page, HitCountMixin):
     # ── Admin panels ───────────────────────────────────────────────────────
     content_panels = Page.content_panels + [
         FieldPanel('slug'),
+        FieldPanel('tags'),
         FieldPanel('main_issue'),
         FieldPanel('date'),
         FieldPanel('topic'),
@@ -342,11 +361,13 @@ class Article(Page, HitCountMixin):
 
 class ArticleIndexPage(Page):
     intro = RichTextField(blank=True)
+    tags = ClusterTaggableManager(through=ArticleIndexPageTag, blank=True)
 
     max_count = 1
 
     content_panels = Page.content_panels + [
-        FieldPanel('intro')
+        FieldPanel('intro'),
+        FieldPanel('tags'),
     ]
 
     subpage_types = ['Article']

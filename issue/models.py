@@ -1,6 +1,8 @@
 from django.db import models
 from django import forms
 from modelcluster.fields import ParentalKey
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel
@@ -14,6 +16,20 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from articles.wagtail_widgets import ColorPickerWidget
+
+class IssueTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'Issue',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
+
+class IssueIndexPageTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'IssueIndexPage',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
 
 
 
@@ -169,6 +185,7 @@ class Issue(Page):
         help_text="Issue number within the volume (e.g. 1, 2, 3…)"
     )
     date_of_publishing = models.DateField("Date of publishing")
+    tags = ClusterTaggableManager(through=IssueTag, blank=True)
 
     # Only allow Articles to be created inside an Issue
     subpage_types = ['articles.Article']
@@ -236,6 +253,7 @@ class Issue(Page):
 
     content_panels = Page.content_panels + [
         FieldPanel('slug'),
+        FieldPanel('tags'),
         FieldPanel('volume'),
         FieldPanel('issue_number'),
         FieldPanel('topic'),
@@ -306,6 +324,7 @@ class Topic(index.Indexed, models.Model):
 
 class IssueIndexPage(Page):
     intro = RichTextField(blank=True)
+    tags = ClusterTaggableManager(through=IssueIndexPageTag, blank=True)
 
     max_count = 1
     subpage_types = ['Issue']
@@ -313,7 +332,8 @@ class IssueIndexPage(Page):
     parent_page_types = ['home.HomePage']
 
     content_panels = Page.content_panels + [
-        FieldPanel('intro')
+        FieldPanel('intro'),
+        FieldPanel('tags'),
     ]
 
     def get_context(self, request):
