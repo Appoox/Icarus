@@ -982,7 +982,7 @@
       <h3 class="tags-title">Tags</h3>
       <div class="tags-list">
         {% for tag in page.tags.all %}
-        <span class="tag-item">{{ tag.name }}</span>
+        <a href="{% url 'tag_detail' tag=tag.name %}" class="sg-tag-btn">{{ tag.name }}</a>
         {% endfor %}
       </div>
     </div>
