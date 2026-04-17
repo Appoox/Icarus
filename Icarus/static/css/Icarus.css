@@ -233,3 +233,28 @@
         padding: 2rem 1rem 1.5rem;
     }
 }
+
+/* ── Tags Button (Global) ──────────────────────────────── */
+.sg-tag-btn {
+    display: inline-block;
+    font-family: var(--label);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    background: var(--paper);
+    padding: 0.4rem 1.1rem;
+    border-radius: 20px;
+    border: 1px solid var(--rule);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.sg-tag-btn:hover {
+    background: var(--navy);
+    color: #ffffff;
+    border-color: var(--navy);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
