@@ -247,6 +247,14 @@
         color: #e65100;
         margin-bottom: 16px;
     }
+
+    /* Address display */
+    .address-block {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        color: #1a1612;
+        line-height: 1.6;
+    }
 </style>
 {% endblock %}
 
@@ -270,6 +278,25 @@
         ⚠️ Your subscription expired recently. You're in a grace period — renew now to keep your access.
     </div>
     {% endif %}
+
+    {# ── Address ── #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Address</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+        </div>
+        {% if reader.address_line_1 or reader.city or reader.state or reader.pincode %}
+        <div class="address-block">
+            {% if reader.address_line_1 %}{{ reader.address_line_1 }}<br>{% endif %}
+            {% if reader.address_line_2 %}{{ reader.address_line_2 }}<br>{% endif %}
+            {% if reader.city %}{{ reader.city }}{% if reader.state %}, {% endif %}{% endif %}
+            {% if reader.state %}{{ reader.state }}{% endif %}
+            {% if reader.pincode %} — {{ reader.pincode }}{% endif %}
+        </div>
+        {% else %}
+        <p class="empty-state">No address added yet. <a href="{% url 'edit_profile' %}" class="link-edit">Add one</a></p>
+        {% endif %}
+    </div>
 
     {# ── Subscription Status ── #}
     <div class="sub-card">
