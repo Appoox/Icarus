@@ -300,16 +300,19 @@ class Article(Page, HitCountMixin):
         truncated_body = None
         reader = None
 
-        # 1. Admin Exemption
-        if request.user.is_superuser or request.user.is_staff:
-            show_paywall = False
-        
-        # 2. Authenticated Reader Logic
-        elif request.user.is_authenticated:
+        # 1. Reader Profile Fetch
+        if request.user.is_authenticated:
             try:
                 reader = request.user.reader
             except Exception:
                 reader = None
+
+        # 2. Admin Exemption
+        if request.user.is_superuser or request.user.is_staff:
+            show_paywall = False
+        
+        # 3. Authenticated Reader Logic
+        elif request.user.is_authenticated:
 
             if reader and reader.is_subscribed:
                 # Subscribed reader → full access, track the read

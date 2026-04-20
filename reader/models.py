@@ -207,6 +207,20 @@ class Reader(index.Indexed, models.Model):
         help_text="Topics this reader is interested in.",
     )
 
+    # ── Favourites ────────────────────────────────────────────────────
+    favorite_articles = models.ManyToManyField(
+        'articles.Article',
+        blank=True,
+        related_name='favorited_by',
+        help_text='Articles this reader has bookmarked.',
+    )
+    favorite_issues = models.ManyToManyField(
+        'issue.Issue',
+        blank=True,
+        related_name='favorited_by',
+        help_text='Issues this reader has bookmarked.',
+    )
+
     panels = [
         MultiFieldPanel([
             FieldPanel('name'),
@@ -235,6 +249,10 @@ class Reader(index.Indexed, models.Model):
             FieldPanel('read_articles'),
             FieldPanel('interested_topics'),
         ], heading="Activity & Interests"),
+        MultiFieldPanel([
+            FieldPanel('favorite_articles'),
+            FieldPanel('favorite_issues'),
+        ], heading="Favourites"),
     ]
 
     class Meta:

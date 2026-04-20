@@ -279,6 +279,17 @@ class Issue(Page):
         FieldPanel('editorial'),
     ]
 
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+        reader = None
+        if request.user.is_authenticated:
+            try:
+                reader = request.user.reader
+            except Exception:
+                reader = None
+        context['reader'] = reader
+        return context
+
 class IssueArticleReprint(Orderable):
     issue = ParentalKey('Issue', related_name='reprinted_articles', on_delete=models.CASCADE)
     article = models.ForeignKey('articles.Article', related_name='reprint_appearances', on_delete=models.CASCADE)

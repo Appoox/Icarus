@@ -346,6 +346,47 @@
         {% endif %}
     </div>
 
+    {# ── Favourites ── #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Favorite Articles</h2>
+        </div>
+        {% if reader.favorite_articles.all %}
+        <ul class="read-list">
+            {% for article in reader.favorite_articles.all %}
+            <li>
+                <a href="{{ article.url }}">{{ article.title }}</a>
+                {% if article.date %}
+                <span class="date">{{ article.date|date:"F j, Y" }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">You haven't favorited any articles yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Favorite Issues</h2>
+        </div>
+        {% if reader.favorite_issues.all %}
+        <ul class="read-list">
+            {% for issue in reader.favorite_issues.all %}
+            <li>
+                <a href="{{ issue.url }}">{{ issue.title }}</a>
+                {% if issue.date_of_publishing %}
+                <span class="date">{{ issue.date_of_publishing|date:"F j, Y" }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">You haven't favorited any issues yet.</p>
+        {% endif %}
+    </div>
+
     {# ── Interested Topics ── #}
     <div class="profile-section">
         <div class="profile-section__header">
