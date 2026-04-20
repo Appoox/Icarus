@@ -49,7 +49,7 @@
         <div class="editorial-board-col">
             <h2 class="editorial-board-col__heading">പ്രസാധകര്‍</h2>
 
-            {% for rel in page.editorial_board_relationship.all %}
+            {% for rel in page.board_members %}
             <div class="board-member">
                 <div class="board-member__photo">
                     {% if rel.editor.profile_image %}
