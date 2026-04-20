@@ -22,13 +22,53 @@
         </div>
         {% endif %}
         <h1>{{ page.title }}</h1>
-        <div class="issue-page-header__date">{{ page.date_of_publishing|date:"F j, Y" }}</div>
+        <div class="issue-page-header__date" style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+            {{ page.date_of_publishing|date:"F j, Y" }}
+            {% if user.is_authenticated %}
+            <button class="favorite-btn" data-id="{{ page.id }}" data-type="issue" 
+                    data-favorited="{% if reader and page in reader.favorite_issues.all %}true{% else %}false{% endif %}"
+                    title="Toggle Favorite">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+            {% endif %}
+        </div>
         {% if page.topic %}
         <a href="{% url 'topic_detail' slug=page.topic.slug %}" class="issue-page-header__topic"
             style="background-color: {{ page.topic.color|default:'#0b1f3a' }};">
             {{ page.topic.name }}</a>
         {% endif %}
+        {% csrf_token %}
     </header>
+
+    <style>
+      .favorite-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        color: #6b6659;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .favorite-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+      .favorite-btn[data-favorited="true"] {
+        color: #c8102e;
+      }
+      .favorite-btn[data-favorited="true"] svg {
+        fill: #c8102e;
+      }
+      .favorite-btn:hover {
+        transform: scale(1.1);
+        color: #c8102e;
+      }
+    </style>
     
     {# ── Tags ── #}
     {% if page.tags.all %}
@@ -155,4 +195,43 @@
   </div>
 
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favoriteBtn = document.querySelector('.favorite-btn');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const type = this.getAttribute('data-type');
+                const url = type === 'article' ? `/reader/favorite/article/${id}/` : `/reader/favorite/issue/${id}/`;
+                const csrfToken = "{{ csrf_token }}" || (document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '');
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Server returned ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.favorited !== undefined) {
+                        this.setAttribute('data-favorited', data.favorited);
+                        this.title = data.favorited ? 'Remove from Favorites' : 'Add to Favorites';
+                    } else if (data.error) {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error toggling favorite:', error);
+                    alert('Failed to update favorite. Please check if you are logged.');
+                });
+            });
+        }
+    });
+</script>
 {% endblock %}
