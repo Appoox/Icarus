@@ -207,6 +207,15 @@ class Issue(Page):
         related_name='issues'
     )
 
+    editorial_board = models.ForeignKey(
+        'literati.EditorialBoard',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='issues',
+        help_text="Select an editorial board group for this issue"
+    )
+
     editorial = StreamField([
         ('heading',    blocks.RichTextBlock(form_classname="full title")),
         ('paragraph',  blocks.RichTextBlock()),
@@ -251,6 +260,12 @@ class Issue(Page):
         reprints = [rel.article for rel in self.reprinted_articles.select_related('article').filter(article__live=True)]
         return list(primary) + reprints
 
+    @property
+    def board_members(self):
+        if self.editorial_board:
+            return self.editorial_board.members.all()
+        return []
+
     content_panels = Page.content_panels + [
         FieldPanel('slug'),
         FieldPanel('tags'),
@@ -259,7 +274,7 @@ class Issue(Page):
         FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
         FieldPanel('cover_image'),
-        InlinePanel('editorial_board_relationship', label="Editorial Board Members"),
+        FieldPanel('editorial_board'),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
         FieldPanel('editorial'),
     ]
@@ -272,28 +287,7 @@ class IssueArticleReprint(Orderable):
         FieldPanel('article'),
     ]
 
-class IssueEditorialBoardRelationship(Orderable):
-    page = ParentalKey('Issue', related_name='editorial_board_relationship', on_delete=models.CASCADE)
-    editor = models.ForeignKey('literati.Literati', related_name='editorial_roles', on_delete=models.CASCADE)
-    
-    # Context-dependent roles for the editorial board
-    ROLE_CHOICES = [
-        ('editor', 'Editor'),
-        ('associate', 'Associate Editor'),
-        ('managing', 'Managing Editor'),
-        ('board', 'Board Member'),
-    ]
-    role = models.CharField(
-        max_length=50, 
-        choices=ROLE_CHOICES, 
-        default='editor',
-        help_text="Select the role for this issue's editorial board"
-    )
 
-    panels = [
-        FieldPanel('editor'),
-        FieldPanel('role'),
-    ]
 
 @register_snippet
 class Topic(index.Indexed, models.Model):
