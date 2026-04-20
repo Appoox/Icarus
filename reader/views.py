@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST   # ✅ NEW
 from django.utils import timezone                       # ✅ NEW (fixes the bug)
 import uuid                                             # ✅ NEW (better IDs than timestamp)
 
-from .forms import ReaderSignupForm, UpdateInterestsForm
+from .forms import ReaderSignupForm, ReaderProfileEditForm, UpdateInterestsForm
 from .models import Reader, PaymentDetails
 
 # ── Single source of truth for plan prices ──────────────────────────────────
@@ -58,6 +58,26 @@ def reader_profile(request):
         'plans': PLANS,   # ✅ Pass plans so profile.html doesn't hardcode prices
     }
     return render(request, 'reader/profile.html', context)
+
+
+@login_required(login_url='/reader/login/')
+def edit_profile(request):
+    """Let readers edit their name, email, and phone number."""
+    try:
+        reader = request.user.reader
+    except Reader.DoesNotExist:
+        return redirect('reader_profile')
+
+    if request.method == 'POST':
+        form = ReaderProfileEditForm(request.POST, instance=reader)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('reader_profile')
+    else:
+        form = ReaderProfileEditForm(instance=reader)
+
+    return render(request, 'reader/edit_profile.html', {'form': form})
 
 
 @login_required(login_url='/reader/login/')
