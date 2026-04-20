@@ -6,11 +6,14 @@ from taggit.models import TaggedItemBase
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
 from wagtail import blocks
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel, InlinePanel
 from phonenumber_field.modelfields import PhoneNumberField
 from hitcount.models import HitCountMixin, HitCount
 from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.views import HitCountMixin as HitCountViewMixin
+from wagtail.snippets.models import register_snippet
+from wagtail.search import index
+from modelcluster.models import ClusterableModel
 
 
 class SocialMediaBlock(blocks.StructBlock):
@@ -127,3 +130,45 @@ class ArticleAuthorRelationship(Orderable):
         FieldPanel('author'),
         FieldPanel('role'),
     ]
+
+@register_snippet
+class EditorialBoard(index.Indexed, ClusterableModel):
+    name = models.CharField(max_length=255)
+    
+    search_fields = [
+        index.SearchField('name'),
+    ]
+
+    panels = [
+        FieldPanel('name'),
+        InlinePanel('members', label="Board Members"),
+    ]
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Editorial Boards"
+
+
+class EditorialBoardMember(Orderable):
+    board = ParentalKey(EditorialBoard, related_name='members', on_delete=models.CASCADE)
+    editor = models.ForeignKey('Literati', related_name='board_memberships', on_delete=models.CASCADE)
+    
+    ROLE_CHOICES = [
+        ('editor', 'Editor'),
+        ('associate', 'Associate Editor'),
+        ('managing', 'Managing Editor'),
+        ('board', 'Board Member'),
+    ]
+    role = models.CharField(
+        max_length=50, 
+        choices=ROLE_CHOICES, 
+        default='editor',
+    )
+
+    panels = [
+        FieldPanel('editor'),
+        FieldPanel('role'),
+    ]
+
