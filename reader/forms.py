@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
@@ -40,6 +42,49 @@ class ReaderSignupForm(UserCreationForm):
         help_text='Select topics you are interested in.',
     )
 
+    # ── Address fields ───────────────────────────────────────────────
+    address_line_1 = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'House / flat no., street',
+            'class': 'form-input',
+        }),
+    )
+    address_line_2 = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Landmark, area, locality',
+            'class': 'form-input',
+        }),
+    )
+    city = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'City / town',
+            'class': 'form-input',
+        }),
+    )
+    state = forms.ChoiceField(
+        choices=Reader.INDIAN_STATES,
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-input',
+        }),
+    )
+    pincode = forms.CharField(
+        max_length=6,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': '6-digit pincode',
+            'class': 'form-input',
+            'inputmode': 'numeric',
+            'maxlength': '6',
+        }),
+    )
+
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
@@ -76,6 +121,13 @@ class ReaderSignupForm(UserCreationForm):
                 raise forms.ValidationError('This phone number is already registered.')
         return phone_number
 
+    def clean_pincode(self):
+        pincode = self.cleaned_data.get('pincode')
+        if pincode:
+            if not re.match(r'^[1-9][0-9]{5}$', pincode):
+                raise forms.ValidationError('Enter a valid 6-digit Indian pincode.')
+        return pincode
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
@@ -86,6 +138,11 @@ class ReaderSignupForm(UserCreationForm):
                 name=self.cleaned_data['name'],
                 email=self.cleaned_data['email'],
                 phone_number=self.cleaned_data.get('phone_number', ''),
+                address_line_1=self.cleaned_data.get('address_line_1', ''),
+                address_line_2=self.cleaned_data.get('address_line_2', ''),
+                city=self.cleaned_data.get('city', ''),
+                state=self.cleaned_data.get('state', ''),
+                pincode=self.cleaned_data.get('pincode', ''),
             )
             topics = self.cleaned_data.get('interested_topics')
             if topics:
@@ -120,9 +177,53 @@ class ReaderProfileEditForm(forms.ModelForm):
         }),
     )
 
+    # ── Address fields ───────────────────────────────────────────────
+    address_line_1 = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'House / flat no., street',
+            'class': 'form-input',
+        }),
+    )
+    address_line_2 = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Landmark, area, locality',
+            'class': 'form-input',
+        }),
+    )
+    city = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'City / town',
+            'class': 'form-input',
+        }),
+    )
+    state = forms.ChoiceField(
+        choices=Reader.INDIAN_STATES,
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-input',
+        }),
+    )
+    pincode = forms.CharField(
+        max_length=6,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': '6-digit pincode',
+            'class': 'form-input',
+            'inputmode': 'numeric',
+            'maxlength': '6',
+        }),
+    )
+
     class Meta:
         model = Reader
-        fields = ('name', 'email', 'phone_number')
+        fields = ('name', 'email', 'phone_number',
+                  'address_line_1', 'address_line_2', 'city', 'state', 'pincode')
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -139,6 +240,13 @@ class ReaderProfileEditForm(forms.ModelForm):
             if Reader.objects.filter(phone_number=phone_number).exclude(pk=self.instance.pk).exists():
                 raise forms.ValidationError('This phone number is already registered.')
         return phone_number
+
+    def clean_pincode(self):
+        pincode = self.cleaned_data.get('pincode')
+        if pincode:
+            if not re.match(r'^[1-9][0-9]{5}$', pincode):
+                raise forms.ValidationError('Enter a valid 6-digit Indian pincode.')
+        return pincode
 
     def save(self, commit=True):
         reader = super().save(commit=False)
