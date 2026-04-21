@@ -98,10 +98,22 @@ class AudioBlock(blocks.StructBlock):
         label = 'Audio'
 
 
+class VideoBlock(blocks.StructBlock):
+    video_file = DocumentChooserBlock(required=False, help_text="Upload a video file (mp4, webm, etc.)")
+    video_embed_url = blocks.URLBlock(required=False, help_text="Or paste an embed link (YouTube, Vimeo, etc.)")
+    caption = blocks.CharBlock(required=False, help_text="Optional caption for the video")
+
+    class Meta:
+        icon = 'media'
+        template = 'blocks/video_block.html'
+        label = 'Video'
+
+
 # ── Reusable StreamField Blocks ─────────────────────────────────────────
 
 STREAM_BLOCKS = [
     ('audio',      AudioBlock()),
+    ('video',      VideoBlock()),
     ('heading',    blocks.RichTextBlock(form_classname="full title")),
     ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
     ('paragraph',  blocks.RichTextBlock()),
@@ -248,6 +260,20 @@ class Article(Page, HitCountMixin):
         help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
     )
 
+    # ── Video ─────────────────────────────────────────────────────────────
+    video_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    video_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for video (e.g., YouTube, Vimeo)"
+    )
+
     # ── Analytics ─────────────────────────────────────────────────────────
     read_fully_count = models.PositiveIntegerField(default=0, editable=False)
     # ── Admin panels ───────────────────────────────────────────────────────
@@ -267,6 +293,10 @@ class Article(Page, HitCountMixin):
             FieldPanel('audio_file'),
             FieldPanel('audio_embed_url'),
         ], heading="Audio (Main)"),
+        MultiFieldPanel([
+            FieldPanel('video_file'),
+            FieldPanel('video_embed_url'),
+        ], heading="Video (Main)"),
         InlinePanel('article_authors', label="Authors"),
         FieldPanel('body'),
         MultiFieldPanel([

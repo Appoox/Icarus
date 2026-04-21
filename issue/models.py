@@ -16,7 +16,7 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from articles.wagtail_widgets import ColorPickerWidget
-from articles.models import AudioBlock
+from articles.models import AudioBlock, VideoBlock
 
 class IssueTag(TaggedItemBase):
     content_object = ParentalKey(
@@ -231,8 +231,23 @@ class Issue(Page):
         help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
     )
 
+    # ── Video ─────────────────────────────────────────────────────────────
+    video_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    video_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for video (e.g., YouTube, Vimeo)"
+    )
+
     editorial = StreamField([
         ('audio',      AudioBlock()),
+        ('video',      VideoBlock()),
         ('heading',    blocks.RichTextBlock(form_classname="full title")),
         ('paragraph',  blocks.RichTextBlock()),
         ('image',      ImageBlock()),                                   # ← StructBlock with caption
@@ -294,6 +309,10 @@ class Issue(Page):
             FieldPanel('audio_file'),
             FieldPanel('audio_embed_url'),
         ], heading="Audio"),
+        MultiFieldPanel([
+            FieldPanel('video_file'),
+            FieldPanel('video_embed_url'),
+        ], heading="Video"),
         FieldPanel('editorial_board'),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
         FieldPanel('editorial'),
