@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
 from django.utils import timezone
 from datetime import timedelta
 
@@ -18,6 +19,71 @@ class Reader(index.Indexed, models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20, blank=True)
+
+    # ── Address ──────────────────────────────────────────────────────
+    INDIAN_STATES = [
+        ('', '— Select State —'),
+        ('Andaman and Nicobar Islands', 'Andaman and Nicobar Islands'),
+        ('Andhra Pradesh', 'Andhra Pradesh'),
+        ('Arunachal Pradesh', 'Arunachal Pradesh'),
+        ('Assam', 'Assam'),
+        ('Bihar', 'Bihar'),
+        ('Chandigarh', 'Chandigarh'),
+        ('Chhattisgarh', 'Chhattisgarh'),
+        ('Dadra and Nagar Haveli and Daman and Diu', 'Dadra and Nagar Haveli and Daman and Diu'),
+        ('Delhi', 'Delhi'),
+        ('Goa', 'Goa'),
+        ('Gujarat', 'Gujarat'),
+        ('Haryana', 'Haryana'),
+        ('Himachal Pradesh', 'Himachal Pradesh'),
+        ('Jammu and Kashmir', 'Jammu and Kashmir'),
+        ('Jharkhand', 'Jharkhand'),
+        ('Karnataka', 'Karnataka'),
+        ('Kerala', 'Kerala'),
+        ('Ladakh', 'Ladakh'),
+        ('Lakshadweep', 'Lakshadweep'),
+        ('Madhya Pradesh', 'Madhya Pradesh'),
+        ('Maharashtra', 'Maharashtra'),
+        ('Manipur', 'Manipur'),
+        ('Meghalaya', 'Meghalaya'),
+        ('Mizoram', 'Mizoram'),
+        ('Nagaland', 'Nagaland'),
+        ('Odisha', 'Odisha'),
+        ('Puducherry', 'Puducherry'),
+        ('Punjab', 'Punjab'),
+        ('Rajasthan', 'Rajasthan'),
+        ('Sikkim', 'Sikkim'),
+        ('Tamil Nadu', 'Tamil Nadu'),
+        ('Telangana', 'Telangana'),
+        ('Tripura', 'Tripura'),
+        ('Uttar Pradesh', 'Uttar Pradesh'),
+        ('Uttarakhand', 'Uttarakhand'),
+        ('West Bengal', 'West Bengal'),
+    ]
+
+    pincode_validator = RegexValidator(
+        regex=r'^[1-9][0-9]{5}$',
+        message='Enter a valid 6-digit Indian pincode.',
+    )
+
+    address_line_1 = models.CharField(
+        max_length=255, blank=True,
+        help_text='House / flat number, street name.',
+    )
+    address_line_2 = models.CharField(
+        max_length=255, blank=True,
+        help_text='Landmark, area, locality.',
+    )
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(
+        max_length=50, blank=True,
+        choices=INDIAN_STATES,
+    )
+    pincode = models.CharField(
+        max_length=6, blank=True,
+        validators=[pincode_validator],
+        help_text='6-digit Indian pincode.',
+    )
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
@@ -141,6 +207,20 @@ class Reader(index.Indexed, models.Model):
         help_text="Topics this reader is interested in.",
     )
 
+    # ── Favourites ────────────────────────────────────────────────────
+    favorite_articles = models.ManyToManyField(
+        'articles.Article',
+        blank=True,
+        related_name='favorited_by',
+        help_text='Articles this reader has bookmarked.',
+    )
+    favorite_issues = models.ManyToManyField(
+        'issue.Issue',
+        blank=True,
+        related_name='favorited_by',
+        help_text='Issues this reader has bookmarked.',
+    )
+
     panels = [
         MultiFieldPanel([
             FieldPanel('name'),
@@ -148,6 +228,15 @@ class Reader(index.Indexed, models.Model):
             FieldPanel('phone_number'),
             FieldPanel('user'),
         ], heading="Personal Information"),
+        MultiFieldPanel([
+            FieldPanel('address_line_1'),
+            FieldPanel('address_line_2'),
+            FieldRowPanel([
+                FieldPanel('city'),
+                FieldPanel('state'),
+            ]),
+            FieldPanel('pincode'),
+        ], heading="Address"),
         MultiFieldPanel([
             FieldPanel('subscription_plan'),
             FieldRowPanel([
@@ -160,6 +249,10 @@ class Reader(index.Indexed, models.Model):
             FieldPanel('read_articles'),
             FieldPanel('interested_topics'),
         ], heading="Activity & Interests"),
+        MultiFieldPanel([
+            FieldPanel('favorite_articles'),
+            FieldPanel('favorite_issues'),
+        ], heading="Favourites"),
     ]
 
     class Meta:

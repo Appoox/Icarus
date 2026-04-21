@@ -87,9 +87,33 @@ class ImageBlock(blocks.StructBlock):
         label = 'Image'
 
 
+class AudioBlock(blocks.StructBlock):
+    audio_file = DocumentChooserBlock(required=False, help_text="Upload an audio file (mp3, wav, etc.)")
+    audio_embed_url = blocks.URLBlock(required=False, help_text="Or paste an embed link (SoundCloud, etc.)")
+    caption = blocks.CharBlock(required=False, help_text="Optional caption for the audio")
+
+    class Meta:
+        icon = 'media'
+        template = 'blocks/audio_block.html'
+        label = 'Audio'
+
+
+class VideoBlock(blocks.StructBlock):
+    video_file = DocumentChooserBlock(required=False, help_text="Upload a video file (mp4, webm, etc.)")
+    video_embed_url = blocks.URLBlock(required=False, help_text="Or paste an embed link (YouTube, Vimeo, etc.)")
+    caption = blocks.CharBlock(required=False, help_text="Optional caption for the video")
+
+    class Meta:
+        icon = 'media'
+        template = 'blocks/video_block.html'
+        label = 'Video'
+
+
 # ── Reusable StreamField Blocks ─────────────────────────────────────────
 
 STREAM_BLOCKS = [
+    ('audio',      AudioBlock()),
+    ('video',      VideoBlock()),
     ('heading',    blocks.RichTextBlock(form_classname="full title")),
     ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
     ('paragraph',  blocks.RichTextBlock()),
@@ -221,6 +245,35 @@ class Article(Page, HitCountMixin):
 
     title_ta = models.CharField(max_length=255, blank=True, verbose_name="Title (Tamil)")
     body_ta = StreamField(STREAM_BLOCKS, use_json_field=True, null=True, blank=True, verbose_name="Body (Tamil)")
+
+    # ── Audio ─────────────────────────────────────────────────────────────
+    audio_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    audio_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
+    )
+
+    # ── Video ─────────────────────────────────────────────────────────────
+    video_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    video_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for video (e.g., YouTube, Vimeo)"
+    )
+
     # ── Analytics ─────────────────────────────────────────────────────────
     read_fully_count = models.PositiveIntegerField(default=0, editable=False)
     # ── Admin panels ───────────────────────────────────────────────────────
@@ -236,6 +289,14 @@ class Article(Page, HitCountMixin):
             FieldPanel('cover_image_caption'),
             CoverImagePreviewPanel(),
         ], heading="Cover Image"),
+        MultiFieldPanel([
+            FieldPanel('audio_file'),
+            FieldPanel('audio_embed_url'),
+        ], heading="Audio (Main)"),
+        MultiFieldPanel([
+            FieldPanel('video_file'),
+            FieldPanel('video_embed_url'),
+        ], heading="Video (Main)"),
         InlinePanel('article_authors', label="Authors"),
         FieldPanel('body'),
         MultiFieldPanel([
@@ -300,16 +361,19 @@ class Article(Page, HitCountMixin):
         truncated_body = None
         reader = None
 
-        # 1. Admin Exemption
-        if request.user.is_superuser or request.user.is_staff:
-            show_paywall = False
-        
-        # 2. Authenticated Reader Logic
-        elif request.user.is_authenticated:
+        # 1. Reader Profile Fetch
+        if request.user.is_authenticated:
             try:
                 reader = request.user.reader
             except Exception:
                 reader = None
+
+        # 2. Admin Exemption
+        if request.user.is_superuser or request.user.is_staff:
+            show_paywall = False
+        
+        # 3. Authenticated Reader Logic
+        elif request.user.is_authenticated:
 
             if reader and reader.is_subscribed:
                 # Subscribed reader → full access, track the read

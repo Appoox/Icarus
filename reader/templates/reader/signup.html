@@ -167,6 +167,42 @@
         margin-top: 4px;
         display: block;
     }
+
+    /* ── Address fieldset ── */
+    .form-fieldset {
+        border: 1px solid #d4d0c8;
+        border-radius: 6px;
+        padding: 20px 20px 4px;
+        margin-bottom: 20px;
+    }
+
+    .form-fieldset__legend {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #6b6659;
+        padding: 0 8px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 16px;
+    }
+
+    .form-group--half {
+        flex: 1;
+        min-width: 0;
+    }
+
+    select.form-input {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6659' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 32px;
+    }
 </style>
 {% endblock %}
 
@@ -201,6 +237,42 @@
             {{ form.phone_number }}
             {% if form.phone_number.errors %}<div class="form-errors">{{ form.phone_number.errors }}</div>{% endif %}
         </div>
+
+        {# ── Address ── #}
+        <fieldset class="form-fieldset">
+            <legend class="form-fieldset__legend">Address</legend>
+
+            <div class="form-group">
+                <label for="id_address_line_1">Address Line 1</label>
+                {{ form.address_line_1 }}
+                {% if form.address_line_1.errors %}<div class="form-errors">{{ form.address_line_1.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_address_line_2">Address Line 2</label>
+                {{ form.address_line_2 }}
+                {% if form.address_line_2.errors %}<div class="form-errors">{{ form.address_line_2.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group form-group--half">
+                    <label for="id_city">City</label>
+                    {{ form.city }}
+                    {% if form.city.errors %}<div class="form-errors">{{ form.city.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group form-group--half">
+                    <label for="id_state">State</label>
+                    {{ form.state }}
+                    {% if form.state.errors %}<div class="form-errors">{{ form.state.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group" style="max-width: 200px;">
+                <label for="id_pincode">Pincode</label>
+                {{ form.pincode }}
+                {% if form.pincode.errors %}<div class="form-errors">{{ form.pincode.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
 
         <div class="form-group">
             <label for="id_password1">Password</label>

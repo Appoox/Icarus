@@ -200,7 +200,7 @@ WAGTAILADMIN_BASE_URL = "http://example.com"
 # This can be omitted to allow all files, but note that this may present a security risk
 # if untrusted users are allowed to upload files -
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
-WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
+WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip', 'mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'opus', 'mp4', 'webm', 'ogv']
 
 # ── Reader / Paywall ──────────────────────────────────────────────────
 FREE_ARTICLE_LIMIT = env.int("FREE_ARTICLE_LIMIT", 3)  # Number of free articles for non-subscribed readers
@@ -230,6 +230,7 @@ DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="ശാസ്ത്�
 
 # Enable framing from SAMEORIGIN to allow PDF rendering within search interface
 X_FRAME_OPTIONS = "SAMEORIGIN"
+WAGTAILEMBEDS_RESPONSIVE_HTML = True
 
 
 TAGGIT_CASE_INSENSITIVE = True
