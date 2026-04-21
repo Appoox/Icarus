@@ -5,7 +5,7 @@ from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
-from wagtail.admin.panels import FieldPanel, InlinePanel
+from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.admin.forms import WagtailAdminPageForm, WagtailAdminModelForm
 from wagtail.snippets.models import register_snippet
 from wagtail import blocks
@@ -16,6 +16,7 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from articles.wagtail_widgets import ColorPickerWidget
+from articles.models import AudioBlock
 
 class IssueTag(TaggedItemBase):
     content_object = ParentalKey(
@@ -216,7 +217,22 @@ class Issue(Page):
         help_text="Select an editorial board group for this issue"
     )
 
+    # ── Audio ─────────────────────────────────────────────────────────────
+    audio_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    audio_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
+    )
+
     editorial = StreamField([
+        ('audio',      AudioBlock()),
         ('heading',    blocks.RichTextBlock(form_classname="full title")),
         ('paragraph',  blocks.RichTextBlock()),
         ('image',      ImageBlock()),                                   # ← StructBlock with caption
@@ -274,6 +290,10 @@ class Issue(Page):
         FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
         FieldPanel('cover_image'),
+        MultiFieldPanel([
+            FieldPanel('audio_file'),
+            FieldPanel('audio_embed_url'),
+        ], heading="Audio"),
         FieldPanel('editorial_board'),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
         FieldPanel('editorial'),
