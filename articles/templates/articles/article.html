@@ -950,12 +950,155 @@
                 </script>
             {% elif page.audio_embed_url %}
                 <div class="audio-embed">
-                    {% embed page.audio_embed_url %}
+                    {% if ".mp3" in page.audio_embed_url or ".wav" in page.audio_embed_url or ".m4a" in page.audio_embed_url %}
+                        {# Handle direct audio links in the embed field #}
+                        <div class="modern-audio-player" id="player-embed">
+                            <audio id="audio-embed" src="{{ page.audio_embed_url }}"></audio>
+                            <div class="player-main" style="display: flex; align-items: center; gap: 16px;">
+                                <button class="play-btn" id="play-btn-embed" style="width: 48px; height: 48px; border-radius: 50%; background: var(--red); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                                    <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                </button>
+                                <div class="player-info" style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                                    <div class="progress-wrapper" style="position: relative; height: 6px; background: #eef0f2; border-radius: 3px;">
+                                        <input type="range" class="progress-slider" id="slider-embed" value="0" min="0" max="100" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; margin: 0;">
+                                        <div class="progress-bar-fill" id="fill-embed" style="position: absolute; top: 0; left: 0; height: 100%; background: var(--red); border-radius: 3px; width: 0%; z-index: 1;"></div>
+                                    </div>
+                                    <div class="time-meta" style="display: flex; justify-content: space-between; font-size: 12px; color: #95a5a6; font-weight: 600;">
+                                        <span id="current-embed">0:00</span>
+                                        <span id="duration-embed">0:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <script>
+                        (function() {
+                            const audio = document.getElementById('audio-embed');
+                            const playBtn = document.getElementById('play-btn-embed');
+                            const slider = document.getElementById('slider-embed');
+                            const fill = document.getElementById('fill-embed');
+                            const current = document.getElementById('current-embed');
+                            const duration = document.getElementById('duration-embed');
+                            const playIcon = playBtn.querySelector('.play-icon');
+                            const pauseIcon = playBtn.querySelector('.pause-icon');
+                            playBtn.addEventListener('click', () => {
+                                if (audio.paused) { audio.play(); playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; }
+                                else { audio.pause(); playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; }
+                            });
+                            audio.addEventListener('loadedmetadata', () => { duration.textContent = Math.floor(audio.duration/60) + ":" + (Math.floor(audio.duration%60)).toString().padStart(2,'0'); });
+                            audio.addEventListener('timeupdate', () => { const pct = (audio.currentTime / audio.duration) * 100; slider.value = pct; fill.style.width = pct + '%'; current.textContent = Math.floor(audio.currentTime/60) + ":" + (Math.floor(audio.currentTime%60)).toString().padStart(2,'0'); });
+                            slider.addEventListener('input', () => { audio.currentTime = (slider.value / 100) * audio.duration; });
+                        })();
+                        </script>
+                    {% else %}
+                        {% embed page.audio_embed_url %}
+                    {% endif %}
                 </div>
             {% endif %}
         </div>
     </div>
     {% endif %}
+
+    {# ── Main Video Display ── #}
+    {% if page.video_file or page.video_embed_url %}
+    <div class="main-video-container" style="max-width: var(--article-col); margin: 0 auto 32px;">
+        {% if page.video_file %}
+            <div class="modern-video-player" id="vplayer-main" style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); background: #000;">
+                <div class="video-wrapper" style="position: relative; width: 100%; line-height: 0;">
+                    <video id="video-main" src="{{ page.video_file.url }}" style="width: 100%; height: auto;"></video>
+                    <div class="video-overlay" id="overlay-main" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; pointer-events: none;">
+                        <button class="big-play-btn" id="big-play-main" style="width: 80px; height: 80px; border-radius: 50%; background: rgba(192, 57, 43, 0.9); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto; transition: transform 0.2s;">
+                            <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="video-controls" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, rgba(0,0,0,0.7)); display: flex; align-items: center; gap: 15px; line-height: 1;">
+                    <button class="v-play-btn" id="v-play-main" style="background: none; border: none; cursor: pointer; padding: 0;">
+                        <svg class="v-play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                        <svg class="v-pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                    <div class="v-progress-wrapper" style="flex: 1; position: relative; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px;">
+                        <input type="range" class="v-progress-slider" id="v-slider-main" value="0" min="0" max="100" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; margin: 0;">
+                        <div class="v-progress-fill" id="v-fill-main" style="height: 100%; background: #c0392b; width: 0%; border-radius: 2px;"></div>
+                    </div>
+                </div>
+            </div>
+            <script>
+            (function() {
+                const video = document.getElementById('video-main');
+                const playBtn = document.getElementById('v-play-main');
+                const bigPlayBtn = document.getElementById('big-play-main');
+                const overlay = document.getElementById('overlay-main');
+                const slider = document.getElementById('v-slider-main');
+                const fill = document.getElementById('v-fill-main');
+                const playIcon = playBtn.querySelector('.v-play-icon');
+                const pauseIcon = playBtn.querySelector('.v-pause-icon');
+                function togglePlay() {
+                    if (video.paused) { video.play(); playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; overlay.style.opacity = '0'; }
+                    else { video.pause(); playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; overlay.style.opacity = '1'; }
+                }
+                playBtn.addEventListener('click', togglePlay);
+                bigPlayBtn.addEventListener('click', togglePlay);
+                video.addEventListener('click', togglePlay);
+        video.addEventListener('timeupdate', () => {
+                    const pct = (video.currentTime / video.duration) * 100;
+                    slider.value = pct; fill.style.width = pct + '%';
+                });
+                slider.addEventListener('input', () => {
+                    const time = (slider.value / 100) * video.duration;
+                    video.currentTime = time; fill.style.width = slider.value + '%';
+                });
+            })();
+            </script>
+        {% elif page.video_embed_url %}
+            <div class="video-embed" style="border-radius: 16px; overflow: hidden;">
+                {% if ".mp4" in page.video_embed_url or ".webm" in page.video_embed_url or ".ogv" in page.video_embed_url %}
+                    {# Handle direct video links in the embed field #}
+                    <div class="modern-video-player" id="vplayer-embed" style="position: relative; background: #000;">
+                        <video id="video-embed" src="{{ page.video_embed_url }}" style="width: 100%; height: auto;"></video>
+                        <div class="video-overlay" id="overlay-embed" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                            <button class="big-play-btn" id="big-play-embed" style="width: 80px; height: 80px; border-radius: 50%; background: rgba(192, 57, 43, 0.9); border: none; cursor: pointer; pointer-events: auto;">
+                                <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <script>
+                    (function() {
+                        const video = document.getElementById('video-embed');
+                        const bigPlayBtn = document.getElementById('big-play-embed');
+                        const overlay = document.getElementById('overlay-embed');
+                        function togglePlay() { if (video.paused) { video.play(); overlay.style.opacity = '0'; } else { video.pause(); overlay.style.opacity = '1'; } }
+                        bigPlayBtn.addEventListener('click', togglePlay);
+                        video.addEventListener('click', togglePlay);
+                    })();
+                    </script>
+                {% elif "youtu.be" in page.video_embed_url or "youtube.com" in page.video_embed_url %}
+                    {# Robust YouTube Fallback #}
+                    <div class="youtube-fallback" data-url="{{ page.video_embed_url }}" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000;"></div>
+                {% else %}
+                    {% embed page.video_embed_url %}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <script>
+    (function() {
+        document.querySelectorAll('.youtube-fallback').forEach(container => {
+            const url = container.dataset.url;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            const id = (match && match[2].length == 11) ? match[2] : null;
+            
+            console.log("Extracted YouTube ID:", id, "from URL:", url);
+            
+            if (id) {
+                container.innerHTML = `<iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" src="https://www.youtube.com/embed/${id}" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+            }
+        });
+    })();
+    </script>
 
   </header>
 
