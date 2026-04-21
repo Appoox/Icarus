@@ -2,11 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.views.decorators.http import require_POST   # ✅ NEW
-from django.utils import timezone                       # ✅ NEW (fixes the bug)
-import uuid                                             # ✅ NEW (better IDs than timestamp)
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST   
+from django.utils import timezone                       
+import uuid                                            
 
-from .forms import ReaderSignupForm, UpdateInterestsForm
+from .forms import ReaderSignupForm, ReaderProfileEditForm, UpdateInterestsForm
 from .models import Reader, PaymentDetails
 
 # ── Single source of truth for plan prices ──────────────────────────────────
@@ -58,6 +59,26 @@ def reader_profile(request):
         'plans': PLANS,   # ✅ Pass plans so profile.html doesn't hardcode prices
     }
     return render(request, 'reader/profile.html', context)
+
+
+@login_required(login_url='/reader/login/')
+def edit_profile(request):
+    """Let readers edit their name, email, and phone number."""
+    try:
+        reader = request.user.reader
+    except Reader.DoesNotExist:
+        return redirect('reader_profile')
+
+    if request.method == 'POST':
+        form = ReaderProfileEditForm(request.POST, instance=reader)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('reader_profile')
+    else:
+        form = ReaderProfileEditForm(instance=reader)
+
+    return render(request, 'reader/edit_profile.html', {'form': form})
 
 
 @login_required(login_url='/reader/login/')
@@ -152,6 +173,49 @@ def update_interests(request):
         form = UpdateInterestsForm(instance=reader)
 
     return render(request, 'reader/update_interests.html', {'form': form})
+
+@login_required(login_url='/reader/login/')
+@require_POST
+def toggle_favorite_article(request, article_id):
+    """Toggle an article's favourite status for the logged-in reader."""
+    from articles.models import Article
+    article = get_object_or_404(Article, pk=article_id)
+
+    try:
+        reader = request.user.reader
+    except Reader.DoesNotExist:
+        return JsonResponse({'error': 'Reader profile not found.'}, status=404)
+
+    if reader.favorite_articles.filter(pk=article_id).exists():
+        reader.favorite_articles.remove(article)
+        favorited = False
+    else:
+        reader.favorite_articles.add(article)
+        favorited = True
+
+    return JsonResponse({'favorited': favorited, 'id': article_id, 'type': 'article'})
+
+
+@login_required(login_url='/reader/login/')
+@require_POST
+def toggle_favorite_issue(request, issue_id):
+    """Toggle an issue's favourite status for the logged-in reader."""
+    from issue.models import Issue
+    issue = get_object_or_404(Issue, pk=issue_id)
+
+    try:
+        reader = request.user.reader
+    except Reader.DoesNotExist:
+        return JsonResponse({'error': 'Reader profile not found.'}, status=404)
+
+    if reader.favorite_issues.filter(pk=issue_id).exists():
+        reader.favorite_issues.remove(issue)
+        favorited = False
+    else:
+        reader.favorite_issues.add(issue)
+        favorited = True
+
+    return JsonResponse({'favorited': favorited, 'id': issue_id, 'type': 'issue'})
 
 
 def reader_logout(request):

@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('signup/',          views.reader_signup,       name='reader_signup'),
     path('profile/',         views.reader_profile,      name='reader_profile'),
+    path('profile/edit/',    views.edit_profile,        name='edit_profile'),
     path('logout/',          views.reader_logout,       name='reader_logout'),
     path('checkout/<str:plan_type>/', views.reader_checkout, name='reader_checkout'),
     path('process-payment/', views.process_payment,    name='process_payment'),
@@ -12,6 +13,8 @@ urlpatterns = [
     # ✅ NEW
     path('cancel/',          views.cancel_subscription, name='cancel_subscription'),
     path('interests/',       views.update_interests,    name='update_interests'),
+    path('favorite/article/<int:article_id>/', views.toggle_favorite_article, name='toggle_favorite_article'),
+    path('favorite/issue/<int:issue_id>/', views.toggle_favorite_issue, name='toggle_favorite_issue'),
 
     path(
         'login/',

@@ -1,0 +1,226 @@
+{% load wagtailcore_tags wagtailembeds_tags %}
+
+<div class="audio-block">
+    {% if self.audio_file %}
+        <div class="modern-audio-player" id="player-{{ block.id|default:forloop.counter0 }}">
+            <audio id="audio-{{ block.id|default:forloop.counter0 }}" src="{{ self.audio_file.url }}"></audio>
+            
+            <div class="player-main">
+                <button class="play-btn" id="play-btn-{{ block.id|default:forloop.counter0 }}" title="Play">
+                    <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg class="pause-icon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                
+                <div class="player-info">
+                    <div class="progress-wrapper">
+                        <input type="range" class="progress-slider" id="slider-{{ block.id|default:forloop.counter0 }}" value="0" min="0" max="100">
+                        <div class="progress-bar-fill" id="fill-{{ block.id|default:forloop.counter0 }}"></div>
+                    </div>
+                    <div class="time-meta">
+                        <span class="time-current" id="current-{{ block.id|default:forloop.counter0 }}">0:00</span>
+                        <span class="time-duration" id="duration-{{ block.id|default:forloop.counter0 }}">0:00</span>
+                    </div>
+                </div>
+
+                <div class="volume-control">
+                    <button class="mute-btn" id="mute-{{ block.id|default:forloop.counter0 }}">
+                        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        (function() {
+            const id = "{{ block.id|default:forloop.counter0 }}";
+            const audio = document.getElementById('audio-' + id);
+            const playBtn = document.getElementById('play-btn-' + id);
+            const slider = document.getElementById('slider-' + id);
+            const fill = document.getElementById('fill-' + id);
+            const current = document.getElementById('current-' + id);
+            const duration = document.getElementById('duration-' + id);
+            const playIcon = playBtn.querySelector('.play-icon');
+            const pauseIcon = playBtn.querySelector('.pause-icon');
+
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return mins + ':' + (secs < 10 ? '0' : '') + secs;
+            }
+
+            playBtn.addEventListener('click', () => {
+                if (audio.paused) {
+                    audio.play();
+                    playIcon.style.display = 'none';
+                    pauseIcon.style.display = 'block';
+                } else {
+                    audio.pause();
+                    playIcon.style.display = 'block';
+                    pauseIcon.style.display = 'none';
+                }
+            });
+
+            audio.addEventListener('loadedmetadata', () => {
+                duration.textContent = formatTime(audio.duration);
+            });
+
+            audio.addEventListener('timeupdate', () => {
+                const pct = (audio.currentTime / audio.duration) * 100;
+                slider.value = pct;
+                fill.style.width = pct + '%';
+                current.textContent = formatTime(audio.currentTime);
+            });
+
+            slider.addEventListener('input', () => {
+                const time = (slider.value / 100) * audio.duration;
+                audio.currentTime = time;
+                fill.style.width = slider.value + '%';
+            });
+            
+            // Mute toggle
+            const muteBtn = document.getElementById('mute-' + id);
+            muteBtn.addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                muteBtn.style.opacity = audio.muted ? '0.5' : '1';
+            });
+        })();
+        </script>
+
+    {% elif self.audio_embed_url %}
+        <div class="audio-embed">
+            {% embed self.audio_embed_url %}
+        </div>
+    {% endif %}
+    
+    {% if self.caption %}
+        <div class="audio-caption">
+            {{ self.caption }}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .audio-block {
+        margin: 2.5rem 0;
+        padding: 1.5rem;
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #eef0f2;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+
+    .modern-audio-player {
+        width: 100%;
+        font-family: 'Source Sans 3', sans-serif;
+    }
+
+    .player-main {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .play-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #c0392b;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s, background 0.2s;
+        flex-shrink: 0;
+    }
+
+    .play-btn:hover {
+        transform: scale(1.05);
+        background: #a93226;
+    }
+
+    .play-btn svg {
+        width: 24px;
+        height: 24px;
+        fill: white;
+    }
+
+    .player-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .progress-wrapper {
+        position: relative;
+        height: 6px;
+        background: #eef0f2;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    .progress-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+        margin: 0;
+    }
+
+    .progress-bar-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: #c0392b;
+        border-radius: 3px;
+        width: 0%;
+        z-index: 1;
+    }
+
+    .time-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #95a5a6;
+        font-weight: 600;
+    }
+
+    .volume-control {
+        flex-shrink: 0;
+    }
+
+    .mute-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+    }
+
+    .mute-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: #7f8c8d;
+    }
+
+    .audio-embed iframe {
+        width: 100%;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .audio-caption {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        text-align: center;
+        font-style: italic;
+    }
+</style>

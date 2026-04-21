@@ -247,6 +247,14 @@
         color: #e65100;
         margin-bottom: 16px;
     }
+
+    /* Address display */
+    .address-block {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        color: #1a1612;
+        line-height: 1.6;
+    }
 </style>
 {% endblock %}
 
@@ -258,7 +266,8 @@
             <h1>{{ reader.name }}</h1>
             <p class="email">{{ reader.email }}</p>
         </div>
-        <div style="margin-top: 12px;">
+        <div style="margin-top: 12px; display: flex; gap: 16px;">
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit Profile</a>
             <a href="{% url 'reader_password_change' %}" class="link-edit">Change Password</a>
         </div>
     </div>
@@ -269,6 +278,25 @@
         ⚠️ Your subscription expired recently. You're in a grace period — renew now to keep your access.
     </div>
     {% endif %}
+
+    {# ── Address ── #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Address</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+        </div>
+        {% if reader.address_line_1 or reader.city or reader.state or reader.pincode %}
+        <div class="address-block">
+            {% if reader.address_line_1 %}{{ reader.address_line_1 }}<br>{% endif %}
+            {% if reader.address_line_2 %}{{ reader.address_line_2 }}<br>{% endif %}
+            {% if reader.city %}{{ reader.city }}{% if reader.state %}, {% endif %}{% endif %}
+            {% if reader.state %}{{ reader.state }}{% endif %}
+            {% if reader.pincode %} — {{ reader.pincode }}{% endif %}
+        </div>
+        {% else %}
+        <p class="empty-state">No address added yet. <a href="{% url 'edit_profile' %}" class="link-edit">Add one</a></p>
+        {% endif %}
+    </div>
 
     {# ── Subscription Status ── #}
     <div class="sub-card">
@@ -315,6 +343,47 @@
                     {% endfor %}
                 </div>
             </div>
+        {% endif %}
+    </div>
+
+    {# ── Favourites ── #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Favorite Articles</h2>
+        </div>
+        {% if reader.favorite_articles.all %}
+        <ul class="read-list">
+            {% for article in reader.favorite_articles.all %}
+            <li>
+                <a href="{{ article.url }}">{{ article.title }}</a>
+                {% if article.date %}
+                <span class="date">{{ article.date|date:"F j, Y" }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">You haven't favorited any articles yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Favorite Issues</h2>
+        </div>
+        {% if reader.favorite_issues.all %}
+        <ul class="read-list">
+            {% for issue in reader.favorite_issues.all %}
+            <li>
+                <a href="{{ issue.url }}">{{ issue.title }}</a>
+                {% if issue.date_of_publishing %}
+                <span class="date">{{ issue.date_of_publishing|date:"F j, Y" }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">You haven't favorited any issues yet.</p>
         {% endif %}
     </div>
 

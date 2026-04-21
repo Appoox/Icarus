@@ -5,7 +5,7 @@ from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
-from wagtail.admin.panels import FieldPanel, InlinePanel
+from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.admin.forms import WagtailAdminPageForm, WagtailAdminModelForm
 from wagtail.snippets.models import register_snippet
 from wagtail import blocks
@@ -16,6 +16,7 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from articles.wagtail_widgets import ColorPickerWidget
+from articles.models import AudioBlock, VideoBlock
 
 class IssueTag(TaggedItemBase):
     content_object = ParentalKey(
@@ -216,7 +217,37 @@ class Issue(Page):
         help_text="Select an editorial board group for this issue"
     )
 
+    # ── Audio ─────────────────────────────────────────────────────────────
+    audio_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    audio_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
+    )
+
+    # ── Video ─────────────────────────────────────────────────────────────
+    video_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    video_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for video (e.g., YouTube, Vimeo)"
+    )
+
     editorial = StreamField([
+        ('audio',      AudioBlock()),
+        ('video',      VideoBlock()),
         ('heading',    blocks.RichTextBlock(form_classname="full title")),
         ('paragraph',  blocks.RichTextBlock()),
         ('image',      ImageBlock()),                                   # ← StructBlock with caption
@@ -274,10 +305,29 @@ class Issue(Page):
         FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
         FieldPanel('cover_image'),
+        MultiFieldPanel([
+            FieldPanel('audio_file'),
+            FieldPanel('audio_embed_url'),
+        ], heading="Audio"),
+        MultiFieldPanel([
+            FieldPanel('video_file'),
+            FieldPanel('video_embed_url'),
+        ], heading="Video"),
         FieldPanel('editorial_board'),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
         FieldPanel('editorial'),
     ]
+
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+        reader = None
+        if request.user.is_authenticated:
+            try:
+                reader = request.user.reader
+            except Exception:
+                reader = None
+        context['reader'] = reader
+        return context
 
 class IssueArticleReprint(Orderable):
     issue = ParentalKey('Issue', related_name='reprinted_articles', on_delete=models.CASCADE)

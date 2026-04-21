@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Sign Up — Reader Account{% endblock %}
+{% block title %}Edit Profile{% endblock %}
 
 {% block extra_css %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,38 +74,6 @@
         box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.08);
     }
 
-    .topics-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 4px;
-    }
-
-    .topics-group label {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        font-weight: 400;
-        text-transform: none;
-        letter-spacing: 0;
-        color: #1a1612;
-        background: #fff;
-        border: 1px solid #d4d0c8;
-        border-radius: 20px;
-        padding: 6px 14px;
-        cursor: pointer;
-        transition: all 0.15s;
-    }
-
-    .topics-group label:hover {
-        border-color: #0b1f3a;
-    }
-
-    .topics-group input[type="checkbox"] {
-        accent-color: #c8102e;
-    }
-
     .form-errors {
         color: #c8102e;
         font-family: 'Source Sans 3', sans-serif;
@@ -160,14 +128,6 @@
         text-decoration: underline;
     }
 
-    .helptext {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 12px;
-        color: #888070;
-        margin-top: 4px;
-        display: block;
-    }
-
     /* ── Address fieldset ── */
     .form-fieldset {
         border: 1px solid #d4d0c8;
@@ -208,8 +168,8 @@
 
 {% block content %}
 <div class="auth-page">
-    <h1>Create Your Account</h1>
-    <p class="subtitle">Join to read articles and manage your subscription.</p>
+    <h1>Edit Profile</h1>
+    <p class="subtitle">Update your personal details below.</p>
 
     <form method="post" class="auth-form" novalidate>
         {% csrf_token %}
@@ -218,12 +178,6 @@
             <label for="id_name">Full Name</label>
             {{ form.name }}
             {% if form.name.errors %}<div class="form-errors">{{ form.name.errors }}</div>{% endif %}
-        </div>
-
-        <div class="form-group">
-            <label for="id_username">Username</label>
-            {{ form.username }}
-            {% if form.username.errors %}<div class="form-errors">{{ form.username.errors }}</div>{% endif %}
         </div>
 
         <div class="form-group">
@@ -274,35 +228,11 @@
             </div>
         </fieldset>
 
-        <div class="form-group">
-            <label for="id_password1">Password</label>
-            {{ form.password1 }}
-            {% if form.password1.help_text %}<span class="helptext">{{ form.password1.help_text }}</span>{% endif %}
-            {% if form.password1.errors %}<div class="form-errors">{{ form.password1.errors }}</div>{% endif %}
-        </div>
-
-        <div class="form-group">
-            <label for="id_password2">Confirm Password</label>
-            {{ form.password2 }}
-            {% if form.password2.errors %}<div class="form-errors">{{ form.password2.errors }}</div>{% endif %}
-        </div>
-
-        {% if form.interested_topics.field.queryset.exists %}
-        <div class="form-group">
-            <label>Topics You're Interested In</label>
-            <div class="topics-group">
-                {% for checkbox in form.interested_topics %}
-                {{ checkbox }}
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <button type="submit" class="auth-submit">Create Account</button>
+        <button type="submit" class="auth-submit">Save Changes</button>
     </form>
 
     <p class="auth-footer">
-        Already have an account? <a href="{% url 'reader_login' %}">Sign in</a>
+        <a href="{% url 'reader_profile' %}">← Back to Profile</a>
     </p>
 </div>
 {% endblock %}
