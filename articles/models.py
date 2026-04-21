@@ -87,9 +87,21 @@ class ImageBlock(blocks.StructBlock):
         label = 'Image'
 
 
+class AudioBlock(blocks.StructBlock):
+    audio_file = DocumentChooserBlock(required=False, help_text="Upload an audio file (mp3, wav, etc.)")
+    audio_embed_url = blocks.URLBlock(required=False, help_text="Or paste an embed link (SoundCloud, etc.)")
+    caption = blocks.CharBlock(required=False, help_text="Optional caption for the audio")
+
+    class Meta:
+        icon = 'media'
+        template = 'blocks/audio_block.html'
+        label = 'Audio'
+
+
 # ── Reusable StreamField Blocks ─────────────────────────────────────────
 
 STREAM_BLOCKS = [
+    ('audio',      AudioBlock()),
     ('heading',    blocks.RichTextBlock(form_classname="full title")),
     ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
     ('paragraph',  blocks.RichTextBlock()),
@@ -221,6 +233,21 @@ class Article(Page, HitCountMixin):
 
     title_ta = models.CharField(max_length=255, blank=True, verbose_name="Title (Tamil)")
     body_ta = StreamField(STREAM_BLOCKS, use_json_field=True, null=True, blank=True, verbose_name="Body (Tamil)")
+
+    # ── Audio ─────────────────────────────────────────────────────────────
+    audio_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    audio_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
+    )
+
     # ── Analytics ─────────────────────────────────────────────────────────
     read_fully_count = models.PositiveIntegerField(default=0, editable=False)
     # ── Admin panels ───────────────────────────────────────────────────────
@@ -236,6 +263,10 @@ class Article(Page, HitCountMixin):
             FieldPanel('cover_image_caption'),
             CoverImagePreviewPanel(),
         ], heading="Cover Image"),
+        MultiFieldPanel([
+            FieldPanel('audio_file'),
+            FieldPanel('audio_embed_url'),
+        ], heading="Audio (Main)"),
         InlinePanel('article_authors', label="Authors"),
         FieldPanel('body'),
         MultiFieldPanel([
