@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST   
 from django.utils import timezone                       
 import uuid                                            
+from the_librarian.views import superuser_required 
 
 from .forms import ReaderSignupForm, ReaderProfileEditForm, UpdateInterestsForm
 from .models import Reader, PaymentDetails
@@ -223,3 +224,21 @@ def reader_logout(request):
     logout(request)
     messages.info(request, 'You have been signed out.')
     return redirect('/')
+
+
+@superuser_required
+def print_subscribers(request):
+    """
+    View to display a printable list of all active or recently expired subscribers.
+    Limited to staff members.
+    """
+    # Get all readers who have/had a plan, ordered by name
+    subscribers = Reader.objects.exclude(subscription_plan='none').order_by('name')
+    
+    # Optional: Filter for active only if requested, but usually admin wants the full list 
+    # of anyone who ever paid/is paying. For now, let's show anyone with a plan.
+    
+    return render(request, 'reader/admin/print_subscribers.html', {
+        'subscribers': subscribers,
+        'now': timezone.now()
+    })

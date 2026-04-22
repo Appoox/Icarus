@@ -9,7 +9,6 @@ from wagtail.snippets.models import register_snippet
 from wagtail.search import index
 
 
-@register_snippet
 class Reader(index.Indexed, models.Model):
     """
     Reader profile linked to a Django User. Tracks subscription status,
@@ -158,6 +157,16 @@ class Reader(index.Indexed, models.Model):
         delta = self.subscription_end - timezone.now()
         return max(delta.days, 0)
 
+    def status_display(self):
+        if self.is_subscribed:
+            return "Active"
+        if self.is_in_grace_period:
+            return "Grace Period"
+        if self.subscription_plan != 'none':
+            return "Expired"
+        return "No Subscription"
+    status_display.short_description = "Status"
+
     def activate_subscription(self, plan):
         """
         Start or renew a subscription with the given plan key.
@@ -263,7 +272,6 @@ class Reader(index.Indexed, models.Model):
         return f'{self.name} ({self.email})'
 
 
-@register_snippet
 class PaymentDetails(models.Model):
     """
     Structured payment information, designed for future integration

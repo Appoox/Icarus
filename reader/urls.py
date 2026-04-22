@@ -15,6 +15,7 @@ urlpatterns = [
     path('interests/',       views.update_interests,    name='update_interests'),
     path('favorite/article/<int:article_id>/', views.toggle_favorite_article, name='toggle_favorite_article'),
     path('favorite/issue/<int:issue_id>/', views.toggle_favorite_issue, name='toggle_favorite_issue'),
+    path('admin/print-subscribers/', views.print_subscribers, name='print_subscribers'),
 
     path(
         'login/',
