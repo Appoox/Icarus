@@ -7,7 +7,7 @@ from datetime import timedelta
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, FieldRowPanel
 from wagtail.snippets.models import register_snippet
 from wagtail.search import index
-
+from phonenumber_field.modelfields import PhoneNumberField
 
 class Reader(index.Indexed, models.Model):
     """
@@ -17,7 +17,19 @@ class Reader(index.Indexed, models.Model):
 
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=20, blank=True)
+
+    GENDER_CHOICES = [
+        ('പുരുഷന്‍', 'Male'),
+        ('സ്ത്രീ', 'Female'),
+        ('നോണ്‍ ബൈനറി / ക്വീര്‍', 'Non-binary / Queer'),
+        ('പറയാന്‍ താല്‍പര്യമില്ല', 'Prefer not to say'),
+        ('മറ്റൊന്ന്', 'Other')
+    ]
+
+    gender = models.CharField(max_length=100, choices=GENDER_CHOICES, blank=True)
+    gender_other = models.CharField("Other Gender", max_length=100, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    phone_number = PhoneNumberField("Phone Number", blank=True)
 
     # ── Address ──────────────────────────────────────────────────────
     INDIAN_STATES = [
@@ -74,24 +86,44 @@ class Reader(index.Indexed, models.Model):
         help_text='Landmark, area, locality.',
     )
     city = models.CharField(max_length=100, blank=True)
-    state = models.CharField(
-        max_length=50, blank=True,
-        choices=INDIAN_STATES,
-    )
+
+    post_office = models.CharField(max_length=100, blank=True)
+    
     pincode = models.CharField(
         max_length=6, blank=True,
         validators=[pincode_validator],
         help_text='6-digit Indian pincode.',
     )
+
+    district = models.CharField(max_length=100, blank=True)
+
+    state = models.CharField(
+        max_length=50, blank=True,
+        choices=INDIAN_STATES,
+    )
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name='reader',
     )
 
+# ചേര്‍ക്കുന്ന ആളുടെ വിവരങ്ങൾ
+    care_of_name = models.CharField(max_length=255, blank=True)
+    care_of_number = PhoneNumberField("C/O Phone Number", blank=True)
+    care_of_district = models.CharField(max_length=100, blank=True)
+    care_of_meghala = models.CharField(max_length=100, blank=True)
+    care_of_unit = models.CharField(max_length=100, blank=True)
+
     search_fields = [
         index.SearchField('name'),
         index.SearchField('email'),
+        index.SearchField('phone_number'),
+        index.SearchField('care_of_name'),
+        index.SearchField('care_of_number'),
+        index.SearchField('care_of_district'),
+        index.SearchField('care_of_meghala'),
+        index.SearchField('care_of_unit'),
     ]
 
     # ── Subscription ──────────────────────────────────────────────────
@@ -235,8 +267,18 @@ class Reader(index.Indexed, models.Model):
             FieldPanel('name'),
             FieldPanel('email'),
             FieldPanel('phone_number'),
+            FieldPanel('gender'),
+            FieldPanel('gender_other'),
+            FieldPanel('date_of_birth'),
             FieldPanel('user'),
         ], heading="Personal Information"),
+        MultiFieldPanel([
+            FieldPanel('care_of_name'),
+            FieldPanel('care_of_number'),
+            FieldPanel('care_of_district'),
+            FieldPanel('care_of_meghala'),
+            FieldPanel('care_of_unit'),
+        ], heading="Added By"),
         MultiFieldPanel([
             FieldPanel('address_line_1'),
             FieldPanel('address_line_2'),
@@ -300,6 +342,7 @@ class PaymentDetails(models.Model):
     payment_method = models.CharField(
         max_length=20, choices=PAYMENT_METHODS, default='card',
     )
+    payment_method_other = models.CharField("Other Payment Method", max_length=100, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     currency = models.CharField(max_length=3, default='INR')
     status = models.CharField(
@@ -317,6 +360,7 @@ class PaymentDetails(models.Model):
         ], heading="Gateway Reference"),
         MultiFieldPanel([
             FieldPanel('payment_method'),
+            FieldPanel('payment_method_other'),
             FieldRowPanel([
                 FieldPanel('amount'),
                 FieldPanel('currency'),
