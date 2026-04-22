@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils import timezone
 from wagtail import hooks
 from wagtail.snippets.views.snippets import SnippetViewSet
+from wagtail.admin.widgets import Button
 from .models import Reader, PaymentDetails
 
 class ReaderFilterSet(django_filters.FilterSet):
@@ -45,13 +46,13 @@ class ReaderSnippetViewSet(SnippetViewSet):
     def get_header_buttons(self, filter_parameters=None):
         buttons = super().get_header_buttons(filter_parameters)
         
-        # Add "Print Subscribers" button
-        buttons.append({
-            'url': reverse('print_subscribers'),
-            'label': 'Print Subscriber List',
-            'classname': 'button button-secondary',
-            'icon_name': 'print',
-        })
+        buttons.append(Button(
+            'Print Subscriber List',
+            url=reverse('print_subscribers'),
+            classname='button button-secondary',
+            icon_name='print',
+            attrs={'target': '_blank'}
+        ))
         
         return buttons
 
@@ -65,9 +66,21 @@ class PaymentDetailsSnippetViewSet(SnippetViewSet):
     list_display = ("gateway_name", "amount", "status", "created_at")
     list_filter = ("status", "payment_method")
 
+from wagtail.admin.menu import MenuItem
+
 @hooks.register('register_admin_viewset')
 def register_reader_viewsets():
     return [
         ReaderSnippetViewSet(),
         PaymentDetailsSnippetViewSet(),
     ]
+
+@hooks.register('register_admin_menu_item')
+def register_print_subscribers_menu_item():
+    return MenuItem(
+        'Print Subscriber List',
+        reverse('print_subscribers'),
+        icon_name='print',
+        order=302,
+        attrs={'target': '_blank'}
+    )
