@@ -9,6 +9,20 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+ACCOUNT_LOGIN_METHODS = {"phone", "email"}
+ACCOUNT_SIGNUP_FIELDS = [
+  'phone*',
+  'email*',
+  'password1*',
+]
+ACCOUNT_USERNAME_REQUIRED = False # ← allows login without username
+ACCOUNT_PHONE_VERIFICATION_ENABLED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_SIGNUP_FORM_CLASS = 'reader.forms.AllauthSignupForm'
+ACCOUNT_ADAPTER = 'reader.adapter.CustomAccountAdapter'
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from pathlib import Path
@@ -59,6 +73,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.postgres",
+    "allauth",
+    "allauth.account",
 ]
 
 MIDDLEWARE = [
@@ -70,6 +86,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "Icarus.urls"
@@ -117,6 +134,11 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -205,7 +227,7 @@ WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'tx
 # ── Reader / Paywall ──────────────────────────────────────────────────
 FREE_ARTICLE_LIMIT = env.int("FREE_ARTICLE_LIMIT", 3)  # Number of free articles for non-subscribed readers
 LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/reader/profile/')
-LOGIN_URL = env.str("LOGIN_URL", '/reader/login/')
+LOGIN_URL = env.str("LOGIN_URL", '/accounts/login/')
 
 # ── The Librarian ─────────────────────────────────────────────────────
 ARCHIVE_DIR = env.path("ARCHIVE_DIR", BASE_DIR / "archive")
