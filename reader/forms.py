@@ -5,6 +5,38 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Reader
 from issue.models import Topic
+from phonenumber_field.formfields import SplitPhoneNumberField
+
+
+class AllauthSignupForm(forms.Form):
+    """
+    Custom signup form for django-allauth to capture Reader-specific fields.
+    """
+    name = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Full name',
+            'class': 'form-input',
+        }),
+    )
+
+    def signup(self, request, user):
+        """
+        Invoked by allauth at signup time.
+        """
+        reader, created = Reader.objects.get_or_create(
+            user=user,
+            defaults={
+                'name': self.cleaned_data.get('name', ''),
+                'email': user.email,
+            }
+        )
+        if not created:
+            # If the reader was somehow created already, update it
+            reader.name = self.cleaned_data.get('name', '')
+            reader.save()
+
+
 
 
 class ReaderSignupForm(UserCreationForm):
@@ -168,11 +200,28 @@ class ReaderProfileEditForm(forms.ModelForm):
             'class': 'form-input',
         }),
     )
-    phone_number = forms.CharField(
-        max_length=20,
+    phone_number = SplitPhoneNumberField(
+        region='IN',
+        required=False,
+    )
+    gender = forms.ChoiceField(
+        choices=Reader.GENDER_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-input',
+        }),
+    )
+    gender_other = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
-            'placeholder': 'Phone number',
+            'placeholder': 'If other, please specify',
+            'class': 'form-input',
+        }),
+    )
+    date_of_birth = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
             'class': 'form-input',
         }),
     )
@@ -219,11 +268,75 @@ class ReaderProfileEditForm(forms.ModelForm):
             'maxlength': '6',
         }),
     )
+    post_office = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Post Office',
+            'class': 'form-input',
+        }),
+    )
+    district = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'District',
+            'class': 'form-input',
+        }),
+    )
+
+    # ── Added By fields ─────────────────────────────────────────────
+    care_of_name = forms.CharField(
+        required=False,
+        label="Added By (Name)",
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Name of the person who added you',
+            'class': 'form-input',
+        }),
+    )
+    care_of_number = SplitPhoneNumberField(
+        region='IN',
+        required=False,
+        label="Added By (Phone)",
+    )
+    care_of_district = forms.CharField(
+        required=False,
+        label="Added By (District)",
+        widget=forms.TextInput(attrs={
+            'placeholder': 'District of the person who added you',
+            'class': 'form-input',
+        }),
+    )
+    care_of_meghala = forms.CharField(
+        required=False,
+        label="Added By (Meghala)",
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Meghala',
+            'class': 'form-input',
+        }),
+    )
+    care_of_unit = forms.CharField(
+        required=False,
+        label="Added By (Unit)",
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Unit',
+            'class': 'form-input',
+        }),
+    )
 
     class Meta:
         model = Reader
-        fields = ('name', 'email', 'phone_number',
-                  'address_line_1', 'address_line_2', 'city', 'state', 'pincode')
+        fields = (
+            'name', 'email', 'phone_number', 'gender', 'gender_other', 'date_of_birth',
+            'address_line_1', 'address_line_2', 'city', 'post_office', 'pincode', 'district', 'state',
+            'care_of_name', 'care_of_number', 'care_of_district', 'care_of_meghala', 'care_of_unit'
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Apply styling to the split phone widgets
+        for field_name in ['phone_number', 'care_of_number']:
+            if field_name in self.fields:
+                for widget in self.fields[field_name].widget.widgets:
+                    widget.attrs.update({'class': 'form-input'})
 
     def clean_email(self):
         email = self.cleaned_data.get('email')

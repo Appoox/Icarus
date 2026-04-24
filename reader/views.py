@@ -22,22 +22,22 @@ PLANS = {
 }
 
 
-def reader_signup(request):
-    """Register a new reader account."""
-    if request.user.is_authenticated:
-        return redirect('reader_profile')
-
-    if request.method == 'POST':
-        form = ReaderSignupForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, 'Welcome! Your account has been created.')
-            return redirect('reader_profile')
-    else:
-        form = ReaderSignupForm()
-
-    return render(request, 'reader/signup.html', {'form': form})
+# def reader_signup(request):
+#     """Register a new reader account."""
+#     if request.user.is_authenticated:
+#         return redirect('reader_profile')
+# 
+#     if request.method == 'POST':
+#         form = ReaderSignupForm(request.POST)
+#         if form.is_valid():
+#             user = form.save()
+#             login(request, user)
+#             messages.success(request, 'Welcome! Your account has been created.')
+#             return redirect('reader_profile')
+#     else:
+#         form = ReaderSignupForm()
+# 
+#     return render(request, 'reader/signup.html', {'form': form})
 
 
 @login_required(login_url='/reader/login/')
@@ -52,11 +52,13 @@ def reader_profile(request):
             email=request.user.email or '',
         )
 
+
+
     context = {
         'reader': reader,
-        'read_articles': reader.read_articles.all().order_by('-first_published_at')[:20],
-        'interested_topics': reader.interested_topics.all(),
-        'all_topics': reader.interested_topics.all(),
+        'read_articles': reader.read_articles.all().order_by('-first_published_at')[:20] if hasattr(reader.read_articles, 'all') else [],
+        'interested_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
+        'all_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
         'plans': PLANS,   # ✅ Pass plans so profile.html doesn't hardcode prices
     }
     return render(request, 'reader/profile.html', context)
@@ -219,11 +221,11 @@ def toggle_favorite_issue(request, issue_id):
     return JsonResponse({'favorited': favorited, 'id': issue_id, 'type': 'issue'})
 
 
-def reader_logout(request):
-    """Log the user out and redirect to home."""
-    logout(request)
-    messages.info(request, 'You have been signed out.')
-    return redirect('/')
+# def reader_logout(request):
+#     """Log the user out and redirect to home."""
+#     logout(request)
+#     messages.info(request, 'You have been signed out.')
+#     return redirect('/')
 
 
 @superuser_required
