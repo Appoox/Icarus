@@ -237,15 +237,24 @@
     }
 
     /* Grace period banner */
-    .grace-banner {
-        background: #fff3e0;
-        border: 1px solid #ffb74d;
+    .grace-banner, .notice-banner {
         border-radius: 6px;
         padding: 12px 16px;
         font-family: 'Source Sans 3', sans-serif;
         font-size: 14px;
-        color: #e65100;
         margin-bottom: 16px;
+    }
+
+    .grace-banner {
+        background: #fff3e0;
+        border: 1px solid #ffb74d;
+        color: #e65100;
+    }
+
+    .notice-banner {
+        background: #e3f2fd;
+        border: 1px solid #90caf9;
+        color: #1565c0;
     }
 
     /* Address display */
@@ -271,6 +280,13 @@
             <a href="{% url 'account_change_password' %}" class="link-edit">Change Password</a>
         </div>
     </div>
+
+    {# ── Profile completion notice ── #}
+    {% if not reader.is_profile_complete %}
+    <div class="notice-banner">
+        👋 Your profile is incomplete. <a href="{% url 'edit_profile' %}" style="color: inherit; font-weight: 700;">Complete it now</a> to help us serve you better.
+    </div>
+    {% endif %}
 
     {# ── Grace period warning ── #}
     {% if reader.is_in_grace_period %}
