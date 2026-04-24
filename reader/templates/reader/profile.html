@@ -279,6 +279,19 @@
     </div>
     {% endif %}
 
+    {# ── Personal Details ── #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Personal Details</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+        </div>
+        <div class="address-block">
+            {% if reader.phone_number %}<strong>Phone:</strong> {{ reader.phone_number }}<br>{% endif %}
+            {% if reader.gender %}<strong>Gender:</strong> {{ reader.get_gender_display }}{% if reader.gender == 'മറ്റൊന്ന്' and reader.gender_other %} ({{ reader.gender_other }}){% endif %}<br>{% endif %}
+            {% if reader.date_of_birth %}<strong>Birthday:</strong> {{ reader.date_of_birth|date:"F j, Y" }}<br>{% endif %}
+        </div>
+    </div>
+
     {# ── Address ── #}
     <div class="profile-section">
         <div class="profile-section__header">
@@ -289,14 +302,37 @@
         <div class="address-block">
             {% if reader.address_line_1 %}{{ reader.address_line_1 }}<br>{% endif %}
             {% if reader.address_line_2 %}{{ reader.address_line_2 }}<br>{% endif %}
-            {% if reader.city %}{{ reader.city }}{% if reader.state %}, {% endif %}{% endif %}
-            {% if reader.state %}{{ reader.state }}{% endif %}
-            {% if reader.pincode %} — {{ reader.pincode }}{% endif %}
+            {% if reader.city or reader.post_office %}
+                {% if reader.post_office %}{{ reader.post_office }}{% if reader.city %}, {% endif %}{% endif %}
+                {% if reader.city %}{{ reader.city }}{% endif %}<br>
+            {% endif %}
+            {% if reader.district or reader.state %}
+                {% if reader.district %}{{ reader.district }}{% if reader.state %}, {% endif %}{% endif %}
+                {% if reader.state %}{{ reader.state }}{% endif %}<br>
+            {% endif %}
+            {% if reader.pincode %}<strong>Pincode:</strong> {{ reader.pincode }}{% endif %}
         </div>
         {% else %}
         <p class="empty-state">No address added yet. <a href="{% url 'edit_profile' %}" class="link-edit">Add one</a></p>
         {% endif %}
     </div>
+
+    {# ── Added By (Care Of) ── #}
+    {% if reader.care_of_name or reader.care_of_number %}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Membership Details (Added By)</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+        </div>
+        <div class="address-block">
+            {% if reader.care_of_name %}<strong>Name:</strong> {{ reader.care_of_name }}<br>{% endif %}
+            {% if reader.care_of_number %}<strong>Phone:</strong> {{ reader.care_of_number }}<br>{% endif %}
+            {% if reader.care_of_district %}<strong>District:</strong> {{ reader.care_of_district }}<br>{% endif %}
+            {% if reader.care_of_meghala %}<strong>Meghala:</strong> {{ reader.care_of_meghala }}<br>{% endif %}
+            {% if reader.care_of_unit %}<strong>Unit:</strong> {{ reader.care_of_unit }}<br>{% endif %}
+        </div>
+    </div>
+    {% endif %}
 
     {# ── Subscription Status ── #}
     <div class="sub-card">
