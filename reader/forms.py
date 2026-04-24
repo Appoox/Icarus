@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Reader
 from issue.models import Topic
+from phonenumber_field.formfields import SplitPhoneNumberField
 
 
 class AllauthSignupForm(forms.Form):
@@ -199,13 +200,9 @@ class ReaderProfileEditForm(forms.ModelForm):
             'class': 'form-input',
         }),
     )
-    phone_number = forms.CharField(
-        max_length=20,
+    phone_number = SplitPhoneNumberField(
+        region='IN',
         required=False,
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Phone number',
-            'class': 'form-input',
-        }),
     )
     gender = forms.ChoiceField(
         choices=Reader.GENDER_CHOICES,
@@ -295,13 +292,10 @@ class ReaderProfileEditForm(forms.ModelForm):
             'class': 'form-input',
         }),
     )
-    care_of_number = forms.CharField(
+    care_of_number = SplitPhoneNumberField(
+        region='IN',
         required=False,
         label="Added By (Phone)",
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Phone number of the person who added you',
-            'class': 'form-input',
-        }),
     )
     care_of_district = forms.CharField(
         required=False,
@@ -335,6 +329,14 @@ class ReaderProfileEditForm(forms.ModelForm):
             'address_line_1', 'address_line_2', 'city', 'post_office', 'pincode', 'district', 'state',
             'care_of_name', 'care_of_number', 'care_of_district', 'care_of_meghala', 'care_of_unit'
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Apply styling to the split phone widgets
+        for field_name in ['phone_number', 'care_of_number']:
+            if field_name in self.fields:
+                for widget in self.fields[field_name].widget.widgets:
+                    widget.attrs.update({'class': 'form-input'})
 
     def clean_email(self):
         email = self.cleaned_data.get('email')

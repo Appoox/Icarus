@@ -163,6 +163,30 @@
         background-position: right 12px center;
         padding-right: 32px;
     }
+
+    /* ── Phone Widget ── */
+    .phone-widget {
+        display: flex;
+        gap: 8px;
+    }
+    
+    #id_phone_number_0, #id_care_of_number_0 {
+        width: 150px !important;
+        flex-shrink: 0;
+        /* Reset custom arrow for the small select */
+        appearance: auto !important;
+        background-image: none !important;
+        padding-right: 8px !important;
+    }
+    #id_phone_number_1, #id_care_of_number_1 {
+        flex: 1;
+    }
+
+    @media (max-width: 480px) {
+        #id_phone_number_0, #id_care_of_number_0 {
+            width: 120px !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -188,8 +212,29 @@
 
         <div class="form-group">
             <label for="id_phone_number">Phone Number</label>
-            {{ form.phone_number }}
+            <div class="phone-widget">
+                {{ form.phone_number }}
+            </div>
             {% if form.phone_number.errors %}<div class="form-errors">{{ form.phone_number.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group form-group--half">
+                <label for="id_gender">Gender</label>
+                {{ form.gender }}
+                {% if form.gender.errors %}<div class="form-errors">{{ form.gender.errors }}</div>{% endif %}
+            </div>
+            <div class="form-group form-group--half">
+                <label for="id_date_of_birth">Date of Birth</label>
+                {{ form.date_of_birth }}
+                {% if form.date_of_birth.errors %}<div class="form-errors">{{ form.date_of_birth.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-group" id="gender-other-group" style="display: none;">
+            <label for="id_gender_other">Other Gender</label>
+            {{ form.gender_other }}
+            {% if form.gender_other.errors %}<div class="form-errors">{{ form.gender_other.errors }}</div>{% endif %}
         </div>
 
         {# ── Address ── #}
@@ -221,10 +266,61 @@
                 </div>
             </div>
 
+            <div class="form-row">
+                <div class="form-group form-group--half">
+                    <label for="id_post_office">Post Office</label>
+                    {{ form.post_office }}
+                    {% if form.post_office.errors %}<div class="form-errors">{{ form.post_office.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group form-group--half">
+                    <label for="id_district">District</label>
+                    {{ form.district }}
+                    {% if form.district.errors %}<div class="form-errors">{{ form.district.errors }}</div>{% endif %}
+                </div>
+            </div>
+
             <div class="form-group" style="max-width: 200px;">
                 <label for="id_pincode">Pincode</label>
                 {{ form.pincode }}
                 {% if form.pincode.errors %}<div class="form-errors">{{ form.pincode.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
+
+        {# ── Added By (Care Of) ── #}
+        <fieldset class="form-fieldset">
+            <legend class="form-fieldset__legend">Added By (C/O)</legend>
+
+            <div class="form-group">
+                <label for="id_care_of_name">Name</label>
+                {{ form.care_of_name }}
+                {% if form.care_of_name.errors %}<div class="form-errors">{{ form.care_of_name.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_care_of_number">Phone Number</label>
+                <div class="phone-widget">
+                    {{ form.care_of_number }}
+                </div>
+                {% if form.care_of_number.errors %}<div class="form-errors">{{ form.care_of_number.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group form-group--half">
+                    <label for="id_care_of_district">District</label>
+                    {{ form.care_of_district }}
+                    {% if form.care_of_district.errors %}<div class="form-errors">{{ form.care_of_district.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group form-group--half">
+                    <label for="id_care_of_meghala">Meghala</label>
+                    {{ form.care_of_meghala }}
+                    {% if form.care_of_meghala.errors %}<div class="form-errors">{{ form.care_of_meghala.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_care_of_unit">Unit</label>
+                {{ form.care_of_unit }}
+                {% if form.care_of_unit.errors %}<div class="form-errors">{{ form.care_of_unit.errors }}</div>{% endif %}
             </div>
         </fieldset>
 
@@ -235,4 +331,23 @@
         <a href="{% url 'reader_profile' %}">← Back to Profile</a>
     </p>
 </div>
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const genderSelect = document.querySelector('#id_gender');
+        const otherGroup = document.querySelector('#gender-other-group');
+
+        function toggleOtherGender() {
+            if (genderSelect.value === 'മറ്റൊന്ന്') {
+                otherGroup.style.display = 'block';
+            } else {
+                otherGroup.style.display = 'none';
+            }
+        }
+
+        genderSelect.addEventListener('change', toggleOtherGender);
+        toggleOtherGender(); // Initial state
+    });
+</script>
+{% endblock %}
 {% endblock %}
