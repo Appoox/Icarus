@@ -52,11 +52,13 @@ def reader_profile(request):
             email=request.user.email or '',
         )
 
+
+
     context = {
         'reader': reader,
-        'read_articles': reader.read_articles.all().order_by('-first_published_at')[:20],
-        'interested_topics': reader.interested_topics.all(),
-        'all_topics': reader.interested_topics.all(),
+        'read_articles': reader.read_articles.all().order_by('-first_published_at')[:20] if hasattr(reader.read_articles, 'all') else [],
+        'interested_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
+        'all_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
         'plans': PLANS,   # ✅ Pass plans so profile.html doesn't hardcode prices
     }
     return render(request, 'reader/profile.html', context)

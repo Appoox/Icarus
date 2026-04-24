@@ -162,6 +162,23 @@ class Reader(index.Indexed, models.Model):
     GRACE_PERIOD = timedelta(days=3)
 
     @property
+    def is_profile_complete(self):
+        """
+        Returns True if the essential profile fields are filled.
+        Used to prompt users to complete their profile after signup.
+        """
+        # Essential fields for a "complete" profile
+        essential_fields = [
+            self.gender,
+            self.date_of_birth,
+            self.address_line_1,
+            self.city,
+            self.state,
+            self.pincode
+        ]
+        return all(field for field in essential_fields)
+
+    @property
     def is_subscribed(self):
         """True if the reader has an active, non-expired subscription."""
         if self.subscription_plan == 'none':
