@@ -478,5 +478,22 @@
         {% endif %}
     </div>
 
+    {# ── Deactivation ── #}
+    <div class="profile-section" style="margin-top: 60px; padding-top: 40px; border-top: 1px solid #d4d0c8;">
+        <div class="profile-section__header" style="border-bottom: none;">
+            <h2 style="color: #c8102e;">Danger Zone</h2>
+        </div>
+        <p class="sub-card__detail" style="margin-bottom: 16px;">
+            Deactivating your account will immediately revoke your access to Icarus. 
+            In accordance with our data retention policy, your personal data will be 
+            scheduled for permanent deletion after the statutory period.
+        </p>
+        <form method="post" action="{% url 'deactivate_account' %}"
+              onsubmit="return confirm('Are you sure you want to DEACTIVATE your account? This action will log you out immediately and disable your access.');">
+            {% csrf_token %}
+            <button type="submit" class="btn-cancel">Deactivate My Account</button>
+        </form>
+    </div>
+
 </div>
 {% endblock %}
