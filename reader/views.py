@@ -9,17 +9,7 @@ import uuid
 from the_librarian.views import superuser_required 
 
 from .forms import ReaderProfileEditForm, UpdateInterestsForm
-from .models import ReaderUser, PaymentDetails
-
-# ── Single source of truth for plan prices ──────────────────────────────────
-# Previously hardcoded in both views.py and profile.html.
-# Now defined once here and passed to templates as context.
-PLANS = {
-    '1_month':  {'name': '1 Month',   'price': 299},
-    '3_months': {'name': '3 Months',  'price': 799},
-    '6_months': {'name': '6 Months',  'price': 1499},
-    '1_year':   {'name': '1 Year',    'price': 2499},
-}
+from .models import ReaderUser, PaymentDetails, PLANS
 
 
 # def reader_signup(request):
@@ -84,6 +74,7 @@ def reader_checkout(request, plan_type):
         'plan_type': plan_type,
         'plan_name': plan['name'],
         'price': plan['price'],
+        'idempotency_key': f'IK_{uuid.uuid4().hex}', # Generate a key for this specific session
     })
 
 
@@ -101,12 +92,20 @@ def process_payment(request):
         return redirect('reader_profile')
 
     amount = plan['price']
+    idempotency_key = request.POST.get('idempotency_key')
+
+    # ✅ IDEMPOTENCY CHECK: If this key has already been processed, skip creation
+    existing_payment = PaymentDetails.objects.filter(idempotency_key=idempotency_key).first()
+    if existing_payment:
+        messages.info(request, "Your payment is already being processed.")
+        return redirect('reader_profile')
 
     # ✅ Use uuid for transaction IDs instead of timestamp (unique, not guessable)
     payment = PaymentDetails.objects.create(
         gateway_name='MockGateway',
         gateway_transaction_id=f'TXN_{uuid.uuid4().hex}',
         gateway_order_id=f'ORD_{uuid.uuid4().hex}',
+        idempotency_key=idempotency_key,
         payment_method=method,
         amount=amount,
         status='completed',
@@ -232,3 +231,69 @@ def print_subscribers(request):
         'subscribers': subscribers,
         'now': timezone.now()
     })
+@login_required(login_url='/reader/login/')
+@require_POST
+def deactivate_account(request):
+    """
+    Handle account deactivation request.
+    This is a final action that logs the user out and disables the account.
+    """
+    reader = request.user
+    
+    # Optional: You could verify password here for extra security
+    # if not reader.check_password(request.POST.get('password')):
+    #     messages.error(request, "Incorrect password. Deactivation cancelled.")
+    #     return redirect('reader_profile')
+
+    reader.deactivate()
+    logout(request)
+    
+    messages.warning(
+        request, 
+        "Your account has been deactivated. In accordance with our data retention policy, "
+        "your personal data will be permanently purged after the statutory period."
+    )
+    return redirect('home')
+
+import csv
+from django.http import HttpResponse
+
+@superuser_required
+def export_mailing_list(request):
+    """
+    Generates a CSV mailing list for active print subscribers.
+    Used for courier/postal delivery.
+    """
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="icarus_mailing_list_{timezone.now().date()}.csv"'
+
+    writer = csv.writer(response)
+    # Header
+    writer.writerow([
+        'Name', 'Phone', 'Address Line 1', 'Address Line 2', 
+        'Post Office', 'City', 'District', 'State', 'Pincode', 
+        'Special Instructions'
+    ])
+
+    # Only get active print subscribers with a valid expiry date
+    active_print_readers = ReaderUser.objects.filter(
+        is_print_subscriber=True,
+        print_delivery_status='active',
+        print_expiry_date__gte=timezone.now().date()
+    ).order_by('pincode', 'name')
+
+    for reader in active_print_readers:
+        writer.writerow([
+            reader.name,
+            str(reader.phone_number),
+            reader.address_line_1,
+            reader.address_line_2,
+            reader.post_office,
+            reader.city,
+            reader.district,
+            reader.state,
+            reader.pincode,
+            reader.delivery_notes
+        ])
+
+    return response

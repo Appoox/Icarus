@@ -16,6 +16,8 @@ urlpatterns = [
     path('favorite/article/<int:article_id>/', views.toggle_favorite_article, name='toggle_favorite_article'),
     path('favorite/issue/<int:issue_id>/', views.toggle_favorite_issue, name='toggle_favorite_issue'),
     path('admin/print-subscribers/', views.print_subscribers, name='print_subscribers'),
+    path('admin/export-mailing-list/', views.export_mailing_list, name='export_mailing_list'),
+    path('deactivate/',      views.deactivate_account,  name='deactivate_account'),
 
 #     path(
 #         'login/',

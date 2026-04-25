@@ -6,23 +6,42 @@ from phonenumber_field.formfields import SplitPhoneNumberField
 
 User = get_user_model()
 
+from django.utils import timezone
+from datetime import date
+
 class AllauthSignupForm(forms.Form):
     """
-    Custom signup form for django-allauth to capture Reader-specific fields.
+    Custom signup form for django-allauth to capture Reader-specific fields
+    and ensure legal compliance (Consent & Age verification).
     """
     name = forms.CharField(
         max_length=255,
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Full name',
-            'class': 'form-input',
-        }),
+        widget=forms.TextInput(attrs={'placeholder': 'Full name', 'class': 'form-input'}),
+    )
+    date_of_birth = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+        help_text="Under-18 signups require parental consent under DPDP Act."
+    )
+    accept_terms = forms.BooleanField(
+        required=True,
+        label="I agree to the Terms of Service and Privacy Policy.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'})
     )
 
+    def clean_date_of_birth(self):
+        dob = self.cleaned_data.get('date_of_birth')
+        if dob:
+            today = date.today()
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            if age < 18:
+                raise forms.ValidationError(
+                    "You must be at least 18 years old to subscribe to Icarus independently."
+                )
+        return dob
+
     def signup(self, request, user):
-        """
-        Invoked by allauth at signup time.
-        """
         user.name = self.cleaned_data.get('name', '')
+        user.date_of_birth = self.cleaned_data.get('date_of_birth')
         user.save()
 
 class ReaderProfileEditForm(forms.ModelForm):

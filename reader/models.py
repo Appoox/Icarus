@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
 from django.core.validators import RegexValidator
 from django.utils import timezone
 from datetime import timedelta
@@ -8,6 +10,14 @@ from wagtail.admin.panels import FieldPanel, MultiFieldPanel, FieldRowPanel
 from wagtail.snippets.models import register_snippet
 from wagtail.search import index
 from phonenumber_field.modelfields import PhoneNumberField
+
+# ── Single source of truth for plan configuration ───────────────────────
+PLANS = {
+    '1_month':  {'name': '1 Month',   'price': 299,  'has_print': False, 'duration_days': 30},
+    '3_months': {'name': '3 Months',  'price': 799,  'has_print': False, 'duration_days': 90},
+    '6_months': {'name': '6 Months',  'price': 1499, 'has_print': True,  'duration_days': 180},
+    '1_year':   {'name': '1 Year',    'price': 2499, 'has_print': True,  'duration_days': 365},
+}
 
 class ReaderUserManager(BaseUserManager):
     def create_user(self, phone_number, name, password=None, **extra_fields):
@@ -63,6 +73,56 @@ class ReaderUser(AbstractUser, index.Indexed):
     can_comment = models.BooleanField(
         default=True,
         help_text='Uncheck this to restrict this user from posting comments.'
+    )
+
+    # ── Compliance & Legal (DPDP & GDPR) ──
+    # Single source of truth for current document versions
+    CURRENT_TERMS_VERSION = "1.0.0"
+    CURRENT_PRIVACY_VERSION = "1.0.0"
+
+    accepted_terms_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of agreement to Terms of Service for legal enforceability."
+    )
+    terms_version = models.CharField(
+        max_length=20, blank=True,
+        help_text="Specific version of Terms of Service agreed to by the user."
+    )
+    accepted_privacy_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of explicit consent to the Privacy Policy."
+    )
+    privacy_version = models.CharField(
+        max_length=20, blank=True,
+        help_text="Specific version of Privacy Policy consented to (Required for Consent Versioning)."
+    )
+    newsletter_opt_in = models.BooleanField(
+        default=False,
+        help_text="User's choice to receive non-essential marketing communications."
+    )
+    newsletter_opt_in_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of when the newsletter consent status last changed."
+    )
+    
+    # ── Security & Audit ──
+    registration_ip = models.GenericIPAddressField(
+        null=True, blank=True,
+        help_text="Captured at signup to detect and prevent fraudulent bot registrations."
+    )
+    last_login_ip = models.GenericIPAddressField(
+        null=True, blank=True,
+        help_text="Monitored for security auditing and to detect unauthorized account access."
+    )
+    
+    # ── Account Lifecycle ──
+    deactivated_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Marked when a user requests deletion; triggers the statutory data retention clock."
+    )
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Account status based on successful verification of primary contact method."
     )
 
     USERNAME_FIELD = 'phone_number'
@@ -272,21 +332,18 @@ class ReaderUser(AbstractUser, index.Indexed):
         return "No Subscription"
     status_display.short_description = "Status"
 
-    def activate_subscription(self, plan):
+    def activate_subscription(self, plan_type):
         """
-        Start or renew a subscription with the given plan key.
- 
-        ✅ Renewal stacking: if the reader still has time left on their current
-        subscription, the new period starts from subscription_end (not now),
-        so they never lose paid days.
+        Activates or extends a reader's subscription based on the plan type.
+        Now also handles automated print delivery activation.
         """
-        duration = self.PLAN_DURATIONS.get(plan)
-        if not duration or plan == 'none':
+        plan = PLANS.get(plan_type)
+        if not plan:
             return
 
+        duration = timedelta(days=plan['duration_days'])
         now = timezone.now()
 
-        # ✅ Stack on top of existing subscription if still active
         if self.is_subscribed and self.subscription_end:
             new_start = self.subscription_end
         else:
@@ -345,6 +402,11 @@ class ReaderUser(AbstractUser, index.Indexed):
             FieldPanel('date_of_birth'),
         ], heading="Personal Information"),
         MultiFieldPanel([
+            FieldPanel('profile_image'),
+            FieldPanel('bio'),
+            FieldPanel('can_comment'),
+        ], heading="Public Profile & Moderation"),
+        MultiFieldPanel([
             FieldPanel('care_of_name'),
             FieldPanel('care_of_number'),
             FieldPanel('care_of_district'),
@@ -356,10 +418,20 @@ class ReaderUser(AbstractUser, index.Indexed):
             FieldPanel('address_line_2'),
             FieldRowPanel([
                 FieldPanel('city'),
+                FieldPanel('post_office'),
+            ]),
+            FieldRowPanel([
+                FieldPanel('district'),
                 FieldPanel('state'),
             ]),
             FieldPanel('pincode'),
-        ], heading="Address"),
+        ], heading="Mailing Address"),
+        MultiFieldPanel([
+            FieldPanel('is_print_subscriber'),
+            FieldPanel('print_delivery_status'),
+            FieldPanel('print_expiry_date'),
+            FieldPanel('delivery_notes'),
+        ], heading="Print Circulation Management"),
         MultiFieldPanel([
             FieldPanel('subscription_plan'),
             FieldRowPanel([
@@ -376,7 +448,77 @@ class ReaderUser(AbstractUser, index.Indexed):
             FieldPanel('favorite_articles'),
             FieldPanel('favorite_issues'),
         ], heading="Favourites"),
+        MultiFieldPanel([
+            FieldPanel('accepted_terms_at', read_only=True),
+            FieldPanel('terms_version', read_only=True),
+            FieldPanel('accepted_privacy_at', read_only=True),
+            FieldPanel('privacy_version', read_only=True),
+            FieldPanel('newsletter_opt_in'),
+            FieldPanel('registration_ip', read_only=True),
+            FieldPanel('last_login_ip', read_only=True),
+            FieldPanel('deactivated_at', read_only=True),
+            FieldPanel('is_verified'),
+        ], heading="Legal, Security & Lifecycle"),
     ]
+
+    def deactivate(self):
+        """
+        Executes a soft-deactivation. Revokes access immediately and starts
+        the statutory retention clock for data purging.
+        """
+        self.is_active = False
+        self.deactivated_at = timezone.now()
+        self.newsletter_opt_in = False
+        self.newsletter_opt_in_at = timezone.now()
+        self.save(update_fields=['is_active', 'deactivated_at', 'newsletter_opt_in', 'newsletter_opt_in_at'])
+
+    # ── Print Subscription Management ──
+    is_print_subscriber = models.BooleanField(
+        default=False,
+        help_text="Designates whether this user receives the physical print magazine."
+    )
+    print_delivery_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('active', 'Active Delivery'),
+            ('paused', 'Paused'),
+            ('returned', 'Address Issue / Returned'),
+            ('inactive', 'No Print Copy'),
+        ],
+        default='inactive',
+        help_text="Current logistical status of the print delivery."
+    )
+    print_expiry_date = models.DateField(
+        null=True, blank=True,
+        help_text="When the print subscription ends (may differ from digital expiry)."
+    )
+    delivery_notes = models.TextField(
+        blank=True,
+        help_text="Special instructions for the courier (e.g., 'Leave at gate')."
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to handle audit logging for consent changes.
+        """
+        # Ensure that if a user is deactivated, we don't accidentally re-activate them 
+        # unless specifically intended via the admin.
+        if self.deactivated_at and not self.is_active:
+             self.newsletter_opt_in = False
+
+        if self.pk:
+            # Check if opt-in status has changed to update the audit timestamp
+            try:
+                old_instance = ReaderUser.objects.get(pk=self.pk)
+                if old_instance.newsletter_opt_in != self.newsletter_opt_in:
+                    self.newsletter_opt_in_at = timezone.now()
+            except ReaderUser.DoesNotExist:
+                pass
+        elif self.newsletter_opt_in:
+            # New user who opted in immediately
+            self.newsletter_opt_in_at = timezone.now()
+            
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Reader User'
@@ -409,6 +551,12 @@ class PaymentDetails(models.Model):
     gateway_name = models.CharField(max_length=50, blank=True)
     gateway_transaction_id = models.CharField(max_length=255, blank=True)
     gateway_order_id = models.CharField(max_length=255, blank=True)
+    idempotency_key = models.CharField(
+        max_length=255, 
+        unique=True, 
+        null=True, blank=True,
+        help_text="Unique key to prevent duplicate payment processing."
+    )
 
     payment_method = models.CharField(
         max_length=20, choices=PAYMENT_METHODS, default='card',
@@ -453,3 +601,20 @@ class PaymentDetails(models.Model):
             f'{self.gateway_name or "—"} · {self.get_status_display()} '
             f'· ₹{self.amount}'
         )
+@receiver(user_logged_in)
+def update_user_login_ip(sender, request, user, **kwargs):
+    """
+    Tracks the IP address used during login for security and audit purposes.
+    Ensures we only track for ReaderUser to avoid crashing on staff login.
+    """
+    if not isinstance(user, ReaderUser):
+        return
+
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    
+    user.last_login_ip = ip
+    user.save(update_fields=['last_login_ip'])
