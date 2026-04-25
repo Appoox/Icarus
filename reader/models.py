@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import RegexValidator
 from django.utils import timezone
 from datetime import timedelta
@@ -9,14 +9,77 @@ from wagtail.snippets.models import register_snippet
 from wagtail.search import index
 from phonenumber_field.modelfields import PhoneNumberField
 
-class Reader(index.Indexed, models.Model):
-    """
-    Reader profile linked to a Django User. Tracks subscription status,
-    payment details, reading history, and topic interests.
-    """
+class ReaderUserManager(BaseUserManager):
+    def create_user(self, phone_number, name, password=None, **extra_fields):
+        if not phone_number:
+            raise ValueError('The Phone Number must be set')
+        if not name:
+            raise ValueError('The Name must be set')
+        
+        user = self.model(
+            phone_number=phone_number,
+            name=name,
+            **extra_fields
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
+    def create_superuser(self, phone_number, name, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(phone_number, name, password, **extra_fields)
+
+class ReaderUser(AbstractUser, index.Indexed):
+    """
+    Custom User model for Icarus. Consolidates Django User and Reader profile.
+    Tracks subscription status, payment details, reading history, and topic interests.
+    """
+    username = None
     name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
+    phone_number = PhoneNumberField("Phone Number", blank=True, unique=True)
+    email = models.EmailField(unique=True, blank=True, null=True)
+    
+    objects = ReaderUserManager()
+    profile_image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        help_text='Visible next to your comments.'
+    )
+    bio = models.TextField(
+        max_length=500, 
+        blank=True, 
+        help_text='A short description about yourself.'
+    )
+    can_comment = models.BooleanField(
+        default=True,
+        help_text='Uncheck this to restrict this user from posting comments.'
+    )
+
+    USERNAME_FIELD = 'phone_number'
+    REQUIRED_FIELDS = ['name', 'email']
+
+    @property
+    def username(self):
+        """Wagtail and some internal Django apps expect a string 'username'."""
+        return str(self.phone_number)
+
+    def get_username(self):
+        """Return the string representation of the phone number."""
+        return str(self.phone_number)
+
+    def natural_key(self):
+        """Required for some serialization flows."""
+        return (str(self.phone_number),)
 
     GENDER_CHOICES = [
         ('പുരുഷന്‍', 'Male'),
@@ -29,7 +92,6 @@ class Reader(index.Indexed, models.Model):
     gender = models.CharField(max_length=100, choices=GENDER_CHOICES, blank=True)
     gender_other = models.CharField("Other Gender", max_length=100, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
-    phone_number = PhoneNumberField("Phone Number", blank=True)
 
     # ── Address ──────────────────────────────────────────────────────
     INDIAN_STATES = [
@@ -100,12 +162,6 @@ class Reader(index.Indexed, models.Model):
     state = models.CharField(
         max_length=50, blank=True,
         choices=INDIAN_STATES,
-    )
-
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reader',
     )
 
 # ചേര്‍ക്കുന്ന ആളുടെ വിവരങ്ങൾ
@@ -219,7 +275,7 @@ class Reader(index.Indexed, models.Model):
     def activate_subscription(self, plan):
         """
         Start or renew a subscription with the given plan key.
-
+ 
         ✅ Renewal stacking: if the reader still has time left on their current
         subscription, the new period starts from subscription_end (not now),
         so they never lose paid days.
@@ -248,7 +304,7 @@ class Reader(index.Indexed, models.Model):
         'PaymentDetails',
         null=True, blank=True,
         on_delete=models.SET_NULL,
-        related_name='reader',
+        related_name='reader_user',
     )
 
     # ── Reading History & Interests ───────────────────────────────────
@@ -287,7 +343,6 @@ class Reader(index.Indexed, models.Model):
             FieldPanel('gender'),
             FieldPanel('gender_other'),
             FieldPanel('date_of_birth'),
-            FieldPanel('user'),
         ], heading="Personal Information"),
         MultiFieldPanel([
             FieldPanel('care_of_name'),
@@ -324,12 +379,11 @@ class Reader(index.Indexed, models.Model):
     ]
 
     class Meta:
-        verbose_name = 'Reader'
-        verbose_name_plural = 'Readers'
+        verbose_name = 'Reader User'
+        verbose_name_plural = 'Reader Users'
 
     def __str__(self):
-        return f'{self.name} ({self.email})'
-
+        return f'{self.name or str(self.phone_number)} ({self.email or str(self.phone_number)})'
 
 class PaymentDetails(models.Model):
     """
