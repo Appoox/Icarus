@@ -979,7 +979,7 @@
   {% endif %}
 
   {# ── SUBSCRIBE BANNER ── #}
-  {% if not request.user.is_authenticated or not request.user.reader or not request.user.reader.is_subscribed %}
+  {% if not request.user.is_authenticated or not request.user.is_subscribed %}
   <div class="sg-subscribe" role="complementary" aria-label="Subscribe">
     <div class="sg-subscribe__text">
       <div class="sg-subscribe__kicker">വരിക്കാരാകൂ</div>

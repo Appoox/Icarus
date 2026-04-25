@@ -363,10 +363,7 @@ class Article(Page, HitCountMixin):
 
         # 1. Reader Profile Fetch
         if request.user.is_authenticated:
-            try:
-                reader = request.user.reader
-            except Exception:
-                reader = None
+            reader = request.user
 
         # 2. Admin Exemption
         if request.user.is_superuser or request.user.is_staff:

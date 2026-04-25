@@ -8,8 +8,8 @@ from django.utils import timezone
 import uuid                                            
 from the_librarian.views import superuser_required 
 
-from .forms import ReaderSignupForm, ReaderProfileEditForm, UpdateInterestsForm
-from .models import Reader, PaymentDetails
+from .forms import ReaderProfileEditForm, UpdateInterestsForm
+from .models import ReaderUser, PaymentDetails
 
 # ── Single source of truth for plan prices ──────────────────────────────────
 # Previously hardcoded in both views.py and profile.html.
@@ -43,16 +43,7 @@ PLANS = {
 @login_required(login_url='/reader/login/')
 def reader_profile(request):
     """Display reader profile with reading history and subscription info."""
-    try:
-        reader = request.user.reader
-    except Reader.DoesNotExist:
-        reader = Reader.objects.create(
-            user=request.user,
-            name=request.user.get_full_name() or request.user.username,
-            email=request.user.email or '',
-        )
-
-
+    reader = request.user
 
     context = {
         'reader': reader,
@@ -66,11 +57,8 @@ def reader_profile(request):
 
 @login_required(login_url='/reader/login/')
 def edit_profile(request):
-    """Let readers edit their name, email, and phone number."""
-    try:
-        reader = request.user.reader
-    except Reader.DoesNotExist:
-        return redirect('reader_profile')
+    """Let readers edit their profile."""
+    reader = request.user
 
     if request.method == 'POST':
         form = ReaderProfileEditForm(request.POST, instance=reader)
@@ -125,7 +113,7 @@ def process_payment(request):
     )
 
     try:
-        reader = request.user.reader
+        reader = request.user
         reader.payment_details = payment
         reader.save(update_fields=['payment_details'])
         reader.activate_subscription(plan_type)
@@ -133,7 +121,7 @@ def process_payment(request):
             request,
             f"Successfully subscribed to the {plan['name']} plan!"
         )
-    except Reader.DoesNotExist:
+    except Exception:
         messages.error(request, "Reader profile not found.")
 
     return redirect('reader_profile')
@@ -144,7 +132,7 @@ def process_payment(request):
 def cancel_subscription(request):
     """Cancel the reader's active subscription immediately."""
     try:
-        reader = request.user.reader
+        reader = request.user
         if reader.is_subscribed:
             reader.subscription_plan = 'none'
             reader.subscription_end = timezone.now()
@@ -152,7 +140,7 @@ def cancel_subscription(request):
             messages.success(request, "Your subscription has been cancelled.")
         else:
             messages.info(request, "You don't have an active subscription.")
-    except Reader.DoesNotExist:
+    except Exception:
         messages.error(request, "Reader profile not found.")
 
     return redirect('reader_profile')
@@ -162,8 +150,8 @@ def cancel_subscription(request):
 def update_interests(request):
     """Let readers update their topic interests after signup."""
     try:
-        reader = request.user.reader
-    except Reader.DoesNotExist:
+        reader = request.user
+    except Exception:
         return redirect('reader_profile')
 
     if request.method == 'POST':
@@ -185,8 +173,8 @@ def toggle_favorite_article(request, article_id):
     article = get_object_or_404(Article, pk=article_id)
 
     try:
-        reader = request.user.reader
-    except Reader.DoesNotExist:
+        reader = request.user
+    except Exception:
         return JsonResponse({'error': 'Reader profile not found.'}, status=404)
 
     if reader.favorite_articles.filter(pk=article_id).exists():
@@ -207,8 +195,8 @@ def toggle_favorite_issue(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)
 
     try:
-        reader = request.user.reader
-    except Reader.DoesNotExist:
+        reader = request.user
+    except Exception:
         return JsonResponse({'error': 'Reader profile not found.'}, status=404)
 
     if reader.favorite_issues.filter(pk=issue_id).exists():
@@ -235,7 +223,7 @@ def print_subscribers(request):
     Limited to staff members.
     """
     # Get all readers who have/had a plan, ordered by name
-    subscribers = Reader.objects.exclude(subscription_plan='none').order_by('name')
+    subscribers = ReaderUser.objects.exclude(subscription_plan='none').order_by('name')
     
     # Optional: Filter for active only if requested, but usually admin wants the full list 
     # of anyone who ever paid/is paying. For now, let's show anyone with a plan.
