@@ -183,6 +183,7 @@
             {% csrf_token %}
             <input type="hidden" name="plan_type" value="{{ plan_type }}">
             <input type="hidden" name="amount" value="{{ price }}">
+            <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
 
             <div class="form-group">
                 <label>Select Payment Method</label>

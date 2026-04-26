@@ -4,7 +4,10 @@ from django.utils import timezone
 from wagtail import hooks
 from wagtail.snippets.views.snippets import SnippetViewSet, IndexView
 from wagtail.admin.widgets import HeaderButton
-from .models import Reader, PaymentDetails
+from .models import ReaderUser, PaymentDetails
+from wagtail.admin.forms.auth import LoginForm
+from django import forms
+from phonenumber_field.formfields import SplitPhoneNumberField
 
 class ReaderFilterSet(django_filters.FilterSet):
     sub_status = django_filters.ChoiceFilter(
@@ -18,7 +21,7 @@ class ReaderFilterSet(django_filters.FilterSet):
     )
 
     class Meta:
-        model = Reader
+        model = ReaderUser
         fields = ['subscription_plan', 'sub_status']
 
     def filter_sub_status(self, queryset, name, value):
@@ -44,7 +47,7 @@ class ReaderIndexView(IndexView):
         return buttons
 
 class ReaderSnippetViewSet(SnippetViewSet):
-    model = Reader
+    model = ReaderUser
     index_view_class = ReaderIndexView
     url_prefix = 'readers'
     menu_label = 'Readers'
@@ -52,9 +55,9 @@ class ReaderSnippetViewSet(SnippetViewSet):
     menu_order = 300
     add_to_admin_menu = True
     
-    list_display = ("name", "email", "subscription_plan", "subscription_end", "status_display")
+    list_display = ("name", "email", "phone_number", "subscription_plan", "subscription_end", "status_display")
     filterset_class = ReaderFilterSet
-    search_fields = ("name", "email")
+    search_fields = ("phone_number", "name", "email")
 
 class PaymentDetailsSnippetViewSet(SnippetViewSet):
     model = PaymentDetails
@@ -72,3 +75,17 @@ def register_reader_viewsets():
         ReaderSnippetViewSet(),
         PaymentDetailsSnippetViewSet(),
     ]
+
+# ── Custom User Forms ───────────────────────────────────────────────
+from wagtail.users.forms import UserEditForm, UserCreationForm
+
+class CustomUserEditForm(UserEditForm):
+    pass # ReaderUser fields are already in panels if defined in the model
+
+class CustomUserCreationForm(UserCreationForm):
+    pass
+
+@hooks.register('construct_user_edit_form')
+def construct_user_edit_form(form, user, **kwargs):
+    # This hook can be used to further customize the form if needed
+    pass

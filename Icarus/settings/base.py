@@ -9,18 +9,18 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-ACCOUNT_LOGIN_METHODS = {"phone", "email"}
+ACCOUNT_LOGIN_METHODS = {"phone"}
 ACCOUNT_SIGNUP_FIELDS = [
   'phone*',
-  'email*',
+  'name*',
   'password1*',
 ]
-ACCOUNT_USERNAME_REQUIRED = False # ← allows login without username
-ACCOUNT_PHONE_VERIFICATION_ENABLED = False
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USER_MODEL_PHONE_FIELD = 'phone_number'
 ACCOUNT_SIGNUP_FORM_CLASS = 'reader.forms.AllauthSignupForm'
 ACCOUNT_ADAPTER = 'reader.adapter.CustomAccountAdapter'
+AUTH_USER_MODEL = 'reader.ReaderUser'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
@@ -256,3 +256,5 @@ WAGTAILEMBEDS_RESPONSIVE_HTML = True
 
 
 TAGGIT_CASE_INSENSITIVE = True
+
+DAYS_BEFORE_PURGE = env.int("DAYS_BEFORE_PURGE", default=30)

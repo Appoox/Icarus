@@ -99,7 +99,11 @@
 {% block content %}
     <div class="print-container">
         <div class="no-print-actions">
-            <button onclick="window.print()" class="button button-longrunning">
+            <a href="{% url 'export_mailing_list' %}" class="button button-longrunning">
+                <span class="icon icon-download"></span>
+                Export Mailing List (CSV)
+            </a>
+            <button onclick="window.print()" class="button button-secondary">
                 <span class="icon icon-print"></span>
                 Print this list
             </button>
