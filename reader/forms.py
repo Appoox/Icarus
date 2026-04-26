@@ -129,3 +129,4 @@ class UpdateInterestsForm(forms.ModelForm):
     class Meta:
         model = ReaderUser
         fields = ('interested_topics',)
+
