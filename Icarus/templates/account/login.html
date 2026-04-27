@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Playfair+Display:wght@700;900&display=swap"
+    rel="stylesheet">
+
+<style>
+    .auth-page {
+        max-width: 420px;
+        margin: 80px auto;
+        padding: 0 24px 80px;
+    }
+
+    .auth-page h1 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 32px;
+        font-weight: 900;
+        color: #0b1f3a;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .auth-page .subtitle {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 15px;
+        color: #6b6659;
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .auth-form {
+        background: #fafaf8;
+        border: 1px solid #d4d0c8;
+        border-radius: 8px;
+        padding: 32px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6b6659;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 15px;
+        border: 1px solid #d4d0c8;
+        border-radius: 4px;
+        background: #fff;
+        color: #1a1612;
+        transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #0b1f3a;
+        box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.08);
+    }
+
+    .form-errors {
+        color: #c8102e;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    .form-errors ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .auth-submit {
+        width: 100%;
+        padding: 12px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: #c8102e;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-top: 8px;
+    }
+
+    .auth-submit:hover {
+        background: #a00d24;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        color: #6b6659;
+    }
+
+    .auth-footer a {
+        color: #c8102e;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .messages {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px;
+    }
+
+    .messages li {
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 10px 16px;
+        border-radius: 4px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .messages li.error {
+        background: #fce4ec;
+        color: #c8102e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <h1>Welcome Back</h1>
+    <p class="subtitle">Sign in to access your reading history and subscription.</p>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+            {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if form.errors %}
+    <div class="form-errors" style="margin-bottom: 16px; text-align: center;">
+        <p>Invalid phone/email or password. Please try again.</p>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'account_login' %}" class="auth-form" novalidate>
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_login">Phone Number or Email</label>
+            <input type="text" name="login" id="id_login" class="form-input" placeholder="Phone or Email" autofocus
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="id_password" style="display: flex; justify-content: space-between;">
+                Password
+                <a href="{% url 'account_reset_password' %}" style="text-transform: none; font-weight: 500; font-size: 11px; letter-spacing: 0; color: #c8102e; text-decoration: none;">Forgot Password?</a>
+            </label>
+            <input type="password" name="password" id="id_password" class="form-input" placeholder="Password" required>
+        </div>
+
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+        {% endif %}
+
+        <button type="submit" class="auth-submit">Sign In</button>
+    </form>
+
+    <p class="auth-footer">
+        Don't have an account? <a href="{% url 'account_signup' %}">Create one</a>
+    </p>
+</div>
+{% endblock %}

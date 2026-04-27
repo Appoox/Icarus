@@ -1,0 +1,89 @@
+{% load wagtailcore_tags %}
+
+<div class="button-block button-block--align-{{ self.alignment }}">
+    <a
+        class="button-block__btn button-block__btn--{{ self.style }}"
+        href="{{ self.url }}"
+        {% if self.open_in_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}
+    >
+        {{ self.label }}
+        {% if self.open_in_new_tab %}
+            <svg class="button-block__ext-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+            </svg>
+        {% endif %}
+    </a>
+</div>
+
+<style>
+    .button-block {
+        margin: 1.75rem 0;
+        display: flex;
+    }
+
+    .button-block--align-left   { justify-content: flex-start; }
+    .button-block--align-center { justify-content: center; }
+    .button-block--align-right  { justify-content: flex-end; }
+
+    .button-block__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.7rem 1.6rem;
+        border-radius: 8px;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-decoration: none;
+        transition: transform 0.15s, box-shadow 0.15s, background 0.2s, color 0.2s;
+        cursor: pointer;
+    }
+
+    .button-block__btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.14);
+    }
+
+    .button-block__btn:active { transform: translateY(0); }
+
+    /* Primary */
+    .button-block__btn--primary {
+        background: #c0392b;
+        color: #fff;
+        border: 2px solid #c0392b;
+    }
+    .button-block__btn--primary:hover { background: #a93226; border-color: #a93226; }
+
+    /* Secondary */
+    .button-block__btn--secondary {
+        background: transparent;
+        color: #c0392b;
+        border: 2px solid #c0392b;
+    }
+    .button-block__btn--secondary:hover { background: #fdf2f2; }
+
+    /* Ghost */
+    .button-block__btn--ghost {
+        background: transparent;
+        color: #2c3e50;
+        border: 2px solid #bdc3c7;
+    }
+    .button-block__btn--ghost:hover { background: #f4f6f7; border-color: #95a5a6; }
+
+    /* Danger */
+    .button-block__btn--danger {
+        background: #c0392b;
+        color: #fff;
+        border: 2px solid #c0392b;
+        opacity: 0.85;
+    }
+    .button-block__btn--danger:hover { background: #96281b; border-color: #96281b; opacity: 1; }
+
+    .button-block__ext-icon {
+        width: 15px;
+        height: 15px;
+        fill: currentColor;
+        flex-shrink: 0;
+    }
+</style>

@@ -7,7 +7,10 @@ from articles.models import ArticleIndexPage
 from literati.models import AuthorIndexPage
 from issue.models import IssueIndexPage
 from django.utils.html import format_html, mark_safe
-from django.contrib.auth.models import User, Group
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+User = get_user_model()
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from itertools import chain
@@ -100,7 +103,7 @@ class RecentActivityPanel(Component):
         items_html = ""
         for entry in all_logs:
             timestamp = entry.timestamp.strftime("%b %d, %H:%M")
-            user = entry.user.get_full_name() or entry.user.username if entry.user else "System"
+            user = entry.user.get_full_name() or str(entry.user.phone_number) if entry.user else "System"
             
             # Action formatting
             action_label = entry.action.replace('wagtail.', '').title()

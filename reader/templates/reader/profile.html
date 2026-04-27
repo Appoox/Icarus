@@ -237,15 +237,24 @@
     }
 
     /* Grace period banner */
-    .grace-banner {
-        background: #fff3e0;
-        border: 1px solid #ffb74d;
+    .grace-banner, .notice-banner {
         border-radius: 6px;
         padding: 12px 16px;
         font-family: 'Source Sans 3', sans-serif;
         font-size: 14px;
-        color: #e65100;
         margin-bottom: 16px;
+    }
+
+    .grace-banner {
+        background: #fff3e0;
+        border: 1px solid #ffb74d;
+        color: #e65100;
+    }
+
+    .notice-banner {
+        background: #e3f2fd;
+        border: 1px solid #90caf9;
+        color: #1565c0;
     }
 
     /* Address display */
@@ -268,9 +277,16 @@
         </div>
         <div style="margin-top: 12px; display: flex; gap: 16px;">
             <a href="{% url 'edit_profile' %}" class="link-edit">Edit Profile</a>
-            <a href="{% url 'reader_password_change' %}" class="link-edit">Change Password</a>
+            <a href="{% url 'account_change_password' %}" class="link-edit">Change Password</a>
         </div>
     </div>
+
+    {# ── Profile completion notice ── #}
+    {% if not reader.is_profile_complete %}
+    <div class="notice-banner">
+        👋 Your profile is incomplete. <a href="{% url 'edit_profile' %}" style="color: inherit; font-weight: 700;">Complete it now</a> to help us serve you better.
+    </div>
+    {% endif %}
 
     {# ── Grace period warning ── #}
     {% if reader.is_in_grace_period %}
@@ -278,6 +294,19 @@
         ⚠️ Your subscription expired recently. You're in a grace period — renew now to keep your access.
     </div>
     {% endif %}
+
+    {# ── Personal Details ── #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Personal Details</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+        </div>
+        <div class="address-block">
+            {% if reader.phone_number %}<strong>Phone:</strong> {{ reader.phone_number }}<br>{% endif %}
+            {% if reader.gender %}<strong>Gender:</strong> {{ reader.get_gender_display }}{% if reader.gender == 'മറ്റൊന്ന്' and reader.gender_other %} ({{ reader.gender_other }}){% endif %}<br>{% endif %}
+            {% if reader.date_of_birth %}<strong>Birthday:</strong> {{ reader.date_of_birth|date:"F j, Y" }}<br>{% endif %}
+        </div>
+    </div>
 
     {# ── Address ── #}
     <div class="profile-section">
@@ -289,14 +318,37 @@
         <div class="address-block">
             {% if reader.address_line_1 %}{{ reader.address_line_1 }}<br>{% endif %}
             {% if reader.address_line_2 %}{{ reader.address_line_2 }}<br>{% endif %}
-            {% if reader.city %}{{ reader.city }}{% if reader.state %}, {% endif %}{% endif %}
-            {% if reader.state %}{{ reader.state }}{% endif %}
-            {% if reader.pincode %} — {{ reader.pincode }}{% endif %}
+            {% if reader.city or reader.post_office %}
+                {% if reader.post_office %}{{ reader.post_office }}{% if reader.city %}, {% endif %}{% endif %}
+                {% if reader.city %}{{ reader.city }}{% endif %}<br>
+            {% endif %}
+            {% if reader.district or reader.state %}
+                {% if reader.district %}{{ reader.district }}{% if reader.state %}, {% endif %}{% endif %}
+                {% if reader.state %}{{ reader.state }}{% endif %}<br>
+            {% endif %}
+            {% if reader.pincode %}<strong>Pincode:</strong> {{ reader.pincode }}{% endif %}
         </div>
         {% else %}
         <p class="empty-state">No address added yet. <a href="{% url 'edit_profile' %}" class="link-edit">Add one</a></p>
         {% endif %}
     </div>
+
+    {# ── Added By (Care Of) ── #}
+    {% if reader.care_of_name or reader.care_of_number %}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Membership Details (Added By)</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+        </div>
+        <div class="address-block">
+            {% if reader.care_of_name %}<strong>Name:</strong> {{ reader.care_of_name }}<br>{% endif %}
+            {% if reader.care_of_number %}<strong>Phone:</strong> {{ reader.care_of_number }}<br>{% endif %}
+            {% if reader.care_of_district %}<strong>District:</strong> {{ reader.care_of_district }}<br>{% endif %}
+            {% if reader.care_of_meghala %}<strong>Meghala:</strong> {{ reader.care_of_meghala }}<br>{% endif %}
+            {% if reader.care_of_unit %}<strong>Unit:</strong> {{ reader.care_of_unit }}<br>{% endif %}
+        </div>
+    </div>
+    {% endif %}
 
     {# ── Subscription Status ── #}
     <div class="sub-card">
@@ -424,6 +476,23 @@
         {% else %}
         <p class="empty-state">You haven't read any articles yet.</p>
         {% endif %}
+    </div>
+
+    {# ── Deactivation ── #}
+    <div class="profile-section" style="margin-top: 60px; padding-top: 40px; border-top: 1px solid #d4d0c8;">
+        <div class="profile-section__header" style="border-bottom: none;">
+            <h2 style="color: #c8102e;">Danger Zone</h2>
+        </div>
+        <p class="sub-card__detail" style="margin-bottom: 16px;">
+            Deactivating your account will immediately revoke your access to Icarus. 
+            In accordance with our data retention policy, your personal data will be 
+            scheduled for permanent deletion after the statutory period.
+        </p>
+        <form method="post" action="{% url 'deactivate_account' %}"
+              onsubmit="return confirm('Are you sure you want to DEACTIVATE your account? This action will log you out immediately and disable your access.');">
+            {% csrf_token %}
+            <button type="submit" class="btn-cancel">Deactivate My Account</button>
+        </form>
     </div>
 
 </div>

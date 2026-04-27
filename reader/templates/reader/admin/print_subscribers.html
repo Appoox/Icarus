@@ -1,0 +1,160 @@
+{% extends "wagtailadmin/base.html" %}
+{% load static %}
+
+{% block titletag %}Print Subscribers{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <style>
+        @media print {
+            .nav-main, .sidebar, .header, .footer, .breadcrumb, .buttons {
+                display: none !important;
+            }
+            .content-wrapper {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            body {
+                background: white !important;
+            }
+        }
+        
+        .print-container {
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            color: black;
+        }
+
+        .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .print-header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #1a1a1a;
+        }
+
+        .print-header p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+
+        .subscribers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .subscribers-table th, 
+        .subscribers-table td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: left;
+        }
+
+        .subscribers-table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+
+        .subscribers-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-active { background: #e6fffa; color: #0694a2; }
+        .badge-expired { background: #fff5f5; color: #e53e3e; }
+
+        .print-footer {
+            margin-top: 40px;
+            text-align: right;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .no-print-actions {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        @media print {
+            .no-print-actions { display: none; }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="print-container">
+        <div class="no-print-actions">
+            <a href="{% url 'export_mailing_list' %}" class="button button-longrunning">
+                <span class="icon icon-download"></span>
+                Export Mailing List (CSV)
+            </a>
+            <button onclick="window.print()" class="button button-secondary">
+                <span class="icon icon-print"></span>
+                Print this list
+            </button>
+            <a href="javascript:window.close()" class="button button-secondary">Close</a>
+        </div>
+
+        <div class="print-header">
+            <h1>Subscribed Readers List</h1>
+            <p>Generated on {{ now|date:"F j, Y, g:i a" }}</p>
+        </div>
+
+        <table class="subscribers-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Plan</th>
+                    <th>Started</th>
+                    <th>Expires</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reader in subscribers %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ reader.name }}</td>
+                    <td>{{ reader.email }}</td>
+                    <td>{{ reader.get_subscription_plan_display }}</td>
+                    <td>{{ reader.subscription_start|date:"d/m/Y" }}</td>
+                    <td>{{ reader.subscription_end|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if reader.is_subscribed %}
+                            <span class="badge badge-active">Active</span>
+                        {% else %}
+                            <span class="badge badge-expired">Expired</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center;">No subscribed readers found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="print-footer">
+            <p>Total Subscriptions: {{ subscribers|length }}</p>
+            <p>Icarus Management System</p>
+        </div>
+    </div>
+{% endblock %}

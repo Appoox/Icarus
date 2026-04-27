@@ -1,0 +1,81 @@
+{% load wagtailcore_tags %}
+
+<div class="callout-block callout-block--{{ self.callout_type }}">
+    {% if self.title %}
+        <div class="callout-block__title">{{ self.title }}</div>
+    {% endif %}
+    <div class="callout-block__content">{{ self.content }}</div>
+</div>
+
+<style>
+    .callout-block {
+        margin: 2rem 0;
+        padding: 1.25rem 1.5rem;
+        border-radius: 10px;
+        border-left: 5px solid;
+        font-family: 'Source Sans 3', sans-serif;
+        line-height: 1.65;
+    }
+
+    .callout-block__title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .callout-block__content p { margin: 0; }
+
+    /* info */
+    .callout-block--info {
+        background: #eaf4fb;
+        border-color: #2980b9;
+        color: #1a4f72;
+    }
+    .callout-block--info .callout-block__title { color: #2980b9; }
+    .callout-block--info .callout-block__title::before { content: "ℹ  "; }
+
+    /* tip */
+    .callout-block--tip {
+        background: #fefbea;
+        border-color: #f39c12;
+        color: #5d4037;
+    }
+    .callout-block--tip .callout-block__title { color: #e67e22; }
+    .callout-block--tip .callout-block__title::before { content: "💡  "; }
+
+    /* warning */
+    .callout-block--warning {
+        background: #fef9e7;
+        border-color: #f1c40f;
+        color: #7d6608;
+    }
+    .callout-block--warning .callout-block__title { color: #d4ac0d; }
+    .callout-block--warning .callout-block__title::before { content: "⚠  "; }
+
+    /* danger */
+    .callout-block--danger {
+        background: #fdf2f2;
+        border-color: #c0392b;
+        color: #7b241c;
+    }
+    .callout-block--danger .callout-block__title { color: #c0392b; }
+    .callout-block--danger .callout-block__title::before { content: "🚨  "; }
+
+    /* success */
+    .callout-block--success {
+        background: #eafaf1;
+        border-color: #27ae60;
+        color: #1e5631;
+    }
+    .callout-block--success .callout-block__title { color: #27ae60; }
+    .callout-block--success .callout-block__title::before { content: "✅  "; }
+
+    /* quote */
+    .callout-block--quote {
+        background: #f4f4f4;
+        border-color: #2c3e50;
+        color: #2c3e50;
+    }
+    .callout-block--quote .callout-block__title { color: #2c3e50; }
+    .callout-block--quote .callout-block__title::before { content: "💬  "; }
+</style>

@@ -1,0 +1,104 @@
+{% load wagtailimages_tags %}
+
+<figure class="image-gallery-block image-gallery-block--{{ self.layout }}">
+    <div class="image-gallery-block__grid">
+        {% for image in self.images %}
+            <div class="image-gallery-block__item">
+                {% image image fill-800x600 class="image-gallery-block__img" %}
+            </div>
+        {% endfor %}
+    </div>
+    {% if self.caption %}
+        <figcaption class="image-gallery-block__caption">{{ self.caption }}</figcaption>
+    {% endif %}
+</figure>
+
+<style>
+    .image-gallery-block {
+        margin: 2.5rem 0;
+        font-family: 'Source Sans 3', sans-serif;
+    }
+
+    .image-gallery-block__grid {
+        display: grid;
+        gap: 6px;
+    }
+
+    /* 2 columns */
+    .image-gallery-block--2col .image-gallery-block__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* 3 columns */
+    .image-gallery-block--3col .image-gallery-block__grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* 4 columns */
+    .image-gallery-block--4col .image-gallery-block__grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Masonry — CSS columns fallback (JS-free) */
+    .image-gallery-block--masonry .image-gallery-block__grid {
+        display: block;
+        column-count: 3;
+        column-gap: 6px;
+    }
+    .image-gallery-block--masonry .image-gallery-block__item {
+        break-inside: avoid;
+        margin-bottom: 6px;
+    }
+
+    .image-gallery-block__item {
+        overflow: hidden;
+        border-radius: 6px;
+        background: #f0f0f0;
+    }
+
+    .image-gallery-block__img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.35s ease;
+    }
+
+    /* Fixed height for non-masonry layouts */
+    .image-gallery-block:not(.image-gallery-block--masonry) .image-gallery-block__item {
+        aspect-ratio: 4 / 3;
+    }
+
+    .image-gallery-block__item:hover .image-gallery-block__img {
+        transform: scale(1.04);
+    }
+
+    .image-gallery-block__caption {
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        text-align: center;
+        font-style: italic;
+    }
+
+    @media (max-width: 640px) {
+        .image-gallery-block--3col .image-gallery-block__grid,
+        .image-gallery-block--4col .image-gallery-block__grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .image-gallery-block--masonry .image-gallery-block__grid {
+            column-count: 2;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .image-gallery-block--2col .image-gallery-block__grid,
+        .image-gallery-block--3col .image-gallery-block__grid,
+        .image-gallery-block--4col .image-gallery-block__grid {
+            grid-template-columns: 1fr;
+        }
+        .image-gallery-block--masonry .image-gallery-block__grid {
+            column-count: 1;
+        }
+    }
+</style>

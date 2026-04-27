@@ -979,7 +979,7 @@
   {% endif %}
 
   {# ── SUBSCRIBE BANNER ── #}
-  {% if not request.user.is_authenticated or not request.user.reader or not request.user.reader.is_subscribed %}
+  {% if not request.user.is_authenticated or not request.user.is_subscribed %}
   <div class="sg-subscribe" role="complementary" aria-label="Subscribe">
     <div class="sg-subscribe__text">
       <div class="sg-subscribe__kicker">വരിക്കാരാകൂ</div>
@@ -988,8 +988,9 @@
       {% if request.user.is_authenticated %}
       <a href="{% url 'reader_profile' %}" class="sg-subscribe__cta">സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക</a>
       {% else %}
-      <a href="{% url 'reader_signup' %}" class="sg-subscribe__cta">ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ</a>
-      {% endif %}
+      {# <a href="{% url 'reader_signup' %}" class="sg-subscribe__cta">ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ</a> #}
+      <a href="{% url 'account_signup' %}" class="sg-subscribe__cta">ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ</a>
+    {% endif %}
     </div>
   </div>
   {% endif %}
