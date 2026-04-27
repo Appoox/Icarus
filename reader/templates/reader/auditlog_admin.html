@@ -1,0 +1,118 @@
+{% extends "wagtailadmin/base.html" %}
+{% load tz %}
+{% block titletag %}Audit Log{% endblock %}
+
+{% block extra_css %}
+<style>
+    .audit-changes-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.9em;
+    }
+    .audit-changes-item {
+        margin-bottom: 4px;
+        padding: 4px 8px;
+        background: #f9f9f9;
+        border-radius: 4px;
+        border-left: 3px solid #ccc;
+    }
+    .audit-field-name {
+        font-weight: bold;
+        color: #333;
+        display: block;
+        margin-bottom: 2px;
+    }
+    .audit-change-diff {
+        color: #666;
+    }
+    .audit-old-val {
+        color: #d9534f;
+        text-decoration: line-through;
+    }
+    .audit-new-val {
+        color: #5cb85c;
+        font-weight: bold;
+    }
+    .audit-arrow {
+        margin: 0 4px;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    {% include "wagtailadmin/shared/header.html" with title="Audit Log" icon="list-ul" %}
+
+    <div class="nice-padding">
+        <table class="listing">
+            <thead>
+                <tr>
+                    <th style="width: 200px;">Timestamp (IST)</th>
+                    <th style="width: 150px;">User</th>
+                    <th style="width: 120px;">Model</th>
+                    <th style="width: 100px;">Action</th>
+                    <th>Changes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>
+                        {% timezone "Asia/Kolkata" %}
+                            {{ entry.timestamp|date:"DATETIME_FORMAT" }}
+                        {% endtimezone %}
+                    </td>
+                    <td>
+                        {% if entry.actor %}
+                            <strong>{{ entry.actor }}</strong>
+                        {% else %}
+                            <span style="color: #999; font-style: italic;">System</span>
+                        {% endif %}
+                    </td>
+                    <td><code style="background: #0019faff; padding: 2px 4px; border-radius: 3px;">{{ entry.content_type.model }}</code></td>
+                    <td>
+                        {% if entry.action == 0 %}
+                            <span class="status-tag primary">Create</span>
+                        {% elif entry.action == 1 %}
+                            <span class="status-tag secondary">Update</span>
+                        {% elif entry.action == 2 %}
+                            <span class="status-tag fatal">Delete</span>
+                        {% else %}
+                            {{ entry.get_action_display }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            <ul class="audit-changes-list">
+                                {% for field, values in entry.changes_display_dict.items %}
+                                <li class="audit-changes-item">
+                                    <span class="audit-field-name">{{ field|title }}</span>
+                                    <span class="audit-change-diff">
+                                        {% if values.0 is not None and values.0 != "" %}
+                                            <span class="audit-old-val">{{ values.0|truncatechars:100 }}</span>
+                                        {% else %}
+                                            <span class="audit-old-val" style="text-decoration: none; font-style: italic;">(None)</span>
+                                        {% endif %}
+                                        
+                                        <span class="audit-arrow">→</span>
+                                        
+                                        {% if values.1 is not None and values.1 != "" %}
+                                            <span class="audit-new-val">{{ values.1|truncatechars:100 }}</span>
+                                        {% else %}
+                                            <span class="audit-new-val" style="font-weight: normal; font-style: italic;">(None)</span>
+                                        {% endif %}
+                                    </span>
+                                </li>
+                                {% empty %}
+                                    <li style="color: #999; font-style: italic;">No specific field changes recorded.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
