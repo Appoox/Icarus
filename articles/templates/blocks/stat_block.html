@@ -1,0 +1,62 @@
+{% load wagtailcore_tags %}
+
+<div class="stat-block">
+    <div class="stat-block__inner">
+        <span class="stat-block__figure" style="color: {{ self.highlight_color|default:'#c0392b' }}">
+            {{ self.statistic }}
+        </span>
+        <span class="stat-block__label">{{ self.label }}</span>
+        {% if self.context %}
+            <span class="stat-block__context">{{ self.context }}</span>
+        {% endif %}
+    </div>
+    <div class="stat-block__accent" style="background: {{ self.highlight_color|default:'#c0392b' }}"></div>
+</div>
+
+<style>
+    .stat-block {
+        margin: 2.5rem 0;
+        font-family: 'Source Sans 3', sans-serif;
+        background: #fff;
+        border: 1px solid #eaecee;
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+
+    .stat-block__accent {
+        width: 6px;
+        flex-shrink: 0;
+        background: #c0392b;
+    }
+
+    .stat-block__inner {
+        padding: 1.75rem 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .stat-block__figure {
+        font-size: 3.5rem;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: #c0392b;
+    }
+
+    .stat-block__label {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #2c3e50;
+        line-height: 1.4;
+    }
+
+    .stat-block__context {
+        font-size: 0.8rem;
+        color: #95a5a6;
+        font-style: italic;
+        margin-top: 0.2rem;
+    }
+</style>

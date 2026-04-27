@@ -1,0 +1,180 @@
+{% load wagtailcore_tags %}
+
+<div class="chapter-break-block chapter-break-block--{{ self.style }}"
+     {% if self.style == 'numbered' %}data-chapter{% endif %}>
+
+    {% if self.style == 'line' %}
+        <div class="chapter-break-block__line-inner">
+            {% if self.chapter_label or self.title %}
+                <div class="chapter-break-block__text-group">
+                    {% if self.chapter_label %}
+                        <span class="chapter-break-block__label">{{ self.chapter_label }}</span>
+                    {% endif %}
+                    {% if self.title %}
+                        <span class="chapter-break-block__title">{{ self.title }}</span>
+                    {% endif %}
+                </div>
+            {% endif %}
+            <hr class="chapter-break-block__hr">
+        </div>
+
+    {% elif self.style == 'spaced' %}
+        <div class="chapter-break-block__spaced-inner">
+            {% if self.chapter_label %}
+                <span class="chapter-break-block__label">{{ self.chapter_label }}</span>
+            {% endif %}
+            {% if self.title %}
+                <span class="chapter-break-block__title">{{ self.title }}</span>
+            {% endif %}
+        </div>
+
+    {% elif self.style == 'ornamental' %}
+        <div class="chapter-break-block__ornamental-inner">
+            <span class="chapter-break-block__orn-line" aria-hidden="true"></span>
+            <span class="chapter-break-block__orn-symbol" aria-hidden="true">&#10022;</span>
+            <span class="chapter-break-block__orn-line" aria-hidden="true"></span>
+        </div>
+        {% if self.chapter_label or self.title %}
+            <div class="chapter-break-block__text-group chapter-break-block__text-group--centered">
+                {% if self.chapter_label %}
+                    <span class="chapter-break-block__label">{{ self.chapter_label }}</span>
+                {% endif %}
+                {% if self.title %}
+                    <span class="chapter-break-block__title">{{ self.title }}</span>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    {% elif self.style == 'numbered' %}
+        <div class="chapter-break-block__numbered-inner">
+            <span class="chapter-break-block__number-badge">
+                <span class="chapter-break-block__number-counter"></span>
+            </span>
+            <div class="chapter-break-block__text-group">
+                {% if self.chapter_label %}
+                    <span class="chapter-break-block__label">{{ self.chapter_label }}</span>
+                {% endif %}
+                {% if self.title %}
+                    <span class="chapter-break-block__title">{{ self.title }}</span>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    // Auto-increment chapter numbers across all numbered breaks on the page
+    const breaks = document.querySelectorAll('.chapter-break-block--numbered');
+    breaks.forEach((el, i) => {
+        const counter = el.querySelector('.chapter-break-block__number-counter');
+        if (counter) counter.textContent = i + 1;
+    });
+})();
+</script>
+
+<style>
+    .chapter-break-block {
+        font-family: 'Source Sans 3', sans-serif;
+        clear: both; /* clear any floated pull-quotes */
+    }
+
+    /* ── Line ── */
+    .chapter-break-block--line {
+        margin: 3rem 0 2.5rem;
+    }
+    .chapter-break-block--line .chapter-break-block__text-group {
+        margin-bottom: 0.85rem;
+    }
+    .chapter-break-block__hr {
+        border: none;
+        border-top: 1px solid #dde1e4;
+        margin: 0;
+    }
+
+    /* ── Spaced ── */
+    .chapter-break-block--spaced {
+        margin: 4rem 0;
+        text-align: center;
+    }
+
+    /* ── Ornamental ── */
+    .chapter-break-block--ornamental {
+        margin: 3rem 0 2.5rem;
+        text-align: center;
+    }
+    .chapter-break-block__ornamental-inner {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .chapter-break-block__orn-line {
+        flex: 1;
+        display: block;
+        height: 1px;
+        background: #dde1e4;
+    }
+    .chapter-break-block__orn-symbol {
+        font-size: 1.2rem;
+        color: #c0392b;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+    /* ── Numbered ── */
+    .chapter-break-block--numbered {
+        margin: 3rem 0 2rem;
+        border-top: 2px solid #eaecee;
+        padding-top: 1.5rem;
+    }
+    .chapter-break-block__numbered-inner {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+    .chapter-break-block__number-badge {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #c0392b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .chapter-break-block__number-counter {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    /* ── Shared text ── */
+    .chapter-break-block__text-group {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    .chapter-break-block__text-group--centered {
+        align-items: center;
+    }
+
+    .chapter-break-block__label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #c0392b;
+    }
+
+    .chapter-break-block__title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #1a1a2e;
+        line-height: 1.3;
+    }
+
+    .chapter-break-block--spaced .chapter-break-block__title {
+        font-size: 1.5rem;
+    }
+</style>
