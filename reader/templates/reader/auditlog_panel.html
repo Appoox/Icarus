@@ -1,0 +1,51 @@
+{% load tz %}
+<section class="panel recent-activity nice-padding">
+    <h2 class="icon icon-list-ul">Recent Activity (Audit Log)</h2>
+    <table class="listing">
+        <thead>
+            <tr>
+                <th style="width: 150px;">Time</th>
+                <th style="width: 120px;">User</th>
+                <th style="width: 100px;">Action</th>
+                <th>Model & Changes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td class="title">
+                    <div class="title-wrapper">
+                        {% timezone "Asia/Kolkata" %}
+                            {{ entry.timestamp|date:"M d, H:i" }}
+                        {% endtimezone %}
+                    </div>
+                </td>
+                <td>{{ entry.actor|default:"System" }}</td>
+                <td>
+                    {% if entry.action == 0 %}
+                        <span class="status-tag primary">Create</span>
+                    {% elif entry.action == 1 %}
+                        <span class="status-tag secondary">Update</span>
+                    {% elif entry.action == 2 %}
+                        <span class="status-tag fatal">Delete</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ entry.content_type.model|title }}</strong>
+                    <div style="font-size: 0.85em; color: #666; margin-top: 4px;">
+                        {% for field, values in entry.changes_display_dict.items|slice:":3" %}
+                            {{ field|title }}: {{ values.1|truncatechars:30 }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                        {% if entry.changes_display_dict.items|length > 3 %}...{% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No recent activity found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="view-all"><a href="{% url 'auditlog_view' %}" class="button button-small button-secondary">View Full Audit Log</a></p>
+</section>
