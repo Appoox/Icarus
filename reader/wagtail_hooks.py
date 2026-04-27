@@ -5,14 +5,10 @@ from wagtail import hooks
 from wagtail.snippets.views.snippets import SnippetViewSet, IndexView
 from wagtail.admin.widgets import HeaderButton
 from .models import ReaderUser, PaymentDetails
-from wagtail.admin.forms.auth import LoginForm
-from django import forms
-from phonenumber_field.formfields import SplitPhoneNumberField
 from django.urls import path
 from django.shortcuts import render
 from auditlog.models import LogEntry
 from wagtail.admin.menu import MenuItem
-from wagtail.admin.ui.components import Component
 
 class ReaderFilterSet(django_filters.FilterSet):
     sub_status = django_filters.ChoiceFilter(
@@ -119,41 +115,3 @@ def register_auditlog_menu_item():
         order=900,
     )
 
-# ── Dashboard Audit Log Panel ─────────────────────────────────────────
-
-class AuditLogPanel(Component):
-    order = 300
-    template_name = "reader/auditlog_panel.html"
-
-    def get_context_data(self, parent_context):
-        return {
-            "entries": LogEntry.objects.select_related("actor", "content_type").order_by("-timestamp")[:10],
-        }
-
-@hooks.register('construct_homepage_panels')
-def add_audit_log_panel(request, panels):
-    # Remove the default "Recent Activity" or "Recent Edits" panels if they exist
-    # The default activity panel often has an order around 300.
-    # We will remove any panel that looks like it might be the activity panel
-    # and add ours instead.
-    
-    # In recent Wagtail, 'panels' is a list of Component objects.
-    # We can try to identify them by their class name if possible, 
-    # but since it varies by Wagtail version, we'll just add ours 
-    # and maybe filter out others if we can identify them.
-    
-    # Common activity panel class names in Wagtail:
-    # - RecentEditsPanel
-    # - PagesForModerationPanel
-    
-    new_panels = []
-    for panel in panels:
-        # Keep everything except what might be the default activity/edits panels
-        # Usually we want to keep SiteSummaryPanel (order 100)
-        class_name = panel.__class__.__name__
-        if class_name not in ['RecentEditsPanel', 'PagesForModerationPanel']:
-             new_panels.append(panel)
-    
-    # Clear and update the list
-    panels[:] = new_panels
-    panels.append(AuditLogPanel())

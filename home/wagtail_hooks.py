@@ -1,7 +1,6 @@
 from django.urls import reverse
 from wagtail import hooks
 from wagtail.admin.ui.components import Component
-from wagtail.models import Page, PageLogEntry, ModelLogEntry
 from wagtail.log_actions import log
 from articles.models import ArticleIndexPage
 from literati.models import AuthorIndexPage
@@ -9,11 +8,11 @@ from issue.models import IssueIndexPage
 from django.utils.html import format_html, mark_safe
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from auditlog.models import LogEntry
 
 User = get_user_model()
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
-from itertools import chain
 
 class CreatePagePanel(Component):
     order = 50
@@ -81,78 +80,75 @@ class CreatePagePanel(Component):
             mark_safe(buttons_html)
         )
 
-class RecentActivityPanel(Component):
+class AuditLogDashboardPanel(Component):
+    """Dashboard panel showing the 10 most recent django-auditlog entries."""
     order = 400
 
+    # ACTION constants from django-auditlog
+    _ACTION_LABELS = {0: 'Created', 1: 'Updated', 2: 'Deleted'}
+    _ACTION_COLORS = {
+        0: 'var(--w-color-positive)',
+        1: 'var(--w-color-secondary-100)',
+        2: 'var(--w-color-critical)',
+    }
+
     def render_html(self, parent_context=None):
-        request = parent_context.get('request') if parent_context else None
-        if not request:
-            return ""
+        from zoneinfo import ZoneInfo
 
-        # Fetch recent logs from both Page and Model logs
-        page_logs = PageLogEntry.objects.select_related('user', 'page', 'content_type').order_by('-timestamp')[:5]
-        model_logs = ModelLogEntry.objects.select_related('user', 'content_type').order_by('-timestamp')[:5]
+        ist = ZoneInfo('Asia/Kolkata')
+        entries = (
+            LogEntry.objects
+            .select_related('actor', 'content_type')
+            .order_by('-timestamp')[:10]
+        )
 
-        # Combine and sort by timestamp
-        all_logs = sorted(
-            chain(page_logs, model_logs),
-            key=lambda x: x.timestamp,
-            reverse=True
-        )[:10]
+        items_html = ''
+        for entry in entries:
+            ts = entry.timestamp.astimezone(ist).strftime('%b %d, %H:%M')
 
-        items_html = ""
-        for entry in all_logs:
-            timestamp = entry.timestamp.strftime("%b %d, %H:%M")
-            user = entry.user.get_full_name() or str(entry.user.phone_number) if entry.user else "System"
-            
-            # Action formatting
-            action_label = entry.action.replace('wagtail.', '').title()
-            
-            # Object and Action formatting
-            if hasattr(entry, 'page') and entry.page:
-                obj_name = entry.page.title
-                obj_type = entry.page.get_verbose_name()
+            if entry.actor:
+                actor = entry.actor.name or str(entry.actor.phone_number)
             else:
-                # For ModelLogEntry, try to find the actual object or its name
-                model_class = entry.content_type.model_class() if entry.content_type else None
-                obj_type = model_class._meta.verbose_name.title() if model_class else "Object"
-                
-                # Try to get the object representation
-                obj_name = entry.label or f"ID: {entry.object_id}"
-                
-                # Specific refinement for User/Group actions
-                if model_class and model_class.__name__ == 'User':
-                    if entry.action == 'wagtail.edit':
-                         action_label = "Updated profile for"
-                    elif entry.action == 'wagtail.create':
-                        action_label = "Created new account"
-                    elif entry.action == 'wagtail.added_to_group':
-                        group_name = entry.data.get('group', 'a group')
-                        action_label = f"Added to group '{group_name}'"
-                    elif entry.action == 'wagtail.removed_from_group':
-                        group_name = entry.data.get('group', 'a group')
-                        action_label = f"Removed from group '{group_name}'"
-                elif model_class and model_class.__name__ == 'Group':
-                    if entry.action == 'wagtail.edit':
-                         action_label = "Modified settings for"
-                    elif entry.action == 'wagtail.group_membership_changed':
-                        action_label = "Updated members in"
+                actor = 'System'
+
+            action_label = self._ACTION_LABELS.get(entry.action, 'Changed')
+            action_color = self._ACTION_COLORS.get(entry.action, 'inherit')
+            model_name = entry.content_type.model.replace('_', ' ').title() if entry.content_type else 'Object'
+
+            # Build a short summary of changed fields (max 3)
+            changes = entry.changes_display_dict
+            if changes:
+                summary_parts = []
+                for i, (field, vals) in enumerate(changes.items()):
+                    if i >= 3:
+                        summary_parts.append(f'…+{len(changes) - 3} more')
+                        break
+                    new_val = str(vals[1])[:40] if vals[1] not in (None, '') else '(None)'
+                    summary_parts.append(f'{field.replace("_", " ").title()}: {new_val}')
+                changes_html = '<br>'.join(summary_parts)
+            else:
+                changes_html = ''
 
             items_html += f"""
                 <li style="padding: 12px 0; border-bottom: 1px solid var(--w-color-grey-100); display: flex; align-items: flex-start; gap: 12px;">
-                    <div style="flex-shrink: 0; background: var(--w-color-grey-50); padding: 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; color: var(--w-color-grey-600); width: 80px; text-align: center;">
-                        {timestamp}
+                    <div style="flex-shrink: 0; background: var(--w-color-grey-50); padding: 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; color: var(--w-color-grey-600); width: 80px; text-align: center; line-height: 1.3;">
+                        {ts}
                     </div>
-                    <div>
-                        <div style="font-weight: 600;">{user} {action_label.lower()} "{obj_name}"</div>
-                        <div style="font-size: 0.85rem; color: var(--w-color-white-500);">{obj_type}</div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
+                            <span style="font-weight: 600;">{actor}</span>
+                            <span style="color: {action_color}; font-size: 0.8em; font-weight: 600; text-transform: uppercase;">{action_label}</span>
+                            <span style="color: var(--w-color-text-meta); font-size: 0.85em;">{model_name}</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--w-color-text-meta); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{changes_html}</div>
                     </div>
                 </li>
             """
 
         if not items_html:
-            items_html = "<p>No recent activity found.</p>"
+            items_html = '<p style="color: var(--w-color-text-meta);">No activity recorded yet.</p>'
 
+        audit_url = reverse('auditlog_view')
         return format_html(
             """
             <section class="panel summary-panel">
@@ -162,12 +158,13 @@ class RecentActivityPanel(Component):
                         {}
                     </ul>
                     <div style="margin-top: 15px;">
-                        <a href="/admin/reports/site-history/" class="button button-secondary button-small">View Full History</a>
+                        <a href="{}" class="button button-secondary button-small">View Full Audit Log</a>
                     </div>
                 </div>
             </section>
             """,
-            mark_safe(items_html)
+            mark_safe(items_html),
+            audit_url,
         )
 
 @hooks.register('register_log_actions')
@@ -177,8 +174,8 @@ def register_log_actions(actions):
 
 @hooks.register("construct_homepage_panels")
 def add_create_page_panel(request, panels):
-        panels.insert(0, CreatePagePanel())
-        panels.append(RecentActivityPanel())
+    panels.insert(0, CreatePagePanel())
+    panels.append(AuditLogDashboardPanel())
 
 # ── Custom Signals for Granular Logging ────────────────────────────────
 
