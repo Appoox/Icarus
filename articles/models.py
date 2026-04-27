@@ -109,46 +109,397 @@ class VideoBlock(blocks.StructBlock):
         label = 'Video'
 
 
+class CalloutBlock(blocks.StructBlock):
+    """Highlighted callout box — ideal for tips, warnings, or key takeaways."""
+    callout_type = blocks.ChoiceBlock(
+        choices=[
+            ('info',    'ℹ Info — general note or context'),
+            ('tip',     '💡 Tip — helpful suggestion'),
+            ('warning', '⚠ Warning — caution or important caveat'),
+            ('danger',  '🚨 Danger — critical alert'),
+            ('success', '✅ Success — positive outcome or confirmation'),
+            ('quote',   '💬 Highlight — pull-attention excerpt'),
+        ],
+        default='info',
+        label='Box style',
+    )
+    title = blocks.CharBlock(required=False, help_text="Optional bold heading inside the box")
+    content = blocks.RichTextBlock(help_text="Body text of the callout")
+
+    class Meta:
+        icon = 'warning'
+        template = 'blocks/callout_block.html'
+        label = 'Callout Box'
+
+
+class PullQuoteBlock(blocks.StructBlock):
+    """Large, typographically prominent pull-quote for visual emphasis mid-article."""
+    quote = blocks.CharBlock(
+        label='Quote text',
+        help_text="The highlighted sentence or phrase — keep it short and punchy"
+    )
+    attribution = blocks.CharBlock(
+        required=False,
+        label='Attribution',
+        help_text="Who said it (optional)"
+    )
+    alignment = blocks.ChoiceBlock(
+        choices=[
+            ('left',   'Inset left — floats to the left, text wraps right'),
+            ('center', 'Centred — full-width, visually dominant'),
+            ('right',  'Inset right — floats to the right, text wraps left'),
+        ],
+        default='center',
+    )
+
+    class Meta:
+        icon = 'openquote'
+        template = 'blocks/pull_quote_block.html'
+        label = 'Pull Quote'
+
+
+class CodeBlock(blocks.StructBlock):
+    """Syntax-highlighted code snippet with language label."""
+    language = blocks.ChoiceBlock(
+        choices=[
+            ('python',     'Python'),
+            ('javascript', 'JavaScript'),
+            ('typescript', 'TypeScript'),
+            ('html',       'HTML'),
+            ('css',        'CSS'),
+            ('bash',       'Bash / Shell'),
+            ('sql',        'SQL'),
+            ('json',       'JSON'),
+            ('yaml',       'YAML'),
+            ('rust',       'Rust'),
+            ('go',         'Go'),
+            ('java',       'Java'),
+            ('c',          'C'),
+            ('cpp',        'C++'),
+            ('plaintext',  'Plain text (no highlighting)'),
+        ],
+        default='python',
+    )
+    code = blocks.TextBlock(
+        label='Code',
+        help_text="Paste your code here — indentation is preserved"
+    )
+    caption = blocks.CharBlock(
+        required=False,
+        help_text="Optional note shown below the code block (e.g. filename or source)"
+    )
+
+    class Meta:
+        icon = 'code'
+        template = 'blocks/code_block.html'
+        label = 'Code Snippet'
+
+
+class ButtonBlock(blocks.StructBlock):
+    """A call-to-action button — link anywhere, styled to match context."""
+    label = blocks.CharBlock(help_text="Button text, e.g. 'Read more' or 'Subscribe'")
+    url = blocks.URLBlock(help_text="Destination URL")
+    style = blocks.ChoiceBlock(
+        choices=[
+            ('primary',   'Primary — solid filled, most prominent'),
+            ('secondary', 'Secondary — outlined, less prominent'),
+            ('ghost',     'Ghost — minimal, transparent background'),
+            ('danger',    'Danger — red, for destructive or urgent actions'),
+        ],
+        default='primary',
+    )
+    open_in_new_tab = blocks.BooleanBlock(
+        required=False,
+        default=False,
+        label='Open in new tab',
+    )
+    alignment = blocks.ChoiceBlock(
+        choices=[
+            ('left',   'Left'),
+            ('center', 'Centre'),
+            ('right',  'Right'),
+        ],
+        default='left',
+    )
+
+    class Meta:
+        icon = 'link'
+        template = 'blocks/button_block.html'
+        label = 'Button / CTA'
+
+
+class ImageGalleryBlock(blocks.StructBlock):
+    """A responsive image grid — multiple photos displayed together."""
+    images = blocks.ListBlock(
+        ImageChooserBlock(),
+        label='Images',
+        help_text="Add two or more images to display as a gallery"
+    )
+    layout = blocks.ChoiceBlock(
+        choices=[
+            ('2col', '2 columns — side-by-side pairs'),
+            ('3col', '3 columns — compact grid'),
+            ('4col', '4 columns — dense mosaic'),
+            ('masonry', 'Masonry — Pinterest-style variable heights'),
+        ],
+        default='3col',
+        label='Grid layout',
+    )
+    caption = blocks.CharBlock(required=False, help_text="Optional caption for the whole gallery")
+
+    class Meta:
+        icon = 'image'
+        template = 'blocks/image_gallery_block.html'
+        label = 'Image Gallery'
+
+
+class TwoColumnBlock(blocks.StructBlock):
+    """Side-by-side two-column layout — rich text on each side."""
+    left_column = blocks.RichTextBlock(label='Left column')
+    right_column = blocks.RichTextBlock(label='Right column')
+    split = blocks.ChoiceBlock(
+        choices=[
+            ('50-50', 'Equal — 50 / 50'),
+            ('60-40', 'Left-heavy — 60 / 40'),
+            ('40-60', 'Right-heavy — 40 / 60'),
+            ('70-30', 'Left-dominant — 70 / 30'),
+            ('30-70', 'Right-dominant — 30 / 70'),
+        ],
+        default='50-50',
+        label='Column split',
+    )
+
+    class Meta:
+        icon = 'grip'
+        template = 'blocks/two_column_block.html'
+        label = 'Two Columns'
+
+
+class AccordionItemBlock(blocks.StructBlock):
+    """A single collapsible accordion row."""
+    heading = blocks.CharBlock(label='Question / heading')
+    content = blocks.RichTextBlock(label='Answer / body')
+
+    class Meta:
+        icon = 'collapse-down'
+        label = 'Accordion item'
+
+
+class AccordionBlock(blocks.StructBlock):
+    """A set of collapsible FAQ-style accordion sections."""
+    title = blocks.CharBlock(
+        required=False,
+        help_text="Optional heading above the accordion, e.g. 'Frequently asked questions'"
+    )
+    items = blocks.ListBlock(AccordionItemBlock(), label='Items')
+    allow_multiple_open = blocks.BooleanBlock(
+        required=False,
+        default=False,
+        label='Allow multiple sections open at once',
+    )
+
+    class Meta:
+        icon = 'list-ul'
+        template = 'blocks/accordion_block.html'
+        label = 'Accordion / FAQ'
+
+
+class TimelineItemBlock(blocks.StructBlock):
+    """One entry in a chronological timeline."""
+    date = blocks.CharBlock(
+        label='Date / period',
+        help_text="e.g. 'March 2024', '1947', or 'Day 3'"
+    )
+    heading = blocks.CharBlock(label='Event heading')
+    description = blocks.RichTextBlock(required=False, label='Details')
+    image = ImageChooserBlock(required=False, label='Optional image')
+
+    class Meta:
+        icon = 'time'
+        label = 'Timeline entry'
+
+
+class TimelineBlock(blocks.StructBlock):
+    """A vertical chronological timeline — good for history, biography, or project milestones."""
+    title = blocks.CharBlock(required=False, help_text="Optional heading above the timeline")
+    entries = blocks.ListBlock(TimelineItemBlock(), label='Timeline entries')
+    direction = blocks.ChoiceBlock(
+        choices=[
+            ('vertical',    'Vertical — stacked top-to-bottom'),
+            ('alternating', 'Alternating — entries flip left/right'),
+        ],
+        default='vertical',
+    )
+
+    class Meta:
+        icon = 'time'
+        template = 'blocks/timeline_block.html'
+        label = 'Timeline'
+
+
+class StatBlock(blocks.StructBlock):
+    """A bold, eye-catching statistic — number, label, and optional context."""
+    statistic = blocks.CharBlock(
+        label='Figure',
+        help_text="The number or value, e.g. '₹4.2 Cr', '73%', '1 in 5'"
+    )
+    label = blocks.CharBlock(
+        label='Label',
+        help_text="What the number represents, e.g. 'displaced families'"
+    )
+    context = blocks.CharBlock(
+        required=False,
+        label='Context note',
+        help_text="Small supporting note, e.g. 'Source: UNHCR 2024'"
+    )
+    highlight_color = ColorPickerBlock(
+        required=False,
+        default="#000000",
+        help_text="Accent colour for the figure"
+    )
+
+    class Meta:
+        icon = 'order'
+        template = 'blocks/stat_block.html'
+        label = 'Statistic Highlight'
+
+
+class TestimonialBlock(blocks.StructBlock):
+    """A person's testimonial or endorsement — quote, name, role, and optional photo."""
+    quote = blocks.RichTextBlock(
+        label='Quote',
+        help_text="What the person said"
+    )
+    name = blocks.CharBlock(label='Name')
+    role = blocks.CharBlock(
+        required=False,
+        label='Title / role',
+        help_text="e.g. 'District Collector, Wayanad'"
+    )
+    photo = ImageChooserBlock(required=False, label='Photo')
+    style = blocks.ChoiceBlock(
+        choices=[
+            ('card',    'Card — framed box with shadow'),
+            ('inline',  'Inline — minimal, runs with the body text'),
+            ('feature', 'Feature — large, full-bleed highlight'),
+        ],
+        default='card',
+    )
+
+    class Meta:
+        icon = 'group'
+        template = 'blocks/testimonial_block.html'
+        label = 'Testimonial'
+
+
+class ChapterBreakBlock(blocks.StructBlock):
+    """A visual section divider — optionally labelled, to break long articles into chapters."""
+    chapter_label = blocks.CharBlock(
+        required=False,
+        label='Chapter label',
+        help_text="Optional short label above the title, e.g. 'Part II' or 'Chapter 3'"
+    )
+    title = blocks.CharBlock(
+        required=False,
+        label='Chapter title',
+        help_text="Optional heading for the new section"
+    )
+    style = blocks.ChoiceBlock(
+        choices=[
+            ('line',      'Line — a simple horizontal rule'),
+            ('spaced',    'Spaced — extra white space, no decoration'),
+            ('ornamental','Ornamental — decorative divider symbol'),
+            ('numbered',  'Numbered — auto-increments chapter number'),
+        ],
+        default='line',
+    )
+
+    class Meta:
+        icon = 'horizontalrule'
+        template = 'blocks/chapter_break_block.html'
+        label = 'Chapter Break'
+
+
 # ── Reusable StreamField Blocks ─────────────────────────────────────────
 
 STREAM_BLOCKS = [
-    ('audio',      AudioBlock()),
-    ('video',      VideoBlock()),
-    ('heading',    blocks.RichTextBlock(form_classname="full title")),
-    ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
-    ('paragraph',  blocks.RichTextBlock()),
-    ('image',      ImageBlock()),
-    ('blockquote', BlockQuoteBlock()),
-    ('embed',      EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
-    ('document',   DocumentChooserBlock()),
-    ('table',      TableBlock()),
-    ('raw_html',   blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
-    ('text',       blocks.TextBlock()),
-    ('email',      blocks.EmailBlock()),
-    ('url',        blocks.URLBlock()),
-    ('boolean',    blocks.BooleanBlock(required=False)),
-    ('integer',    blocks.IntegerBlock()),
-    ('float',      blocks.FloatBlock()),
-    ('decimal',    blocks.DecimalBlock()),
-    ('date',       blocks.DateBlock()),
-    ('time',       blocks.TimeBlock()),
-    ('datetime',   blocks.DateTimeBlock()),
-    ('rich_text',  blocks.RichTextBlock(label="Rich Text (Full)")),
-    ('choice',     blocks.ChoiceBlock(choices=[
-        ('left',   'Left'),
-        ('center', 'Centre'),
-        ('right',  'Right'),
-    ], help_text="Alignment choice")),
-    ('page',       blocks.PageChooserBlock()),
-    ('static',     blocks.StaticBlock(
-        admin_text="This is a placeholder block — content is defined in the template.",
-        label="Divider / Separator",
-    )),
-    ('list',       blocks.ListBlock(blocks.CharBlock(), label="List of items")),
-    ('stream',     blocks.StreamBlock([
-        ('text',  blocks.CharBlock()),
-        ('image', ImageChooserBlock()),
-    ], label="Nested Stream")),
+
+    # ── Text & Headings ───────────────────────────────────────────────────
+    ('heading',         blocks.RichTextBlock(
+                            form_classname="full title",
+                            label="Heading (rich text)",
+                            help_text="A plain rich-text heading"
+                        )),
+    ('colored_heading', ColoredHeadingBlock()),
+    ('paragraph',       blocks.RichTextBlock(label="Paragraph")),
+    ('rich_text',       blocks.RichTextBlock(label="Rich Text (Full)")),
+    ('text',            blocks.TextBlock(label="Plain Text")),
+    ('pull_quote',      PullQuoteBlock()),
+    ('blockquote',      BlockQuoteBlock()),
+    ('code',            CodeBlock()),
+    ('chapter_break',   ChapterBreakBlock()),
+
+    # ── Media ─────────────────────────────────────────────────────────────
+    ('image',           ImageBlock()),
+    ('image_gallery',   ImageGalleryBlock()),
+    ('audio',           AudioBlock()),
+    ('video',           VideoBlock()),
+    ('embed',           EmbedBlock(
+                            help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud, Twitter/X)"
+                        )),
+    ('document',        DocumentChooserBlock(
+                            help_text="Attach a downloadable file (PDF, Word doc, etc.)"
+                        )),
+
+    # ── Layout & Structure ────────────────────────────────────────────────
+    ('two_columns',     TwoColumnBlock()),
+    ('table',           TableBlock()),
+    ('accordion',       AccordionBlock()),
+    ('timeline',        TimelineBlock()),
+    ('static',          blocks.StaticBlock(
+                            admin_text="Divider / Separator — renders a horizontal rule in the template.",
+                            label="Divider / Separator",
+                        )),
+
+    # ── Callouts & Highlights ─────────────────────────────────────────────
+    ('callout',         CalloutBlock()),
+    ('stat',            StatBlock()),
+    ('testimonial',     TestimonialBlock()),
+    ('button',          ButtonBlock()),
+
+    # ── Choosers ──────────────────────────────────────────────────────────
+    ('page',            blocks.PageChooserBlock(
+                            help_text="Link to another page on this site"
+                        )),
+
+    # ── Raw / Advanced ────────────────────────────────────────────────────
+    ('raw_html',        blocks.RawHTMLBlock(
+                            help_text="⚠ Use with caution: raw HTML is not sanitised"
+                        )),
+
+    # ── Primitive / Data ──────────────────────────────────────────────────
+    ('email',           blocks.EmailBlock()),
+    ('url',             blocks.URLBlock()),
+    ('integer',         blocks.IntegerBlock()),
+    ('float',           blocks.FloatBlock()),
+    ('decimal',         blocks.DecimalBlock()),
+    ('boolean',         blocks.BooleanBlock(required=False)),
+    ('date',            blocks.DateBlock()),
+    ('time',            blocks.TimeBlock()),
+    ('datetime',        blocks.DateTimeBlock()),
+    ('choice',          blocks.ChoiceBlock(choices=[
+                            ('left',   'Left'),
+                            ('center', 'Centre'),
+                            ('right',  'Right'),
+                        ], help_text="Alignment choice")),
+    ('list',            blocks.ListBlock(
+                            blocks.CharBlock(),
+                            label="List of items"
+                        )),
+    ('stream',          blocks.StreamBlock([
+                            ('text',  blocks.CharBlock()),
+                            ('image', ImageChooserBlock()),
+                        ], label="Nested Stream")),
 ]
 
 class ArticleForm(WagtailAdminPageForm):
@@ -363,10 +714,7 @@ class Article(Page, HitCountMixin):
 
         # 1. Reader Profile Fetch
         if request.user.is_authenticated:
-            try:
-                reader = request.user.reader
-            except Exception:
-                reader = None
+            reader = request.user
 
         # 2. Admin Exemption
         if request.user.is_superuser or request.user.is_staff:

@@ -1,0 +1,195 @@
+{% load wagtailimages_tags %}
+
+<div class="timeline-block timeline-block--{{ self.direction }}">
+    {% if self.title %}
+        <h3 class="timeline-block__title">{{ self.title }}</h3>
+    {% endif %}
+    <div class="timeline-block__track">
+        {% for entry in self.entries %}
+            <div class="timeline-block__entry">
+                <div class="timeline-block__marker">
+                    <span class="timeline-block__dot"></span>
+                </div>
+                <div class="timeline-block__body">
+                    <span class="timeline-block__date">{{ entry.date }}</span>
+                    <h4 class="timeline-block__heading">{{ entry.heading }}</h4>
+                    {% if entry.description %}
+                        <div class="timeline-block__description">{{ entry.description }}</div>
+                    {% endif %}
+                    {% if entry.image %}
+                        <div class="timeline-block__image-wrap">
+                            {% image entry.image width-600 class="timeline-block__image" %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .timeline-block {
+        margin: 2.5rem 0;
+        font-family: 'Source Sans 3', sans-serif;
+    }
+
+    .timeline-block__title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin: 0 0 2rem;
+    }
+
+    /* ── Vertical layout ── */
+    .timeline-block--vertical .timeline-block__track {
+        position: relative;
+        padding-left: 2.25rem;
+    }
+
+    .timeline-block--vertical .timeline-block__track::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        bottom: 0;
+        width: 2px;
+        background: #eaecee;
+    }
+
+    .timeline-block--vertical .timeline-block__entry {
+        position: relative;
+        display: flex;
+        gap: 1.25rem;
+        padding-bottom: 2.25rem;
+    }
+
+    .timeline-block--vertical .timeline-block__entry:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-block--vertical .timeline-block__marker {
+        position: absolute;
+        left: -2.25rem;
+        top: 2px;
+    }
+
+    /* ── Alternating layout ── */
+    .timeline-block--alternating .timeline-block__track {
+        position: relative;
+    }
+
+    .timeline-block--alternating .timeline-block__track::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 2px;
+        transform: translateX(-50%);
+        background: #eaecee;
+    }
+
+    .timeline-block--alternating .timeline-block__entry {
+        display: flex;
+        justify-content: flex-end;
+        width: 50%;
+        padding: 0 2.5rem 2.25rem 0;
+        position: relative;
+    }
+
+    .timeline-block--alternating .timeline-block__entry:nth-child(even) {
+        justify-content: flex-start;
+        align-self: flex-end;
+        margin-left: 50%;
+        padding: 0 0 2.25rem 2.5rem;
+    }
+
+    .timeline-block--alternating .timeline-block__marker {
+        position: absolute;
+        right: -10px;
+        top: 2px;
+    }
+
+    .timeline-block--alternating .timeline-block__entry:nth-child(even) .timeline-block__marker {
+        right: auto;
+        left: -10px;
+    }
+
+    /* ── Shared dot ── */
+    .timeline-block__dot {
+        display: block;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #c0392b;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #c0392b;
+        flex-shrink: 0;
+    }
+
+    /* ── Body ── */
+    .timeline-block__body {
+        background: #fff;
+        border: 1px solid #eaecee;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        flex: 1;
+        min-width: 0;
+    }
+
+    .timeline-block__date {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #c0392b;
+        margin-bottom: 0.35rem;
+    }
+
+    .timeline-block__heading {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin: 0 0 0.5rem;
+    }
+
+    .timeline-block__description {
+        font-size: 0.95rem;
+        line-height: 1.65;
+        color: #555;
+    }
+    .timeline-block__description p:first-child { margin-top: 0; }
+    .timeline-block__description p:last-child  { margin-bottom: 0; }
+
+    .timeline-block__image-wrap {
+        margin-top: 0.75rem;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .timeline-block__image {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    @media (max-width: 640px) {
+        .timeline-block--alternating .timeline-block__track::before {
+            left: 9px;
+        }
+        .timeline-block--alternating .timeline-block__entry,
+        .timeline-block--alternating .timeline-block__entry:nth-child(even) {
+            width: 100%;
+            margin-left: 0;
+            padding: 0 0 2rem 2.25rem;
+            justify-content: flex-start;
+        }
+        .timeline-block--alternating .timeline-block__marker,
+        .timeline-block--alternating .timeline-block__entry:nth-child(even) .timeline-block__marker {
+            left: 0;
+            right: auto;
+        }
+    }
+</style>
