@@ -1,0 +1,104 @@
+{% load wagtailcore_tags %}
+
+<div class="code-block" id="code-block-{{ block.id|default:forloop.counter0 }}">
+    <div class="code-block__header">
+        <span class="code-block__lang">{{ self.language }}</span>
+        <button class="code-block__copy" onclick="copyCode('{{ block.id|default:forloop.counter0 }}')">
+            <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            <span>Copy</span>
+        </button>
+    </div>
+    <pre class="code-block__pre"><code class="code-block__code language-{{ self.language }}" id="code-{{ block.id|default:forloop.counter0 }}">{{ self.code }}</code></pre>
+    {% if self.caption %}
+        <div class="code-block__caption">{{ self.caption }}</div>
+    {% endif %}
+</div>
+
+<script>
+function copyCode(id) {
+    const code = document.getElementById('code-' + id);
+    const btn = document.querySelector('#code-block-' + id + ' .code-block__copy span');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+}
+</script>
+
+<style>
+    .code-block {
+        margin: 2rem 0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #1e1e2e;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    }
+
+    .code-block__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 1.25rem;
+        background: #16162a;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .code-block__lang {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #c0392b;
+        font-family: 'Source Sans 3', sans-serif;
+    }
+
+    .code-block__copy {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 6px;
+        color: #a0a0b8;
+        font-size: 0.75rem;
+        font-family: 'Source Sans 3', sans-serif;
+        padding: 4px 10px;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .code-block__copy:hover {
+        background: rgba(255,255,255,0.13);
+        color: #fff;
+    }
+
+    .code-block__copy svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+    }
+
+    .code-block__pre {
+        margin: 0;
+        padding: 1.4rem 1.5rem;
+        overflow-x: auto;
+    }
+
+    .code-block__code {
+        color: #cdd6f4;
+        font-size: 0.9rem;
+        line-height: 1.7;
+        white-space: pre;
+    }
+
+    .code-block__caption {
+        padding: 0.6rem 1.25rem;
+        background: #16162a;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.8rem;
+        color: #7f8c8d;
+        font-style: italic;
+    }
+</style>
