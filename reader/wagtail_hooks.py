@@ -5,9 +5,10 @@ from wagtail import hooks
 from wagtail.snippets.views.snippets import SnippetViewSet, IndexView
 from wagtail.admin.widgets import HeaderButton
 from .models import ReaderUser, PaymentDetails
-from wagtail.admin.forms.auth import LoginForm
-from django import forms
-from phonenumber_field.formfields import SplitPhoneNumberField
+from django.urls import path
+from django.shortcuts import render
+from auditlog.models import LogEntry
+from wagtail.admin.menu import MenuItem
 
 class ReaderFilterSet(django_filters.FilterSet):
     sub_status = django_filters.ChoiceFilter(
@@ -89,3 +90,28 @@ class CustomUserCreationForm(UserCreationForm):
 def construct_user_edit_form(form, user, **kwargs):
     # This hook can be used to further customize the form if needed
     pass
+
+# ── Audit Log Admin View ──────────────────────────────────────────────
+def auditlog_view(request):
+    entries = (
+        LogEntry.objects
+        .select_related("actor", "content_type")
+        .order_by("-timestamp")[:200]
+    )
+    return render(request, "reader/auditlog_admin.html", {"entries": entries})
+
+@hooks.register("register_admin_urls")
+def register_auditlog_url():
+    return [
+        path("auditlog/", auditlog_view, name="auditlog_view"),
+    ]
+
+@hooks.register("register_admin_menu_item")
+def register_auditlog_menu_item():
+    return MenuItem(
+        "Audit Log",
+        reverse("auditlog_view"),
+        icon_name="list-ul",
+        order=900,
+    )
+
