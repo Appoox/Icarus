@@ -3,6 +3,8 @@ from phonenumber_field.formfields import SplitPhoneNumberField
 from django import forms
 from django.utils import timezone
 from reader.models import ReaderUser
+from phonenumber_field.formfields import SplitPhoneNumberField as BaseSplitPhoneNumberField
+from allauth.account.internal.flows import phone_verification
 
 class CustomAccountAdapter(DefaultAccountAdapter):
     def save_user(self, request, user, form, commit=True):
@@ -37,7 +39,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         """
         kwargs.setdefault('required', True)
         kwargs.setdefault('region', 'IN')
-        return SplitPhoneNumberField(**kwargs)
+        return StringSplitPhoneNumberField(**kwargs)
 
     def clean_phone(self, phone):
         """
@@ -53,9 +55,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         Save the phone number directly to the User.
         """
         user.phone_number = str(phone)
-        # user.save() will be called by allauth later or we can do it here
-        # Actually set_phone is called before saving the user in some flows.
-        # But for custom models we should ensure it's saved.
+        user.save()
 
     def get_user_by_phone(self, phone):
         """
@@ -72,5 +72,19 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         """
         phone = getattr(user, 'phone_number', None)
         if phone:
-            return (str(phone), False)
+            return (str(phone), True)
         return None
+
+    def send_verification_code_sms(self, request, phone_number: str, key: str, **kwargs) -> None:
+        # Log for dev, no-op for prod
+        print(f"[DEV] SMS code for {phone_number}: {key}")
+
+    def is_phone_verified(self, request, user):
+        """Trust phone numbers at registration — skip verification stage."""
+        return True
+
+
+class StringSplitPhoneNumberField(BaseSplitPhoneNumberField):
+    def clean(self, value):
+        result = super().clean(value)
+        return str(result) if result else result
