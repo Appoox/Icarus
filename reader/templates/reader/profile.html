@@ -295,43 +295,74 @@
     </div>
     {% endif %}
 
-    {# ── Personal Details ── #}
-    <div class="profile-section">
-        <div class="profile-section__header">
-            <h2>Personal Details</h2>
-            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
-        </div>
-        <div class="address-block">
-            {% if reader.phone_number %}<strong>Phone:</strong> {{ reader.phone_number }}<br>{% endif %}
-            {% if reader.gender %}<strong>Gender:</strong> {{ reader.get_gender_display }}{% if reader.gender == 'മറ്റൊന്ന്' and reader.gender_other %} ({{ reader.gender_other }}){% endif %}<br>{% endif %}
-            {% if reader.date_of_birth %}<strong>Birthday:</strong> {{ reader.date_of_birth|date:"F j, Y" }}<br>{% endif %}
-        </div>
-    </div>
+            {# ── Personal Details ── #}
+        <div class="profile-section">
+            <div class="profile-section__header">
+                <h2>Personal Details</h2>
+                <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+            </div>
 
-    {# ── Address ── #}
-    <div class="profile-section">
-        <div class="profile-section__header">
-            <h2>Address</h2>
-            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+            {# Profile image + bio #}
+            <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 16px;">
+                {% if reader.profile_image %}
+                {% image reader.profile_image fill-80x80 as img %}
+                <img src="{{ img.url }}" alt="{{ reader.name }}"
+                    style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #d4d0c8;">
+                {% else %}
+                <div style="width:80px;height:80px;border-radius:50%;background:#e8e8e8;
+                            display:flex;align-items:center;justify-content:center;
+                            font-size:28px;color:#6b6659;flex-shrink:0;">
+                    {{ reader.name|slice:":1"|upper }}
+                </div>
+                {% endif %}
+                {% if reader.bio %}
+                <p style="font-family:'Source Sans 3',sans-serif;font-size:14px;
+                        color:#1a1612;line-height:1.6;margin:0;">{{ reader.bio }}</p>
+                {% endif %}
+            </div>
+
+            <div class="address-block">
+                {% if reader.phone_number %}
+                    <strong>Phone:</strong> {{ reader.phone_number }}<br>
+                {% endif %}
+                {% if reader.email %}
+                    <strong>Email:</strong> {{ reader.email }}<br>
+                {% endif %}
+                {% if reader.gender %}
+                    <strong>Gender:</strong> {{ reader.get_gender_display }}
+                    {% if reader.gender == 'മറ്റൊന്ന്' and reader.gender_other %}
+                        ({{ reader.gender_other }})
+                    {% endif %}<br>
+                {% endif %}
+                {% if reader.date_of_birth %}
+                    <strong>Birthday:</strong> {{ reader.date_of_birth|date:"F j, Y" }}<br>
+                {% endif %}
+                <strong>Newsletter:</strong>
+                {% if reader.newsletter_opt_in %}
+                    ✅ Subscribed
+                {% else %}
+                    Not subscribed
+                {% endif %}<br>
+            </div>
         </div>
-        {% if reader.address_line_1 or reader.city or reader.state or reader.pincode %}
-        <div class="address-block">
-            {% if reader.address_line_1 %}{{ reader.address_line_1 }}<br>{% endif %}
-            {% if reader.address_line_2 %}{{ reader.address_line_2 }}<br>{% endif %}
-            {% if reader.city or reader.post_office %}
-                {% if reader.post_office %}{{ reader.post_office }}{% if reader.city %}, {% endif %}{% endif %}
-                {% if reader.city %}{{ reader.city }}{% endif %}<br>
-            {% endif %}
-            {% if reader.district or reader.state %}
-                {% if reader.district %}{{ reader.district }}{% if reader.state %}, {% endif %}{% endif %}
-                {% if reader.state %}{{ reader.state }}{% endif %}<br>
-            {% endif %}
-            {% if reader.pincode %}<strong>Pincode:</strong> {{ reader.pincode }}{% endif %}
+
+        {# ── Print Subscription ── #}
+        {% if reader.is_print_subscriber %}
+        <div class="profile-section">
+            <div class="profile-section__header">
+                <h2>Print Subscription</h2>
+            </div>
+            <div class="address-block">
+                <strong>Delivery Status:</strong> {{ reader.get_print_delivery_status_display }}<br>
+                {% if reader.print_expiry_date %}
+                    <strong>Print Expires:</strong> {{ reader.print_expiry_date|date:"F j, Y" }}<br>
+                {% endif %}
+                {% if reader.delivery_notes %}
+                    <strong>Delivery Notes:</strong> {{ reader.delivery_notes }}<br>
+                {% endif %}
+            </div>
         </div>
-        {% else %}
-        <p class="empty-state">No address added yet. <a href="{% url 'edit_profile' %}" class="link-edit">Add one</a></p>
         {% endif %}
-    </div>
 
     {# ── Added By (Care Of) ── #}
     {% if reader.care_of_name or reader.care_of_number %}
