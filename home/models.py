@@ -152,11 +152,19 @@ class HomePage(Page):
         
         # Avoid circular imports by importing inside the method
         from articles.models import Article, ArticleIndexPage
-        from issue.models import Issue, Topic
+        from issue.models import Issue, Topic, IssueIndexPage
 
         # 1. Current Issue + its articles
         current_issue = Issue.objects.live().order_by('-date_of_publishing').first()
         context['current_issue'] = current_issue
+
+        # 1.1 Past Issues (excluding the current one)
+        past_issues = Issue.objects.live()
+        if current_issue:
+            past_issues = past_issues.exclude(id=current_issue.id)
+        
+        context['past_issues'] = past_issues.order_by('-date_of_publishing')[:4]
+        context['issue_index_page'] = IssueIndexPage.objects.live().first()
 
         issue_article_ids = []
         if current_issue:

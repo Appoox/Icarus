@@ -6,35 +6,46 @@
 {% endblock %}
 
 {% block content %}
-<div class="issue-container">
-    <header class="issue-feed-header">
-        <h1>{{ page.title }}</h1>
-        {% if page.intro %}
-        <div class="intro">{{ page.intro|richtext }}</div>
-        {% endif %}
-    </header>
+<div class="sg-page">
+    <div class="issue-container">
+        <header class="issue-feed-header">
+            <h1 class="archive-title">{{ page.title }}</h1>
+            <span class="archive-rule"></span>
+            {% if page.intro %}
+            <div class="intro">{{ page.intro|richtext }}</div>
+            {% endif %}
+        </header>
 
-    <div class="issue-feed">
-        {% for issue in issues %}
-        <article class="feed-item">
-            <div class="feed-content">
-                <span class="meta-date">{{ issue.date_of_publishing|date:"F j, Y" }}</span>
-                {% if issue.volume %}
-                <span class="meta-volume">{% if issue.volume.title %}{{ issue.volume.title }}{% else %}Vol. 
-                    {{ issue.volume.number }}{% endif %}{% if issue.issue_number %}, No. {{ issue.issue_number }}
-                    {% endif %}</span>
+        <div class="issue-archive-grid">
+            {% for issue in issues %}
+            <article class="issue-archive-card">
+                {% if issue.cover_image %}
+                <a href="{{ issue.url }}" class="issue-archive-card__image-wrap">
+                    {% image issue.cover_image fill-400x560 as cover_img %}
+                    <img src="{{ cover_img.url }}" alt="{{ issue.title }}">
+                </a>
                 {% endif %}
-                <h2><a href="{{ issue.url }}">{{ issue.title }}</a></h2>
-                {% if issue.topic %}
-                <div class="meta-topic">Topic: {{ issue.topic.name }}</div>
-                {% endif %}
-                <p class="excerpt">
-                    Covering articles published on {{ issue.date_of_publishing|date:"Y-m-d" }}.
-                </p>
-                <a href="{{ issue.url }}" class="view-issue">Explore Issue →</a>
-            </div>
-        </article>
-        {% endfor %}
+                
+                <div class="issue-archive-card__content">
+                    <div class="issue-archive-card__meta">
+                        <span class="meta-date">{{ issue.date_of_publishing|date:"F Y" }}</span>
+                        {% if issue.volume %}
+                        <span class="meta-volume">Vol. {{ issue.volume.number }} / No. {{ issue.issue_number }}</span>
+                        {% endif %}
+                    </div>
+                    <h2 class="issue-archive-card__title">
+                        <a href="{{ issue.url }}">{{ issue.title }}</a>
+                    </h2>
+                    {% if issue.topic %}
+                    <span class="issue-archive-card__topic" style="background-color: {{ issue.topic.color|default:'#6b6659' }};">
+                        {{ issue.topic.name }}
+                    </span>
+                    {% endif %}
+                    <a href="{{ issue.url }}" class="issue-archive-card__cta">ലക്കം കാണുക</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}
