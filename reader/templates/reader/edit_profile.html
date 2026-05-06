@@ -4,190 +4,8 @@
 {% block title %}Edit Profile{% endblock %}
 
 {% block extra_css %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Playfair+Display:wght@700;900&display=swap"
-    rel="stylesheet">
-
-<style>
-    .auth-page {
-        max-width: 480px;
-        margin: 60px auto;
-        padding: 0 24px 80px;
-    }
-
-    .auth-page h1 {
-        font-family: 'Playfair Display', Georgia, serif;
-        font-size: 32px;
-        font-weight: 900;
-        color: #0b1f3a;
-        margin-bottom: 8px;
-        text-align: center;
-    }
-
-    .auth-page .subtitle {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 15px;
-        color: #6b6659;
-        text-align: center;
-        margin-bottom: 32px;
-    }
-
-    .auth-form {
-        background: #fafaf8;
-        border: 1px solid #d4d0c8;
-        border-radius: 8px;
-        padding: 32px;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-group label {
-        display: block;
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #6b6659;
-        margin-bottom: 6px;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 10px 14px;
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 15px;
-        border: 1px solid #d4d0c8;
-        border-radius: 4px;
-        background: #fff;
-        color: #1a1612;
-        transition: border-color 0.15s;
-    }
-
-    .form-input:focus {
-        outline: none;
-        border-color: #0b1f3a;
-        box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.08);
-    }
-
-    .form-errors {
-        color: #c8102e;
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 13px;
-        margin-top: 4px;
-    }
-
-    .form-errors ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .auth-submit {
-        width: 100%;
-        padding: 12px;
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 14px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        background: #c8102e;
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.15s;
-        margin-top: 8px;
-    }
-
-    .auth-submit:hover {
-        background: #a00d24;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
-    }
-
-    .auth-footer {
-        text-align: center;
-        margin-top: 20px;
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 14px;
-        color: #6b6659;
-    }
-
-    .auth-footer a {
-        color: #c8102e;
-        font-weight: 600;
-        text-decoration: none;
-    }
-
-    .auth-footer a:hover {
-        text-decoration: underline;
-    }
-
-    /* ── Address fieldset ── */
-    .form-fieldset {
-        border: 1px solid #d4d0c8;
-        border-radius: 6px;
-        padding: 20px 20px 4px;
-        margin-bottom: 20px;
-    }
-
-    .form-fieldset__legend {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #6b6659;
-        padding: 0 8px;
-    }
-
-    .form-row {
-        display: flex;
-        gap: 16px;
-    }
-
-    .form-group--half {
-        flex: 1;
-        min-width: 0;
-    }
-
-    select.form-input {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6659' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        padding-right: 32px;
-    }
-
-    /* ── Phone Widget ── */
-    .phone-widget {
-        display: flex;
-        gap: 8px;
-    }
-    
-    #id_phone_number_0, #id_care_of_number_0 {
-        width: 150px !important;
-        flex-shrink: 0;
-        /* Reset custom arrow for the small select */
-        appearance: auto !important;
-        background-image: none !important;
-        padding-right: 8px !important;
-    }
-    #id_phone_number_1, #id_care_of_number_1 {
-        flex: 1;
-    }
-
-    @media (max-width: 480px) {
-        #id_phone_number_0, #id_care_of_number_0 {
-            width: 120px !important;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/reader.css' %}">
+{% endblock %}
 {% endblock %}
 
 {% block content %}
@@ -231,7 +49,7 @@
             </div>
         </div>
 
-        <div class="form-group" id="gender-other-group" style="display: none;">
+        <div class="form-group hidden" id="gender-other-group">
             <label for="id_gender_other">Other Gender</label>
             {{ form.gender_other }}
             {% if form.gender_other.errors %}<div class="form-errors">{{ form.gender_other.errors }}</div>{% endif %}
@@ -279,7 +97,7 @@
                 </div>
             </div>
 
-            <div class="form-group" style="max-width: 200px;">
+            <div class="form-group form-group--small">
                 <label for="id_pincode">Pincode</label>
                 {{ form.pincode }}
                 {% if form.pincode.errors %}<div class="form-errors">{{ form.pincode.errors }}</div>{% endif %}
@@ -332,22 +150,6 @@
     </p>
 </div>
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const genderSelect = document.querySelector('#id_gender');
-        const otherGroup = document.querySelector('#gender-other-group');
-
-        function toggleOtherGender() {
-            if (genderSelect.value === 'മറ്റൊന്ന്') {
-                otherGroup.style.display = 'block';
-            } else {
-                otherGroup.style.display = 'none';
-            }
-        }
-
-        genderSelect.addEventListener('change', toggleOtherGender);
-        toggleOtherGender(); // Initial state
-    });
-</script>
+<script src="{% static 'js/reader.js' %}" defer></script>
 {% endblock %}
 {% endblock %}

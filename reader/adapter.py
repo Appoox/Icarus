@@ -9,7 +9,7 @@ from allauth.account.internal.flows import phone_verification
 class CustomAccountAdapter(DefaultAccountAdapter):
     def save_user(self, request, user, form, commit=True):
         """
-        Extend user saving to capture registration metadata.
+        Extend user saving to capture registration metadata and ensure phone is verified.
         """
         user = super().save_user(request, user, form, commit=False)
         
@@ -19,6 +19,10 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         user.terms_version = ReaderUser.CURRENT_TERMS_VERSION
         user.accepted_privacy_at = timezone.now()
         user.privacy_version = ReaderUser.CURRENT_PRIVACY_VERSION
+        
+        # Ensure phone is saved directly (this handles the phone field in the form)
+        if 'phone' in form.cleaned_data:
+            self.set_phone(user, form.cleaned_data['phone'], verified=True)
         
         if commit:
             user.save()

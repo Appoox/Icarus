@@ -2,766 +2,8 @@
 {% load wagtailcore_tags wagtailimages_tags wagtailembeds_tags static %}
 
 {% block extra_css %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-  href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Sans+3:wght@300;400;600;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap"
-  rel="stylesheet">
-
-<style>
-  /* ─────────────────────────────────────────────
-   Design Tokens
-───────────────────────────────────────────── */
-  :root {
-    --red: #c0392b;
-    --red-dark: #922b21;
-    --black: #111111;
-    --gray-dark: #333333;
-    --gray-mid: #666666;
-    --gray-light: #e8e8e8;
-    --gray-bg: #f7f7f5;
-    --white: #ffffff;
-
-    --font-display: 'Domine', Georgia, serif;
-    --font-body: 'Source Serif 4', Georgia, serif;
-    --font-ui: 'Source Sans 3', Helvetica, sans-serif;
-
-    --max-width: 1200px;
-    /* --article-col: 680px; */
-  }
-
-  /* ─────────────────────────────────────────────
-   Reset / Base
-───────────────────────────────────────────── */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    font-family: var(--font-body);
-    font-size: 18px;
-    color: var(--black);
-    background: var(--white);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  a:hover {
-    color: var(--red);  
-  }
-
-  /* ─────────────────────────────────────────────
-   Outer Container
-───────────────────────────────────────────── */
-  .article-container {
-    width: 100%;
-    max-width: var(--max-width);
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
-  /* ─────────────────────────────────────────────
-   Article Header
-───────────────────────────────────────────── */
-  .article-header {
-    max-width: var(--article-col);
-    margin: 48px auto 32px;
-  }
-
-  /* Line 1: Topic kicker → Title stacked below */
-  .header-top {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .article-header h1 {
-    font-family: var(--font-display);
-    font-size: clamp(32px, 5vw, 48px);
-    font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: var(--black);
-  }
-
-  /* Topic tag (kicker above title) */
-  .topic-tag {
-    display: inline-block;
-    font-family: var(--font-ui);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--white);
-    background: var(--red);
-    padding: 6px 14px;
-    border-radius: 20px;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .topic-tag:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-  }
-
-  /* Tags */
-  .tags-container {
-    margin-top: 48px;
-    padding-top: 32px;
-    border-top: 1px solid var(--gray-light);
-  }
-
-  .tags-title {
-    font-family: var(--font-ui);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gray-mid);
-    margin-bottom: 16px;
-  }
-
-  .tags-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .tag-item {
-    font-family: var(--font-ui);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--gray-dark);
-    background: var(--gray-bg);
-    padding: 6px 14px;
-    border-radius: 4px;
-    border: 1px solid var(--gray-light);
-    transition: all 0.2s ease;
-  }
-
-  .tag-item:hover {
-    background: var(--gray-light);
-    color: var(--black);
-    border-color: var(--gray-mid);
-  }
-
-  .subtitle {
-    font-family: var(--font-body);
-    font-size: 20px;
-    font-weight: 300;
-    font-style: italic;
-    line-height: 1.5;
-    color: var(--gray-dark);
-    margin-bottom: 24px;
-    border-left: 3px solid var(--red);
-    padding-left: 16px;
-  }
-
-  /* Line 2: Author left · Date right */
-  .meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 14px 0;
-    border-top: 1px solid var(--gray-light);
-    border-bottom: 1px solid var(--gray-light);
-    font-family: var(--font-ui);
-    font-size: 14px;
-    color: var(--gray-mid);
-  }
-
-  .meta-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .meta-right {
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-
-  .author-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
-
-  .meta .author-link {
-    color: var(--red);
-    font-weight: 600;
-    transition: color 0.2s;
-  }
-
-  .meta .author-link:hover {
-    color: var(--red-dark);
-  }
-
-  .meta-divider {
-    color: var(--gray-light);
-  }
-
-  /* ─────────────────────────────────────────────
-   Hero Image
-───────────────────────────────────────────── */
-  .hero-image {
-    max-width: var(--article-col);
-    margin: 24px auto 32px;
-    line-height: 0;
-  }
-
-  .hero-image img {
-    width: 100%;
-    aspect-ratio: auto;
-    object-fit: cover;
-    display: block;
-    border-radius: 6px;
-  }
-
-  .hero-image figcaption {
-    font-family: var(--font-ui);
-    font-size: 13px;
-    color: var(--gray-mid);
-    padding: 10px 0 0;
-    line-height: 1.4;
-    border-top: 1px solid var(--gray-light);
-    margin-top: 8px;
-  }
-
-  /* ─────────────────────────────────────────────
-   Full-Width Article Body & Content
-───────────────────────────────────────────── */
-  .article-body {
-    max-width: var(--article-col);
-    margin: 0 auto;
-    padding-bottom: 64px;
-  }
-
-  .article-content p {
-    margin-bottom: 1.5em;
-    color: var(--gray-dark);
-    font-size: 19px;
-    line-height: 1.7;
-  }
-
-  /* Dropcap scoped explicitly to the article content paragraphs ONLY */
-  .article-content > p:first-of-type::first-letter {
-    font-family: var(--font-display);
-    font-size: 4.5em; /* Restored original slightly larger dropcap size */
-    font-weight: 700;
-    float: left;
-    line-height: 0.78;
-    margin: 6px 12px 0 0;
-    color: var(--black);
-  }
-
-  /* Removed the huge empty space and borders on Headings */
-  .article-content h2 {
-    font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.3;
-    color: var(--black);
-    margin: 1.5em 0 0.5em;
-    padding-top: 0;
-    border-top: none;
-  }
-
-  .article-content h3 {
-    font-family: var(--font-ui);
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--gray-dark);
-    margin: 1.5em 0 0.5em;
-  }
-
-  .article-content a {
-    color: var(--red);
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    text-underline-offset: 3px;
-    transition: text-decoration-color 0.2s;
-  }
-
-  .article-content a:hover {
-    text-decoration-color: var(--red);
-  }
-
-  .article-content figure {
-    margin: 2em 0;
-    clear: both;
-  }
-
-  .article-content figure img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 4px;
-  }
-
-  .article-content figcaption {
-    font-family: var(--font-ui);
-    font-size: 13px;
-    color: var(--gray-mid);
-    padding: 8px 0 0;
-    line-height: 1.5;
-    border-top: 1px solid var(--gray-light);
-    font-style: italic;
-  }
-
-  /* Float left / right */
-  .article-content figure.img-left {
-    float: left;
-    width: 45%;
-    margin: 0.5em 1.75em 1em 0;
-    clear: left;
-  }
-
-  .article-content figure.img-right {
-    float: right;
-    width: 45%;
-    margin: 0.5em 0 1em 1.75em;
-    clear: right;
-  }
-
-  .article-content::after {
-    content: '';
-    display: table;
-    clear: both;
-  }
-
-  @media (max-width: 500px) {
-    .article-content figure.img-left,
-    .article-content figure.img-right {
-      float: none;
-      width: 100%;
-      margin: 2em 0;
-    }
-  }
-
-  .article-content blockquote {
-    margin: 2em 0;
-    padding: 0 0 0 24px;
-    border-left: 4px solid var(--red);
-    font-size: 24px;
-    font-style: italic;
-    font-weight: 300;
-    color: var(--black);
-    line-height: 1.5;
-  }
-
-  .article-content hr {
-    border: none;
-    border-top: 1px solid var(--gray-light);
-    margin: 2.5em 0;
-  }
-
-  /* ─────────────────────────────────────────────
-   Author Cards Section
-───────────────────────────────────────────── */
-  .author-section {
-    margin-top: 56px;
-    padding-top: 32px;
-    border-top: 1px solid var(--gray-light);
-  }
-
-  .author-section-title {
-    font-family: var(--font-ui);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gray-mid);
-    margin-bottom: 24px;
-  }
-
-  .author-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .author-card {
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-    background: var(--gray-bg);
-    padding: 24px;
-    border-radius: 12px;
-  }
-
-  .author-avatar-large {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  }
-
-  .author-details {
-    flex: 1;
-  }
-
-  .author-name {
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-
-  .author-name a {
-    color: var(--black);
-    text-decoration: none;
-  }
-
-  .author-name a:hover {
-    color: var(--red);
-  }
-
-  .author-role {
-    display: inline-block;
-    font-family: var(--font-ui);
-    font-size: 13px;
-    color: var(--red);
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
-
-  .author-bio-text {
-    font-family: var(--font-body);
-    font-size: 16px;
-    line-height: 1.6;
-    color: var(--gray-dark);
-  }
-
-  .author-bio-text p {
-    margin-bottom: 0.5em;
-  }
-
-  .author-bio-text p:last-child {
-    margin-bottom: 0;
-  }
-
-  /* ─────────────────────────────────────────────
-   Related Articles Row
-───────────────────────────────────────────── */
-  .related-articles {
-    border-top: 1px solid var(--gray-light);
-    padding: 56px 0 72px;
-    margin-top: 0;
-  }
-
-  .related-heading {
-    font-family: var(--font-ui);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gray-mid);
-    margin-bottom: 28px;
-  }
-
-  .related-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
-  }
-
-  .related-card {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    text-decoration: none;
-    color: inherit;
-    transition: opacity 0.2s;
-  }
-
-  .related-card:hover {
-    opacity: 0.85;
-  }
-
-  .related-card__img {
-    width: 100%;
-    aspect-ratio: 3 / 2;
-    overflow: hidden;
-    border-radius: 6px;
-  }
-
-  .related-card__img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.3s ease;
-  }
-
-  .related-card:hover .related-card__img img {
-    transform: scale(1.03);
-  }
-
-  .related-card__body {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .related-card__tag {
-    display: inline-block;
-    align-self: flex-start;
-    font-family: var(--font-ui);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--white);
-    background: var(--red);
-    padding: 4px 10px;
-    border-radius: 12px;
-    margin-bottom: 4px;
-  }
-
-  .related-card__title {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1.35;
-    color: var(--black);
-    margin: 0;
-  }
-
-  /* ─────────────────────────────────────────────
-   Responsive
-───────────────────────────────────────────── */
-  @media (max-width: 780px) {
-    .header-top {
-      flex-direction: column;
-      gap: 8px;
-      align-items: flex-start;
-    }
-
-    .related-grid {
-      grid-template-columns: 1fr;
-      gap: 24px;
-    }
-
-    .author-card {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-  }
-
-  @media (max-width: 680px) {
-    .meta {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
-    }
-  }
-
-  /* ─────────────────────────────────────────────
-   Paywall Overlay
-  ───────────────────────────────────────────── */
-  .paywall-wrapper {
-    position: relative;
-    max-width: var(--article-col);
-    margin: 0 auto;
-    padding-bottom: 0;
-  }
-
-  .article-body--truncated {
-    overflow: hidden;
-    max-height: 500px;
-    position: relative;
-    margin-bottom: 0;
-  }
-
-  .paywall-fade {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 300px;
-    background: linear-gradient(to bottom,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.2) 20%,
-        rgba(255, 255, 255, 0.8) 70%,
-        rgba(255, 255, 255, 1) 100%);
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .paywall-cta {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    justify-content: center;
-    padding: 0 24px 64px;
-    margin-top: -40px;
-  }
-
-  .paywall-cta__card {
-    background: var(--gray-bg);
-    border: 1px solid var(--gray-light);
-    border-radius: 8px;
-    padding: 40px 48px;
-    text-align: center;
-    max-width: 520px;
-    width: 100%;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  }
-
-  .paywall-cta__title {
-    font-family: var(--font-display);
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--black);
-    margin-bottom: 12px;
-    border: none;
-    padding: 0;
-  }
-
-  .paywall-cta__text {
-    font-family: var(--font-ui);
-    font-size: 15px;
-    color: var(--gray-mid);
-    line-height: 1.6;
-    margin-bottom: 24px;
-  }
-
-  .paywall-cta__actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .paywall-btn {
-    display: inline-block;
-    font-family: var(--font-ui);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 12px 28px;
-    border-radius: 4px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-  }
-
-  .paywall-btn--primary {
-    background: var(--red, #c0392b);
-    color: #fff;
-  }
-
-  .paywall-btn--primary:hover {
-    background: #922b21;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);
-  }
-
-  .paywall-btn--secondary {
-    background: transparent;
-    color: var(--black);
-    border: 2px solid var(--gray-light);
-  }
-
-  .paywall-btn--secondary:hover {
-    border-color: var(--black);
-    transform: translateY(-1px);
-  }
-
-  /* ─────────────────────────────────────────────
-   Language Switcher
-  ───────────────────────────────────────────── */
-  .lang-switcher-container {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .lang-slider {
-    position: relative;
-    display: inline-flex;
-    background: var(--gray-bg);
-    padding: 4px;
-    border-radius: 40px;
-    border: 1px solid var(--gray-light);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-    user-select: none;
-  }
-
-  .lang-slider__item {
-    position: relative;
-    z-index: 2;
-    padding: 8px 20px;
-    font-family: var(--font-ui);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--gray-mid);
-    cursor: pointer;
-    transition: color 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-radius: 36px;
-    white-space: nowrap;
-  }
-
-  .lang-slider__item.active {
-    color: var(--white);
-  }
-
-  .lang-slider__indicator {
-    position: absolute;
-    z-index: 1;
-    top: 4px;
-    left: 4px;
-    height: calc(100% - 8px);
-    background: var(--red);
-    border-radius: 36px;
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);
-  }
-
-  /* Language-specific typography */
-  [data-lang="hi"] { font-family: 'Noto Sans Devanagari', sans-serif; }
-  [data-lang="ta"] { font-family: 'Noto Sans Tamil', sans-serif; }
-
-  .lang-content {
-    display: none;
-    animation: fadeIn 0.4s ease forwards;
-  }
-
-  .lang-content.active {
-    display: block;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-</style>
+<link rel="stylesheet" href="{% static 'css/article.css' %}">
+<meta name="article-id" content="{{ page.id }}">
 {% endblock %}
 
 {% block content %}
@@ -774,7 +16,7 @@
     <div class="header-top">
       {% if page.topic %}
       <a href="{% url 'topic_detail' slug=page.topic.slug %}" class="topic-tag"
-        style="background-color: {{ page.topic.color|default:'#c0392b' }};">
+        style="--topic-color: {{ page.topic.color|default:'#c0392b' }};">
         {{ page.topic.name }}</a>
       {% endif %}
       
@@ -811,7 +53,7 @@
         {% endwith %}
         {% endfor %}
       </div>
-      <div class="meta-right" style="display: flex; align-items: center; gap: 16px;">
+      <div class="meta-right">
         {% if page.date %}
         <span class="date">{{ page.date|date:"F j, Y" }}</span>
         {% elif page.last_published_at %}
@@ -831,33 +73,7 @@
     </div>
     {% csrf_token %}
 
-    <style>
-      .favorite-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 4px;
-        color: #6b6659;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .favorite-btn svg {
-        width: 20px;
-        height: 20px;
-      }
-      .favorite-btn[data-favorited="true"] {
-        color: #c8102e;
-      }
-      .favorite-btn[data-favorited="true"] svg {
-        fill: #c8102e;
-      }
-      .favorite-btn:hover {
-        transform: scale(1.1);
-        color: #c8102e;
-      }
-    </style>
+
 
     {# ── MODERN LANGUAGE SLIDER ────────────────── #}
     {% if page.body_en or page.body_hi or page.body_ta %}
@@ -874,26 +90,21 @@
 
     {# ── Main Audio Display ── #}
     {% if page.audio_file or page.audio_embed_url %}
-    <div class="main-audio-container" style="max-width: var(--article-col); margin: 0 auto 32px;">
-        <div class="audio-card" style="background: var(--gray-bg); padding: 24px; border-radius: 16px; border: 1px solid var(--gray-light); box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
-            <h4 style="font-family: var(--font-ui); font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--gray-mid); margin-bottom: 16px; letter-spacing: 0.1em;">Listen to this article</h4>
-            
-            {% if page.audio_file %}
                 <div class="modern-audio-player" id="player-main">
                     <audio id="audio-main" src="{{ page.audio_file.url }}"></audio>
                     
-                    <div class="player-main" style="display: flex; align-items: center; gap: 16px;">
-                        <button class="play-btn" id="play-btn-main" title="Play" style="width: 48px; height: 48px; border-radius: 50%; background: var(--red); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s, background 0.2s; flex-shrink: 0;">
+                    <div class="player-main">
+                        <button class="play-btn" id="play-btn-main" title="Play">
                             <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
                             <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                         </button>
                         
-                        <div class="player-info" style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-                            <div class="progress-wrapper" style="position: relative; height: 6px; background: #eef0f2; border-radius: 3px; cursor: pointer;">
-                                <input type="range" class="progress-slider" id="slider-main" value="0" min="0" max="100" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; margin: 0;">
-                                <div class="progress-bar-fill" id="fill-main" style="position: absolute; top: 0; left: 0; height: 100%; background: var(--red); border-radius: 3px; width: 0%; z-index: 1;"></div>
+                        <div class="player-info">
+                            <div class="progress-wrapper">
+                                <input type="range" class="progress-slider" id="slider-main" value="0" min="0" max="100">
+                                <div class="progress-bar-fill" id="fill-main"></div>
                             </div>
-                            <div class="time-meta" style="display: flex; justify-content: space-between; font-size: 12px; color: #95a5a6; font-weight: 600; font-family: var(--font-ui);">
+                            <div class="time-meta">
                                 <span id="current-main">0:00</span>
                                 <span id="duration-main">0:00</span>
                             </div>
@@ -901,204 +112,84 @@
                     </div>
                 </div>
 
-                <script>
-                (function() {
-                    const audio = document.getElementById('audio-main');
-                    const playBtn = document.getElementById('play-btn-main');
-                    const slider = document.getElementById('slider-main');
-                    const fill = document.getElementById('fill-main');
-                    const current = document.getElementById('current-main');
-                    const duration = document.getElementById('duration-main');
-                    const playIcon = playBtn.querySelector('.play-icon');
-                    const pauseIcon = playBtn.querySelector('.pause-icon');
 
-                    function formatTime(seconds) {
-                        const mins = Math.floor(seconds / 60);
-                        const secs = Math.floor(seconds % 60);
-                        return mins + ':' + (secs < 10 ? '0' : '') + secs;
-                    }
-
-                    playBtn.addEventListener('click', () => {
-                        if (audio.paused) {
-                            audio.play();
-                            playIcon.style.display = 'none';
-                            pauseIcon.style.display = 'block';
-                        } else {
-                            audio.pause();
-                            playIcon.style.display = 'block';
-                            pauseIcon.style.display = 'none';
-                        }
-                    });
-
-                    audio.addEventListener('loadedmetadata', () => {
-                        duration.textContent = formatTime(audio.duration);
-                    });
-
-                    audio.addEventListener('timeupdate', () => {
-                        const pct = (audio.currentTime / audio.duration) * 100;
-                        slider.value = pct;
-                        fill.style.width = pct + '%';
-                        current.textContent = formatTime(audio.currentTime);
-                    });
-
-                    slider.addEventListener('input', () => {
-                        const time = (slider.value / 100) * audio.duration;
-                        audio.currentTime = time;
-                        fill.style.width = slider.value + '%';
-                    });
-                })();
-                </script>
             {% elif page.audio_embed_url %}
                 <div class="audio-embed">
                     {% if ".mp3" in page.audio_embed_url or ".wav" in page.audio_embed_url or ".m4a" in page.audio_embed_url %}
                         {# Handle direct audio links in the embed field #}
                         <div class="modern-audio-player" id="player-embed">
                             <audio id="audio-embed" src="{{ page.audio_embed_url }}"></audio>
-                            <div class="player-main" style="display: flex; align-items: center; gap: 16px;">
-                                <button class="play-btn" id="play-btn-embed" style="width: 48px; height: 48px; border-radius: 50%; background: var(--red); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <div class="player-main">
+                                <button class="play-btn" id="play-btn-embed">
                                     <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
                                     <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                 </button>
-                                <div class="player-info" style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-                                    <div class="progress-wrapper" style="position: relative; height: 6px; background: #eef0f2; border-radius: 3px;">
-                                        <input type="range" class="progress-slider" id="slider-embed" value="0" min="0" max="100" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; margin: 0;">
-                                        <div class="progress-bar-fill" id="fill-embed" style="position: absolute; top: 0; left: 0; height: 100%; background: var(--red); border-radius: 3px; width: 0%; z-index: 1;"></div>
+                                <div class="player-info">
+                                    <div class="progress-wrapper">
+                                        <input type="range" class="progress-slider" id="slider-embed" value="0" min="0" max="100">
+                                        <div class="progress-bar-fill" id="fill-embed"></div>
                                     </div>
-                                    <div class="time-meta" style="display: flex; justify-content: space-between; font-size: 12px; color: #95a5a6; font-weight: 600;">
+                                    <div class="time-meta">
                                         <span id="current-embed">0:00</span>
                                         <span id="duration-embed">0:00</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <script>
-                        (function() {
-                            const audio = document.getElementById('audio-embed');
-                            const playBtn = document.getElementById('play-btn-embed');
-                            const slider = document.getElementById('slider-embed');
-                            const fill = document.getElementById('fill-embed');
-                            const current = document.getElementById('current-embed');
-                            const duration = document.getElementById('duration-embed');
-                            const playIcon = playBtn.querySelector('.play-icon');
-                            const pauseIcon = playBtn.querySelector('.pause-icon');
-                            playBtn.addEventListener('click', () => {
-                                if (audio.paused) { audio.play(); playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; }
-                                else { audio.pause(); playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; }
-                            });
-                            audio.addEventListener('loadedmetadata', () => { duration.textContent = Math.floor(audio.duration/60) + ":" + (Math.floor(audio.duration%60)).toString().padStart(2,'0'); });
-                            audio.addEventListener('timeupdate', () => { const pct = (audio.currentTime / audio.duration) * 100; slider.value = pct; fill.style.width = pct + '%'; current.textContent = Math.floor(audio.currentTime/60) + ":" + (Math.floor(audio.currentTime%60)).toString().padStart(2,'0'); });
-                            slider.addEventListener('input', () => { audio.currentTime = (slider.value / 100) * audio.duration; });
-                        })();
-                        </script>
+
                     {% else %}
                         {% embed page.audio_embed_url %}
                     {% endif %}
                 </div>
             {% endif %}
-        </div>
-    </div>
-    {% endif %}
 
     {# ── Main Video Display ── #}
     {% if page.video_file or page.video_embed_url %}
-    <div class="main-video-container" style="max-width: var(--article-col); margin: 0 auto 32px;">
-        {% if page.video_file %}
-            <div class="modern-video-player" id="vplayer-main" style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); background: #000;">
-                <div class="video-wrapper" style="position: relative; width: 100%; line-height: 0;">
-                    <video id="video-main" src="{{ page.video_file.url }}" style="width: 100%; height: auto;"></video>
-                    <div class="video-overlay" id="overlay-main" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; pointer-events: none;">
-                        <button class="big-play-btn" id="big-play-main" style="width: 80px; height: 80px; border-radius: 50%; background: rgba(192, 57, 43, 0.9); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto; transition: transform 0.2s;">
+            <div class="modern-video-player" id="vplayer-main">
+                <div class="video-wrapper">
+                    <video id="video-main" src="{{ page.video_file.url }}"></video>
+                    <div class="video-overlay" id="overlay-main">
+                        <button class="big-play-btn" id="big-play-main">
                             <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
                         </button>
                     </div>
                 </div>
-                <div class="video-controls" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, rgba(0,0,0,0.7)); display: flex; align-items: center; gap: 15px; line-height: 1;">
-                    <button class="v-play-btn" id="v-play-main" style="background: none; border: none; cursor: pointer; padding: 0;">
+                <div class="video-controls">
+                    <button class="v-play-btn" id="v-play-main">
                         <svg class="v-play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
                         <svg class="v-pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                     </button>
-                    <div class="v-progress-wrapper" style="flex: 1; position: relative; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px;">
-                        <input type="range" class="v-progress-slider" id="v-slider-main" value="0" min="0" max="100" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; margin: 0;">
-                        <div class="v-progress-fill" id="v-fill-main" style="height: 100%; background: #c0392b; width: 0%; border-radius: 2px;"></div>
+                    <div class="v-progress-wrapper">
+                        <input type="range" class="v-progress-slider" id="v-slider-main" value="0" min="0" max="100">
+                        <div class="v-progress-fill" id="v-fill-main"></div>
                     </div>
                 </div>
             </div>
-            <script>
-            (function() {
-                const video = document.getElementById('video-main');
-                const playBtn = document.getElementById('v-play-main');
-                const bigPlayBtn = document.getElementById('big-play-main');
-                const overlay = document.getElementById('overlay-main');
-                const slider = document.getElementById('v-slider-main');
-                const fill = document.getElementById('v-fill-main');
-                const playIcon = playBtn.querySelector('.v-play-icon');
-                const pauseIcon = playBtn.querySelector('.v-pause-icon');
-                function togglePlay() {
-                    if (video.paused) { video.play(); playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; overlay.style.opacity = '0'; }
-                    else { video.pause(); playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; overlay.style.opacity = '1'; }
-                }
-                playBtn.addEventListener('click', togglePlay);
-                bigPlayBtn.addEventListener('click', togglePlay);
-                video.addEventListener('click', togglePlay);
-        video.addEventListener('timeupdate', () => {
-                    const pct = (video.currentTime / video.duration) * 100;
-                    slider.value = pct; fill.style.width = pct + '%';
-                });
-                slider.addEventListener('input', () => {
-                    const time = (slider.value / 100) * video.duration;
-                    video.currentTime = time; fill.style.width = slider.value + '%';
-                });
-            })();
-            </script>
+
         {% elif page.video_embed_url %}
-            <div class="video-embed" style="border-radius: 16px; overflow: hidden;">
+            <div class="video-embed">
                 {% if ".mp4" in page.video_embed_url or ".webm" in page.video_embed_url or ".ogv" in page.video_embed_url %}
                     {# Handle direct video links in the embed field #}
-                    <div class="modern-video-player" id="vplayer-embed" style="position: relative; background: #000;">
-                        <video id="video-embed" src="{{ page.video_embed_url }}" style="width: 100%; height: auto;"></video>
-                        <div class="video-overlay" id="overlay-embed" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; pointer-events: none;">
-                            <button class="big-play-btn" id="big-play-embed" style="width: 80px; height: 80px; border-radius: 50%; background: rgba(192, 57, 43, 0.9); border: none; cursor: pointer; pointer-events: auto;">
+                    <div class="modern-video-player" id="vplayer-embed">
+                        <video id="video-embed" src="{{ page.video_embed_url }}"></video>
+                        <div class="video-overlay" id="overlay-embed">
+                            <button class="big-play-btn" id="big-play-embed">
                                 <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
                             </button>
                         </div>
                     </div>
-                    <script>
-                    (function() {
-                        const video = document.getElementById('video-embed');
-                        const bigPlayBtn = document.getElementById('big-play-embed');
-                        const overlay = document.getElementById('overlay-embed');
-                        function togglePlay() { if (video.paused) { video.play(); overlay.style.opacity = '0'; } else { video.pause(); overlay.style.opacity = '1'; } }
-                        bigPlayBtn.addEventListener('click', togglePlay);
-                        video.addEventListener('click', togglePlay);
-                    })();
-                    </script>
+
                 {% elif "youtu.be" in page.video_embed_url or "youtube.com" in page.video_embed_url %}
                     {# Robust YouTube Fallback #}
-                    <div class="youtube-fallback" data-url="{{ page.video_embed_url }}" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000;"></div>
+                    <div class="youtube-fallback" data-url="{{ page.video_embed_url }}"></div>
                 {% else %}
                     {% embed page.video_embed_url %}
                 {% endif %}
             </div>
         {% endif %}
-    </div>
-    {% endif %}
 
-    <script>
-    (function() {
-        document.querySelectorAll('.youtube-fallback').forEach(container => {
-            const url = container.dataset.url;
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            const id = (match && match[2].length == 11) ? match[2] : null;
-            
-            console.log("Extracted YouTube ID:", id, "from URL:", url);
-            
-            if (id) {
-                container.innerHTML = `<iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" src="https://www.youtube.com/embed/${id}" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
-            }
-        });
-    })();
-    </script>
+
+
 
   </header>
 
@@ -1302,8 +393,8 @@
 
         <div class="related-card__body">
           {% if article.topic %}
-          <span class="related-card__tag" style="background-color: {{ article.topic.color|default:'#c0392b' }};"
-            onclick="window.location.href='{% url 'topic_detail' slug=article.topic.slug %}'; return false;">
+          <span class="related-card__tag" style="--category-color: {{ article.topic.color|default:'#c0392b' }};"
+            data-topic-url="{% url 'topic_detail' slug=article.topic.slug %}">
             {{ article.topic.name }}</span>
           {% endif %}
           <p class="related-card__title">{{ article.title }}</p>
@@ -1315,127 +406,6 @@
 
 </div>{# /.article-container #}
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const slider = document.querySelector('.lang-slider');
-    
-    if (slider) {
-      const items = slider.querySelectorAll('.lang-slider__item');
-      const indicator = slider.querySelector('.lang-slider__indicator');
-      const langContents = document.querySelectorAll('.lang-content');
-
-      function updateSlider(activeItem) {
-        indicator.style.width = activeItem.offsetWidth + 'px';
-        indicator.style.left = activeItem.offsetLeft + 'px';
-
-        items.forEach(item => item.classList.remove('active'));
-        activeItem.classList.add('active');
-
-        const target = activeItem.getAttribute('data-lang-target');
-        langContents.forEach(content => {
-          if (content.getAttribute('data-lang') === target) {
-            content.classList.add('active');
-          } else {
-            content.classList.remove('active');
-          }
-        });
-      }
-
-      const initialActive = slider.querySelector('.lang-slider__item.active');
-      if (initialActive) {
-        setTimeout(() => updateSlider(initialActive), 50);
-      }
-
-      items.forEach(item => {
-        item.addEventListener('click', function() {
-          updateSlider(this);
-          const header = document.querySelector('.article-header');
-          if (window.scrollY > header.offsetTop + 100) {
-            header.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        });
-      });
-
-      window.addEventListener('resize', () => {
-        const currentActive = slider.querySelector('.lang-slider__item.active');
-        if (currentActive) updateSlider(currentActive);
-      });
-    }
-
-    // ── Scroll Tracking (Read Fully) ──────────────────────────
-    let readTracked = false;
-    const articleId = "{{ page.id }}";
-    const trackUrl = "/articles/track-read-fully/";
-    const csrfToken = "{{ csrf_token }}";
-
-    window.addEventListener('scroll', function() {
-      if (readTracked) return;
-
-      const scrollHeight = document.documentElement.scrollHeight;
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const clientHeight = document.documentElement.clientHeight;
-      const scrollPct = (scrollTop + clientHeight) / scrollHeight;
-
-      if (scrollPct > 0.9) {
-        readTracked = true;
-        const formData = new FormData();
-        formData.append('article_id', articleId);
-        
-        fetch(trackUrl, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => { console.log('Read tracking:', data.message); })
-        .catch(error => { console.error('Error tracking read:', error); });
-      }
-    }, { passive: true });
-
-    // ── Favorite Toggle ──────────────────────────────────────
-    document.addEventListener('click', function(e) {
-      const btn = e.target.closest('.favorite-btn');
-      if (!btn) return;
-      
-      e.preventDefault();
-      
-      const id = btn.getAttribute('data-id');
-      const type = btn.getAttribute('data-type');
-      const url = type === 'article' ? `/reader/favorite/article/${id}/` : `/reader/favorite/issue/${id}/`;
-      
-      const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-      const token = "{{ csrf_token }}" || (csrfInput ? csrfInput.value : '');
-      
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': token,
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Server returned ' + response.status);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.favorited !== undefined) {
-          btn.setAttribute('data-favorited', data.favorited);
-          btn.title = data.favorited ? 'Remove from Favorites' : 'Add to Favorites';
-        } else if (data.error) {
-          alert(data.error);
-        }
-      })
-      .catch(error => {
-        console.error('Error toggling favorite:', error);
-        alert('Failed to update favorite: ' + error.message);
-      });
-    });
-  });
-</script>
+<script src="{% static 'js/article.js' %}" defer></script>
 
 {% endblock %}

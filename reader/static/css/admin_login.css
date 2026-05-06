@@ -1,0 +1,55 @@
+/* reader/static/css/admin_login.css */
+
+/* Hide the default Wagtail logo at the bottom and other branding */
+.branding-logo, .branding-title, .wagtail-logo, img[src*="wagtail-logo"] { 
+    display: none !important; 
+}
+
+.admin-login-logo-container {
+    padding-top: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.admin-login-logo {
+    width: 150px;
+    height: auto;
+}
+
+
+/* Style for split phone number field in Wagtail login form */
+.field-username .field-content,
+li:has(#id_username_0) .field-content {
+    display: flex !important;
+    gap: 10px;
+    align-items: center;
+}
+
+#id_username_0 {
+    width: 130px !important;
+    flex-shrink: 0;
+    background-color: #222 !important;
+    color: white !important;
+    border: 1px solid #444 !important;
+    border-radius: 4px;
+    height: 3rem !important;
+}
+
+#id_username_1 {
+    flex-grow: 1;
+    background-color: #222 !important;
+    color: white !important;
+    border: 1px solid #444 !important;
+    border-radius: 4px;
+    height: 3rem !important;
+    padding: 0 12px !important;
+}
+
+#id_username_1::placeholder {
+    color: #888 !important;
+}
+
+/* Ensure the login box doesn't look too cramped with the new logo */
+.login-panel {
+    padding-top: 2rem;
+}

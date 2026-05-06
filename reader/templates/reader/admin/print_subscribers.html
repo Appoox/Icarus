@@ -5,95 +5,12 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <style>
-        @media print {
-            .nav-main, .sidebar, .header, .footer, .breadcrumb, .buttons {
-                display: none !important;
-            }
-            .content-wrapper {
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            body {
-                background: white !important;
-            }
-        }
-        
-        .print-container {
-            padding: 40px;
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            color: black;
-        }
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
 
-        .print-header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 20px;
-        }
-
-        .print-header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #1a1a1a;
-        }
-
-        .print-header p {
-            margin: 5px 0 0;
-            color: #666;
-        }
-
-        .subscribers-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .subscribers-table th, 
-        .subscribers-table td {
-            border: 1px solid #ddd;
-            padding: 12px 8px;
-            text-align: left;
-        }
-
-        .subscribers-table th {
-            background-color: #f8f8f8;
-            font-weight: bold;
-        }
-
-        .subscribers-table tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .badge-active { background: #e6fffa; color: #0694a2; }
-        .badge-expired { background: #fff5f5; color: #e53e3e; }
-
-        .print-footer {
-            margin-top: 40px;
-            text-align: right;
-            font-size: 12px;
-            color: #999;
-        }
-
-        .no-print-actions {
-            margin-bottom: 20px;
-            text-align: right;
-        }
-
-        @media print {
-            .no-print-actions { display: none; }
-        }
-    </style>
+{% block extra_js %}
+    {{ block.super }}
+    <script src="{% static 'js/admin.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -103,11 +20,11 @@
                 <span class="icon icon-download"></span>
                 Export Mailing List (CSV)
             </a>
-            <button onclick="window.print()" class="button button-secondary">
+            <button type="button" id="print-list-btn" class="button button-secondary">
                 <span class="icon icon-print"></span>
                 Print this list
             </button>
-            <a href="javascript:window.close()" class="button button-secondary">Close</a>
+            <button type="button" id="close-window-btn" class="button button-secondary">Close</button>
         </div>
 
         <div class="print-header">

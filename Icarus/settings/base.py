@@ -17,9 +17,14 @@ ACCOUNT_SIGNUP_FIELDS = [
 ]
 ACCOUNT_USER_MODEL_PHONE_FIELD = 'phone_number'
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_USERNAME_REQUIRED = False
+# ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_PHONE_VERIFICATION = "none"  # No SMS backend; skip phone verification
 ACCOUNT_SIGNUP_FORM_CLASS = 'reader.forms.AllauthSignupForm'
+ACCOUNT_FORMS = {
+    'login': 'reader.auth_forms.CustomLoginForm',
+    'signup': 'reader.auth_forms.CustomSignupForm',
+}
+ACCOUNT_LOGIN_ON_SIGNUP = True
 ACCOUNT_ADAPTER = 'reader.adapter.CustomAccountAdapter'
 AUTH_USER_MODEL = 'reader.ReaderUser'
 ACCOUNT_SIGNUP_REDIRECT_URL = '/reader/profile/'

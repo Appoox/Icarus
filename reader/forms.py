@@ -87,11 +87,21 @@ class ReaderProfileEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Apply styling to the split phone widgets
+        # Apply styling and numeric restriction to the split phone widgets
         for field_name in ['phone_number', 'care_of_number']:
             if field_name in self.fields:
-                for widget in self.fields[field_name].widget.widgets:
+                field = self.fields[field_name]
+                # Style all sub-widgets
+                for widget in field.widget.widgets:
                     widget.attrs.update({'class': 'form-input'})
+                
+                # Restrict national number input to numeric only
+                if len(field.widget.widgets) > 1:
+                    field.widget.widgets[1].attrs.update({
+                        'inputmode': 'numeric',
+                        'pattern': '[0-9]*',
+                        'oninput': "this.value = this.value.replace(/[^0-9]/g, '');"
+                    })
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -130,3 +140,7 @@ class UpdateInterestsForm(forms.ModelForm):
         model = ReaderUser
         fields = ('interested_topics',)
 
+
+
+# Custom allauth forms have been moved to reader/auth_forms.py 
+# to avoid circular imports during startup.

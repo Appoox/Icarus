@@ -1,12 +1,13 @@
-{% load tz %}
+{% load static tz %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
 <section class="panel recent-activity nice-padding">
     <h2 class="icon icon-list-ul">Recent Activity (Audit Log)</h2>
     <table class="listing">
         <thead>
             <tr>
-                <th style="width: 150px;">Time</th>
-                <th style="width: 120px;">User</th>
-                <th style="width: 100px;">Action</th>
+                <th class="col-time">Time</th>
+                <th class="col-user">User</th>
+                <th class="col-action">Action</th>
                 <th>Model & Changes</th>
             </tr>
         </thead>
@@ -32,7 +33,7 @@
                 </td>
                 <td>
                     <strong>{{ entry.content_type.model|title }}</strong>
-                    <div style="font-size: 0.85em; color: #666; margin-top: 4px;">
+                    <div class="text-muted audit-changes-preview">
                         {% for field, values in entry.changes_display_dict.items|slice:":3" %}
                             {{ field|title }}: {{ values.1|truncatechars:30 }}{% if not forloop.last %}, {% endif %}
                         {% endfor %}
