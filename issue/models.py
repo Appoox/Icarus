@@ -1,10 +1,12 @@
 from django.db import models
 from django import forms
 from modelcluster.fields import ParentalKey
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
-from wagtail.admin.panels import FieldPanel, InlinePanel
-from wagtail.admin.forms import WagtailAdminPageForm
+from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
+from wagtail.admin.forms import WagtailAdminPageForm, WagtailAdminModelForm
 from wagtail.snippets.models import register_snippet
 from wagtail import blocks
 from wagtail.search import index
@@ -14,6 +16,21 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from articles.wagtail_widgets import ColorPickerWidget
+from articles.models import AudioBlock, VideoBlock
+
+class IssueTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'Issue',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
+
+class IssueIndexPageTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'IssueIndexPage',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
 
 
 
@@ -55,6 +72,21 @@ class ImageBlock(blocks.StructBlock):
         label = 'Image'
 
 
+class VolumeForm(WagtailAdminModelForm):
+    """Pre-fills the number field with the next volume number (last + 1)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only pre-fill when creating a new volume (no pk yet)
+        if not self.instance.pk:
+            from issue.models import Volume as VolModel
+            latest = VolModel.objects.order_by('-number').first()
+            next_number = (latest.number + 1) if latest else 1
+            self.fields['number'].initial = next_number
+            self.initial['number'] = next_number
+            # Force the value into the widget so it renders in the HTML input
+            self.fields['number'].widget.attrs['value'] = next_number
+
+
 @register_snippet
 class Volume(index.Indexed, models.Model):
     number = models.PositiveIntegerField(unique=True, help_text="Volume number (e.g. 1, 2, 3…)")
@@ -73,6 +105,8 @@ class Volume(index.Indexed, models.Model):
         FieldPanel('year_start'),
         FieldPanel('year_end'),
     ]
+
+    base_form_class = VolumeForm
 
     def __str__(self):
         if self.year_end and self.year_end != self.year_start:
@@ -96,6 +130,45 @@ class IssueForm(WagtailAdminPageForm):
                 self.fields['volume'].widget = forms.Select(choices=self.fields['volume'].choices)
                 self.fields['volume'].required = False
 
+            # Pre-fill title with the next month's Malayalam name
+            from datetime import date
+            MALAYALAM_MONTHS = {
+                1: 'ജനുവരി',
+                2: 'ഫെബ്രുവരി',
+                3: 'മാര്ച്ച്',
+                4: 'ഏപ്രില്',
+                5: 'മെയ്',
+                6: 'ജൂണ്',
+                7: 'ജൂലൈ',
+                8: 'ആഗസ്റ്റ്',
+                9: 'സെപ്തംബര്',
+                10: 'ഒക്ടോബര്',
+                11: 'നവംബര്',
+                12: 'ഡിസംബര്',
+            }
+            today = date.today()
+            next_month = today.month % 12 + 1
+            next_year = today.year + 1 if today.month == 12 else today.year
+            next_title = f"{MALAYALAM_MONTHS[next_month]} {next_year}"
+            if 'title' in self.fields:
+                self.initial['title'] = next_title
+                self.fields['title'].initial = next_title
+                self.fields['title'].widget.attrs['value'] = next_title
+
+            from issue.models import Issue as IssueModel
+            latest_issue = IssueModel.objects.order_by('-pk').first()
+            next_issue_num = 1
+            if latest_issue and latest_issue.issue_number is not None:
+                if latest_volume and latest_issue.volume != latest_volume:
+                    next_issue_num = 1
+                else:
+                    next_issue_num = latest_issue.issue_number + 1
+
+            if 'issue_number' in self.fields:
+                self.initial['issue_number'] = next_issue_num
+                self.fields['issue_number'].initial = next_issue_num
+                self.fields['issue_number'].widget.attrs['value'] = next_issue_num
+
 
 class Issue(Page):
     base_form_class = IssueForm
@@ -113,6 +186,7 @@ class Issue(Page):
         help_text="Issue number within the volume (e.g. 1, 2, 3…)"
     )
     date_of_publishing = models.DateField("Date of publishing")
+    tags = ClusterTaggableManager(through=IssueTag, blank=True)
 
     # Only allow Articles to be created inside an Issue
     subpage_types = ['articles.Article']
@@ -134,7 +208,46 @@ class Issue(Page):
         related_name='issues'
     )
 
+    editorial_board = models.ForeignKey(
+        'literati.EditorialBoard',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='issues',
+        help_text="Select an editorial board group for this issue"
+    )
+
+    # ── Audio ─────────────────────────────────────────────────────────────
+    audio_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    audio_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
+    )
+
+    # ── Video ─────────────────────────────────────────────────────────────
+    video_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    video_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for video (e.g., YouTube, Vimeo)"
+    )
+
     editorial = StreamField([
+        ('audio',      AudioBlock()),
+        ('video',      VideoBlock()),
         ('heading',    blocks.RichTextBlock(form_classname="full title")),
         ('paragraph',  blocks.RichTextBlock()),
         ('image',      ImageBlock()),                                   # ← StructBlock with caption
@@ -178,16 +291,43 @@ class Issue(Page):
         reprints = [rel.article for rel in self.reprinted_articles.select_related('article').filter(article__live=True)]
         return list(primary) + reprints
 
+    @property
+    def board_members(self):
+        if self.editorial_board:
+            return self.editorial_board.members.all()
+        return []
+
     content_panels = Page.content_panels + [
+        FieldPanel('slug'),
+        FieldPanel('tags'),
         FieldPanel('volume'),
         FieldPanel('issue_number'),
         FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
         FieldPanel('cover_image'),
-        InlinePanel('editorial_board_relationship', label="Editorial Board Members"),
+        MultiFieldPanel([
+            FieldPanel('audio_file'),
+            FieldPanel('audio_embed_url'),
+        ], heading="Audio"),
+        MultiFieldPanel([
+            FieldPanel('video_file'),
+            FieldPanel('video_embed_url'),
+        ], heading="Video"),
+        FieldPanel('editorial_board'),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
         FieldPanel('editorial'),
     ]
+
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+        reader = None
+        if request.user.is_authenticated:
+            try:
+                reader = request.user.reader
+            except Exception:
+                reader = None
+        context['reader'] = reader
+        return context
 
 class IssueArticleReprint(Orderable):
     issue = ParentalKey('Issue', related_name='reprinted_articles', on_delete=models.CASCADE)
@@ -197,28 +337,7 @@ class IssueArticleReprint(Orderable):
         FieldPanel('article'),
     ]
 
-class IssueEditorialBoardRelationship(Orderable):
-    page = ParentalKey('Issue', related_name='editorial_board_relationship', on_delete=models.CASCADE)
-    editor = models.ForeignKey('literati.Literati', related_name='editorial_roles', on_delete=models.CASCADE)
-    
-    # Context-dependent roles for the editorial board
-    ROLE_CHOICES = [
-        ('editor', 'Editor'),
-        ('associate', 'Associate Editor'),
-        ('managing', 'Managing Editor'),
-        ('board', 'Board Member'),
-    ]
-    role = models.CharField(
-        max_length=50, 
-        choices=ROLE_CHOICES, 
-        default='editor',
-        help_text="Select the role for this issue's editorial board"
-    )
 
-    panels = [
-        FieldPanel('editor'),
-        FieldPanel('role'),
-    ]
 
 @register_snippet
 class Topic(index.Indexed, models.Model):
@@ -249,6 +368,7 @@ class Topic(index.Indexed, models.Model):
 
 class IssueIndexPage(Page):
     intro = RichTextField(blank=True)
+    tags = ClusterTaggableManager(through=IssueIndexPageTag, blank=True)
 
     max_count = 1
     subpage_types = ['Issue']
@@ -256,7 +376,8 @@ class IssueIndexPage(Page):
     parent_page_types = ['home.HomePage']
 
     content_panels = Page.content_panels + [
-        FieldPanel('intro')
+        FieldPanel('intro'),
+        FieldPanel('tags'),
     ]
 
     def get_context(self, request):

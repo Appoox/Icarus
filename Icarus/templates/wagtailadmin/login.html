@@ -1,0 +1,19 @@
+{% extends "wagtailadmin/login.html" %}
+{% load static %}
+
+{% block branding_login %}പാരിഷത്തികത്തിലേക്ക് കയറാം{% endblock %}
+
+{% block branding_logo %}
+    <div class="admin-login-logo-container">
+        <img src="{% static 'images/KSSP_Logo.png' %}" alt="KSSP Logo" class="admin-login-logo">
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/admin_login.css' %}">
+{% endblock %}
+{% block extra_js %}
+    {{ block.super }}
+    <script src="{% static 'js/admin_login.js' %}"></script>
+{% endblock %}

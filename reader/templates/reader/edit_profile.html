@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reader.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="auth-page">
+    <h1>Edit Profile</h1>
+    <p class="subtitle">Update your personal details below.</p>
+
+    <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_name">Full Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="form-errors">{{ form.name.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_email">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}<div class="form-errors">{{ form.email.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_phone_number">Phone Number</label>
+            <div class="phone-widget">
+                {{ form.phone_number }}
+            </div>
+            {% if form.phone_number.errors %}<div class="form-errors">{{ form.phone_number.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group form-group--half">
+                <label for="id_gender">Gender</label>
+                {{ form.gender }}
+                {% if form.gender.errors %}<div class="form-errors">{{ form.gender.errors }}</div>{% endif %}
+            </div>
+            <div class="form-group form-group--half">
+                <label for="id_date_of_birth">Date of Birth</label>
+                {{ form.date_of_birth }}
+                {% if form.date_of_birth.errors %}<div class="form-errors">{{ form.date_of_birth.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-group hidden" id="gender-other-group">
+            <label for="id_gender_other">Other Gender</label>
+            {{ form.gender_other }}
+            {% if form.gender_other.errors %}<div class="form-errors">{{ form.gender_other.errors }}</div>{% endif %}
+        </div>
+
+        {# ── Address ── #}
+        <fieldset class="form-fieldset">
+            <legend class="form-fieldset__legend">Address</legend>
+
+            <div class="form-group">
+                <label for="id_address_line_1">Address Line 1</label>
+                {{ form.address_line_1 }}
+                {% if form.address_line_1.errors %}<div class="form-errors">{{ form.address_line_1.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_address_line_2">Address Line 2</label>
+                {{ form.address_line_2 }}
+                {% if form.address_line_2.errors %}<div class="form-errors">{{ form.address_line_2.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group form-group--half">
+                    <label for="id_city">City</label>
+                    {{ form.city }}
+                    {% if form.city.errors %}<div class="form-errors">{{ form.city.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group form-group--half">
+                    <label for="id_state">State</label>
+                    {{ form.state }}
+                    {% if form.state.errors %}<div class="form-errors">{{ form.state.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group form-group--half">
+                    <label for="id_post_office">Post Office</label>
+                    {{ form.post_office }}
+                    {% if form.post_office.errors %}<div class="form-errors">{{ form.post_office.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group form-group--half">
+                    <label for="id_district">District</label>
+                    {{ form.district }}
+                    {% if form.district.errors %}<div class="form-errors">{{ form.district.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group form-group--small">
+                <label for="id_pincode">Pincode</label>
+                {{ form.pincode }}
+                {% if form.pincode.errors %}<div class="form-errors">{{ form.pincode.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
+
+        {# ── Added By (Care Of) ── #}
+        <fieldset class="form-fieldset">
+            <legend class="form-fieldset__legend">Added By (C/O)</legend>
+
+            <div class="form-group">
+                <label for="id_care_of_name">Name</label>
+                {{ form.care_of_name }}
+                {% if form.care_of_name.errors %}<div class="form-errors">{{ form.care_of_name.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_care_of_number">Phone Number</label>
+                <div class="phone-widget">
+                    {{ form.care_of_number }}
+                </div>
+                {% if form.care_of_number.errors %}<div class="form-errors">{{ form.care_of_number.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group form-group--half">
+                    <label for="id_care_of_district">District</label>
+                    {{ form.care_of_district }}
+                    {% if form.care_of_district.errors %}<div class="form-errors">{{ form.care_of_district.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group form-group--half">
+                    <label for="id_care_of_meghala">Meghala</label>
+                    {{ form.care_of_meghala }}
+                    {% if form.care_of_meghala.errors %}<div class="form-errors">{{ form.care_of_meghala.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_care_of_unit">Unit</label>
+                {{ form.care_of_unit }}
+                {% if form.care_of_unit.errors %}<div class="form-errors">{{ form.care_of_unit.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
+
+        <button type="submit" class="auth-submit">Save Changes</button>
+    </form>
+
+    <p class="auth-footer">
+        <a href="{% url 'reader_profile' %}">← Back to Profile</a>
+    </p>
+</div>
+{% block extra_js %}
+<script src="{% static 'js/reader.js' %}" defer></script>
+{% endblock %}
+{% endblock %}

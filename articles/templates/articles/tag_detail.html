@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block title %}Tag: {{ tag_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/article.css' %}">
+{% endblock %}
+
+{% block content %}
+<header class="topic-header">
+    <div class="topic-header__inner">
+        <span class="topic-header__kicker">Browsing Tag</span>
+        <h1>{{ tag_name }}</h1>
+    </div>
+</header>
+
+<main class="topic-content">
+    <section class="topic-section">
+        <div class="topic-grid">
+            {% for article in articles %}
+            <article class="topic-card">
+                {% if article.cover_image %}
+                <a href="{{ article.url }}" class="topic-card__image-wrap">
+                    {% image article.cover_image fill-600x375 as img %}
+                    <img src="{{ img.url }}" alt="{{ article.title }}">
+                </a>
+                {% endif %}
+                <div class="topic-card__meta">{{ article.date|date:"F j, Y" }}</div>
+                <h3 class="topic-card__title"><a href="{{ article.url }}">{{ article.title }}</a></h3>
+                <div class="topic-card__excerpt">{{ article.excerpt|striptags }}</div>
+            </article>
+            {% empty %}
+            <div class="empty-msg">
+                <p>No articles found with this tag.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

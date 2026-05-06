@@ -66,6 +66,18 @@
     </section>
     {% endif %}
 
+    {% if page.tags.all %}
+    <section class="author-tags">
+        <h2 class="section-title">Tags</h2>
+        <div class="tags-list">
+            {% for tag in page.tags.all %}
+            <a href="{% url 'tag_detail' tag=tag.name %}" class="sg-tag-btn">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+
     <hr class="section-divider">
 
     <section class="author-articles">

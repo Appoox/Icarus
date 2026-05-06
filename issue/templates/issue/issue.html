@@ -1,12 +1,7 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags static %}
+{% load wagtailcore_tags wagtailimages_tags wagtailembeds_tags static %}
 
 {% block extra_css %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Barlow+Condensed:wght@400;600;700;800&display=swap"
-    rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/issue.css' %}">
 {% endblock %}
 
@@ -21,24 +16,163 @@
             {% if page.issue_number %}, ലക്കം {{ page.issue_number }}{% endif %}
         </div>
         {% endif %}
-        <h1>{{ page.title }}</h1>
-        <div class="issue-page-header__date">{{ page.date_of_publishing|date:"F j, Y" }}</div>
+        <div class="issue-page-header__date">
+            {{ page.date_of_publishing|date:"F j, Y" }}
+            {% if user.is_authenticated %}
+            <button class="favorite-btn" data-id="{{ page.id }}" data-type="issue" 
+                    data-favorited="{% if reader and page in reader.favorite_issues.all %}true{% else %}false{% endif %}"
+                    title="Toggle Favorite">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+            {% endif %}
+        </div>
         {% if page.topic %}
         <a href="{% url 'topic_detail' slug=page.topic.slug %}" class="issue-page-header__topic"
-            style="background-color: {{ page.topic.color|default:'#0b1f3a' }};">
+            style="--topic-color: {{ page.topic.color|default:'#0b1f3a' }};">
             {{ page.topic.name }}</a>
         {% endif %}
+        {% csrf_token %}
     </header>
+
+    {# ── Main Audio Display ── #}
+    {% if page.audio_file or page.audio_embed_url %}
+    <div class="main-audio-container">
+        <div class="audio-card">
+            <h4>Listen to this Issue</h4>
+            
+            {% if page.audio_file %}
+                <div class="modern-audio-player" id="player-main">
+                    <audio id="audio-main" src="{{ page.audio_file.url }}"></audio>
+                    
+                    <div class="player-main">
+                        <button class="play-btn" id="play-btn-main" title="Play">
+                            <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                            <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        
+                        <div class="player-info">
+                            <div class="progress-wrapper">
+                                <input type="range" class="progress-slider" id="slider-main" value="0" min="0" max="100">
+                                <div class="progress-bar-fill" id="fill-main"></div>
+                            </div>
+                            <div class="time-meta">
+                                <span id="current-main">0:00</span>
+                                <span id="duration-main">0:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            {% elif page.audio_embed_url %}
+                <div class="audio-embed">
+                    {% if ".mp3" in page.audio_embed_url or ".wav" in page.audio_embed_url or ".m4a" in page.audio_embed_url %}
+                        {# Handle direct audio links in the embed field #}
+                        <div class="modern-audio-player" id="player-embed">
+                            <audio id="audio-embed" src="{{ page.audio_embed_url }}"></audio>
+                            <div class="player-main">
+                                <button class="play-btn" id="play-btn-embed">
+                                    <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                                    <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                </button>
+                                <div class="player-info">
+                                    <div class="progress-wrapper">
+                                        <input type="range" class="progress-slider" id="slider-embed" value="0" min="0" max="100">
+                                        <div class="progress-bar-fill" id="fill-embed"></div>
+                                    </div>
+                                    <div class="time-meta">
+                                        <span id="current-embed">0:00</span>
+                                        <span id="duration-embed">0:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        {% embed page.audio_embed_url %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Main Video Display ── #}
+    {% if page.video_file or page.video_embed_url %}
+    <div class="main-video-container">
+        <div class="video-card">
+            {% if page.video_file %}
+                <div class="modern-video-player" id="vplayer-main">
+                    <div class="video-wrapper">
+                        <video id="video-main" src="{{ page.video_file.url }}"></video>
+                        <div class="video-overlay" id="overlay-main">
+                            <button class="big-play-btn" id="big-play-main">
+                                <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="video-controls">
+                        <button class="v-play-btn" id="v-play-main">
+                            <svg class="v-play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                            <svg class="v-pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <div class="v-progress-wrapper">
+                            <input type="range" class="v-progress-slider" id="v-slider-main" value="0" min="0" max="100">
+                            <div class="v-progress-fill" id="v-fill-main"></div>
+                        </div>
+                    </div>
+                </div>
+
+            {% elif page.video_embed_url %}
+                <div class="video-embed">
+                    {% if ".mp4" in page.video_embed_url or ".webm" in page.video_embed_url or ".ogv" in page.video_embed_url %}
+                        {# Handle direct video links in the embed field #}
+                <div class="modern-video-player" id="vplayer-embed">
+                            <video id="video-embed" src="{{ page.video_embed_url }}"></video>
+                            <div class="video-overlay" id="overlay-embed">
+                                <button class="big-play-btn" id="big-play-embed">
+                                    <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                    {% elif "youtu.be/" in page.video_embed_url or "youtube.com/" in page.video_embed_url %}
+                        <div class="youtube-fallback" data-url="{{ page.video_embed_url }}"></div>
+                    {% elif "vimeo.com/" in page.video_embed_url %}
+                        <div class="embed-responsive">
+                            <iframe src="https://player.vimeo.com/video/{{ page.video_embed_url|slice:"18:" }}" allowfullscreen></iframe>
+                        </div>
+                    {% else %}
+                        {% embed page.video_embed_url %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+
+    
+    {# ── Tags ── #}
+    <div class="issue-tags">
+        <div class="tags-list">
+            {% for tag in page.tags.all %}
+            <a href="{% url 'tag_detail' tag=tag.name %}" class="sg-tag-btn">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
 
 
     {# ── EDITORIAL BOARD | EDITORIAL — two-column layout ── #}
     <div class="editorial-layout">
 
-        {# LEFT COLUMN: Editorial Board #}
+        {# LEFT COLUMN: Editorial Board (Moved to bottom on mobile via CSS) #}
         <div class="editorial-board-col">
             <h2 class="editorial-board-col__heading">പ്രസാധകര്‍</h2>
 
-            {% for rel in page.editorial_board_relationship.all %}
+            {% for rel in page.board_members %}
             <div class="board-member">
                 <div class="board-member__photo">
                     {% if rel.editor.profile_image %}
@@ -62,7 +196,7 @@
             {% endfor %}
         </div>
 
-        {# RIGHT COLUMN: Editorial content (StreamField) #}
+        {# RIGHT COLUMN: Editorial content (Moved to top on mobile via CSS) #}
         <div class="editorial-content-col">
             <h2 class="editorial-content-col__heading">മുഖക്കുറിപ്പ്</h2>
 
@@ -97,29 +231,55 @@
         <span class="issue-section-head__rule" aria-hidden="true"></span>
     </div>
 
-    <div class="issue-articles-grid">
-        {% for article in page.get_all_articles %}
-        <article class="issue-article-card">
-            {% if article.cover_image %}
-            <a href="{{ article.url }}" class="issue-article-card__image-wrap" aria-hidden="true" tabindex="-1">
-                {% image article.cover_image fill-440x280 as art_img %}
-                <img src="{{ art_img.url }}" alt="{{ article.title }}">
-            </a>
-            {% endif %}
-            <h3 class="issue-article-card__title">
-                <a href="{{ article.url }}">{{ article.title }}</a>
-            </h3>
-            <p class="issue-article-card__meta">
-                By
-                {% for rel in article.article_authors.all %}
-                <a href="{{ rel.author.url }}">{{ rel.author.title }}</a>{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-            </p>
-        </article>
-        {% empty %}
-        <p class="issue-no-articles">No articles found for this issue.</p>
-        {% endfor %}
-    </div>
+    {# <div class="issue-articles-grid"> #}
+        {# {% for article in page.get_all_articles %} #}
+            {# Using the global carousel card component #}
+            {# {% include "includes/carousel_card.html" with article=article %} #}
+        {# {% empty %} #}
+        {# <p class="issue-no-articles">No articles found for this issue.</p> #}
+        {# {% endfor %} #}
+    {# </div> #}
+    
+    <div class="sg-article-grid">
+    {% for article in page.get_all_articles %}
+    <article class="sg-article-card">
+      {% if article.cover_image %}
+      <a href="{{ article.url }}" class="sg-article-card__image-wrap" aria-hidden="true" tabindex="-1">
+        {% image article.cover_image fill-440x280 as art_img %}
+        <img src="{{ art_img.url }}" alt="{{ article.title }}">
+      </a>
+      {% endif %}
+      
+      <div class="sg-article-card__content">
+        {% if article.topic %}
+        <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-article-card__category"
+          style="--category-color: {{ article.topic.color|default:'#c8102e' }};">
+          {{ article.topic.name }}
+        </a>
+        {% endif %}
+        <h3 class="sg-article-card__title">
+          <a href="{{ article.url }}">{{ article.title }}</a>
+        </h3>
+
+        {% if article.article_authors.all %}
+        <span class="sg-card-author">
+          {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </span>
+        {% endif %}
+
+        <time class="sg-article-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+          {{ article.date|date:"F j, Y" }}
+        </time>
+      </div>
+    </article>
+    {% empty %}
+    <p class="sg-empty">No articles published yet.</p>
+    {% endfor %}
+  </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/issue.js' %}" defer></script>
 {% endblock %}

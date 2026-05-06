@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <h1>Welcome Back</h1>
+    <p class="subtitle">Sign in to access your reading history and subscription.</p>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+            {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if form.errors %}
+    <div class="form-errors form-errors--center">
+        <p>Invalid phone/email or password. Please try again.</p>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'account_login' %}" class="auth-form" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="form-group">
+            {% if field.name == 'password' %}
+            <label for="{{ field.id_for_label }}" class="label--flex">
+                {{ field.label }}
+                <a href="{% url 'account_reset_password' %}" class="link--forgot">Forgot Password?</a>
+            </label>
+            {% else %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% endif %}
+
+            {% if field.name == 'login' %}
+            <div class="phone-widget-container">
+                {{ field }}
+            </div>
+            {% else %}
+            {{ field }}
+            {% endif %}
+
+            {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+            {% if field.errors %}<div class="form-errors">{{ field.errors }}</div>{% endif %}
+        </div>
+        {% endfor %}
+
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+        {% endif %}
+
+        <button type="submit" class="auth-submit">Sign In</button>
+    </form>
+
+    <p class="auth-footer">
+        Don't have an account? <a href="{% url 'account_signup' %}">Create one</a>
+    </p>
+</div>
+{% endblock %}

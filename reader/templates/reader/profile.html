@@ -4,251 +4,214 @@
 {% block title %}{{ reader.name }} — Profile{% endblock %}
 
 {% block extra_css %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Playfair+Display:wght@700;900&display=swap"
-    rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/reader.css' %}">
+{% endblock %}
 
-<style>
-    .profile-page {
-        max-width: 720px;
-        margin: 48px auto;
-        padding: 0 24px 80px;
-    }
-
-    .profile-header {
-        margin-bottom: 40px;
-    }
-
-    .profile-header h1 {
-        font-family: 'Playfair Display', Georgia, serif;
-        font-size: 32px;
-        font-weight: 900;
-        color: #0b1f3a;
-        margin-bottom: 4px;
-    }
-
-    .profile-header .email {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 15px;
-        color: #6b6659;
-    }
-
-    /* ── Subscription card ── */
-    .sub-card {
-        background: #fafaf8;
-        border: 1px solid #d4d0c8;
-        border-radius: 8px;
-        padding: 28px 32px;
-        margin-bottom: 36px;
-    }
-
-    .sub-card__label {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #6b6659;
-        margin-bottom: 8px;
-    }
-
-    .sub-card__status {
-        font-family: 'Playfair Display', Georgia, serif;
-        font-size: 22px;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-
-    .sub-card__status--active {
-        color: #2e7d32;
-    }
-
-    .sub-card__status--inactive {
-        color: #c8102e;
-    }
-
-    .sub-card__detail {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 14px;
-        color: #6b6659;
-        margin-bottom: 4px;
-    }
-
-    .sub-card__plans {
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid #d4d0c8;
-    }
-
-    .plans-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 12px;
-        margin-top: 12px;
-    }
-
-    .plan-option {
-        background: #fff;
-        border: 2px solid #d4d0c8;
-        border-radius: 6px;
-        padding: 16px;
-        text-align: center;
-        text-decoration: none;
-        transition: all 0.15s;
-    }
-
-    .plan-option:hover {
-        border-color: #0b1f3a;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    }
-
-    .plan-option__name {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 14px;
-        font-weight: 700;
-        color: #0b1f3a;
-        margin-bottom: 4px;
-    }
-
-    .plan-option__price {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 12px;
-        color: #6b6659;
-    }
-
-    /* ── Sections ── */
-    .profile-section {
-        margin-bottom: 36px;
-    }
-
-    .profile-section h2 {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #6b6659;
-        margin-bottom: 16px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #d4d0c8;
-    }
-
-    /* Topics list */
-    .topics-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .topics-list li {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        color: #fff;
-        background: #c8102e;
-        padding: 4px 12px;
-        border-radius: 20px;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-    }
-
-    /* Read articles */
-    .read-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .read-list li {
-        padding: 12px 0;
-        border-bottom: 1px solid #e8e8e8;
-    }
-
-    .read-list li:last-child {
-        border-bottom: none;
-    }
-
-    .read-list a {
-        font-family: 'Playfair Display', Georgia, serif;
-        font-size: 16px;
-        font-weight: 700;
-        color: #0b1f3a;
-        text-decoration: none;
-        transition: color 0.15s;
-    }
-
-    .read-list a:hover {
-        color: #c8102e;
-    }
-
-    .read-list .date {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 12px;
-        color: #888070;
-        display: block;
-        margin-top: 2px;
-    }
-
-    .empty-state {
-        font-family: 'Source Sans 3', sans-serif;
-        font-size: 14px;
-        color: #888070;
-        font-style: italic;
-    }
-</style>
+{% block extra_js %}
+<script src="{% static 'js/reader.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
 <div class="profile-page">
 
     <div class="profile-header">
-        <h1>{{ reader.name }}</h1>
-        <p class="email">{{ reader.email }}</p>
+        <div>
+            <h1>{{ reader.name }}</h1>
+            <p class="email">{{ reader.email }}</p>
+        </div>
+        <div class="profile-header__actions">
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit Profile</a>
+            <a href="{% url 'account_change_password' %}" class="link-edit">Change Password</a>
+        </div>
     </div>
+
+    {# ── Profile completion notice ── #}
+    {% if not reader.is_profile_complete %}
+    <div class="notice-banner">
+        👋 Your profile is incomplete. <a href="{% url 'edit_profile' %}">Complete it now</a> to help us serve you better.
+    </div>
+    {% endif %}
+
+    {# ── Grace period warning ── #}
+    {% if reader.is_in_grace_period %}
+    <div class="grace-banner">
+        ⚠️ Your subscription expired recently. You're in a grace period — renew now to keep your access.
+    </div>
+    {% endif %}
+
+    {# ── Personal Details ── #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Personal Details</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+        </div>
+
+        {# Profile image + bio #}
+        <div class="profile-avatar-wrap">
+            {% if reader.profile_image %}
+                {% image reader.profile_image fill-80x80 as img %}
+                <img src="{{ img.url }}" alt="{{ reader.name }}" class="profile-avatar">
+            {% else %}
+                <div class="profile-avatar-placeholder">
+                    {{ reader.name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            {% if reader.bio %}
+                <p class="profile-bio">{{ reader.bio }}</p>
+            {% endif %}
+        </div>
+
+        <div class="address-block">
+            {% if reader.phone_number %}
+                <strong>Phone:</strong> {{ reader.phone_number }}<br>
+            {% endif %}
+            {% if reader.email %}
+                <strong>Email:</strong> {{ reader.email }}<br>
+            {% endif %}
+            {% if reader.gender %}
+                <strong>Gender:</strong> {{ reader.get_gender_display }}
+                {% if reader.gender == 'മറ്റൊന്ന്' and reader.gender_other %}
+                    ({{ reader.gender_other }})
+                {% endif %}<br>
+            {% endif %}
+            {% if reader.date_of_birth %}
+                <strong>Birthday:</strong> {{ reader.date_of_birth|date:"F j, Y" }}<br>
+            {% endif %}
+            <strong>Newsletter:</strong>
+            {% if reader.newsletter_opt_in %}
+                ✅ Subscribed
+            {% else %}
+                Not subscribed
+            {% endif %}<br>
+        </div>
+    </div>
+
+    {# ── Print Subscription ── #}
+    {% if reader.is_print_subscriber %}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Print Subscription</h2>
+        </div>
+        <div class="address-block">
+            <strong>Delivery Status:</strong> {{ reader.get_print_delivery_status_display }}<br>
+            {% if reader.print_expiry_date %}
+                <strong>Print Expires:</strong> {{ reader.print_expiry_date|date:"F j, Y" }}<br>
+            {% endif %}
+            {% if reader.delivery_notes %}
+                <strong>Delivery Notes:</strong> {{ reader.delivery_notes }}<br>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Added By (Care Of) ── #}
+    {% if reader.care_of_name or reader.care_of_number %}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Membership Details (Added By)</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+        </div>
+        <div class="address-block">
+            {% if reader.care_of_name %}<strong>Name:</strong> {{ reader.care_of_name }}<br>{% endif %}
+            {% if reader.care_of_number %}<strong>Phone:</strong> {{ reader.care_of_number }}<br>{% endif %}
+            {% if reader.care_of_district %}<strong>District:</strong> {{ reader.care_of_district }}<br>{% endif %}
+            {% if reader.care_of_meghala %}<strong>Meghala:</strong> {{ reader.care_of_meghala }}<br>{% endif %}
+            {% if reader.care_of_unit %}<strong>Unit:</strong> {{ reader.care_of_unit }}<br>{% endif %}
+        </div>
+    </div>
+    {% endif %}
 
     {# ── Subscription Status ── #}
     <div class="sub-card">
         <p class="sub-card__label">Subscription</p>
-        {% if reader.is_subscribed %}
-        <p class="sub-card__status sub-card__status--active">Active — {{ reader.get_subscription_plan_display }}</p>
-        <p class="sub-card__detail">Expires: {{ reader.subscription_end|date:"F j, Y" }}</p>
-        {% else %}
-        <p class="sub-card__status sub-card__status--inactive">Not Subscribed</p>
-        <p class="sub-card__detail">Subscribe to get unlimited access to all articles.</p>
 
-        <div class="sub-card__plans">
-            <p class="sub-card__label">Choose a Plan</p>
-            <div class="plans-grid">
-                <a href="{% url 'reader_checkout' plan_type='1_month' %}" class="plan-option">
-                    <div class="plan-option__name">1 Month</div>
-                    <div class="plan-option__price">₹299</div>
-                </a>
-                <a href="{% url 'reader_checkout' plan_type='3_months' %}" class="plan-option">
-                    <div class="plan-option__name">3 Months</div>
-                    <div class="plan-option__price">₹799</div>
-                </a>
-                <a href="{% url 'reader_checkout' plan_type='6_months' %}" class="plan-option">
-                    <div class="plan-option__name">6 Months</div>
-                    <div class="plan-option__price">₹1499</div>
-                </a>
-                <a href="{% url 'reader_checkout' plan_type='1_year' %}" class="plan-option">
-                    <div class="plan-option__name">1 Year</div>
-                    <div class="plan-option__price">₹2499</div>
-                </a>
+        {% if reader.is_subscribed %}
+            <p class="sub-card__status sub-card__status--active">
+                Active — {{ reader.get_subscription_plan_display }}
+            </p>
+
+            {% if reader.subscription_start %}
+            <p class="sub-card__detail">Started: {{ reader.subscription_start|date:"F j, Y" }}</p>
+            {% endif %}
+            <p class="sub-card__detail">
+                Expires: {{ reader.subscription_end|date:"F j, Y" }}
+                {% if reader.days_until_expiry is not None %}
+                    — {{ reader.days_until_expiry }} day{{ reader.days_until_expiry|pluralize }} remaining
+                {% endif %}
+            </p>
+
+            <div class="cancel-form">
+                <form method="post" action="{% url 'cancel_subscription' %}" id="cancel-sub-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-cancel">Cancel Subscription</button>
+                </form>
             </div>
+
+        {% else %}
+            <p class="sub-card__status sub-card__status--inactive">Not Subscribed</p>
+            <p class="sub-card__detail">Subscribe to get unlimited access to all articles.</p>
+
+            <div class="sub-card__plans">
+                <p class="sub-card__label">Choose a Plan</p>
+                <div class="plans-grid">
+                    {% for plan_key, plan in plans.items %}
+                    <a href="{% url 'reader_checkout' plan_type=plan_key %}" class="plan-option">
+                        <div class="plan-option__name">{{ plan.name }}</div>
+                        <div class="plan-option__price">₹{{ plan.price }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {# ── Favourites ── #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Favorite Articles</h2>
         </div>
+        {% if reader.favorite_articles.all %}
+        <ul class="read-list">
+            {% for article in reader.favorite_articles.all %}
+            <li>
+                <a href="{{ article.url }}">{{ article.title }}</a>
+                {% if article.date %}
+                <span class="date">{{ article.date|date:"F j, Y" }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">You haven't favorited any articles yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Favorite Issues</h2>
+        </div>
+        {% if reader.favorite_issues.all %}
+        <ul class="read-list">
+            {% for issue in reader.favorite_issues.all %}
+            <li>
+                <a href="{{ issue.url }}">{{ issue.title }}</a>
+                {% if issue.date_of_publishing %}
+                <span class="date">{{ issue.date_of_publishing|date:"F j, Y" }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">You haven't favorited any issues yet.</p>
         {% endif %}
     </div>
 
     {# ── Interested Topics ── #}
     <div class="profile-section">
-        <h2>Your Interests</h2>
+        <div class="profile-section__header">
+            <h2>Your Interests</h2>
+            <a href="{% url 'update_interests' %}" class="link-edit">Edit</a>
+        </div>
         {% if interested_topics %}
         <ul class="topics-list">
             {% for topic in interested_topics %}
@@ -256,13 +219,15 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="empty-state">No topics selected yet.</p>
+        <p class="empty-state">No topics selected yet. <a href="{% url 'update_interests' %}" class="link-edit">Add some</a></p>
         {% endif %}
     </div>
 
     {# ── Read Articles ── #}
     <div class="profile-section">
-        <h2>Reading History</h2>
+        <div class="profile-section__header">
+            <h2>Reading History</h2>
+        </div>
         {% if read_articles %}
         <ul class="read-list">
             {% for article in read_articles %}
@@ -277,6 +242,22 @@
         {% else %}
         <p class="empty-state">You haven't read any articles yet.</p>
         {% endif %}
+    </div>
+
+    {# ── Deactivation ── #}
+    <div class="profile-section danger-zone">
+        <div class="profile-section__header" style="border-bottom: none;">
+            <h2>Danger Zone</h2>
+        </div>
+        <p class="sub-card__detail">
+            Deactivating your account will immediately revoke your access to Icarus. 
+            In accordance with our data retention policy, your personal data will be 
+            scheduled for permanent deletion after the statutory period.
+        </p>
+        <form method="post" action="{% url 'deactivate_account' %}" id="deactivate-account-form">
+            {% csrf_token %}
+            <button type="submit" class="btn-cancel">Deactivate My Account</button>
+        </form>
     </div>
 
 </div>

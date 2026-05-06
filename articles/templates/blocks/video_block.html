@@ -1,0 +1,53 @@
+{% load wagtailcore_tags wagtailembeds_tags %}
+
+<div class="video-block">
+    {% if self.video_file %}
+        <div class="modern-video-player">
+            <div class="video-wrapper">
+                <video src="{{ self.video_file.url }}"></video>
+                <div class="video-overlay">
+                    <button class="big-play-btn">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="video-controls">
+                <button class="v-play-btn">
+                    <svg class="v-play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg class="v-pause-icon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                
+                <div class="v-progress-wrapper">
+                    <input type="range" class="v-progress-slider" value="0" min="0" max="100">
+                    <div class="v-progress-fill"></div>
+                </div>
+
+                <div class="v-time">
+                    <span class="v-current">0:00</span>
+                </div>
+            </div>
+        </div>
+
+    {% elif self.video_embed_url %}
+        <div class="video-embed">
+            {% if ".mp4" in self.video_embed_url or ".webm" in self.video_embed_url or ".ogv" in self.video_embed_url %}
+                <div class="modern-video-player">
+                    <video src="{{ self.video_embed_url }}"></video>
+                </div>
+            {% elif "youtu.be" in self.video_embed_url or "youtube.com" in self.video_embed_url %}
+                <div class="youtube-fallback" data-url="{{ self.video_embed_url }}">
+                    {# JS will inject iframe here #}
+                </div>
+            {% else %}
+                {% embed self.video_embed_url %}
+            {% endif %}
+        </div>
+    {% endif %}
+    
+    {% if self.caption %}
+        <div class="video-caption">
+            {{ self.caption }}
+        </div>
+    {% endif %}
+</div>

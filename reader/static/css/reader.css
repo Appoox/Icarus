@@ -1,0 +1,486 @@
+/* ─────────────────────────────────────────────
+   Icarus Reader App Styles
+   Consolidated from profile, checkout, edit_profile
+ ───────────────────────────────────────────── */
+
+/* Design tokens now inherited from global Icarus.css */
+
+/* ─────────────────────────────────────────────
+   Layout & Typography
+ ───────────────────────────────────────────── */
+.profile-page, .checkout-page, .auth-page {
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 0 24px 80px;
+}
+
+.checkout-page, .auth-page {
+    max-width: 600px;
+}
+
+.auth-page {
+    max-width: 480px;
+}
+
+h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--navy);
+    margin-bottom: 8px;
+}
+
+.subtitle, .email {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--muted);
+}
+
+/* ─────────────────────────────────────────────
+   Components
+ ───────────────────────────────────────────── */
+
+/* Cards */
+.sub-card, .summary-box, .auth-form, .payment-form {
+    background: var(--bg-light);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 36px;
+}
+
+.payment-form, .auth-form {
+    background: var(--white);
+}
+
+/* Labels & Headers */
+.sub-card__label, .summary-box h2, .profile-section__header h2, .form-group label, .form-fieldset__legend {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+
+.profile-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+}
+
+/* Status Colors */
+.sub-card__status {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+.sub-card__status--active   { color: var(--success); }
+.sub-card__status--grace    { color: var(--warning); }
+.sub-card__status--inactive { color: var(--red); }
+
+/* Buttons */
+.btn-cancel, .checkout-submit, .auth-submit {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.btn-cancel {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red);
+}
+
+.btn-cancel:hover {
+    background: #fce4ec;
+}
+
+.checkout-submit, .auth-submit {
+    width: 100%;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    font-size: 14px;
+    padding: 14px;
+}
+
+.checkout-submit:hover, .auth-submit:hover {
+    background: var(--red-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
+}
+
+/* ─────────────────────────────────────────────
+   Forms
+ ───────────────────────────────────────────── */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 14px;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--white);
+    color: var(--ink);
+    transition: all 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.08);
+}
+
+.form-errors {
+    color: var(--red);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.form-fieldset {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px 20px 4px;
+    margin-bottom: 24px;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.form-group--half {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Custom Select Arrow */
+select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6659' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
+
+/* ─────────────────────────────────────────────
+   Specific Views Logic
+ ───────────────────────────────────────────── */
+
+/* Checkout Payment Methods */
+.payment-methods {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.method-option {
+    flex: 1;
+    border: 2px solid var(--rule);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-ui);
+    font-weight: 600;
+}
+
+.method-option.active {
+    border-color: var(--red);
+    background: #fff5f6;
+    color: var(--red);
+}
+
+.method-option input {
+    display: none;
+}
+
+/* Profile Sections */
+.read-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.read-list li {
+    padding: 14px 0;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.read-list li:last-child { border-bottom: none; }
+
+.read-list a {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.read-list a:hover { color: var(--red); }
+
+.read-list .date {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--muted);
+    display: block;
+    margin-top: 4px;
+}
+
+.topics-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+}
+
+.topics-list li {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    background: var(--red);
+    padding: 6px 16px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Banners */
+.grace-banner, .notice-banner {
+    border-radius: 6px;
+    padding: 14px 20px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.grace-banner {
+    background: #fff3e0;
+    border: 1px solid #ffb74d;
+    color: #e65100;
+}
+
+.notice-banner {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    color: #1565c0;
+}
+
+/* Plans Grid */
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.plan-option {
+    background: var(--white);
+    border: 2px solid var(--rule);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.plan-option:hover {
+    border-color: var(--navy);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.plan-option__name {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 4px;
+}
+
+.plan-option__price {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* Utils */
+.link-edit {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--red);
+    text-decoration: none;
+}
+.link-edit:hover { text-decoration: underline; }
+
+.empty-state {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+}
+
+.address-block {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.7;
+}
+
+/* Signup Topics Group */
+.topics-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.topics-group label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink);
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.topics-group label:hover {
+    border-color: var(--navy);
+}
+
+.topics-group input[type="checkbox"] {
+    accent-color: var(--red);
+}
+
+.helptext {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: #888070;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Phone Widget Fix */
+.phone-widget {
+    display: flex;
+    gap: 10px;
+}
+#id_phone_number_0, #id_care_of_number_0 {
+    width: 140px !important;
+    flex-shrink: 0;
+    appearance: auto !important;
+    background-image: none !important;
+}
+#id_phone_number_1, #id_care_of_number_1 {
+    flex: 1;
+}
+
+@media (max-width: 500px) {
+    .form-row { flex-direction: column; gap: 0; }
+    .method-option { padding: 8px; font-size: 12px; }
+}
+
+/* ── Profile Page Utilities ── */
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.profile-header__actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 16px;
+}
+
+.profile-avatar-wrap {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--rule);
+}
+
+.profile-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #e8e8e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    /* Design tokens now inherited from global Icarus.css */    color: var(--muted);
+    flex-shrink: 0;
+}
+
+.profile-bio {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.danger-zone {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid var(--rule);
+}
+
+.danger-zone h2 {
+    color: var(--red);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.form-group--flex {
+    flex: 1;
+}
+
+.form-group--small {
+    max-width: 200px;
+}
+
+

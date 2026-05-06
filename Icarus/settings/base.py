@@ -9,9 +9,35 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+ACCOUNT_LOGIN_METHODS = {"phone"}
+ACCOUNT_SIGNUP_FIELDS = [
+  'phone*',
+  'name*',
+  'password1*',
+]
+ACCOUNT_USER_MODEL_PHONE_FIELD = 'phone_number'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+# ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_PHONE_VERIFICATION = "none"  # No SMS backend; skip phone verification
+ACCOUNT_SIGNUP_FORM_CLASS = 'reader.forms.AllauthSignupForm'
+ACCOUNT_FORMS = {
+    'login': 'reader.auth_forms.CustomLoginForm',
+    'signup': 'reader.auth_forms.CustomSignupForm',
+}
+ACCOUNT_LOGIN_ON_SIGNUP = True
+ACCOUNT_ADAPTER = 'reader.adapter.CustomAccountAdapter'
+AUTH_USER_MODEL = 'reader.ReaderUser'
+ACCOUNT_SIGNUP_REDIRECT_URL = '/reader/profile/'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from pathlib import Path
+from environs import Env
+
+env = Env()
+env.read_env() 
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = PROJECT_DIR.parent
@@ -24,12 +50,15 @@ BASE_DIR = PROJECT_DIR.parent
 # Application definition
 
 INSTALLED_APPS = [
+    "auditlog",
     "home",
     "search",
     "articles",
     "literati",
     "issue",
     "reader",
+    "hitcount",
+    "the_librarian",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.table_block",
@@ -52,6 +81,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
+    "allauth",
+    "allauth.account",
 ]
 
 MIDDLEWARE = [
@@ -60,9 +92,11 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "auditlog.middleware.AuditlogMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "Icarus.urls"
@@ -91,16 +125,30 @@ WSGI_APPLICATION = "Icarus.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
+import dj_database_url
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:////{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -184,9 +232,39 @@ WAGTAILADMIN_BASE_URL = "http://example.com"
 # This can be omitted to allow all files, but note that this may present a security risk
 # if untrusted users are allowed to upload files -
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
-WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
+WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip', 'mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'opus', 'mp4', 'webm', 'ogv']
 
 # ── Reader / Paywall ──────────────────────────────────────────────────
-FREE_ARTICLE_LIMIT = 3  # Number of free articles for non-subscribed readers
-LOGIN_REDIRECT_URL = '/reader/profile/'
-LOGIN_URL = '/reader/login/'
+FREE_ARTICLE_LIMIT = env.int("FREE_ARTICLE_LIMIT", 3)  # Number of free articles for non-subscribed readers
+LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/reader/profile/')
+LOGIN_URL = env.str("LOGIN_URL", '/accounts/login/')
+
+# ── The Librarian ─────────────────────────────────────────────────────
+ARCHIVE_DIR = env.path("ARCHIVE_DIR", BASE_DIR / "archive")
+LIBRARIAN_EMBEDDER_TYPE = env.str("EMBEDDER_TYPE", "HuggingFace")
+LIBRARIAN_EMBEDDING_MODEL = env.str("EMBEDDING_MODEL_NAME", "all-mpnet-base-v2")
+LIBRARIAN_COLLECTION_NAME = env.str("COLLECTION_NAME", "sg-archive")
+LIBRARIAN_EMBEDDING_DIM = env.int("EMBEDDING_DIM", 768)
+LIBRARIAN_EMBED_BATCH_SIZE = env.int("EMBED_BATCH_SIZE", 64)
+
+# ── Email & Password Reset ───────────────────────────────────────────
+# Default to console backend for local testing, can be toggled via .env
+EMAIL_BACKEND = env.str(
+    "EMAIL_BACKEND", 
+    default="django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = env.str("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=25)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="ശാസ്ത്രഗതി <noreply@example.com>")
+
+# Enable framing from SAMEORIGIN to allow PDF rendering within search interface
+X_FRAME_OPTIONS = "SAMEORIGIN"
+WAGTAILEMBEDS_RESPONSIVE_HTML = True
+
+
+TAGGIT_CASE_INSENSITIVE = True
+
+DAYS_BEFORE_PURGE = env.int("DAYS_BEFORE_PURGE", default=30)

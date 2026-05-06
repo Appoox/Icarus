@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.filename }} — Page {{ page }} — The Librarian</title>
+    <link rel="stylesheet" href="{% static 'css/Icarus.css' %}">
+    <link rel="stylesheet" href="{% static 'css/librarian.css' %}">
+</head>
+<body class="viewer-body">
+    <div class="viewer-bar">
+        <h2>📄 {{ document.filename }}</h2>
+        <div class="meta">
+            <span>Page {{ page }} of {{ document.total_pages }}</span>
+            <a href="{% url 'the_librarian:search' %}">← Back to search</a>
+        </div>
+    </div>
+
+    <!--
+        ViewerJS viewer: loads the PDF via the ViewerJS index.html.
+        The ?startpage=N parameter tells ViewerJS to open at the specified page.
+    -->
+    <iframe
+        class="viewer-frame"
+        src="{% static 'the_librarian/ViewerJS/index.html' %}?startpage={{ page }}#{{ pdf_url }}"
+        allowfullscreen>
+    </iframe>
+</body>
+</html>

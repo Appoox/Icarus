@@ -1,0 +1,44 @@
+{% load wagtailcore_tags wagtailembeds_tags %}
+
+<div class="audio-block">
+    {% if self.audio_file %}
+        <div class="modern-audio-player">
+            <audio src="{{ self.audio_file.url }}"></audio>
+            
+            <div class="player-main">
+                <button class="play-btn" title="Play">
+                    <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg class="pause-icon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                
+                <div class="player-info">
+                    <div class="progress-wrapper">
+                        <input type="range" class="progress-slider" value="0" min="0" max="100">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                    <div class="time-meta">
+                        <span class="time-current">0:00</span>
+                        <span class="time-duration">0:00</span>
+                    </div>
+                </div>
+
+                <div class="volume-control">
+                    <button class="mute-btn">
+                        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    {% elif self.audio_embed_url %}
+        <div class="audio-embed">
+            {% embed self.audio_embed_url %}
+        </div>
+    {% endif %}
+    
+    {% if self.caption %}
+        <div class="audio-caption">
+            {{ self.caption }}
+        </div>
+    {% endif %}
+</div>

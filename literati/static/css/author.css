@@ -188,3 +188,21 @@
 .topic-tag:hover {
     opacity: 0.8;
 }
+
+.author-tags {
+    margin: 24px 0;
+}
+
+.author-tags .section-title {
+    font-size: 0.9rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+}
+
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

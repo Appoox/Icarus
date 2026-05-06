@@ -1,4 +1,11 @@
-{% load i18n wagtailcore_tags %}
+{% load i18n wagtailcore_tags static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Welcome to your new Wagtail site!" %}</title>
+    <link rel="stylesheet" href="{% static 'css/welcome_page.css' %}">
+</head>
+<body>
 
 <header class="header">
     <div class="logo">
@@ -50,3 +57,5 @@
         </div>
     </a>
 </footer>
+</body>
+</html>

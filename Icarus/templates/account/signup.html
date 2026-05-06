@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign Up — Reader Account{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <h1>Create Your Account</h1>
+    <p class="subtitle">Join to read articles and manage your subscription.</p>
+
+    <form method="post" action="{% url 'account_signup' %}" class="auth-form" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="form-errors form-errors--center">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% if field.name == 'phone' %}
+            <div class="phone-widget-container">
+                {{ field }}
+            </div>
+            {% else %}
+            {{ field }}
+            {% endif %}
+            {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+            {% if field.errors %}<div class="form-errors">{{ field.errors }}</div>{% endif %}
+        </div>
+        {% endfor %}
+
+
+
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+        {% endif %}
+
+        <button type="submit" class="auth-submit">Create Account</button>
+    </form>
+
+    <p class="auth-footer">
+        Already have an account? <a href="{% url 'account_login' %}">Sign in</a>
+    </p>
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@ from wagtail import hooks
 from wagtail.admin.panels import Panel
 import wagtail.admin.rich_text.editors.draftail.features as draftail_features
 from wagtail.admin.rich_text.converters.html_to_contentstate import InlineStyleElementHandler
+from wagtail.admin.ui.tables import Column
 
 @hooks.register('register_rich_text_features')
 def register_text_color_features(features):
@@ -188,3 +189,104 @@ def cover_image_preview_js():
 })();
 </script>
 """)
+
+
+class HitCountColumn(Column):
+    def get_value(self, instance):
+        specific_instance = instance.specific
+        if hasattr(specific_instance, 'hit_count'):
+            return specific_instance.hit_count.hits
+        return "-"
+
+class AnalyticsColumn(Column):
+    def __init__(self, name, field_name, **kwargs):
+        super().__init__(name, **kwargs)
+        self.field_name = field_name
+
+    def get_value(self, instance):
+        specific_instance = instance.specific
+        if hasattr(specific_instance, self.field_name):
+            return getattr(specific_instance, self.field_name)
+        return "-"
+
+from wagtail.admin.viewsets.pages import PageListingViewSet
+
+class ArticlePageListingViewSet(PageListingViewSet):
+    icon = 'doc-full'
+    menu_label = 'Articles'
+    menu_order = 200
+    add_to_admin_menu = True # Add this so it shows on the sidebar menu
+
+    @property
+    def columns(self):
+        return super().columns + [
+            HitCountColumn("hit_count", label="Views", sort_key="hit_count_generic__hits"),
+            AnalyticsColumn("read_fully_count", "read_fully_count", label="Read Fully", sort_key="read_fully_count")
+        ]
+
+@hooks.register('register_admin_viewset')
+def register_article_viewset():
+    from .models import Article
+    ArticlePageListingViewSet.model = Article
+    return ArticlePageListingViewSet('articles')
+
+
+@hooks.register('insert_editor_js')
+def register_tag_autocomplete_js():
+    return mark_safe("""
+    <script>
+    (function() {
+        /**
+         * Enhanced Tag Autocomplete Selection for Wagtail 7.x
+         * Automatically selects the first result on Enter if length >= 2
+         */
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const activeElement = document.activeElement;
+                if (!activeElement) return;
+
+                // Targeting modern Wagtail w-tag inputs and legacy tag-it inputs
+                const tagWrapper = activeElement.closest('[data-controller="w-tag"], .tagit, .w-tag-input');
+                if (!tagWrapper) return;
+
+                const value = activeElement.value.trim();
+                
+                // Threshold of 2 characters for "strong match"
+                if (value.length >= 2) {
+                    // Autocomplete menus are usually appended to <body>
+                    const menus = document.querySelectorAll('.ui-autocomplete, [role="listbox"]');
+                    let visibleMenu = null;
+                    
+                    for (const menu of menus) {
+                        if (menu.offsetParent !== null && window.getComputedStyle(menu).display !== 'none') {
+                            visibleMenu = menu;
+                            break;
+                        }
+                    }
+
+                    if (visibleMenu) {
+                        // If something is already highlighted by the user, let default happen
+                        const highlighted = visibleMenu.querySelector('.ui-state-active, .active, [aria-selected="true"]');
+                        if (highlighted) return;
+
+                        // Otherwise, find the first relevant result
+                        const firstItem = visibleMenu.querySelector('.ui-menu-item, [role="option"]');
+                        if (firstItem) {
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            // Try to click the inner wrapper/link first, then fallback to item itself
+                            const target = firstItem.querySelector('.ui-menu-item-wrapper, a, span') || firstItem;
+                            
+                            // Using a combination of events to ensure the library detects the selection
+                            target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                            target.click();
+                            target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                        }
+                    }
+                }
+            }
+        }, true); // Capture phase to beat Wagtail's internal Enter handlers
+    })();
+    </script>
+    """)

@@ -1,6 +1,8 @@
 from django.db import models
 from django import forms
 from modelcluster.fields import ParentalKey
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase
 from wagtail.models import Page
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
@@ -13,6 +15,24 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from .wagtail_widgets import ColorPickerBlock
+
+from hitcount.models import HitCountMixin, HitCount
+from django.contrib.contenttypes.fields import GenericRelation
+from hitcount.views import HitCountMixin as HitCountViewMixin
+
+class ArticleTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'Article',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
+
+class ArticleIndexPageTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'ArticleIndexPage',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
 
 class ColoredHeadingBlock(blocks.StructBlock):
     text = blocks.CharBlock()
@@ -67,9 +87,33 @@ class ImageBlock(blocks.StructBlock):
         label = 'Image'
 
 
+class AudioBlock(blocks.StructBlock):
+    audio_file = DocumentChooserBlock(required=False, help_text="Upload an audio file (mp3, wav, etc.)")
+    audio_embed_url = blocks.URLBlock(required=False, help_text="Or paste an embed link (SoundCloud, etc.)")
+    caption = blocks.CharBlock(required=False, help_text="Optional caption for the audio")
+
+    class Meta:
+        icon = 'media'
+        template = 'blocks/audio_block.html'
+        label = 'Audio'
+
+
+class VideoBlock(blocks.StructBlock):
+    video_file = DocumentChooserBlock(required=False, help_text="Upload a video file (mp4, webm, etc.)")
+    video_embed_url = blocks.URLBlock(required=False, help_text="Or paste an embed link (YouTube, Vimeo, etc.)")
+    caption = blocks.CharBlock(required=False, help_text="Optional caption for the video")
+
+    class Meta:
+        icon = 'media'
+        template = 'blocks/video_block.html'
+        label = 'Video'
+
+
 # ── Reusable StreamField Blocks ─────────────────────────────────────────
 
 STREAM_BLOCKS = [
+    ('audio',      AudioBlock()),
+    ('video',      VideoBlock()),
     ('heading',    blocks.RichTextBlock(form_classname="full title")),
     ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
     ('paragraph',  blocks.RichTextBlock()),
@@ -116,15 +160,20 @@ class ArticleForm(WagtailAdminPageForm):
             Issue = apps.get_model('issue', 'Issue')
             latest_issue = Issue.objects.live().order_by('-date_of_publishing').first()
             if latest_issue:
-                self.fields['main_issue'].queryset = Issue.objects.filter(pk=latest_issue.pk)
+                # Set the initial default value to the latest issue
                 self.fields['main_issue'].initial = latest_issue.pk
                 self.initial['main_issue'] = latest_issue.pk
-                self.fields['main_issue'].widget = forms.Select(choices=self.fields['main_issue'].choices)
-                self.fields['main_issue'].required = False
+                
 
-
-class Article(Page):
+class Article(Page, HitCountMixin):
     base_form_class = ArticleForm
+
+    hit_count_generic = GenericRelation(
+        HitCount, object_id_field='object_pk',
+        related_query_name='hit_count_generic_relation'
+    )
+
+    tags = ClusterTaggableManager(through=ArticleTag, blank=True)
 
     parent_page_types = ['ArticleIndexPage']
 
@@ -197,8 +246,40 @@ class Article(Page):
     title_ta = models.CharField(max_length=255, blank=True, verbose_name="Title (Tamil)")
     body_ta = StreamField(STREAM_BLOCKS, use_json_field=True, null=True, blank=True, verbose_name="Body (Tamil)")
 
+    # ── Audio ─────────────────────────────────────────────────────────────
+    audio_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    audio_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
+    )
+
+    # ── Video ─────────────────────────────────────────────────────────────
+    video_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    video_embed_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Paste an embed link for video (e.g., YouTube, Vimeo)"
+    )
+
+    # ── Analytics ─────────────────────────────────────────────────────────
+    read_fully_count = models.PositiveIntegerField(default=0, editable=False)
     # ── Admin panels ───────────────────────────────────────────────────────
     content_panels = Page.content_panels + [
+        FieldPanel('slug'),
+        FieldPanel('tags'),
         FieldPanel('main_issue'),
         FieldPanel('date'),
         FieldPanel('topic'),
@@ -208,8 +289,19 @@ class Article(Page):
             FieldPanel('cover_image_caption'),
             CoverImagePreviewPanel(),
         ], heading="Cover Image"),
+        MultiFieldPanel([
+            FieldPanel('audio_file'),
+            FieldPanel('audio_embed_url'),
+        ], heading="Audio (Main)"),
+        MultiFieldPanel([
+            FieldPanel('video_file'),
+            FieldPanel('video_embed_url'),
+        ], heading="Video (Main)"),
         InlinePanel('article_authors', label="Authors"),
         FieldPanel('body'),
+        MultiFieldPanel([
+            FieldPanel('read_fully_count', read_only=True),
+        ], heading="Analytics"),
         MultiFieldPanel([
             FieldPanel('title_en'),
             FieldPanel('body_en'),
@@ -240,6 +332,11 @@ class Article(Page):
         context = super().get_context(request, *args, **kwargs)
         from django.conf import settings as django_settings
 
+        # ── Analytics: Increment Opened Count ──────────────────────────
+        if not (request.user.is_superuser or request.user.is_staff):
+            hit_count = HitCount.objects.get_for_object(self)
+            HitCountViewMixin().hit_count(request, hit_count)
+
         # Query Article siblings directly (not the base Page queryset) so that
         # topic filtering and specific fields are available without extra joins.
         siblings = (
@@ -264,16 +361,16 @@ class Article(Page):
         truncated_body = None
         reader = None
 
-        # 1. Admin Exemption
+        # 1. Reader Profile Fetch
+        if request.user.is_authenticated:
+            reader = request.user
+
+        # 2. Admin Exemption
         if request.user.is_superuser or request.user.is_staff:
             show_paywall = False
         
-        # 2. Authenticated Reader Logic
+        # 3. Authenticated Reader Logic
         elif request.user.is_authenticated:
-            try:
-                reader = request.user.reader
-            except Exception:
-                reader = None
 
             if reader and reader.is_subscribed:
                 # Subscribed reader → full access, track the read
@@ -325,11 +422,13 @@ class Article(Page):
 
 class ArticleIndexPage(Page):
     intro = RichTextField(blank=True)
+    tags = ClusterTaggableManager(through=ArticleIndexPageTag, blank=True)
 
     max_count = 1
 
     content_panels = Page.content_panels + [
-        FieldPanel('intro')
+        FieldPanel('intro'),
+        FieldPanel('tags'),
     ]
 
     subpage_types = ['Article']

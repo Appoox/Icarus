@@ -17,6 +17,6 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
 try:
-    from .local import *
+    from .local import *  # type: ignore
 except ImportError:
     pass

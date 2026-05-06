@@ -9,6 +9,6 @@ DEBUG = False
 STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 try:
-    from .local import *
+    from .local import * # type: ignore
 except ImportError:
     pass
