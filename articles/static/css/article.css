@@ -334,7 +334,7 @@
 .author-section {
     margin-top: 56px;
     padding-top: 32px;
-    border-top: 1px solid var(--gray-light);
+    border-top: 1px solid var(--rule);
 }
 
 .author-section-title {
@@ -343,7 +343,7 @@
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--gray-mid);
+    color: var(--caption);
     margin-bottom: 24px;
 }
 
@@ -357,8 +357,9 @@
     display: flex;
     gap: 24px;
     align-items: flex-start;
-    background: var(--gray-bg);
+    background: #fdfdfc;
     padding: 24px;
+    border: 1px solid var(--rule);
     border-radius: 12px;
 }
 
