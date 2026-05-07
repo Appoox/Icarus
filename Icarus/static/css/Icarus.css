@@ -431,6 +431,7 @@ img {
 /* ── Breadcrumbs ──────── */
 .site-breadcrumbs {
     margin: 1rem 0 0 0;
+    margin-left: 5rem;
     padding: 0 1.25rem;
     font-family: var(--font-ui);
     font-size: 0.85rem;
