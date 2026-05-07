@@ -8,7 +8,7 @@
 {% block content %}
 <div class="author-container">
     <header class="author-index-header">
-        <h1>{{ page.title }}</h1>
+        <h1>{{ page.title }} ({{ authors|length }} പേർ)</h1>
         {% if page.intro %}
         <div class="intro">{{ page.intro|richtext }}</div>
         {% endif %}
@@ -29,10 +29,9 @@
             </div>
 
             <div class="author-info">
-                <span class="author-role">{{ author.role }}</span>
                 <h2><a href="{{ author.url }}">{{ author.title }}</a></h2>
-                <p>{{ author.bio|truncatewords:20 }}</p>
-                <a href="{{ author.url }}" class="view-profile">View Articles →</a>
+                <span class="author-role">{{ author.role }}</span>
+                <a href="{{ author.url }}" class="view-profile">ലേഖനങ്ങൾ കാണുക →</a>
             </div>
         </div>
         {% endwith %}

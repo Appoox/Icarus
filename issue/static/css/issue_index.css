@@ -50,6 +50,21 @@
     gap: 3rem 2.5rem;
 }
 
+.issue-card__category {
+  display: inline-block;
+  font-family: var(--label);
+  font-size: .63rem;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: #fff;
+  background-color: var(--category-color, var(--red));
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-bottom: .6rem;
+  align-self: flex-start;
+}
+
 .issue-archive-card {
     display: flex;
     flex-direction: column;
