@@ -427,3 +427,36 @@ img {
     opacity: 0;
     pointer-events: none;
 }
+
+/* ── Breadcrumbs ──────── */
+.site-breadcrumbs {
+    margin: 1rem 0 0 0;
+    padding: 0 1.25rem;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+.site-breadcrumbs ol {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+.site-breadcrumbs a {
+    color: var(--navy);
+    text-decoration: none;
+    font-weight: 500;
+}
+.site-breadcrumbs a:hover {
+    color: var(--red);
+    text-decoration: underline;
+}
+.site-breadcrumbs .separator {
+    color: var(--rule);
+    margin: 0 2px;
+}
+.site-breadcrumbs li[aria-current="page"] {
+    color: var(--ink);
+    font-weight: 600;
+}

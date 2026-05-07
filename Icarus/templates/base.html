@@ -51,6 +51,10 @@
     {% include "includes/header.html" %}
     {% endblock %}
 
+    {% block breadcrumbs %}
+    {% include "includes/breadcrumbs.html" %}
+    {% endblock %}
+
     {% if messages %}
     <div class="messages-container">
         {% for message in messages %}

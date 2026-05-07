@@ -1,0 +1,14 @@
+{% load wagtailcore_tags %}
+{% if page and page.get_ancestors and page.depth > 2 %}
+<nav aria-label="Breadcrumb" class="site-breadcrumbs">
+    <ol>
+        {% for ancestor in page.get_ancestors %}
+            {% if ancestor.depth > 1 %}
+            <li><a href="{% pageurl ancestor %}">{{ ancestor.title }}</a></li>
+            <li class="separator">/</li>
+            {% endif %}
+        {% endfor %}
+        <li aria-current="page">{{ page.title }}</li>
+    </ol>
+</nav>
+{% endif %}
