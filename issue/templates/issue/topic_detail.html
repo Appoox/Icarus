@@ -18,7 +18,7 @@
 <main class="topic-content">
     {% if articles %}
     <section class="topic-section">
-        <h2 class="topic-section__title">Articles</h2>
+        <h2 class="topic-section__title">ഈ വിഷയത്തിലെ ലേഖനങ്ങൾ ({{ articles|length }} എണ്ണം) </h2>
         <div class="topic-grid">
             {% for article in articles %}
             <article class="topic-card">
@@ -39,7 +39,7 @@
 
     {% if issues %}
     <section class="topic-section">
-        <h2 class="topic-section__title">Issues</h2>
+        <h2 class="topic-section__title">ഈ വിഷയവുമായി ബന്ധപ്പെട്ട ലക്കങ്ങൾ ({{ issues|length }} എണ്ണം)</h2>
         <div class="topic-grid">
             {% for issue in issues %}
             <article class="topic-card">
