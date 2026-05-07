@@ -120,8 +120,8 @@ def process_payment(request):
             request,
             f"Successfully subscribed to the {plan['name']} plan!"
         )
-    except Exception:
-        messages.error(request, "Reader profile not found.")
+    except Exception as e:
+        messages.error(request, f"Error: {e}")  
 
     return redirect('reader_profile')
 

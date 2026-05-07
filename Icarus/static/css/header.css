@@ -7,7 +7,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 1.25rem;
-    height: 64px;
+    /* height: 64px; */
+    height: 85px;
     gap: 1rem;
     position: relative;
     z-index: 1000;
@@ -17,12 +18,16 @@
 
 /* ── Left ── */
 .site-header__logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.site-header__logo-img { height: 48px; width: auto; display: block; }
+/* .site-header__logo-img { height: 48px; width: auto; display: block; } */
+.site-header__logo-img { height: auto; width: auto; display: block; }
+
 .site-header__org-name { display: flex; flex-direction: column; font-weight: bold; line-height: 1.3; font-size: 0.78rem; white-space: nowrap; }
 
 /* ── Centre ── */
 .site-header__title { flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; min-width: 0; }
-.site-header__title-img { height: 52px; width: auto; max-width: 100%; }
+/* .site-header__title-img { height: 52px; width: auto; max-width: 100%; } */
+.site-header__title-img { height: auto; width: auto; }
+
 
 /* ── Right ── */
 .site-header__right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
