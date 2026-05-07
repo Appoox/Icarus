@@ -1,0 +1,15 @@
+{% load wagtailimages_tags wagtailcore_tags %}
+
+<figure class="article-image size-{{ self.size }}{% if self.alignment == 'left' %} img-left{% elif self.alignment == 'right' %} img-right{% endif %}">
+  {% if self.size == 'small' %}
+    {% image self.image width-340 as img %}
+  {% elif self.size == 'large' %}
+    {% image self.image width-1000 as img %}
+  {% else %}
+    {% image self.image width-680 as img %}
+  {% endif %}
+  <img src="{{ img.url }}" alt="{{ img.alt }}">
+  {% if self.caption %}
+    <figcaption>{{ self.caption }}</figcaption>
+  {% endif %}
+</figure>

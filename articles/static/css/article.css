@@ -250,8 +250,9 @@
 }
 
 .article-content figure {
-    margin: 2em 0;
+    margin: 2em auto;
     clear: both;
+    max-width: 100%;
 }
 
 .article-content figure img {
@@ -276,16 +277,19 @@
 
 
 
+/* ── IMAGE SIZES ── */
+.article-content .article-image.size-small { width: 340px; }
+.article-content .article-image.size-medium { width: 680px; }
+.article-content .article-image.size-large { width: 1000px; }
+
 .article-content figure.img-left {
     float: left;
-    width: 45%;
     margin: 0.5em 1.75em 1em 0;
     clear: left;
 }
 
 .article-content figure.img-right {
     float: right;
-    width: 45%;
     margin: 0.5em 0 1em 1.75em;
     clear: right;
 }

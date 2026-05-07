@@ -225,20 +225,6 @@
         {% for block in truncated_body %}
           {% if block.block_type == 'heading' %}
           <h2>{{ block.value }}</h2>
-          {% elif block.block_type == 'image' %}
-            {% with alignment=block.value.alignment %}
-            <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
-              {% if alignment == 'left' or alignment == 'right' %}
-              {% image block.value.image width-340 as img %}
-              {% else %}
-              {% image block.value.image width-680 as img %}
-              {% endif %}
-              <img src="{{ img.url }}" alt="{{ img.alt }}">
-              {% if block.value.caption %}
-              <figcaption>{{ block.value.caption }}</figcaption>
-              {% endif %}
-            </figure>
-            {% endwith %}
           {% else %}
             {% include_block block %}
           {% endif %}
@@ -264,8 +250,8 @@
           {% if request.user.is_authenticated %}
           <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">Subscribe Now</a>
           {% else %}
-          <a href="{% url 'reader_login' %}" class="paywall-btn paywall-btn--secondary">Sign In</a>
-          <a href="{% url 'reader_signup' %}" class="paywall-btn paywall-btn--primary">Subscribe</a>
+          <a href="{% url 'account_login' %}" class="paywall-btn paywall-btn--secondary">Sign In</a>
+          <a href="{% url 'account_signup' %}" class="paywall-btn paywall-btn--primary">Subscribe</a>
           {% endif %}
         </div>
       </div>
@@ -282,20 +268,6 @@
         {% for block in page.body %}
           {% if block.block_type == 'heading' %}
           <h2>{{ block.value }}</h2>
-          {% elif block.block_type == 'image' %}
-            {% with alignment=block.value.alignment %}
-            <figure {% if alignment == 'left' %} class="img-left" {% elif alignment == 'right' %} class="img-right" {% endif %}>
-              {% if alignment == 'left' or alignment == 'right' %}
-              {% image block.value.image width-340 as img %}
-              {% else %}
-              {% image block.value.image width-680 as img %}
-              {% endif %}
-              <img src="{{ img.url }}" alt="{{ img.alt }}">
-              {% if block.value.caption %}
-              <figcaption>{{ block.value.caption }}</figcaption>
-              {% endif %}
-            </figure>
-            {% endwith %}
           {% else %}
             {% include_block block %}
           {% endif %}
@@ -307,7 +279,11 @@
     <div id="body-en" class="lang-content" data-lang="en">
       <div class="article-content">
         {% for block in page.body_en %}
-          {% include_block block %}
+          {% if block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+          {% else %}
+            {% include_block block %}
+          {% endif %}
         {% endfor %}
       </div>
     </div>
@@ -317,7 +293,11 @@
     <div id="body-hi" class="lang-content" data-lang="hi">
       <div class="article-content">
         {% for block in page.body_hi %}
-          {% include_block block %}
+          {% if block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+          {% else %}
+            {% include_block block %}
+          {% endif %}
         {% endfor %}
       </div>
     </div>
@@ -327,7 +307,11 @@
     <div id="body-ta" class="lang-content" data-lang="ta">
       <div class="article-content">
         {% for block in page.body_ta %}
-          {% include_block block %}
+          {% if block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+          {% else %}
+            {% include_block block %}
+          {% endif %}
         {% endfor %}
       </div>
     </div>

@@ -81,10 +81,20 @@ class ImageBlock(blocks.StructBlock):
         label='Image placement',
         help_text="Choose how the image sits relative to the surrounding text"
     )
+    size = blocks.ChoiceBlock(
+        choices=[
+            ('small', 'Small (340px)'),
+            ('medium', 'Medium (680px)'),
+            ('large', 'Large (1000px)'),
+        ],
+        default='medium',
+        label='Image Size'
+    )
 
     class Meta:
         icon = 'image'
         label = 'Image'
+        template = 'blocks/image_block.html'
 
 
 class AudioBlock(blocks.StructBlock):
