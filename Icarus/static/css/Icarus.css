@@ -369,3 +369,61 @@ img {
     font-size: 12px;
     font-weight: 600;
 }
+
+/* ── Floating Action Buttons ──────── */
+.floating-action-buttons {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.floating-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--navy);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.floating-btn:hover {
+    background-color: var(--sky);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    color: var(--white);
+}
+
+#goToTopButton {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+}
+
+#goToTopButton.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.go-back-btn {
+    position: fixed;
+    top: 90px;
+    left: 30px;
+    z-index: 1000;
+}
+
+.go-back-btn.idle-hidden {
+    opacity: 0;
+    pointer-events: none;
+}

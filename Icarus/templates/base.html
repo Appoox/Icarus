@@ -68,6 +68,17 @@
     {% include "includes/footer.html" %}
     {% endblock %}
 
+    <!-- Floating Action Buttons -->
+    <button id="goBackButton" class="floating-btn go-back-btn" title="Go Back">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="floating-action-buttons">
+        <button id="goToTopButton" class="floating-btn" title="Go to Top">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+    </div>
+
     {# Global javascript #}
     <script type="text/javascript" src="{% static 'js/Icarus.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/header.js' %}" defer></script>
