@@ -2,13 +2,25 @@
 {% if page and page.get_ancestors and page.depth > 2 %}
 <nav aria-label="Breadcrumb" class="site-breadcrumbs">
     <ol>
-        {% for ancestor in page.get_ancestors %}
-            {% if ancestor.depth > 1 %}
-            <li><a href="{% pageurl ancestor %}">{{ ancestor.title }}</a></li>
+        {% if page.content_type.model == 'article' and page.specific.main_issue %}
+            {% for ancestor in page.get_ancestors %}
+                {% if ancestor.depth == 2 %}
+                <li><a href="{% pageurl ancestor %}">{{ ancestor.title }}</a></li>
+                <li class="separator">/</li>
+                {% endif %}
+            {% endfor %}
+            <li><a href="{% pageurl page.specific.main_issue %}">{{ page.specific.main_issue.title }}</a></li>
             <li class="separator">/</li>
-            {% endif %}
-        {% endfor %}
-        <li aria-current="page">{{ page.title }}</li>
+            <li aria-current="page">{{ page.title }}</li>
+        {% else %}
+            {% for ancestor in page.get_ancestors %}
+                {% if ancestor.depth > 1 %}
+                <li><a href="{% pageurl ancestor %}">{{ ancestor.title }}</a></li>
+                <li class="separator">/</li>
+                {% endif %}
+            {% endfor %}
+            <li aria-current="page">{{ page.title }}</li>
+        {% endif %}
     </ol>
 </nav>
 {% endif %}

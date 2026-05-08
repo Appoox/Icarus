@@ -23,8 +23,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const goToTopButton = document.getElementById('goToTopButton');
 
     if (goBackButton) {
-        goBackButton.addEventListener('click', function() {
-            window.history.back();
+        goBackButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (document.referrer && document.referrer.includes(window.location.host)) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
         });
 
         let mouseTimeout;
@@ -58,5 +63,17 @@ document.addEventListener('DOMContentLoaded', function() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
+
+        const floatingContainer = document.querySelector('.floating-action-buttons');
+        if (floatingContainer && window.location.pathname !== '/') {
+            const homeBtn = document.createElement('a');
+            homeBtn.href = '/';
+            homeBtn.className = 'floating-btn go-home-btn';
+            homeBtn.title = 'Home';
+            homeBtn.innerHTML = '<i class="fas fa-home"></i>';
+            homeBtn.style.textDecoration = 'none';
+            homeBtn.style.justifyContent = 'center';
+            floatingContainer.insertBefore(homeBtn, floatingContainer.firstChild);
+        }
 
 });
