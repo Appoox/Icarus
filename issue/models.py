@@ -231,6 +231,16 @@ class Issue(Page):
         help_text="Paste an embed link for audio (e.g., SoundCloud, Spotify)"
     )
 
+    # ── PDF ──────────────────────────────────────────────────────────────
+    PDF_file = models.ForeignKey(
+        'wagtaildocs.Document',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        help_text="ലക്കം അപ്‌ലോഡ് ചെയ്യാം"
+    )
+
     # ── Video ─────────────────────────────────────────────────────────────
     video_file = models.ForeignKey(
         'wagtaildocs.Document',
@@ -305,6 +315,7 @@ class Issue(Page):
         FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
         FieldPanel('cover_image'),
+        FieldPanel('PDF_file'),
         MultiFieldPanel([
             FieldPanel('audio_file'),
             FieldPanel('audio_embed_url'),

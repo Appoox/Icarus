@@ -1,5 +1,6 @@
 from wagtail import hooks
 from wagtail.models import Page
+from issue.models import Issue
 
 
 @hooks.register('construct_explorer_page_queryset')
@@ -8,7 +9,7 @@ def order_issues_in_explorer(parent_page, pages, request):
     Order Issue pages newest-first in the Wagtail page explorer tree.
     """
     if parent_page.specific_class.__name__ == 'IssueIndexPage':
-        pages = pages.order_by('-date_of_publishing')
+        pages = Issue.objects.filter(pk__in=pages.values_list('pk', flat=True)).order_by('-date_of_publishing')
     return pages
 
 
@@ -23,7 +24,7 @@ def order_issues_in_chooser(pages, request):
         try:
             parent = Page.objects.get(pk=parent_id).specific
             if parent.__class__.__name__ == 'IssueIndexPage':
-                pages = pages.order_by('-date_of_publishing')
+                pages = Issue.objects.filter(pk__in=pages.values_list('pk', flat=True)).order_by('-date_of_publishing')
         except Page.DoesNotExist:
             pass
     return pages
