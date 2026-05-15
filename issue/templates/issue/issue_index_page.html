@@ -9,7 +9,7 @@
 <div class="sg-page">
     <div class="issue-container">
         <header class="issue-feed-header">
-            <h1 class="archive-title">{{ page.title }}</h1>
+            <h1 class="archive-title">{{ page.title }} ( {{ issues|length }} എണ്ണം )</h1>
             <span class="archive-rule"></span>
             {% if page.intro %}
             <div class="intro">{{ page.intro|richtext }}</div>
@@ -37,9 +37,10 @@
                         <a href="{{ issue.url }}">{{ issue.title }}</a>
                     </h2>
                     {% if issue.topic %}
-                    <span class="issue-archive-card__topic" style="background-color: {{ issue.topic.color|default:'#6b6659' }};">
+                        <a href="{% url 'topic_detail' slug=issue.topic.slug %}" class="issue-card__category"
+                        style="--category-color: {{ issue.topic.color|default:'#c8102e' }};">
                         {{ issue.topic.name }}
-                    </span>
+                        </a>
                     {% endif %}
                     <a href="{{ issue.url }}" class="issue-archive-card__cta">ലക്കം കാണുക</a>
                 </div>

@@ -116,7 +116,11 @@ class AuditLogDashboardPanel(Component):
             model_name = entry.content_type.model.replace('_', ' ').title() if entry.content_type else 'Object'
 
             # Build a short summary of changed fields (max 3)
-            changes = entry.changes_display_dict
+            try:
+                changes = entry.changes_display_dict
+            except Exception:
+                changes = None
+
             if changes:
                 summary_parts = []
                 for i, (field, vals) in enumerate(changes.items()):
@@ -126,6 +130,9 @@ class AuditLogDashboardPanel(Component):
                     new_val = str(vals[1])[:40] if vals[1] not in (None, '') else '(None)'
                     summary_parts.append(f'{field.replace("_", " ").title()}: {new_val}')
                 changes_html = '<br>'.join(summary_parts)
+            elif changes is None:
+                # Fallback for when changes_display_dict fails (e.g. unhashable dict error)
+                changes_html = '<span style="color: var(--w-color-text-meta); font-style: italic;">(Display error)</span>'
             else:
                 changes_html = ''
 

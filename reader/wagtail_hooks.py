@@ -98,7 +98,17 @@ def auditlog_view(request):
         .select_related("actor", "content_type")
         .order_by("-timestamp")[:200]
     )
-    return render(request, "reader/auditlog_admin.html", {"entries": entries})
+    
+    # Pre-process entries to safely get changes_display_dict
+    safe_entries = []
+    for entry in entries:
+        try:
+            entry.safe_changes = entry.changes_display_dict
+        except Exception:
+            entry.safe_changes = None
+        safe_entries.append(entry)
+
+    return render(request, "reader/auditlog_admin.html", {"entries": safe_entries})
 
 @hooks.register("register_admin_urls")
 def register_auditlog_url():

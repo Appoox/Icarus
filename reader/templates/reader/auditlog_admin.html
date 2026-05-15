@@ -50,28 +50,32 @@
                     <td>
                         <div class="audit-changes-scroll">
                             <ul class="audit-changes-list">
-                                {% for field, values in entry.changes_display_dict.items %}
-                                <li class="audit-changes-item">
-                                    <span class="audit-field-name">{{ field|title }}</span>
-                                    <span class="audit-change-diff">
-                                        {% if values.0 is not None and values.0 != "" %}
-                                            <span class="audit-old-val">{{ values.0|truncatechars:100 }}</span>
-                                        {% else %}
-                                            <span class="audit-old-val audit-val--none">(None)</span>
-                                        {% endif %}
-                                        
-                                        <span class="audit-arrow">→</span>
-                                        
-                                        {% if values.1 is not None and values.1 != "" %}
-                                            <span class="audit-new-val">{{ values.1|truncatechars:100 }}</span>
-                                        {% else %}
-                                            <span class="audit-new-val audit-val--none">(None)</span>
-                                        {% endif %}
-                                    </span>
-                                </li>
-                                {% empty %}
-                                    <li class="text-muted">No specific field changes recorded.</li>
-                                {% endfor %}
+                                {% if entry.safe_changes is not None %}
+                                    {% for field, values in entry.safe_changes.items %}
+                                    <li class="audit-changes-item">
+                                        <span class="audit-field-name">{{ field|title }}</span>
+                                        <span class="audit-change-diff">
+                                            {% if values.0 is not None and values.0 != "" %}
+                                                <span class="audit-old-val">{{ values.0|truncatechars:100 }}</span>
+                                            {% else %}
+                                                <span class="audit-old-val audit-val--none">(None)</span>
+                                            {% endif %}
+                                            
+                                            <span class="audit-arrow">→</span>
+                                            
+                                            {% if values.1 is not None and values.1 != "" %}
+                                                <span class="audit-new-val">{{ values.1|truncatechars:100 }}</span>
+                                            {% else %}
+                                                <span class="audit-new-val audit-val--none">(None)</span>
+                                            {% endif %}
+                                        </span>
+                                    </li>
+                                    {% empty %}
+                                        <li class="text-muted">No specific field changes recorded.</li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="text-muted"><span style="color: var(--w-color-text-meta); font-style: italic;">(Display error)</span></li>
+                                {% endif %}
                             </ul>
                         </div>
                     </td>

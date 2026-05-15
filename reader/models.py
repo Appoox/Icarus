@@ -349,7 +349,7 @@ class ReaderUser(AbstractUser, index.Indexed):
         else:
             new_start = now
 
-        self.subscription_plan = plan
+        self.subscription_plan = plan_type
         self.subscription_start = new_start
         self.subscription_end = new_start + duration
         self.save(update_fields=[

@@ -8,9 +8,15 @@
 <head>
     <meta charset="utf-8" />
     <title>
-        {% block title %}
-        {% if page.seo_title %}{{ page.seo_title }}{% else %}{{ page.title }}{% endif %}
-        {% endblock %}
+        {% if topic.name %}
+            ശാസ്ത്രഗതി  |  {{ topic.name }}
+        {% elif page.title == 'Home' %}
+            ശാസ്ത്രഗതി
+        {% elif page.title %}
+            ശാസ്ത്രഗതി  |  {{ page.title }}
+        {% else %}
+            ശാസ്ത്രഗതി | Profile
+        {% endif %}
         {% block title_suffix %}
         {% wagtail_site as current_site %}
         {% if current_site and current_site.site_name %}- {{ current_site.site_name }}{% endif %}
@@ -51,6 +57,10 @@
     {% include "includes/header.html" %}
     {% endblock %}
 
+    {% block breadcrumbs %}
+    {% include "includes/breadcrumbs.html" %}
+    {% endblock %}
+
     {% if messages %}
     <div class="messages-container">
         {% for message in messages %}
@@ -67,6 +77,17 @@
     {% block footer %}
     {% include "includes/footer.html" %}
     {% endblock %}
+
+    <!-- Floating Action Buttons -->
+    <button id="goBackButton" class="floating-btn go-back-btn" title="Go Back">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="floating-action-buttons">
+        <button id="goToTopButton" class="floating-btn" title="Go to Top">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+    </div>
 
     {# Global javascript #}
     <script type="text/javascript" src="{% static 'js/Icarus.js' %}"></script>
