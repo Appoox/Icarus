@@ -157,4 +157,38 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // ── EXPANDABLE SECTIONS ──
+    document.querySelectorAll('.expandable-wrapper').forEach(wrapper => {
+        const content = wrapper.querySelector('.expandable-content');
+        const banner = wrapper.querySelector('.show-more-banner');
+        const expandHeight = parseInt(wrapper.dataset.expandHeight) || 400;
+
+        // Set initial max-height
+        content.style.maxHeight = expandHeight + 'px';
+
+        // Check if content actually overflows
+        function checkOverflow() {
+            if (content.scrollHeight <= expandHeight + 20) { // small buffer
+                banner.style.display = 'none';
+                content.style.maxHeight = 'none';
+            } else {
+                banner.style.display = 'flex';
+            }
+        }
+
+        // Run on load and on resize
+        setTimeout(checkOverflow, 200);
+        window.addEventListener('resize', checkOverflow);
+
+        banner.addEventListener('click', () => {
+            wrapper.classList.add('expanded');
+            content.style.maxHeight = content.scrollHeight + 'px';
+            
+            // After transition, set to none to handle dynamic content or resizing
+            setTimeout(() => {
+                content.style.maxHeight = 'none';
+            }, 650);
+        });
+    });
 });
