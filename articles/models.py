@@ -429,6 +429,13 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
 
     @route(r'^pdf/$')
     def serve_pdf(self, request):
+        # 1. Permission Check
+        is_subscribed = request.user.is_authenticated and request.user.is_subscribed
+        is_admin = request.user.is_superuser or request.user.is_staff
+        
+        if not (is_subscribed or is_admin):
+            return redirect(self.url)
+
         context = self.get_context(request)
         context['lang'] = request.GET.get('lang', 'ml')
         html_string = render_to_string('articles/article_pdf.html', context)

@@ -170,7 +170,11 @@ class IssueForm(WagtailAdminPageForm):
                 self.fields['issue_number'].widget.attrs['value'] = next_issue_num
 
 
-class Issue(Page):
+from wagtail.contrib.routable_page.models import RoutablePageMixin, route
+from django.http import HttpResponse, Http404
+from django.shortcuts import redirect
+
+class Issue(RoutablePageMixin, Page):
     base_form_class = IssueForm
     volume = models.ForeignKey(
         'Volume',
@@ -334,11 +338,34 @@ class Issue(Page):
         reader = None
         if request.user.is_authenticated:
             try:
-                reader = request.user.reader
+                reader = request.user
             except Exception:
                 reader = None
         context['reader'] = reader
         return context
+
+    @route(r'^pdf/$')
+    def serve_pdf(self, request):
+        # 1. Permission Check
+        is_subscribed = request.user.is_authenticated and request.user.is_subscribed
+        is_admin = request.user.is_superuser or request.user.is_staff
+        
+        if not (is_subscribed or is_admin):
+            return redirect(self.url)
+
+        # 2. File Check
+        if not self.PDF_file:
+            raise Http404("No PDF file uploaded for this issue.")
+
+        # 3. Serve the file
+        # We use the document's own file property
+        try:
+            file_data = self.PDF_file.file.read()
+            response = HttpResponse(file_data, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{self.PDF_file.filename}"'
+            return response
+        except Exception as e:
+            raise Http404(f"Error reading PDF file: {str(e)}")
 
 class IssueArticleReprint(Orderable):
     issue = ParentalKey('Issue', related_name='reprinted_articles', on_delete=models.CASCADE)

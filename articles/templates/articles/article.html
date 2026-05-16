@@ -364,6 +364,7 @@
   </main>
   {% endif %}
 
+  {% if request.user.is_staff or request.user.is_superuser or request.user.is_subscribed %}
   <div class="article-pdf-download-wrapper">
       <a href="{{ page.url }}pdf/" class="article-pdf-download-btn" target="_blank" rel="noopener noreferrer" title="Download PDF">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -375,6 +376,7 @@
           <span>PDF ഡൗൺലോഡ് ചെയ്യാം</span>
       </a>
   </div>
+  {% endif %}
 
   {# ── RELATED ARTICLES — siblings from the same topic ── #}
   <section class="related-articles">
