@@ -229,42 +229,163 @@
   
   {# ── PAYWALLED: truncated preview + overlay ── #}
   <div class="paywall-wrapper">
-    <main class="article-body article-body--truncated">
-      <div class="article-content">
-        {% for block in truncated_body %}
-          {% if block.block_type == 'heading' %}
-          <h2>{{ block.value }}</h2>
-          {% else %}
-            {% include_block block %}
-          {% endif %}
-        {% endfor %}
+    {# ── Malayalam Paywall Block ── #}
+    <div class="lang-content active" data-lang="ml">
+      <div style="position: relative;">
+        <main class="article-body article-body--truncated">
+          <div class="article-content">
+            {% for block in truncated_body %}
+              {% if block.block_type == 'heading' %}
+              <h2>{{ block.value }}</h2>
+              {% else %}
+                {% include_block block %}
+              {% endif %}
+            {% endfor %}
+          </div>
+        </main>
+        <div class="paywall-fade"></div>
       </div>
-    </main>
-
-    {# Gradient fade overlay #}
-    <div class="paywall-fade"></div>
-
-    {# Subscribe CTA card #}
-    <div class="paywall-cta">
-      <div class="paywall-cta__card">
-        <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
-        <p class="paywall-cta__text">
-          {% if request.user.is_authenticated %}
-          You've reached your free article limit. Subscribe to unlock full access to all articles.
-          {% else %}
-          Sign in or subscribe to read the full article and get unlimited access.
-          {% endif %}
-        </p>
-        <div class="paywall-cta__actions">
-          {% if request.user.is_authenticated %}
-          <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">Subscribe Now</a>
-          {% else %}
-          <a href="{% url 'account_login' %}" class="paywall-btn paywall-btn--secondary">Sign In</a>
-          <a href="{% url 'account_signup' %}" class="paywall-btn paywall-btn--primary">Subscribe</a>
-          {% endif %}
+      <div class="paywall-cta">
+        <div class="paywall-cta__card">
+          <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
+          <p class="paywall-cta__text">
+            {% if request.user.is_authenticated %}
+            നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക.
+            {% else %}
+            പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക.
+            {% endif %}
+          </p>
+          <div class="paywall-cta__actions">
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">ഇപ്പോൾ വരിക്കാരാകാം</a>
+            {% else %}
+            <a href="{% url 'account_login' %}" class="paywall-btn paywall-btn--secondary">സൈൻ ഇൻ</a>
+            <a href="{% url 'account_signup' %}" class="paywall-btn paywall-btn--primary">വരിക്കാരാകാം</a>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
+
+    {# ── English Paywall Block ── #}
+    {% if truncated_body_en %}
+    <div class="lang-content" data-lang="en">
+      <div style="position: relative;">
+        <main class="article-body article-body--truncated">
+          <div class="article-content">
+            {% for block in truncated_body_en %}
+              {% if block.block_type == 'heading' %}
+              <h2>{{ block.value }}</h2>
+              {% else %}
+                {% include_block block %}
+              {% endif %}
+            {% endfor %}
+          </div>
+        </main>
+        <div class="paywall-fade"></div>
+      </div>
+      <div class="paywall-cta">
+        <div class="paywall-cta__card">
+          <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
+          <p class="paywall-cta__text">
+            {% if request.user.is_authenticated %}
+            നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക.
+            {% else %}
+            പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക.
+            {% endif %}
+          </p>
+          <div class="paywall-cta__actions">
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">ഇപ്പോൾ വരിക്കാരാകാം</a>
+            {% else %}
+            <a href="{% url 'account_login' %}" class="paywall-btn paywall-btn--secondary">സൈൻ ഇൻ</a>
+            <a href="{% url 'account_signup' %}" class="paywall-btn paywall-btn--primary">വരിക്കാരാകാം</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── Hindi Paywall Block ── #}
+    {% if truncated_body_hi %}
+    <div class="lang-content" data-lang="hi">
+      <div style="position: relative;">
+        <main class="article-body article-body--truncated">
+          <div class="article-content">
+            {% for block in truncated_body_hi %}
+              {% if block.block_type == 'heading' %}
+              <h2>{{ block.value }}</h2>
+              {% else %}
+                {% include_block block %}
+              {% endif %}
+            {% endfor %}
+          </div>
+        </main>
+        <div class="paywall-fade"></div>
+      </div>
+      <div class="paywall-cta">
+        <div class="paywall-cta__card">
+          <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
+          <p class="paywall-cta__text">
+            {% if request.user.is_authenticated %}
+            നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക.
+            {% else %}
+            പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക.
+            {% endif %}
+          </p>
+          <div class="paywall-cta__actions">
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">ഇപ്പോൾ വരിക്കാരാകാം</a>
+            {% else %}
+            <a href="{% url 'account_login' %}" class="paywall-btn paywall-btn--secondary">സൈൻ ഇൻ</a>
+            <a href="{% url 'account_signup' %}" class="paywall-btn paywall-btn--primary">വരിക്കാരാകാം</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── Tamil Paywall Block ── #}
+    {% if truncated_body_ta %}
+    <div class="lang-content" data-lang="ta">
+      <div style="position: relative;">
+        <main class="article-body article-body--truncated">
+          <div class="article-content">
+            {% for block in truncated_body_ta %}
+              {% if block.block_type == 'heading' %}
+              <h2>{{ block.value }}</h2>
+              {% else %}
+                {% include_block block %}
+              {% endif %}
+            {% endfor %}
+          </div>
+        </main>
+        <div class="paywall-fade"></div>
+      </div>
+      <div class="paywall-cta">
+        <div class="paywall-cta__card">
+          <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
+          <p class="paywall-cta__text">
+            {% if request.user.is_authenticated %}
+            നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക.
+            {% else %}
+            പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക.
+            {% endif %}
+          </p>
+          <div class="paywall-cta__actions">
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">ഇപ്പോൾ വരിക്കാരാകാം</a>
+            {% else %}
+            <a href="{% url 'account_login' %}" class="paywall-btn paywall-btn--secondary">സൈൻ ഇൻ</a>
+            <a href="{% url 'account_signup' %}" class="paywall-btn paywall-btn--primary">വരിക്കാരാകാം</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
   {% else %}
@@ -380,7 +501,10 @@
               <line x1="12" y1="18" x2="12" y2="12"></line>
               <polyline points="9 15 12 18 15 15"></polyline>
           </svg>
-          <span>PDF ഡൗൺലോഡ് ചെയ്യാം</span>
+          <span class="lang-content active" data-lang="ml">PDF ഡൗൺലോഡ് ചെയ്യാം</span>
+          <span class="lang-content" data-lang="en">Download PDF</span>
+          <span class="lang-content" data-lang="hi">PDF डाउनलोड करें</span>
+          <span class="lang-content" data-lang="ta">PDF பதிவிறக்கம்</span>
       </a>
   </div>
   {% endif %}

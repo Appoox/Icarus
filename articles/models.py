@@ -420,10 +420,15 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
 
         if show_paywall:
             # Provide only the first 2 body blocks for the truncated preview
-            truncated_body = list(self.body)[:2]
+            context['truncated_body'] = list(self.body)[:2] if self.body else []
+            if self.body_en:
+                context['truncated_body_en'] = list(self.body_en)[:2]
+            if self.body_hi:
+                context['truncated_body_hi'] = list(self.body_hi)[:2]
+            if self.body_ta:
+                context['truncated_body_ta'] = list(self.body_ta)[:2]
 
         context['show_paywall'] = show_paywall
-        context['truncated_body'] = truncated_body
         context['reader'] = reader
         return context
 
