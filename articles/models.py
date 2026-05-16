@@ -1,5 +1,9 @@
 from django.db import models
 from django import forms
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from wagtail.contrib.routable_page.models import RoutablePageMixin, route
+from weasyprint import HTML
 from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
@@ -175,7 +179,7 @@ class ArticleForm(WagtailAdminPageForm):
                 self.initial['main_issue'] = latest_issue.pk
                 
 
-class Article(Page, HitCountMixin):
+class Article(RoutablePageMixin, Page, HitCountMixin):
     base_form_class = ArticleForm
 
     hit_count_generic = GenericRelation(
@@ -422,6 +426,18 @@ class Article(Page, HitCountMixin):
         context['truncated_body'] = truncated_body
         context['reader'] = reader
         return context
+
+    @route(r'^pdf/$')
+    def serve_pdf(self, request):
+        context = self.get_context(request)
+        context['lang'] = request.GET.get('lang', 'ml')
+        html_string = render_to_string('articles/article_pdf.html', context)
+        html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+        pdf = html.write_pdf()
+
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{self.slug}.pdf"'
+        return response
 
     @property
     def excerpt(self):

@@ -1,0 +1,78 @@
+/* ─────────────────────────────────────────────
+   Media Player Page Styles
+   Used for playback of PDF-linked multimedia
+───────────────────────────────────────────── */
+
+.media-player-page {
+    max-width: var(--article-col, 1000px);
+    margin: 4rem auto;
+    padding: 0 2rem;
+    text-align: center;
+    min-height: 60vh;
+}
+
+.player-container {
+    background: #fff;
+    padding: 3rem 0;
+    border-radius: 24px;
+    margin-bottom: 2rem;
+}
+
+.media-title {
+    font-family: var(--serif, serif);
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin-bottom: 3rem;
+    color: #111;
+    line-height: 1.2;
+}
+
+.player-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.unsupported-media {
+    padding: 3rem;
+    background: #f8f9fa;
+    border-radius: 16px;
+    color: #666;
+}
+
+.unsupported-media i {
+    font-size: 3rem;
+    color: #c0392b;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+video {
+    width: 100%;
+    border-radius: 16px;
+    background: #000;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+audio {
+    width: 100%;
+    height: 54px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2rem;
+    color: #666;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: color 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.back-link:hover {
+    color: #c0392b;
+}

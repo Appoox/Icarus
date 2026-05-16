@@ -1,0 +1,391 @@
+{% load wagtailcore_tags wagtailimages_tags header_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ page.title }}</title>
+  <style>
+    /* ── PDF-specific styles for WeasyPrint ── */
+    @page {
+      size: A4;
+      margin: 2.5cm;
+      @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-family: 'DejaVu Sans', sans-serif;
+        font-size: 9pt;
+        color: #888;
+      }
+    }
+
+    body {
+      font-family: 'DejaVu Sans', sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ── Site Header ── */
+    .pdf-site-header {
+      text-align: center;
+      margin-bottom: 12pt;
+      padding-bottom: 8pt;
+      border-bottom: 1pt solid #d4d0c8;
+    }
+
+    .pdf-site-header img {
+      max-height: 28pt;
+      display: inline-block;
+      vertical-align: middle;
+      margin: 0 8pt;
+    }
+
+    .pdf-site-title-text {
+      font-family: 'Noto Serif', 'DejaVu Serif', Georgia, serif;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #1a1612;
+      vertical-align: middle;
+      margin: 0 8pt;
+    }
+
+    /* ── Article Header ── */
+    .pdf-header {
+      margin-bottom: 24pt;
+      padding-bottom: 12pt;
+      border-bottom: 2pt solid #c8102e;
+    }
+
+    .pdf-topic {
+      display: inline-block;
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: #c8102e;
+      padding: 3pt 10pt;
+      border-radius: 10pt;
+      margin-bottom: 8pt;
+    }
+
+    .pdf-title {
+      font-family: 'Noto Serif', Georgia, 'Times New Roman', serif;
+      font-size: 24pt;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #1a1612;
+      margin: 8pt 0 12pt;
+    }
+
+    .pdf-meta {
+      font-size: 9pt;
+      color: #6b6659;
+      margin-bottom: 4pt;
+    }
+
+    .pdf-meta strong {
+      color: #1a1612;
+    }
+
+    /* ── Cover Image ── */
+    .pdf-cover {
+      margin: 16pt 0 24pt;
+      text-align: center;
+    }
+
+    .pdf-cover img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4pt;
+    }
+
+    .pdf-cover-caption {
+      font-size: 8pt;
+      color: #888;
+      font-style: italic;
+      margin-top: 4pt;
+    }
+
+    /* ── Body Content ── */
+    .pdf-body {
+      margin-top: 16pt;
+    }
+
+    .pdf-body p {
+      margin-bottom: 10pt;
+      text-align: justify;
+    }
+
+    .pdf-body h2 {
+      font-family: 'Noto Serif', Georgia, 'Times New Roman', serif;
+      font-size: 16pt;
+      font-weight: 700;
+      color: #1a1612;
+      margin: 20pt 0 8pt;
+      page-break-after: avoid;
+    }
+
+    .pdf-body h3 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1a1612;
+      margin: 16pt 0 6pt;
+      page-break-after: avoid;
+    }
+
+    .pdf-body h4 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #1a1612;
+      margin: 14pt 0 6pt;
+      page-break-after: avoid;
+    }
+
+    .pdf-body img {
+      max-width: 100%;
+      height: auto;
+      margin: 12pt 0;
+      border-radius: 3pt;
+      page-break-inside: avoid;
+    }
+
+    .pdf-body figure {
+      margin: 14pt 0;
+      page-break-inside: avoid;
+    }
+
+    .pdf-body figcaption {
+      font-size: 8pt;
+      color: #888;
+      font-style: italic;
+      margin-top: 4pt;
+    }
+
+    .pdf-body blockquote {
+      margin: 14pt 0;
+      padding: 8pt 0 8pt 16pt;
+      border-left: 3pt solid #c8102e;
+      font-style: italic;
+      color: #333;
+      page-break-inside: avoid;
+    }
+
+    .pdf-body a {
+      color: #c8102e;
+      text-decoration: underline;
+    }
+
+    .pdf-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14pt 0;
+      font-size: 9pt;
+      page-break-inside: avoid;
+    }
+
+    .pdf-body table th,
+    .pdf-body table td {
+      border: 1px solid #d4d0c8;
+      padding: 6pt 8pt;
+      text-align: left;
+    }
+
+    .pdf-body table th {
+      background: #f5f5f0;
+      font-weight: 700;
+    }
+
+    .pdf-body hr {
+      border: none;
+      border-top: 1pt solid #d4d0c8;
+      margin: 20pt 0;
+    }
+
+    /* ── Footer ── */
+    .pdf-footer {
+      margin-top: 32pt;
+      padding-top: 12pt;
+      border-top: 1pt solid #d4d0c8;
+      font-size: 8pt;
+      color: #888;
+      text-align: center;
+    }
+
+    .pdf-media-link {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      padding: 8pt 12pt;
+      margin: 12pt 0;
+      border-radius: 4pt;
+      font-size: 9pt;
+      color: #4b5563;
+      page-break-inside: avoid;
+    }
+
+    .pdf-media-link a {
+      color: #c8102e;
+      text-decoration: underline;
+      font-weight: 700;
+    }
+
+    .pdf-media-link small {
+      display: block;
+      margin-top: 4pt;
+      color: #6b7280;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  {% get_site_header as header %}
+  {% if header %}
+  <div class="pdf-site-header">
+    {% if header.logo %}
+      {% image header.logo height-60 as logo_img %}
+      <img src="{{ logo_img.url }}" alt="Site Logo">
+    {% endif %}
+    {% if header.site_title_image %}
+      {% image header.site_title_image height-60 as title_img %}
+      <img src="{{ title_img.url }}" alt="Site Title">
+    {% else %}
+      <span class="pdf-site-title-text">{{ header.site_title }}</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="pdf-header">
+    {% if page.topic %}
+    <span class="pdf-topic">{{ page.topic.name }}</span>
+    {% endif %}
+
+    <h1 class="pdf-title">
+      {% if lang == 'en' and page.title_en %}{{ page.title_en }}
+      {% elif lang == 'hi' and page.title_hi %}{{ page.title_hi }}
+      {% elif lang == 'ta' and page.title_ta %}{{ page.title_ta }}
+      {% else %}{{ page.title }}{% endif %}
+    </h1>
+
+    {% for author_rel in page.article_authors.all %}
+    {% with author=author_rel.author %}
+    <div class="pdf-meta">
+      <strong>{{ author.title }}</strong>{% if author.role %} · {{ author.role }}{% endif %}
+    </div>
+    {% endwith %}
+    {% endfor %}
+
+    {% if page.date %}
+    <div class="pdf-meta">{{ page.date|date:"F j, Y" }}</div>
+    {% endif %}
+  </div>
+
+  {% if page.cover_image %}
+  <div class="pdf-cover">
+    {% image page.cover_image width-800 as cover %}
+    <img src="{{ cover.url }}" alt="{{ page.title }}">
+    {% if page.cover_image_caption %}
+    <div class="pdf-cover-caption">{{ page.cover_image_caption }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="pdf-body">
+    {% if lang == 'en' and page.body_en %}
+        {% for block in page.body_en %}
+            {% if block.block_type == 'audio' %}
+                <div class="pdf-media-link">
+                    <strong>Audio:</strong> 
+                    {% if block.value.audio_file %}<a href="{{ request.scheme }}://{{ request.get_host }}{% url 'media_player' doc_id=block.value.audio_file.id %}">Listen to Audio File</a>
+                    {% elif block.value.audio_embed_url %}<a href="{{ block.value.audio_embed_url }}">Open Audio Link</a>{% endif %}
+                    {% if block.value.caption %}<small>{{ block.value.caption }}</small>{% endif %}
+                </div>
+            {% elif block.block_type == 'video' %}
+                <div class="pdf-media-link">
+                    <strong>Video:</strong> 
+                    {% if block.value.video_file %}<a href="{{ request.scheme }}://{{ request.get_host }}{% url 'media_player' doc_id=block.value.video_file.id %}">Watch Video File</a>
+                    {% elif block.value.video_embed_url %}<a href="{{ block.value.video_embed_url }}">Open Video Link</a>{% endif %}
+                    {% if block.value.caption %}<small>{{ block.value.caption }}</small>{% endif %}
+                </div>
+            {% elif block.block_type == 'heading' %}
+                <h2>{{ block.value }}</h2>
+            {% else %}
+                {% include_block block %}
+            {% endif %}
+        {% endfor %}
+    {% elif lang == 'hi' and page.body_hi %}
+        {% for block in page.body_hi %}
+            {% if block.block_type == 'audio' %}
+                <div class="pdf-media-link">
+                    <strong>ऑडियो:</strong> 
+                    {% if block.value.audio_file %}<a href="{{ request.scheme }}://{{ request.get_host }}{% url 'media_player' doc_id=block.value.audio_file.id %}">ऑडियो फ़ाइल सुनें</a>
+                    {% elif block.value.audio_embed_url %}<a href="{{ block.value.audio_embed_url }}">ऑडियो लिंक खोलें</a>{% endif %}
+                    {% if block.value.caption %}<small>{{ block.value.caption }}</small>{% endif %}
+                </div>
+            {% elif block.block_type == 'video' %}
+                <div class="pdf-media-link">
+                    <strong>वीडियो:</strong> 
+                    {% if block.value.video_file %}<a href="{{ request.scheme }}://{{ request.get_host }}{% url 'media_player' doc_id=block.value.video_file.id %}">वीडियो फ़ाइल देखें</a>
+                    {% elif block.value.video_embed_url %}<a href="{{ block.value.video_embed_url }}">वीडियो लिंक खोलें</a>{% endif %}
+                    {% if block.value.caption %}<small>{{ block.value.caption }}</small>{% endif %}
+                </div>
+            {% elif block.block_type == 'heading' %}
+                <h2>{{ block.value }}</h2>
+            {% else %}
+                {% include_block block %}
+            {% endif %}
+        {% endfor %}
+    {% elif lang == 'ta' and page.body_ta %}
+        {% for block in page.body_ta %}
+            {% if block.block_type == 'audio' %}
+                <div class="pdf-media-link">
+                    <strong>ஆடியோ:</strong> 
+                    {% if block.value.audio_file %}<a href="{{ request.scheme }}://{{ request.get_host }}{% url 'media_player' doc_id=block.value.audio_file.id %}">ஆடியோ கோப்பைக் கேளுங்கள்</a>
+                    {% elif block.value.audio_embed_url %}<a href="{{ block.value.audio_embed_url }}">ஆடியோ இணைப்பைத் திறக்கவும்</a>{% endif %}
+                    {% if block.value.caption %}<small>{{ block.value.caption }}</small>{% endif %}
+                </div>
+            {% elif block.block_type == 'video' %}
+                <div class="pdf-media-link">
+                    <strong>வீடியோ:</strong> 
+                    {% if block.value.video_file %}<a href="{{ request.scheme }}://{{ request.get_host }}{% url 'media_player' doc_id=block.value.video_file.id %}">வீடியோ கோப்பைப் பார்க்கவும்</a>
+                    {% elif block.value.video_embed_url %}<a href="{{ block.value.video_embed_url }}">வீடியோ இணைப்பைத் திறக்கவும்</a>{% endif %}
+                    {% if block.value.caption %}<small>{{ block.value.caption }}</small>{% endif %}
+                </div>
+            {% elif block.block_type == 'heading' %}
+                <h2>{{ block.value }}</h2>
+            {% else %}
+                {% include_block block %}
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        {% for block in page.body %}
+            {% if block.block_type == 'audio' %}
+                <div class="pdf-media-link">
+                    <strong>ഓഡിയോ:</strong> 
+                    {% if block.value.audio_file %}<a href="{{ request.scheme }}://{{ request.get_host }}{% url 'media_player' doc_id=block.value.audio_file.id %}">ഓഡിയോ കേൾക്കാം</a>
+                    {% elif block.value.audio_embed_url %}<a href="{{ block.value.audio_embed_url }}">ഓഡിയോ ലിങ്ക് തുറക്കാം</a>{% endif %}
+                    {% if block.value.caption %}<small>{{ block.value.caption }}</small>{% endif %}
+                </div>
+            {% elif block.block_type == 'video' %}
+                <div class="pdf-media-link">
+                    <strong>വീഡിയോ:</strong> 
+                    {% if block.value.video_file %}<a href="{{ request.scheme }}://{{ request.get_host }}{% url 'media_player' doc_id=block.value.video_file.id %}">വീഡിയോ കാണാം</a>
+                    {% elif block.value.video_embed_url %}<a href="{{ block.value.video_embed_url }}">വീഡിയോ ലിങ്ക് തുറക്കാം</a>{% endif %}
+                    {% if block.value.caption %}<small>{{ block.value.caption }}</small>{% endif %}
+                </div>
+            {% elif block.block_type == 'heading' %}
+                <h2>{{ block.value }}</h2>
+            {% else %}
+                {% include_block block %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+  </div>
+
+  <div class="pdf-footer">
+    ശാസ്ത്രഗതി · {{ page.title }}
+  </div>
+
+</body>
+</html>

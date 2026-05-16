@@ -27,6 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     content.classList.remove('active');
                 }
             });
+
+            // Update PDF download link
+            const pdfBtn = document.querySelector('.article-pdf-download-btn');
+            if (pdfBtn) {
+                const baseUrl = pdfBtn.getAttribute('href').split('?')[0];
+                pdfBtn.setAttribute('href', `${baseUrl}?lang=${target}`);
+            }
         }
 
         const initialActive = slider.querySelector('.lang-slider__item.active');

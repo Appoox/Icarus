@@ -24,7 +24,7 @@ def track_read_fully(request):
     
     return JsonResponse({'status': 'ignored', 'message': 'Staff views not counted'})
 
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from taggit.models import Tag
 
 def tag_detail(request, tag):
@@ -37,4 +37,20 @@ def tag_detail(request, tag):
     return render(request, 'articles/tag_detail.html', {
         'tag_name': tag_obj.name if tag_obj else tag,
         'articles': articles,
+    })
+
+from wagtail.documents import get_document_model
+
+def media_player(request, doc_id):
+    Document = get_document_model()
+    doc = get_object_or_404(Document, id=doc_id)
+    
+    ext = doc.file.name.split('.')[-1].lower()
+    is_video = ext in ['mp4', 'webm', 'ogg', 'mov']
+    is_audio = ext in ['mp3', 'wav', 'ogg', 'm4a']
+    
+    return render(request, 'articles/media_player.html', {
+        'doc': doc,
+        'is_video': is_video,
+        'is_audio': is_audio,
     })
