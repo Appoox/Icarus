@@ -90,109 +90,6 @@
     </div>
     {% endif %}
 
-    {# ── Main Audio Display ── #}
-    {% if page.audio_file or page.audio_embed_url %}
-                <div class="modern-audio-player" id="player-main">
-                    <audio id="audio-main" src="{{ page.audio_file.url }}"></audio>
-                    
-                    <div class="player-main">
-                        <button class="play-btn" id="play-btn-main" title="Play">
-                            <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
-                            <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                        </button>
-                        
-                        <div class="player-info">
-                            <div class="progress-wrapper">
-                                <input type="range" class="progress-slider" id="slider-main" value="0" min="0" max="100">
-                                <div class="progress-bar-fill" id="fill-main"></div>
-                            </div>
-                            <div class="time-meta">
-                                <span id="current-main">0:00</span>
-                                <span id="duration-main">0:00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-            {% elif page.audio_embed_url %}
-                <div class="audio-embed">
-                    {% if ".mp3" in page.audio_embed_url or ".wav" in page.audio_embed_url or ".m4a" in page.audio_embed_url %}
-                        {# Handle direct audio links in the embed field #}
-                        <div class="modern-audio-player" id="player-embed">
-                            <audio id="audio-embed" src="{{ page.audio_embed_url }}"></audio>
-                            <div class="player-main">
-                                <button class="play-btn" id="play-btn-embed">
-                                    <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
-                                    <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                                </button>
-                                <div class="player-info">
-                                    <div class="progress-wrapper">
-                                        <input type="range" class="progress-slider" id="slider-embed" value="0" min="0" max="100">
-                                        <div class="progress-bar-fill" id="fill-embed"></div>
-                                    </div>
-                                    <div class="time-meta">
-                                        <span id="current-embed">0:00</span>
-                                        <span id="duration-embed">0:00</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    {% else %}
-                        {% embed page.audio_embed_url %}
-                    {% endif %}
-                </div>
-            {% endif %}
-
-    {# ── Main Video Display ── #}
-    {% if page.video_file or page.video_embed_url %}
-            <div class="modern-video-player" id="vplayer-main">
-                <div class="video-wrapper">
-                    <video id="video-main" src="{{ page.video_file.url }}"></video>
-                    <div class="video-overlay" id="overlay-main">
-                        <button class="big-play-btn" id="big-play-main">
-                            <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="video-controls">
-                    <button class="v-play-btn" id="v-play-main">
-                        <svg class="v-play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
-                        <svg class="v-pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                    </button>
-                    <div class="v-progress-wrapper">
-                        <input type="range" class="v-progress-slider" id="v-slider-main" value="0" min="0" max="100">
-                        <div class="v-progress-fill" id="v-fill-main"></div>
-                    </div>
-                </div>
-            </div>
-
-        {% elif page.video_embed_url %}
-            <div class="video-embed">
-                {% if ".mp4" in page.video_embed_url or ".webm" in page.video_embed_url or ".ogv" in page.video_embed_url %}
-                    {# Handle direct video links in the embed field #}
-                    <div class="modern-video-player" id="vplayer-embed">
-                        <video id="video-embed" src="{{ page.video_embed_url }}"></video>
-                        <div class="video-overlay" id="overlay-embed">
-                            <button class="big-play-btn" id="big-play-embed">
-                                <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                {% elif "youtu.be" in page.video_embed_url or "youtube.com" in page.video_embed_url %}
-                    {# Robust YouTube Fallback #}
-                    <div class="youtube-fallback" data-url="{{ page.video_embed_url }}"></div>
-                {% else %}
-                    {% embed page.video_embed_url %}
-                {% endif %}
-            </div>
-        {% endif %}
-
-
-
-
   </header>
 
   {# ── HERO IMAGE ──────────────────────────────── #}
@@ -216,6 +113,116 @@
     {% endif %}
   </figure>
   {% endif %}
+
+  {# ── FEATURED MULTIMEDIA BOX ─────────────────── #}
+  {% if page.audio_file or page.audio_embed_url or page.video_file or page.video_embed_url %}
+  <div class="featured-media-box">
+    <div class="media-box-header">
+    </div>
+    
+    {# ── Main Audio Display ── #}
+    {% if page.audio_file or page.audio_embed_url %}
+        <div class="featured-audio-section">
+            {% if page.audio_file %}
+                <div class="modern-audio-player main-featured-player" id="player-main">
+                    <audio id="audio-main" src="{{ page.audio_file.url }}"></audio>
+                    
+                    <div class="player-main">
+                        <button class="play-btn" id="play-btn-main" title="Play">
+                            <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                            <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        
+                        <div class="player-info">
+                            <div class="progress-wrapper">
+                                <input type="range" class="progress-slider" id="slider-main" value="0" min="0" max="100">
+                                <div class="progress-bar-fill" id="fill-main"></div>
+                            </div>
+                            <div class="time-meta">
+                                <span id="current-main">0:00</span>
+                                <span id="duration-main">0:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% elif page.audio_embed_url %}
+                <div class="audio-embed">
+                    {% if ".mp3" in page.audio_embed_url or ".wav" in page.audio_embed_url or ".m4a" in page.audio_embed_url %}
+                        <div class="modern-audio-player main-featured-player" id="player-embed">
+                            <audio id="audio-embed" src="{{ page.audio_embed_url }}"></audio>
+                            <div class="player-main">
+                                <button class="play-btn" id="play-btn-embed">
+                                    <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                                    <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                </button>
+                                <div class="player-info">
+                                    <div class="progress-wrapper">
+                                        <input type="range" class="progress-slider" id="slider-embed" value="0" min="0" max="100">
+                                        <div class="progress-bar-fill" id="fill-embed"></div>
+                                    </div>
+                                    <div class="time-meta">
+                                        <span id="current-embed">0:00</span>
+                                        <span id="duration-embed">0:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        {% embed page.audio_embed_url %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {# ── Main Video Display ── #}
+    {% if page.video_file or page.video_embed_url %}
+        <div class="featured-video-section">
+            {% if page.video_file %}
+            <div class="modern-video-player main-featured-player" id="vplayer-main">
+                <div class="video-wrapper">
+                    <video id="video-main" src="{{ page.video_file.url }}"></video>
+                    <div class="video-overlay" id="overlay-main">
+                        <button class="big-play-btn" id="big-play-main">
+                            <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="video-controls">
+                    <button class="v-play-btn" id="v-play-main">
+                        <svg class="v-play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                        <svg class="v-pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                    <div class="v-progress-wrapper">
+                        <input type="range" class="v-progress-slider" id="v-slider-main" value="0" min="0" max="100">
+                        <div class="v-progress-fill" id="v-fill-main"></div>
+                    </div>
+                </div>
+            </div>
+            {% elif page.video_embed_url %}
+            <div class="video-embed">
+                {% if ".mp4" in page.video_embed_url or ".webm" in page.video_embed_url or ".ogv" in page.video_embed_url %}
+                    <div class="modern-video-player main-featured-player" id="vplayer-embed">
+                        <video id="video-embed" src="{{ page.video_embed_url }}"></video>
+                        <div class="video-overlay" id="overlay-embed">
+                            <button class="big-play-btn" id="big-play-embed">
+                                <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                {% elif "youtu.be" in page.video_embed_url or "youtube.com" in page.video_embed_url %}
+                    <div class="youtube-fallback" data-url="{{ page.video_embed_url }}"></div>
+                {% else %}
+                    {% embed page.video_embed_url %}
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+
 
   {# ── FULL-WIDTH ARTICLE BODY ─────────────────── #}
   {% if show_paywall %}
