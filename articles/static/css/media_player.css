@@ -1,0 +1,110 @@
+/* ─────────────────────────────────────────────
+   Media Player Page Styles
+   Used for playback of PDF-linked multimedia
+───────────────────────────────────────────── */
+
+.media-player-page {
+    width: 100%;
+    max-width: var(--article-col, 1000px);
+    margin: 4rem auto;
+    padding: 0 24px;
+    text-align: center;
+    min-height: 60vh;
+}
+
+.player-container {
+    width: 100%;
+    background: #fff;
+    padding: 4rem 0;
+    border-radius: 24px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.player-wrapper {
+    width: 100%;
+    padding: 0 4rem; /* Give some breathing room on the sides */
+    box-sizing: border-box;
+}
+
+.modern-audio-player {
+    width: 100%;
+    margin: 0 auto;
+    background: #fdfdfd;
+    padding: 2.5rem;
+    border-radius: 20px;
+    border: 1px solid #eef0f2;
+}
+
+.player-main {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    width: 100%;
+}
+
+.player-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: left;
+}
+
+.progress-wrapper {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    background: #eef0f2;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.progress-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.progress-bar-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: #c0392b;
+    border-radius: 4px;
+    width: 0%;
+    z-index: 1;
+}
+
+.time-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #666;
+    font-weight: 700;
+    font-family: var(--font-ui);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3rem;
+    color: #666;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: color 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.back-link:hover {
+    color: #c0392b;
+}

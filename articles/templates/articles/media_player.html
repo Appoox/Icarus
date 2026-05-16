@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/media_player.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="media-player-page">
+    <div class="player-container">
+        <div class="player-wrapper">
+            {% if is_video %}
+                <div class="modern-video-player">
+                    <div class="video-wrapper">
+                        <video src="{{ doc.url }}" autoplay></video>
+                        <div class="video-overlay">
+                            <button class="big-play-btn">
+                                <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="video-controls">
+                        <button class="v-play-btn">
+                            <svg class="v-play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                            <svg class="v-pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <div class="v-progress-wrapper">
+                            <input type="range" class="v-progress-slider" value="0" min="0" max="100">
+                            <div class="v-progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            {% elif is_audio %}
+                <div class="modern-audio-player">
+                    <audio src="{{ doc.url }}" autoplay></audio>
+                    <div class="player-main">
+                        <button class="play-btn" title="Play">
+                            <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
+                            <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <div class="player-info">
+                            <div class="progress-wrapper">
+                                <input type="range" class="progress-slider" value="0" min="0" max="100">
+                                <div class="progress-bar-fill"></div>
+                            </div>
+                            <div class="time-meta">
+                                <span class="time-current">0:00</span>
+                                <span class="time-duration">0:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="unsupported-media">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>This file type is not supported for playback.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <a href="javascript:history.back()" class="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Go Back
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/article.js' %}" defer></script>
+{% endblock %}

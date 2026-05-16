@@ -21,6 +21,67 @@
     margin: 48px auto 32px;
 }
 
+/* ── Featured Multimedia Box ── */
+.featured-media-box {
+    max-width: var(--article-col);
+    margin: 3rem auto;
+    padding: 1rem;
+    background: #fdfdfd;
+    border-radius: 24px;
+    border: 1px solid #eef0f2;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04);
+}
+
+.media-box-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 2.5rem;
+}
+
+.media-box-label {
+    font-family: var(--label);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--navy);
+    background: #fff;
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: 1px solid #eef0f2;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.media-box-line {
+    flex: 1;
+    height: 1px;
+    background: #eef0f2;
+}
+
+.main-featured-player {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.featured-audio-section {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid #f0f2f5;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.02);
+}
+
+.featured-video-section {
+    margin-top: 2rem;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
 .header-top {
     display: flex;
     flex-direction: column;
@@ -148,6 +209,49 @@
 .favorite-btn:hover {
     transform: scale(1.1);
     color: var(--red);
+}
+
+/* ── PDF DOWNLOAD BUTTON ── */
+.article-pdf-download-wrapper {
+    text-align: center;
+    /* margin: 2.5rem 0 4rem; */
+}
+
+.article-pdf-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: 1rem;
+    padding: .6rem 1.6rem;
+    font-family: var(--label);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--navy, #0b1f3a);
+    border-radius: 24px;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(11, 31, 58, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.article-pdf-download-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.article-pdf-download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(11, 31, 58, 0.35);
+    background: var(--navy-mid, #163a5f);
+    color: #fff;
+}
+
+.article-pdf-download-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(11, 31, 58, 0.2);
 }
 
 .video-embed {
