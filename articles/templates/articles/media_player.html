@@ -7,12 +7,12 @@
 
 {% block content %}
 <div class="media-player-page">
-    <div class="player-container">        
+    <div class="player-container">
         <div class="player-wrapper">
             {% if is_video %}
                 <div class="modern-video-player">
                     <div class="video-wrapper">
-                        <video src="{{ doc.url }}"></video>
+                        <video src="{{ doc.url }}" autoplay></video>
                         <div class="video-overlay">
                             <button class="big-play-btn">
                                 <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: white; margin-left: 5px;"><path d="M8 5v14l11-7z"/></svg>
@@ -32,7 +32,7 @@
                 </div>
             {% elif is_audio %}
                 <div class="modern-audio-player">
-                    <audio src="{{ doc.url }}"></audio>
+                    <audio src="{{ doc.url }}" autoplay></audio>
                     <div class="player-main">
                         <button class="play-btn" title="Play">
                             <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>

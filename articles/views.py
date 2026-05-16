@@ -45,9 +45,12 @@ def media_player(request, doc_id):
     Document = get_document_model()
     doc = get_object_or_404(Document, id=doc_id)
     
-    ext = doc.file.name.split('.')[-1].lower()
-    is_video = ext in ['mp4', 'webm', 'ogg', 'mov']
-    is_audio = ext in ['mp3', 'wav', 'ogg', 'm4a']
+    import os
+    _, ext = os.path.splitext(doc.file.name)
+    ext = ext.lower().lstrip('.')
+    
+    is_video = ext in ['mp4', 'webm', 'ogg', 'ogv', 'mov', 'm4v', 'avi', 'mkv', '3gp']
+    is_audio = ext in ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'opus', 'oga', 'wma', 'amr']
     
     return render(request, 'articles/media_player.html', {
         'doc': doc,
