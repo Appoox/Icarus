@@ -358,11 +358,13 @@ class Issue(RoutablePageMixin, Page):
             raise Http404("No PDF file uploaded for this issue.")
 
         # 3. Serve the file
-        # We use the document's own file property
         try:
+            from django.utils.encoding import escape_uri_path
             file_data = self.PDF_file.file.read()
+            filename = f"{self.title}.pdf"
             response = HttpResponse(file_data, content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="{self.PDF_file.filename}"'
+            # Use filename*=UTF-8'' to support non-ASCII characters (like Malayalam) in the filename
+            response['Content-Disposition'] = f"attachment; filename*=UTF-8''{escape_uri_path(filename)}"
             return response
         except Exception as e:
             raise Http404(f"Error reading PDF file: {str(e)}")

@@ -447,8 +447,20 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
         html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
         pdf = html.write_pdf()
 
+        from django.utils.encoding import escape_uri_path
+        lang = request.GET.get('lang', 'ml')
+        filename_title = self.title
+        if lang == 'en' and self.title_en:
+            filename_title = self.title_en
+        elif lang == 'hi' and self.title_hi:
+            filename_title = self.title_hi
+        elif lang == 'ta' and self.title_ta:
+            filename_title = self.title_ta
+
+        filename = f"{filename_title}.pdf"
         response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{self.slug}.pdf"'
+        # Use filename*=UTF-8'' to support non-ASCII characters (like Malayalam) in the filename
+        response['Content-Disposition'] = f"attachment; filename*=UTF-8''{escape_uri_path(filename)}"
         return response
 
     @property
