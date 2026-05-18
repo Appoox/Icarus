@@ -5,7 +5,7 @@
 
 /* ── PAGE WRAPPER ── */
 .sg-page {
-    max-width: 1240px;
+    max-width: 1421px;
     margin: 0 auto;
     padding: 0 1rem; /* Reduced from 2rem */
     flex: 1 0 auto; /* Ensure content pushes footer down */
@@ -57,7 +57,7 @@
 
 .sg-issue-cover__label {
     font-family: var(--label);
-    font-size: .85rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: .25em;
     text-transform: uppercase;
@@ -176,7 +176,7 @@
 
 .sg-issue-articles__heading {
     font-family: var(--label);
-    font-size: .8rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: .22em;
     text-transform: uppercase;
@@ -255,7 +255,7 @@
 .sg-issue-card__category {
     display: inline-block;
     font-family: var(--label);
-    font-size: .70rem;
+    font-size: .80rem;
     font-weight: 800;
     letter-spacing: .15em;
     text-transform: uppercase;
@@ -320,7 +320,7 @@
 
 .sg-issue-other-topics__heading {
     font-family: var(--label);
-    font-size: .8rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: .22em;
     text-transform: uppercase;
@@ -328,6 +328,10 @@
     padding-bottom: .6rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.25rem;
+}
+
+.sg-issue-other-topics__scroll-wrapper {
+    width: 100%;
 }
 
 .sg-issue-other-topics__grid {
@@ -427,7 +431,7 @@
 
 .sg-issue-small-card__category {
     font-family: var(--label);
-    font-size: .60rem;
+    font-size: .80rem;
     font-weight: 800;
     letter-spacing: .15em;
     text-transform: uppercase;
@@ -441,7 +445,7 @@
 
 .sg-issue-small-card__title {
     font-family: var(--serif);
-    font-size: 1.05rem;
+    font-size: 1.30rem;
     font-weight: 700;
     line-height: 1.25;
     margin: 0;
@@ -625,7 +629,7 @@
 .sg-article-card__category {
     display: inline-block;
     font-family: var(--label);
-    font-size: .63rem;
+    font-size: .8rem;
     font-weight: 800;
     letter-spacing: .15em;
     text-transform: uppercase;
@@ -734,11 +738,37 @@
       margin-top: 2rem;
       border-top: 1px solid var(--rule);
       padding-top: 2rem;
+      min-width: 0; /* Crucial for horizontal scroll nested in grid/flex */
+      width: 100%;
+    }
+
+    .sg-issue-other-topics__scroll-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+      scrollbar-width: none; /* Hide scrollbar for Firefox */
+      padding: 1.5rem 1.25rem;
+      margin: 0 -1.25rem;
+    }
+
+    .sg-issue-other-topics__scroll-wrapper::-webkit-scrollbar {
+      display: none; /* Hide scrollbar for Chrome/Safari */
     }
 
     .sg-issue-other-topics__grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      display: flex;
+      flex-direction: row;
+      gap: 1.25rem;
+      width: max-content;
+      padding-right: 1.25rem; /* Balance with margin */
+    }
+
+    .sg-issue-other-topics__grid .sg-issue-small-card {
+      flex: 0 0 260px;
+      white-space: normal;
+      scroll-snap-align: center;
     }
 
     .sg-article-grid {
@@ -859,7 +889,7 @@
 
 .sg-issue-card-simple__category {
     font-family: var(--label);
-    font-size: 0.55rem;
+    font-size: 0.8rem;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;

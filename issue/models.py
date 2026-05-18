@@ -311,6 +311,22 @@ class Issue(RoutablePageMixin, Page):
             return self.editorial_board.members.all()
         return []
 
+    @property
+    def editors_list(self):
+        return [m for m in self.board_members if m.role == 'editor']
+
+    @property
+    def associate_editors_list(self):
+        return [m for m in self.board_members if m.role == 'associate']
+
+    @property
+    def managing_editors_list(self):
+        return [m for m in self.board_members if m.role == 'managing']
+
+    @property
+    def board_members_only(self):
+        return [m for m in self.board_members if m.role == 'board']
+
     content_panels = Page.content_panels + [
         FieldPanel('slug'),
         FieldPanel('tags'),

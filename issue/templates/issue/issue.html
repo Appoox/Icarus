@@ -166,43 +166,139 @@
     </div>
 
 
-    {# ── EDITORIAL BOARD | EDITORIAL — two-column layout ── #}
-    <div class="editorial-layout">
+    <div class="editorial-board-btn-wrapper">
+        <button class="editorial-board-btn show-more-btn" aria-expanded="false" aria-controls="editorial-board-content">
+            പത്രാധിപ സമിതി
+        </button>
 
-        {# LEFT COLUMN: Editorial Board (Moved to bottom on mobile via CSS) #}
-        <div class="editorial-board-col">
-            <h2 class="editorial-board-col__heading">പ്രസാധകര്‍</h2>
-
-            <div class="expandable-wrapper" data-expand-height="300">
-                <div class="expandable-content">
-                    {% for rel in page.board_members %}
-                    <div class="board-member">
-                        <div class="board-member__photo">
-                            {% if rel.editor.profile_image %}
-                            {% image rel.editor.profile_image fill-108x108 as ed_img %}
-                            <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}">
-                            {% else %}
-                            <div class="board-member__photo-placeholder">
-                                {{ rel.editor.title|first }}
+        <div class="editorial-board-content" id="editorial-board-content">
+            <div class="editorial-board-inner">
+                
+                {# 1. EDITOR #}
+                {% if page.editors_list %}
+                <div class="editorial-board-section">
+                    <h3 class="editorial-board-role-heading">എഡിറ്റർ</h3>
+                    <div class="editorial-board-members-grid">
+                        {% for rel in page.editors_list %}
+                        <div class="board-member">
+                            <div class="board-member__photo">
+                                {% if rel.editor.profile_image %}
+                                {% image rel.editor.profile_image fill-108x108 as ed_img %}
+                                <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}">
+                                {% else %}
+                                <div class="board-member__photo-placeholder">
+                                    {{ rel.editor.title|first }}
+                                </div>
+                                {% endif %}
                             </div>
-                            {% endif %}
+                            <div class="board-member__info">
+                                {# <span class="board-member__role">{{ rel.get_role_display }}</span> #}
+                                <h3 class="board-member__name">
+                                    <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
+                                </h3>
+                            </div>
                         </div>
-                        <div class="board-member__info">
-                            <span class="board-member__role">{{ rel.get_role_display }}</span>
-                            <h3 class="board-member__name">
-                                <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
-                            </h3>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% empty %}
-                    <p class="editorial-empty">No editorial board members listed.</p>
-                    {% endfor %}
                 </div>
-                <div class="show-more-banner">
-                    <button class="show-more-btn">കൂടുതൽ കാണുക</button>
+                {% endif %}
+
+                {# 2. MANAGING EDITOR #}
+                {% if page.managing_editors_list %}
+                <div class="editorial-board-section">
+                    <h3 class="editorial-board-role-heading">മാനേജിംഗ് എഡിറ്റർ</h3>
+                    <div class="editorial-board-members-grid">
+                        {% for rel in page.managing_editors_list %}
+                        <div class="board-member">
+                            <div class="board-member__photo">
+                                {% if rel.editor.profile_image %}
+                                {% image rel.editor.profile_image fill-108x108 as ed_img %}
+                                <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}">
+                                {% else %}
+                                <div class="board-member__photo-placeholder">
+                                    {{ rel.editor.title|first }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="board-member__info">
+                                {# <span class="board-member__role">{{ rel.get_role_display }}</span> #}
+                                <h3 class="board-member__name">
+                                    <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
+                                </h3>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endif %}
+
+                {# 3. ASSOCIATE EDITOR #}
+                {% if page.associate_editors_list %}
+                <div class="editorial-board-section">
+                    <h3 class="editorial-board-role-heading">അസോസിയേറ്റ് എഡിറ്റർ </h3>
+                    <div class="editorial-board-members-grid">
+                        {% for rel in page.associate_editors_list %}
+                        <div class="board-member">
+                            <div class="board-member__photo">
+                                {% if rel.editor.profile_image %}
+                                {% image rel.editor.profile_image fill-108x108 as ed_img %}
+                                <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}">
+                                {% else %}
+                                <div class="board-member__photo-placeholder">
+                                    {{ rel.editor.title|first }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="board-member__info">
+                                {# <span class="board-member__role">{{ rel.get_role_display }}</span> #}
+                                <h3 class="board-member__name">
+                                    <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
+                                </h3>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {# 4. BOARD MEMBERS #}
+                {% if page.board_members_only %}
+                <div class="editorial-board-section">
+                    <h3 class="editorial-board-role-heading">സമിതി അംഗങ്ങൾ</h3>
+                    <div class="editorial-board-members-grid">
+                        {% for rel in page.board_members_only %}
+                        <div class="board-member">
+                            <div class="board-member__photo">
+                                {% if rel.editor.profile_image %}
+                                {% image rel.editor.profile_image fill-108x108 as ed_img %}
+                                <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}">
+                                {% else %}
+                                <div class="board-member__photo-placeholder">
+                                    {{ rel.editor.title|first }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="board-member__info">
+                                {# <span class="board-member__role">{{ rel.get_role_display }}</span> #}
+                                <h3 class="board-member__name">
+                                    <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
+                                </h3>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if not page.board_members %}
+                <p class="editorial-empty">No editorial board members listed.</p>
+                {% endif %}
             </div>
         </div>
+    </div>
+
+    {# ── EDITORIAL — single column layout now ── #}
+    <div class="editorial-layout">
 
         {# RIGHT COLUMN: Editorial content (Moved to top on mobile via CSS) #}
         <div class="editorial-content-col">
@@ -213,19 +309,7 @@
                 <div class="expandable-content">
                     <div class="editorial-body">
                         {% for block in page.editorial %}
-                        {% if block.block_type == 'heading' %}
-                        <h2>{{ block.value }}</h2>
-                        {% elif block.block_type == 'image' %}
-                        <figure>
-                            {% image block.value.image width-600 as img %}
-                            <img src="{{ img.url }}" alt="{{ img.alt }}">
-                            {% if block.value.caption %}
-                            <figcaption>{{ block.value.caption }}</figcaption>
-                            {% endif %}
-                        </figure>
-                        {% else %}
                         {% include_block block %}
-                        {% endif %}
                         {% endfor %}
                     </div>
                 </div>

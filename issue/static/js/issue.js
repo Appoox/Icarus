@@ -158,6 +158,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ── EDITORIAL BOARD ACCORDION TOGGLE ──
+    const boardToggle = document.querySelector('.editorial-board-btn');
+    const boardContent = document.getElementById('editorial-board-content');
+    if (boardToggle && boardContent) {
+        boardToggle.addEventListener('click', () => {
+            const isExpanded = boardToggle.getAttribute('aria-expanded') === 'true';
+            boardToggle.setAttribute('aria-expanded', !isExpanded);
+            
+            if (isExpanded) {
+                boardContent.classList.remove('is-expanded');
+                boardToggle.textContent = 'പത്രാധിപ സമിതി';
+            } else {
+                boardContent.classList.add('is-expanded');
+                boardToggle.textContent = 'കുറച്ചു കാണുക';
+            }
+        });
+    }
+
     // ── EXPANDABLE SECTIONS ──
     document.querySelectorAll('.expandable-wrapper').forEach(wrapper => {
         const content = wrapper.querySelector('.expandable-content');

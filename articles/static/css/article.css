@@ -102,12 +102,12 @@
 .topic-tag {
     display: inline-block;
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--white);
-    background: var(--red);
+    background: var(--topic-color, var(--red));
     padding: 6px 14px;
     border-radius: 20px;
     white-space: nowrap;
@@ -170,6 +170,7 @@
     color: var(--red);
     font-weight: 600;
     transition: color 0.2s;
+    font-size: 1.5rem;
 }
 
 .meta .author-link:hover {
@@ -563,7 +564,7 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--white);
-    background: var(--red);
+    background: var(--category-color, var(--red));
     padding: 4px 10px;
     border-radius: 12px;
     margin-bottom: 4px;
@@ -779,7 +780,7 @@
 }
 
 .topic-header__inner {
-    max-width: 1200px;
+    max-width: 1421px;
     margin: 0 auto;
     position: relative;
     z-index: 1;
@@ -806,7 +807,7 @@
 }
 
 .topic-content {
-    max-width: 1200px;
+    max-width: 1421px;
     margin: 0 auto;
     padding: 0 2rem 5rem;
 }

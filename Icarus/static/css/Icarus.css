@@ -27,7 +27,7 @@
     --font-ui: 'Source Sans 3', Helvetica, sans-serif;
     
     --col-gap: 2.5rem;
-    --max-width: 1200px;
+    --max-width: 1421px;
     --article-col: 1000px;
 }
 
@@ -98,7 +98,7 @@ img {
 
 /* ── Messages (Django Messages Framework) ──────── */
 .messages-container {
-    max-width: 1200px;
+    max-width: 1421px;
     margin: 1rem auto;
     padding: 0 1.25rem;
     position: relative;

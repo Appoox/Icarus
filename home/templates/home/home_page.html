@@ -86,38 +86,40 @@
     <div class="sg-issue-other-topics">
       <div class="sg-issue-other-topics__heading">മറ്റുള്ള വിഷയങ്ങള്‍</div>
       
-      <div class="sg-issue-other-topics__grid">
-        {% for article in other_topic_articles %}
-        <article class="sg-issue-small-card">
-          {% if article.cover_image %}
-          <a href="{{ article.url }}" class="sg-issue-small-card__image-wrap" aria-hidden="true" tabindex="-1">
-            {% image article.cover_image fill-200x125 as art_img %}
-            <img src="{{ art_img.url }}" alt="{{ article.title }}">
-          </a>
-          {% endif %}
-          {% if article.topic %}
-          <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-small-card__category"
-            style="background-color: {{ article.topic.color|default:'#6b6659' }};">
-            {{ article.topic.name }}
-          </a>
-          {% endif %}
-          <h3 class="sg-issue-small-card__title">
-            <a href="{{ article.url }}">{{ article.title }}</a>
-          </h3>
+      <div class="sg-issue-other-topics__scroll-wrapper">
+        <div class="sg-issue-other-topics__grid">
+          {% for article in other_topic_articles %}
+          <article class="sg-issue-small-card">
+            {% if article.cover_image %}
+            <a href="{{ article.url }}" class="sg-issue-small-card__image-wrap" aria-hidden="true" tabindex="-1">
+              {% image article.cover_image fill-200x125 as art_img %}
+              <img src="{{ art_img.url }}" alt="{{ article.title }}">
+            </a>
+            {% endif %}
+            {% if article.topic %}
+            <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-small-card__category"
+              style="background-color: {{ article.topic.color|default:'#6b6659' }};">
+              {{ article.topic.name }}
+            </a>
+            {% endif %}
+            <h3 class="sg-issue-small-card__title">
+              <a href="{{ article.url }}">{{ article.title }}</a>
+            </h3>
 
-          {% if article.article_authors.all %}
-          <span class="sg-card-author">
-            {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
-          </span>
-          {% endif %}
+            {% if article.article_authors.all %}
+            <span class="sg-card-author">
+              {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </span>
+            {% endif %}
 
-          <time class="sg-issue-small-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
-            {{ article.date|date:"F j, Y" }}
-          </time>
-        </article>
-        {% empty %}
-        <p class="sg-empty">No other topics.</p>
-        {% endfor %}
+            <time class="sg-issue-small-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+              {{ article.date|date:"F j, Y" }}
+            </time>
+          </article>
+          {% empty %}
+          <p class="sg-empty">No other topics.</p>
+          {% endfor %}
+        </div>
       </div>
     </div>
 

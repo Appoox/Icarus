@@ -5,7 +5,7 @@
 
 /* ── PAGE CONTAINER ── */
 .issue-page {
-    max-width: 1200px;
+    max-width: 1421px;
     margin: 0 auto;
     padding: 0 2rem 4rem;
 }
@@ -65,7 +65,7 @@
     display: inline-block;
     margin-top: .75rem;
     font-family: var(--label);
-    font-size: .68rem;
+    font-size: 1rem;
     font-weight: 700;
     letter-spacing: .14em;
     text-transform: uppercase;
@@ -153,7 +153,7 @@
 /* ── AUDIO & VIDEO PLAYERS ── */
 .main-audio-container,
 .main-video-container {
-    max-width: 1200px;
+    max-width: 1421px;
     margin: 0 auto 2.5rem;
     padding: 0 2rem;
 }
@@ -383,7 +383,7 @@
 
 /* ── TAGS ── */
 .issue-tags {
-    max-width: 1200px;
+    max-width: 1421px;
     margin: 0 auto 2.5rem;
     padding: 0 2rem;
     display: flex;
@@ -398,21 +398,22 @@
 }
 
 /* ── EDITORIAL BOARD | EDITORIAL ── */
+.editorial-board-btn-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2.5rem 0 1.5rem;
+    width: 100%;
+}
+
 .editorial-layout {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 0;
+    display: block;
     border-top: 3px double var(--rule);
     border-bottom: 3px double var(--rule);
     margin-bottom: 2.5rem;
+    padding: 2.5rem 0;
 }
 
-.editorial-board-col {
-    border-right: 1px solid var(--rule);
-    padding: 2rem 2rem 2rem 0;
-}
-
-.editorial-board-col__heading,
 .editorial-content-col__heading {
     font-family: var(--label);
     font-size: .78rem;
@@ -425,21 +426,77 @@
     margin-bottom: 1.5rem;
 }
 
+/* ── EDITORIAL BOARD ACCORDION TOGGLE ── */
+.editorial-board-btn {
+    position: relative;
+}
+
+.editorial-board-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    width: 100%;
+}
+
+.editorial-board-content.is-expanded {
+    grid-template-rows: 1fr;
+}
+
+.editorial-board-inner {
+    min-height: 0;
+}
+
+.editorial-board-section {
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.editorial-board-section:last-child {
+    margin-bottom: 0;
+}
+
+.editorial-board-role-heading {
+    font-family: var(--label);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--navy);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.5rem;
+    margin: 1.5rem auto 0.5rem;
+    max-width: 1421px;
+    width: 100%;
+    text-align: center;
+}
+
+.editorial-board-members-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem 2.5rem;
+    padding: 1rem 0;
+    max-width: 1421px;
+    width: 100%;
+}
+
 .board-member {
     display: flex;
     gap: .85rem;
-    align-items: flex-start;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--rule);
-    transition: background .15s;
-}
-
-.board-member:last-child {
-    border-bottom: none;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    width: 280px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--bg, #fdfdfc);
 }
 
 .board-member:hover {
-    background: rgba(0, 0, 0, .015);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: #fff;
 }
 
 .board-member__photo img,
@@ -481,7 +538,7 @@
 }
 
 .editorial-content-col {
-    padding: 2rem 0 2rem 2.5rem;
+    padding: 0;
 }
 
 .editorial-body {
@@ -494,9 +551,6 @@
 .editorial-body h2 {
     font-family: var(--serif);
     font-size: 1.4rem;
-    margin: 2em 0 .75em;
-    padding-top: 1.25em;
-    border-top: 1px solid var(--rule);
 }
 
 .editorial-empty {
@@ -553,9 +607,9 @@
     color: #fff;
     border: none;
     padding: 0.65rem 1.8rem;
-    border-radius: 30px;
+    /* border-radius: 30px; */
     font-family: var(--label);
-    font-size: 0.72rem;
+    font-size: 1rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -713,7 +767,7 @@
 }
 
 .topic-header__inner {
-    max-width: 1200px;
+    max-width: 1421px;
     margin: 0 auto;
     position: relative;
     z-index: 1;
@@ -740,7 +794,7 @@
 }
 
 .topic-content {
-    max-width: 1200px;
+    max-width: 1421px;
     margin: 0 auto;
     padding: 0 2rem 5rem;
 }
@@ -855,26 +909,15 @@
 }
 
 @media (max-width: 900px) {
-    .editorial-layout {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .editorial-content-col {
-        order: 1;
-        padding: 2rem 0;
-    }
-
-    .editorial-board-col {
-        order: 2;
-        border-right: none;
-        border-top: 1px solid var(--rule);
-        padding: 2rem 0;
+    .editorial-board-members-grid {
+        gap: 1rem;
+        padding: 1.5rem 0;
     }
 
     .board-member {
-        padding: 0.65rem 0;
-        gap: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        width: 100%;
+        max-width: 340px;
     }
 
     .board-member__photo img, 
