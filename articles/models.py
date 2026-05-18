@@ -23,6 +23,7 @@ from .wagtail_widgets import ColorPickerBlock
 from hitcount.models import HitCountMixin, HitCount
 from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.views import HitCountMixin as HitCountViewMixin
+from django.shortcuts import redirect
 
 class ArticleTag(TaggedItemBase):
     content_object = ParentalKey(
@@ -190,6 +191,7 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
     tags = ClusterTaggableManager(through=ArticleTag, blank=True)
 
     parent_page_types = ['ArticleIndexPage']
+    subpage_types = []
 
     # ── Relations ──────────────────────────────────────────────────────────
     main_issue = models.ForeignKey(
