@@ -25,6 +25,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.views import HitCountMixin as HitCountViewMixin
 from django.shortcuts import redirect
 
+import json
+
 class ArticleTag(TaggedItemBase):
     content_object = ParentalKey(
         'Article',
@@ -123,61 +125,224 @@ class VideoBlock(blocks.StructBlock):
         template = 'blocks/video_block.html'
         label = 'Video'
 
+class RichTextImportBlock(blocks.TextBlock):
+    """
+    Paste raw HTML or plain text into this block in the Wagtail editor.
+
+    Clicking "Convert to Blocks" in the editor toolbar adds a hidden
+    `convert_block_id` field to the Save Draft form submission.
+    ArticleForm.save() detects that field, converts this block's content
+    into proper heading / paragraph / blockquote / image blocks,
+    and the page reloads with the expanded blocks ready to edit.
+
+    This block should never reach the live site — the conversion always
+    happens before the page is saved. The template is a safety fallback only.
+    """
+
+    class Meta:
+        icon      = 'clipboard-list'
+        label     = 'Paste & Import'
+        help_text = (
+            'Paste HTML or plain text here, then click "Convert to Blocks" '
+            'in the toolbar above the text area.'
+        )
+        template  = 'blocks/rich_text_import_block.html'
+
+
 
 # ── Reusable StreamField Blocks ─────────────────────────────────────────
 
 STREAM_BLOCKS = [
-    ('audio',      AudioBlock()),
-    ('video',      VideoBlock()),
-    ('heading',    blocks.RichTextBlock(form_classname="full title")),
+    # ── Import helper (auto-expands on save) ───────────────────────────────
+    ('rich_text_import', RichTextImportBlock()),
+
+    # ── Media ──────────────────────────────────────────────────────────────
+    ('audio',           AudioBlock()),
+    ('video',           VideoBlock()),
+
+    # ── Text ───────────────────────────────────────────────────────────────
+    ('heading',         blocks.RichTextBlock(form_classname="full title")),
     ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
-    ('paragraph',  blocks.RichTextBlock()),
-    ('image',      ImageBlock()),
-    ('blockquote', BlockQuoteBlock()),
-    ('embed',      EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
-    ('document',   DocumentChooserBlock()),
-    ('table',      TableBlock()),
-    ('raw_html',   blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
-    ('text',       blocks.TextBlock()),
-    ('email',      blocks.EmailBlock()),
-    ('url',        blocks.URLBlock()),
-    ('boolean',    blocks.BooleanBlock(required=False)),
-    ('integer',    blocks.IntegerBlock()),
-    ('float',      blocks.FloatBlock()),
-    ('decimal',    blocks.DecimalBlock()),
-    ('date',       blocks.DateBlock()),
-    ('time',       blocks.TimeBlock()),
-    ('datetime',   blocks.DateTimeBlock()),
-    ('rich_text',  blocks.RichTextBlock(label="Rich Text (Full)")),
-    ('choice',     blocks.ChoiceBlock(choices=[
+    ('paragraph',       blocks.RichTextBlock()),
+    ('blockquote',      BlockQuoteBlock()),
+    ('text',            blocks.TextBlock()),
+
+    # ── Media & Embeds ─────────────────────────────────────────────────────
+    ('image',           ImageBlock()),
+    ('embed',           EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
+    ('document',        DocumentChooserBlock()),
+    ('table',           TableBlock()),
+    ('raw_html',        blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
+
+    # ── Typed primitives ───────────────────────────────────────────────────
+    ('email',           blocks.EmailBlock()),
+    ('url',             blocks.URLBlock()),
+    ('boolean',         blocks.BooleanBlock(required=False)),
+    ('integer',         blocks.IntegerBlock()),
+    ('float',           blocks.FloatBlock()),
+    ('decimal',         blocks.DecimalBlock()),
+    ('date',            blocks.DateBlock()),
+    ('time',            blocks.TimeBlock()),
+    ('datetime',        blocks.DateTimeBlock()),
+    ('rich_text',       blocks.RichTextBlock(label="Rich Text (Full)")),
+    ('choice',          blocks.ChoiceBlock(choices=[
         ('left',   'Left'),
         ('center', 'Centre'),
         ('right',  'Right'),
     ], help_text="Alignment choice")),
-    ('page',       blocks.PageChooserBlock()),
-    ('static',     blocks.StaticBlock(
+    ('page',            blocks.PageChooserBlock()),
+    ('static',          blocks.StaticBlock(
         admin_text="This is a placeholder block — content is defined in the template.",
         label="Divider / Separator",
     )),
-    ('list',       blocks.ListBlock(blocks.CharBlock(), label="List of items")),
-    ('stream',     blocks.StreamBlock([
+    ('list',            blocks.ListBlock(blocks.CharBlock(), label="List of items")),
+    ('stream',          blocks.StreamBlock([
         ('text',  blocks.CharBlock()),
         ('image', ImageChooserBlock()),
     ], label="Nested Stream")),
 ]
 
 class ArticleForm(WagtailAdminPageForm):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.instance.pk:
-            # We use apps.get_model to avoid circular imports
             from django.apps import apps
             Issue = apps.get_model('issue', 'Issue')
             latest_issue = Issue.objects.live().order_by('-date_of_publishing').first()
             if latest_issue:
-                # Set the initial default value to the latest issue
                 self.fields['main_issue'].initial = latest_issue.pk
                 self.initial['main_issue'] = latest_issue.pk
+
+    def save(self, commit=True):
+        """
+        Override save() to convert rich_text_import blocks before saving.
+
+        Two modes:
+        1. Targeted — JS sets convert_block_id=<uuid> on the form when the
+           editor clicks "Convert to Blocks". Only that block is converted.
+           If convert_block_id='__all__', all import blocks are converted
+           (used as a JS fallback when the block UUID can't be determined).
+
+        2. Auto-fallback — if no convert_block_id is present in POST at all,
+           any rich_text_import blocks are still converted automatically.
+           This ensures conversion always happens even if the JS injection
+           fails entirely.
+        """
+        page = super().save(commit=False)
+
+        convert_block_id = (self.data.get('convert_block_id') or '').strip()
+
+        if convert_block_id == '__all__' or not convert_block_id:
+            # Convert every import block on the page
+            self._convert_all_import_blocks(page)
+        else:
+            # Convert only the block the editor explicitly requested
+            self._convert_import_block(page, convert_block_id)
+
+        if commit:
+            page.save()
+
+        return page
+
+    # ------------------------------------------------------------------
+    def _convert_all_import_blocks(self, page):
+        """Convert every rich_text_import block across all StreamFields."""
+        from .richtext_import_utils import html_to_stream_blocks
+        base_url = self._get_base_url()
+        stream_fields = ['body', 'body_en', 'body_hi', 'body_ta']
+
+        for field_name in stream_fields:
+            stream_value = getattr(page, field_name, None)
+            if not stream_value:
+                continue
+            try:
+                raw = list(stream_value.raw_data)
+            except AttributeError:
+                continue
+
+            new_blocks = []
+            changed = False
+            for block in raw:
+                if block.get('type') == 'rich_text_import':
+                    changed = True
+                    raw_text = block.get('value', '') or ''
+                    new_blocks.extend(html_to_stream_blocks(raw_text, base_url=base_url))
+                else:
+                    new_blocks.append(block)
+
+            if changed:
+                setattr(page, field_name, json.dumps(new_blocks))
+
+    # ------------------------------------------------------------------
+    def _convert_import_block(self, page, block_id):
+        """
+        Find the rich_text_import block whose id == block_id across all
+        StreamFields on the page, convert its content, and replace it
+        in-place with the resulting blocks.
+        """
+        from .richtext_import_utils import html_to_stream_blocks
+
+        # Construct a base URL for resolving relative image paths.
+        # Uses the Wagtail Site record for the current default site.
+        base_url = self._get_base_url()
+
+        stream_fields = ['body', 'body_en', 'body_hi', 'body_ta']
+
+        for field_name in stream_fields:
+            stream_value = getattr(page, field_name, None)
+            if not stream_value:
+                continue
+
+            try:
+                raw = list(stream_value.raw_data)
+            except AttributeError:
+                continue
+
+            new_blocks = []
+            changed    = False
+
+            for block in raw:
+                if (
+                    block.get('type') == 'rich_text_import'
+                    and block.get('id') == block_id
+                ):
+                    changed  = True
+                    raw_text = block.get('value', '') or ''
+                    converted = html_to_stream_blocks(raw_text, base_url=base_url)
+                    new_blocks.extend(converted)
+                else:
+                    new_blocks.append(block)
+
+            if changed:
+                # Re-assign the field as raw JSON.
+                # Wagtail's StreamField descriptor accepts a JSON string
+                # and parses it correctly.
+                setattr(page, field_name, json.dumps(new_blocks))
+                # Stop after the first field that contained the block —
+                # block IDs are unique across all fields.
+                break
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _get_base_url():
+        """
+        Return the site's base URL for resolving relative image paths,
+        or None if it cannot be determined.
+        """
+        try:
+            from wagtail.models import Site
+            site = Site.objects.filter(is_default_site=True).first()
+            if not site:
+                return None
+            scheme = 'https' if site.port == 443 else 'http'
+            base = f'{scheme}://{site.hostname}'
+            if site.port not in (80, 443):
+                base += f':{site.port}'
+            return base
+        except Exception:
+            return None
+
                 
 
 class Article(RoutablePageMixin, Page, HitCountMixin):

@@ -1,9 +1,14 @@
+import json
 from django.utils.safestring import mark_safe
 from wagtail import hooks
 from wagtail.admin.panels import Panel
 import wagtail.admin.rich_text.editors.draftail.features as draftail_features
 from wagtail.admin.rich_text.converters.html_to_contentstate import InlineStyleElementHandler
 from wagtail.admin.ui.tables import Column
+
+
+
+# ── Rich-text colour features ──────────────────────────────────────────────
 
 @hooks.register('register_rich_text_features')
 def register_text_color_features(features):
@@ -33,6 +38,7 @@ def register_text_color_features(features):
         })
         features.default_features.append(feature_name)
 
+
 @hooks.register('register_rich_text_features')
 def register_alignment_features(features):
     alignments = [
@@ -45,24 +51,21 @@ def register_alignment_features(features):
     for name, label, value in alignments:
         feature_name = f'align-{name}'
         type_ = f'ALIGN_{name.upper()}'
-        
-        # Mapping to CSS text-align property
         control = {
             'type': type_,
             'label': label,
             'description': f'Align {label}',
-            # Using an icon name if available, or just the label
             'icon': f'align-{name}',
         }
-
         features.register_editor_plugin('draftail', feature_name, draftail_features.InlineStyleFeature(control))
         features.register_converter_rule('contentstate', feature_name, {
             'from_database_format': {f'div[style="text-align: {value};"]': InlineStyleElementHandler(type_)},
             'to_database_format': {'style_map': {type_: {'element': 'div', 'props': {'style': f'text-align: {value};'}}}},
         })
-        # Note: We don't append to default_features automatically to avoid cluttering all editors.
-        # But for this project, the user likely wants them everywhere.
         features.default_features.append(feature_name)
+
+
+# ── Cover image preview panel ──────────────────────────────────────────────
 
 class CoverImagePreviewPanel(Panel):
     """
@@ -156,26 +159,21 @@ def cover_image_preview_js():
         }
         if (!chooser) return;
 
-        // Set initial aspect-ratio on the viewport from its data attribute
         var viewport = document.getElementById('cover-preview-viewport');
         if (viewport && viewport.dataset.aspect) {
             viewport.style.aspectRatio = RATIOS[viewport.dataset.aspect] || '2 / 1';
         }
 
-        // Initial render
         setTimeout(function () { update(chooser, select); }, 400);
 
-        // Shape dropdown changed
         if (select) {
             select.addEventListener('change', function () { update(chooser, select); });
         }
 
-        // Image chosen (Wagtail 4/5+ event)
         chooser.addEventListener('wagtail:chooser-chosen', function () {
             setTimeout(function () { update(chooser, select); }, 150);
         });
 
-        // Fallback MutationObserver for all Wagtail versions
         new MutationObserver(function () {
             setTimeout(function () { update(chooser, select); }, 100);
         }).observe(chooser, { childList: true, subtree: true, attributes: true });
@@ -191,12 +189,15 @@ def cover_image_preview_js():
 """)
 
 
+# ── Analytics columns & viewset ────────────────────────────────────────────
+
 class HitCountColumn(Column):
     def get_value(self, instance):
         specific_instance = instance.specific
         if hasattr(specific_instance, 'hit_count'):
             return specific_instance.hit_count.hits
         return "-"
+
 
 class AnalyticsColumn(Column):
     def __init__(self, name, field_name, **kwargs):
@@ -209,13 +210,15 @@ class AnalyticsColumn(Column):
             return getattr(specific_instance, self.field_name)
         return "-"
 
+
 from wagtail.admin.viewsets.pages import PageListingViewSet
+
 
 class ArticlePageListingViewSet(PageListingViewSet):
     icon = 'doc-full'
     menu_label = 'Articles'
     menu_order = 200
-    add_to_admin_menu = True # Add this so it shows on the sidebar menu
+    add_to_admin_menu = True
 
     @property
     def columns(self):
@@ -224,6 +227,7 @@ class ArticlePageListingViewSet(PageListingViewSet):
             AnalyticsColumn("read_fully_count", "read_fully_count", label="Read Fully", sort_key="read_fully_count")
         ]
 
+
 @hooks.register('register_admin_viewset')
 def register_article_viewset():
     from .models import Article
@@ -231,32 +235,27 @@ def register_article_viewset():
     return ArticlePageListingViewSet('articles')
 
 
+# ── Tag autocomplete ───────────────────────────────────────────────────────
+
 @hooks.register('insert_editor_js')
 def register_tag_autocomplete_js():
     return mark_safe("""
     <script>
     (function() {
-        /**
-         * Enhanced Tag Autocomplete Selection for Wagtail 7.x
-         * Automatically selects the first result on Enter if length >= 2
-         */
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 const activeElement = document.activeElement;
                 if (!activeElement) return;
 
-                // Targeting modern Wagtail w-tag inputs and legacy tag-it inputs
                 const tagWrapper = activeElement.closest('[data-controller="w-tag"], .tagit, .w-tag-input');
                 if (!tagWrapper) return;
 
                 const value = activeElement.value.trim();
-                
-                // Threshold of 2 characters for "strong match"
+
                 if (value.length >= 2) {
-                    // Autocomplete menus are usually appended to <body>
                     const menus = document.querySelectorAll('.ui-autocomplete, [role="listbox"]');
                     let visibleMenu = null;
-                    
+
                     for (const menu of menus) {
                         if (menu.offsetParent !== null && window.getComputedStyle(menu).display !== 'none') {
                             visibleMenu = menu;
@@ -265,20 +264,15 @@ def register_tag_autocomplete_js():
                     }
 
                     if (visibleMenu) {
-                        // If something is already highlighted by the user, let default happen
                         const highlighted = visibleMenu.querySelector('.ui-state-active, .active, [aria-selected="true"]');
                         if (highlighted) return;
 
-                        // Otherwise, find the first relevant result
                         const firstItem = visibleMenu.querySelector('.ui-menu-item, [role="option"]');
                         if (firstItem) {
                             event.preventDefault();
                             event.stopPropagation();
 
-                            // Try to click the inner wrapper/link first, then fallback to item itself
                             const target = firstItem.querySelector('.ui-menu-item-wrapper, a, span') || firstItem;
-                            
-                            // Using a combination of events to ensure the library detects the selection
                             target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
                             target.click();
                             target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
@@ -286,7 +280,263 @@ def register_tag_autocomplete_js():
                     }
                 }
             }
-        }, true); // Capture phase to beat Wagtail's internal Enter handlers
+        }, true);
     })();
     </script>
     """)
+
+
+# ── Paste & Import block — Convert to Blocks button ───────────────────────
+#
+# How it works:
+#   1. MutationObserver watches for "Paste & Import" blocks in the stream editor.
+#   2. Each import block gets a "Convert to Blocks" button above its textarea.
+#   3. Clicking the button adds a hidden <input name="convert_block_id"> to the
+#      page edit form and programmatically clicks "Save Draft".
+#   4. ArticleForm.save() in models.py intercepts convert_block_id and converts
+#      that specific block. If convert_block_id is absent (e.g. JS failed to
+#      inject or the Save Draft selector missed), ArticleForm.save() falls back
+#      to converting ALL rich_text_import blocks automatically.
+
+@hooks.register('insert_editor_js')
+def richtext_import_block_js():
+    return mark_safe("""
+<script>
+(function () {
+    'use strict';
+
+    /*
+     * Strategy: do NOT rely on any specific data attribute for block containers.
+     * Instead, find every <textarea> inside the StreamField, walk up the DOM
+     * to find its block wrapper (identified by containing the label text
+     * "Paste & Import"), and inject the button there.
+     *
+     * This works regardless of which data-* attribute Wagtail uses for blocks.
+     */
+
+    /* ── Helpers ──────────────────────────────────────────────────────────── */
+
+    function wordCount(text) {
+        return (text || '').trim() ? (text.trim().split(/\\s+/).length) : 0;
+    }
+
+    /*
+     * Walk up from `el` up to `maxDepth` levels.
+     * Return the first ancestor whose textContent contains `needle`
+     * AND which itself has a textContent longer than the needle
+     * (i.e. it wraps the label, not just equals it).
+     */
+    function closestContaining(el, needle, maxDepth) {
+        var node = el.parentElement;
+        for (var i = 0; i < (maxDepth || 12); i++) {
+            if (!node) break;
+            if (node.textContent && node.textContent.indexOf(needle) !== -1) return node;
+            node = node.parentElement;
+        }
+        return null;
+    }
+
+    /* Find the Save Draft submit button. */
+    function findSaveDraftButton() {
+        var selectors = [
+            'button[value="action-save-draft"]',
+            'button[name="action-save-draft"]',
+            'input[name="action-save-draft"]',
+            'button.action-save-draft',
+            'button.button--draft',
+            '[data-action-trigger="save-draft"]',
+        ];
+        for (var i = 0; i < selectors.length; i++) {
+            var el = document.querySelector(selectors[i]);
+            if (el) return el;
+        }
+        // Text fallback
+        var btns = document.querySelectorAll('button[type="submit"], input[type="submit"]');
+        for (var j = 0; j < btns.length; j++) {
+            if ((btns[j].textContent || btns[j].value || '').toLowerCase().indexOf('draft') !== -1)
+                return btns[j];
+        }
+        return null;
+    }
+
+    /* ── Inject UI into one textarea ──────────────────────────────────────── */
+
+    function instrumentTextarea(ta) {
+        if (ta.dataset.rtiDone) return;
+
+        /*
+         * Find the block container: walk up until we find an element whose
+         * text includes "Paste & Import" (the block label rendered by Wagtail).
+         * Stop before <body> / <html>.
+         */
+        var blockEl = closestContaining(ta, 'Paste & Import', 14);
+        if (!blockEl) return;   // not an import block textarea
+
+        /*
+         * Tighten: we want the CLOSEST ancestor that contains the label,
+         * not a grand-ancestor that incidentally has it.  Keep walking
+         * *down* (i.e. try children of blockEl) to find a tighter wrapper.
+         */
+        ta.dataset.rtiDone = '1';
+
+        /* ── Banner ──────────────────────────────────────────────────────── */
+        if (!blockEl.querySelector('.rti-banner')) {
+            var banner = document.createElement('div');
+            banner.className = 'rti-banner';
+            banner.style.cssText = [
+                'background:#fffbeb',
+                'border:1px solid #fde68a',
+                'color:#78350f',
+                'font-size:12px',
+                'padding:6px 14px',
+                'margin:0 0 4px',
+                'font-family:sans-serif',
+                'border-radius:4px',
+            ].join(';');
+            banner.innerHTML =
+                '<strong>Paste &amp; Import</strong> — paste HTML or plain text ' +
+                'below, then click <em>Convert to Blocks</em>. ' +
+                'The page saves as a draft and reloads with the expanded blocks.';
+            /* Insert banner just before the textarea */
+            ta.parentNode.insertBefore(banner, ta);
+        }
+
+        /* ── Toolbar ─────────────────────────────────────────────────────── */
+        if (!blockEl.querySelector('.rti-toolbar')) {
+            var toolbar = document.createElement('div');
+            toolbar.className = 'rti-toolbar';
+            toolbar.style.cssText = [
+                'display:flex', 'align-items:center', 'gap:10px',
+                'padding:6px 0 8px', 'font-family:sans-serif',
+            ].join(';');
+
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'rti-convert-btn button button-small';
+            btn.style.cssText = [
+                'background:#1a7f5a', 'color:#fff', 'border:none',
+                'padding:5px 14px', 'border-radius:4px',
+                'font-size:13px', 'font-weight:600', 'cursor:pointer',
+            ].join(';');
+            btn.textContent = '\\u26a1 Convert to Blocks';
+
+            var meta = document.createElement('span');
+            meta.className = 'rti-meta';
+            meta.style.cssText = 'color:#6b7280;font-size:12px;';
+
+            toolbar.appendChild(btn);
+            toolbar.appendChild(meta);
+            ta.parentNode.insertBefore(toolbar, ta);
+
+            /* Live word count */
+            var update = function () {
+                var n = wordCount(ta.value);
+                meta.textContent = n > 0 ? n.toLocaleString() + ' words' : '';
+            };
+            ta.addEventListener('input', update);
+            setTimeout(update, 400);
+
+            btn.addEventListener('click', function () {
+                handleConvert(ta, blockEl, btn, meta);
+            });
+        }
+    }
+
+    /* ── Conversion handler ───────────────────────────────────────────────── */
+
+    function handleConvert(ta, blockEl, btn, meta) {
+        if (!ta.value.trim()) {
+            meta.style.color = '#dc2626';
+            meta.textContent = 'Paste some content first.';
+            setTimeout(function () { meta.textContent = ''; }, 4000);
+            return;
+        }
+
+        /* Find the form */
+        var form =
+            document.getElementById('page-edit-form') ||
+            ta.closest('form') ||
+            document.querySelector('form[method="post"]');
+
+        if (!form) {
+            meta.style.color = '#dc2626';
+            meta.textContent = 'Cannot find the edit form.';
+            return;
+        }
+
+        /*
+         * Set convert_block_id.
+         * Try to find a UUID in the block element's data attributes or
+         * in a hidden input near it.  Fall back to '__all__' which tells
+         * ArticleForm.save() to convert every import block on the page.
+         */
+        var blockId = '__all__';
+
+        /* Check every data attribute on blockEl and its children for a UUID */
+        var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        var allEls = [blockEl].concat(Array.from(blockEl.querySelectorAll('*')));
+        outer: for (var i = 0; i < allEls.length; i++) {
+            var ds = allEls[i].dataset;
+            for (var key in ds) {
+                if (uuidRe.test(ds[key])) { blockId = ds[key]; break outer; }
+            }
+            /* Also check hidden inputs */
+            if (allEls[i].tagName === 'INPUT' && allEls[i].type === 'hidden') {
+                if (uuidRe.test(allEls[i].value)) { blockId = allEls[i].value; break; }
+            }
+        }
+
+        var hiddenField = form.querySelector('input[name="convert_block_id"]');
+        if (!hiddenField) {
+            hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.name = 'convert_block_id';
+            form.appendChild(hiddenField);
+        }
+        hiddenField.value = blockId;
+
+        /* Find and click Save Draft */
+        var saveDraftBtn = findSaveDraftButton();
+        if (saveDraftBtn) {
+            btn.disabled = true;
+            btn.style.background = '#6b7280';
+            btn.textContent = '\\u23f3 Saving\\u2026';
+            meta.style.color = '#1a7f5a';
+            meta.textContent = 'Page will reload with the converted blocks.';
+            setTimeout(function () { saveDraftBtn.click(); }, 80);
+        } else {
+            /* Hidden field is set — tell editor to click Save Draft manually */
+            btn.style.background = '#b45309';
+            btn.textContent = '\\u26a0\\ufe0f Click Save Draft to convert';
+            meta.style.color = '#b45309';
+            meta.textContent = 'Ready. Click the Save Draft button to apply conversion.';
+        }
+    }
+
+    /* ── Scan for import-block textareas ─────────────────────────────────── */
+
+    function scan() {
+        document.querySelectorAll('textarea').forEach(instrumentTextarea);
+    }
+
+    /* MutationObserver: re-scan when new blocks are added */
+    new MutationObserver(function (mutations) {
+        var needsScan = false;
+        mutations.forEach(function (m) {
+            m.addedNodes.forEach(function (n) {
+                if (n.nodeType === 1) needsScan = true;
+            });
+        });
+        if (needsScan) scan();
+    }).observe(document.body, { childList: true, subtree: true });
+
+    /* Initial scan — delayed to let Wagtail finish rendering */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { setTimeout(scan, 800); });
+    } else {
+        setTimeout(scan, 800);
+    }
+
+})();
+</script>
+""")

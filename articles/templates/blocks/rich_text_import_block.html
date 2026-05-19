@@ -1,0 +1,24 @@
+{# Fallback template — in normal operation this block is expanded before save  #}
+{# and will never appear on the live site. This renders if it somehow does.    #}
+
+{% if self %}
+<div class="rich-text-import-fallback" style="
+    border: 2px dashed #f59e0b;
+    background: #fffbeb;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 6px;
+    color: #92400e;
+    font-size: 0.9rem;
+">
+    <strong>⚠️ Import block not yet converted.</strong>
+    <p style="margin: 0.5rem 0 0;">
+        This content was pasted for import but has not been saved yet.
+        Open the page in the editor and re-save to convert it.
+    </p>
+    <details style="margin-top: 0.5rem;">
+        <summary>Show raw content</summary>
+        <pre style="white-space: pre-wrap; margin-top: 0.5rem;">{{ self }}</pre>
+    </details>
+</div>
+{% endif %}
