@@ -56,7 +56,14 @@ def after_create_literati(request, page):
                     phone_number=page.phone_number,
                     name=page.title,
                     email=page.email or None,
-                    password=password
+                    password=password,
+                    address_line_1=page.address_line_1,
+                    address_line_2=page.address_line_2,
+                    city=page.city,
+                    post_office=page.post_office,
+                    pincode=page.pincode,
+                    district=page.district,
+                    state=page.state
                 )
                 
                 # Associate with Literati

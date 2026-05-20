@@ -13,6 +13,7 @@ from hitcount.models import HitCountMixin, HitCount
 from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.views import HitCountMixin as HitCountViewMixin
 from wagtail.snippets.models import register_snippet
+from reader.models import ReaderUser
 from wagtail.search import index
 from modelcluster.models import ClusterableModel
 
@@ -62,6 +63,26 @@ class Literati(Page, HitCountMixin):
     
     email = models.EmailField("Email", blank=True)
     phone_number = PhoneNumberField("Phone Number", blank=False)
+    address_line_1 = models.CharField(
+        max_length=255, blank=True,
+        help_text='House / flat number, street name.',
+    )
+    address_line_2 = models.CharField(
+        max_length=255, blank=True,
+        help_text='Landmark, area, locality.',
+    )
+    city = models.CharField(max_length=100, blank=True)
+    post_office = models.CharField(max_length=100, blank=True)
+    pincode = models.CharField(
+        max_length=6, blank=True,
+        validators=[ReaderUser.pincode_validator],
+        help_text='6-digit Indian pincode.',
+    )
+    district = models.CharField(max_length=100, blank=True)
+    state = models.CharField(
+        max_length=50, blank=True,
+        choices=ReaderUser.INDIAN_STATES,
+    )
     reader_user = models.OneToOneField(
         'reader.ReaderUser',
         null=True,
@@ -140,6 +161,27 @@ class Literati(Page, HitCountMixin):
             if user.name != self.title:
                 user.name = self.title
                 updated_fields.append('name')
+            if user.address_line_1 != self.address_line_1:
+                user.address_line_1 = self.address_line_1
+                updated_fields.append('address_line_1')
+            if user.address_line_2 != self.address_line_2:
+                user.address_line_2 = self.address_line_2
+                updated_fields.append('address_line_2')
+            if user.city != self.city:
+                user.city = self.city
+                updated_fields.append('city')
+            if user.post_office != self.post_office:
+                user.post_office = self.post_office
+                updated_fields.append('post_office')
+            if user.pincode != self.pincode:
+                user.pincode = self.pincode
+                updated_fields.append('pincode')
+            if user.district != self.district:
+                user.district = self.district
+                updated_fields.append('district')
+            if user.state != self.state:
+                user.state = self.state
+                updated_fields.append('state')
             if updated_fields:
                 user.save(update_fields=updated_fields)
         super().save(*args, **kwargs)
@@ -156,6 +198,15 @@ class Literati(Page, HitCountMixin):
             FieldPanel('phone_number'),
             FieldPanel('reader_user', read_only=True),
         ], heading="Contact Information"),
+        MultiFieldPanel([
+            FieldPanel('address_line_1'),
+            FieldPanel('address_line_2'),
+            FieldPanel('city'),
+            FieldPanel('post_office'),
+            FieldPanel('district'),
+            FieldPanel('state'),
+            FieldPanel('pincode'),
+        ], heading="Mailing Address"),
         FieldPanel('areas_of_interest', widget=forms.CheckboxSelectMultiple),
         FieldPanel('social_media_links'),
     ]

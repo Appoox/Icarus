@@ -287,13 +287,20 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
             lit2.full_clean()
 
     def test_after_create_hook_creates_reader_user(self):
-        """Wagtail hook automatically creates a ReaderUser with username+123 password."""
+        """Wagtail hook automatically creates a ReaderUser with username+123 password and address fields."""
         phone = "+919999999999"
         lit = Literati(
             title="Jane Doe",
             slug="jane-doe",
             phone_number=phone,
-            email="jane@example.com"
+            email="jane@example.com",
+            address_line_1="123 Baker Street",
+            address_line_2="Apt 4B",
+            city="London",
+            post_office="Baker Street PO",
+            pincode="682025",
+            district="Ernakulam",
+            state="Kerala"
         )
         self.author_index.add_child(instance=lit)
         
@@ -313,6 +320,13 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         self.assertEqual(user.phone_number, phone)
         self.assertEqual(user.name, "Jane Doe")
         self.assertEqual(user.email, "jane@example.com")
+        self.assertEqual(user.address_line_1, "123 Baker Street")
+        self.assertEqual(user.address_line_2, "Apt 4B")
+        self.assertEqual(user.city, "London")
+        self.assertEqual(user.post_office, "Baker Street PO")
+        self.assertEqual(user.pincode, "682025")
+        self.assertEqual(user.district, "Ernakulam")
+        self.assertEqual(user.state, "Kerala")
         
         # Verify password follows pattern username+123
         clean_phone = phone.replace(' ', '').replace('-', '')
@@ -320,18 +334,36 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         self.assertTrue(user.check_password(expected_pass))
 
     def test_field_syncs_on_save(self):
-        """Saving Literati page syncs title, phone_number, and email to ReaderUser."""
+        """Saving Literati page syncs title, phone_number, email, and address fields to ReaderUser."""
         phone = "+919999999999"
         lit = Literati(
             title="Original Name",
             slug="orig-name",
             phone_number=phone,
-            email="orig@example.com"
+            email="orig@example.com",
+            address_line_1="Original Address 1",
+            address_line_2="Original Address 2",
+            city="Original City",
+            post_office="Original PO",
+            pincode="682025",
+            district="Original District",
+            state="Kerala"
         )
         self.author_index.add_child(instance=lit)
         
         # Manually create and associate reader user
-        user = User.objects.create_user(phone_number=phone, name="Original Name", email="orig@example.com")
+        user = User.objects.create_user(
+            phone_number=phone,
+            name="Original Name",
+            email="orig@example.com",
+            address_line_1="Original Address 1",
+            address_line_2="Original Address 2",
+            city="Original City",
+            post_office="Original PO",
+            pincode="682025",
+            district="Original District",
+            state="Kerala"
+        )
         lit.reader_user = user
         lit.save()
         
@@ -339,9 +371,23 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         lit.title = "Updated Name"
         lit.phone_number = "+919999999990"
         lit.email = "updated@example.com"
+        lit.address_line_1 = "Updated Address 1"
+        lit.address_line_2 = "Updated Address 2"
+        lit.city = "Updated City"
+        lit.post_office = "Updated PO"
+        lit.pincode = "682001"
+        lit.district = "Updated District"
+        lit.state = "Tamil Nadu"
         lit.save()
         
         user.refresh_from_db()
         self.assertEqual(user.name, "Updated Name")
         self.assertEqual(user.phone_number, "+919999999990")
         self.assertEqual(user.email, "updated@example.com")
+        self.assertEqual(user.address_line_1, "Updated Address 1")
+        self.assertEqual(user.address_line_2, "Updated Address 2")
+        self.assertEqual(user.city, "Updated City")
+        self.assertEqual(user.post_office, "Updated PO")
+        self.assertEqual(user.pincode, "682001")
+        self.assertEqual(user.district, "Updated District")
+        self.assertEqual(user.state, "Tamil Nadu")
