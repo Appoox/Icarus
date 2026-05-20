@@ -79,7 +79,7 @@ class IssueModelAndFormTests(WagtailPageTestCase):
         self.author_index = AuthorIndexPage(title="Authors", slug="authors")
         self.home.add_child(instance=self.author_index)
 
-        self.literati = Literati(title="John Doe", slug="john-doe", role="Editor")
+        self.literati = Literati(title="John Doe", slug="john-doe", role="Editor", phone_number="+919876543213")
         self.author_index.add_child(instance=self.literati)
 
         # Editorial Board Setup

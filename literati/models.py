@@ -1,5 +1,6 @@
 from django.db import models
 from django import forms
+from django.core.exceptions import ValidationError
 from modelcluster.fields import ParentalKey, ParentalManyToManyField
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
@@ -60,7 +61,15 @@ class Literati(Page, HitCountMixin):
     )
     
     email = models.EmailField("Email", blank=True)
-    phone_number = PhoneNumberField("Phone Number", blank=True)
+    phone_number = PhoneNumberField("Phone Number", blank=False)
+    reader_user = models.OneToOneField(
+        'reader.ReaderUser',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='literati',
+        verbose_name="Associated Reader User"
+    )
     areas_of_interest = ParentalManyToManyField('issue.Topic', blank=True)
     social_media_links = StreamField([
         ('social_link', SocialMediaBlock()),
@@ -84,9 +93,60 @@ class Literati(Page, HitCountMixin):
     def get_articles(self):
         return [rel.page for rel in self.literati_articles.select_related('page').filter(page__live=True)]
 
+    def clean(self):
+        super().clean()
+        
+        if not self.phone_number:
+            return
+
+        from reader.models import ReaderUser
+
+        # Check if phone number is already registered in ReaderUser
+        phone_exists = ReaderUser.objects.filter(phone_number=self.phone_number)
+        if self.reader_user:
+            phone_exists = phone_exists.exclude(pk=self.reader_user.pk)
+        if phone_exists.exists():
+            raise ValidationError({'phone_number': 'A Reader User with this phone number already exists.'})
+
+        # Check if email is already registered in ReaderUser
+        if self.email:
+            email_exists = ReaderUser.objects.filter(email=self.email)
+            if self.reader_user:
+                email_exists = email_exists.exclude(pk=self.reader_user.pk)
+            if email_exists.exists():
+                raise ValidationError({'email': 'A Reader User with this email already exists.'})
+
+        # Check if another Literati page has the same phone number
+        literati_phone_exists = Literati.objects.filter(phone_number=self.phone_number).exclude(pk=self.pk)
+        if literati_phone_exists.exists():
+            raise ValidationError({'phone_number': 'Another Author page is already registered with this phone number.'})
+
+        # Check if another Literati page has the same email
+        if self.email:
+            literati_email_exists = Literati.objects.filter(email=self.email).exclude(pk=self.pk)
+            if literati_email_exists.exists():
+                raise ValidationError({'email': 'Another Author page is already registered with this email.'})
+
+    def save(self, *args, **kwargs):
+        if self.reader_user:
+            user = self.reader_user
+            updated_fields = []
+            if user.phone_number != self.phone_number:
+                user.phone_number = self.phone_number
+                updated_fields.append('phone_number')
+            if user.email != self.email:
+                user.email = self.email
+                updated_fields.append('email')
+            if user.name != self.title:
+                user.name = self.title
+                updated_fields.append('name')
+            if updated_fields:
+                user.save(update_fields=updated_fields)
+        super().save(*args, **kwargs)
+
     content_panels = [
         FieldPanel('title', heading="Name", help_text="Enter the full name of the person"),
-        FieldPanel('slug'),
+        FieldPanel('slug', help_text="The slug is a URL-friendly name for this page. It is used as the end portion of the page's web address (URL). It should only contain lowercase letters, numbers, and hyphens. Changing the slug will change the URL of the page and may break existing links."),
         FieldPanel('tags'),
         FieldPanel('role'),
         FieldPanel('profile_image'),
@@ -94,10 +154,22 @@ class Literati(Page, HitCountMixin):
         MultiFieldPanel([
             FieldPanel('email'),
             FieldPanel('phone_number'),
+            FieldPanel('reader_user', read_only=True),
         ], heading="Contact Information"),
         FieldPanel('areas_of_interest', widget=forms.CheckboxSelectMultiple),
         FieldPanel('social_media_links'),
     ]
+
+    promote_panels = [
+        MultiFieldPanel([
+            FieldPanel('seo_title'),
+            FieldPanel('search_description'),
+        ], heading="For Search Engines"),
+        MultiFieldPanel([
+            FieldPanel('show_in_menus'),
+        ], heading="Settings"),
+    ]
+
 
 class AuthorIndexPage(Page):
     intro = RichTextField(blank=True)

@@ -328,7 +328,7 @@ class Issue(RoutablePageMixin, Page):
         return [m for m in self.board_members if m.role == 'board']
 
     content_panels = Page.content_panels + [
-        FieldPanel('slug'),
+        FieldPanel('slug', help_text="The slug is a URL-friendly name for this page. It is used as the end portion of the page's web address (URL). It should only contain lowercase letters, numbers, and hyphens. Changing the slug will change the URL of the page and may break existing links."),
         FieldPanel('tags'),
         FieldPanel('volume'),
         FieldPanel('issue_number'),
@@ -347,6 +347,16 @@ class Issue(RoutablePageMixin, Page):
         FieldPanel('editorial_board'),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
         FieldPanel('editorial'),
+    ]
+
+    promote_panels = [
+        MultiFieldPanel([
+            FieldPanel('seo_title'),
+            FieldPanel('search_description'),
+        ], heading="For Search Engines"),
+        MultiFieldPanel([
+            FieldPanel('show_in_menus'),
+        ], heading="Settings"),
     ]
 
     def get_context(self, request, *args, **kwargs):
