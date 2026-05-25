@@ -23,4 +23,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Comment body expand / collapse
+    document.querySelectorAll('[data-comment-toggle]').forEach(function(btn) {
+        var bodyEl = btn.closest('.comment-item__body-wrap').querySelector('.comment-item__body');
+        var lessLabel = btn.querySelector('.toggle-less');
+        var moreLabel = btn.querySelector('.toggle-more');
+
+        btn.addEventListener('click', function() {
+            var expanded = bodyEl.classList.toggle('is-expanded');
+            lessLabel.classList.toggle('hidden', !expanded);
+            moreLabel.classList.toggle('hidden', expanded);
+        });
+    });
+
 });

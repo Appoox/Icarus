@@ -10,6 +10,7 @@ from wagtail.admin.panels import FieldPanel, MultiFieldPanel, FieldRowPanel
 from wagtail.snippets.models import register_snippet
 from wagtail.search import index
 from phonenumber_field.modelfields import PhoneNumberField
+from kalapila.models import Comment
 
 # ── Single source of truth for plan configuration ───────────────────────
 PLANS = {
@@ -75,6 +76,9 @@ class ReaderUser(AbstractUser, index.Indexed):
         help_text='Uncheck this to restrict this user from posting comments.'
     )
 
+    # def own_comments(self):
+    #     return Comment.objects.filter(user=self)
+    
     # ── Compliance & Legal (DPDP & GDPR) ──
     # Single source of truth for current document versions
     CURRENT_TERMS_VERSION = "1.0.0"

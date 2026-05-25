@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -35,12 +36,17 @@ def reader_profile(request):
     """Display reader profile with reading history and subscription info."""
     reader = request.user
 
+    comments_qs = reader.comments.select_related('page').order_by('-created_at')
+    paginator = Paginator(comments_qs, 10)
+    own_comments = paginator.get_page(request.GET.get('comments_page'))
+
     context = {
         'reader': reader,
         'read_articles': reader.read_articles.all().order_by('-first_published_at')[:20] if hasattr(reader.read_articles, 'all') else [],
         'interested_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
         'all_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
-        'plans': PLANS,   # ✅ Pass plans so profile.html doesn't hardcode prices
+        'plans': PLANS,
+        'own_comments': own_comments,
     }
     return render(request, 'reader/profile.html', context)
 
