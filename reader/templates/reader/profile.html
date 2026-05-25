@@ -242,6 +242,72 @@
         {% endif %}
     </div>
 
+    <div class="profile-section" id="comments-section">
+        <div class="profile-section__header">
+            <h2>My Comments</h2>
+            {% if own_comments %}
+            <span class="comments-count">{{ own_comments|length }}</span>
+            {% endif %}
+        </div>
+
+        {% if own_comments %}
+        <ul class="comments-list">
+            {% for comment in own_comments %}
+            <li class="comment-item{% if comment.is_removed %} comment-item--removed{% elif not comment.is_approved %} comment-item--pending{% endif %}">
+                <div class="comment-item__meta">
+                    <a href="{{ comment.page.url }}" class="comment-item__page">{{ comment.page.title }}</a>
+                    <span class="comment-item__date">{{ comment.created_at|date:"j M Y" }}</span>
+                    {% if comment.is_removed %}
+                        <span class="comment-badge comment-badge--removed">Removed</span>
+                    {% elif not comment.is_approved %}
+                        <span class="comment-badge comment-badge--pending">Pending</span>
+                    {% else %}
+                        <span class="comment-badge comment-badge--approved">Published</span>
+                    {% endif %}
+                    {% if comment.parent %}
+                        <span class="comment-badge comment-badge--reply">↩ Reply</span>
+                    {% endif %}
+                </div>
+                <div class="comment-item__body-wrap">
+                    <p class="comment-item__body">{{ comment.body }}</p>
+                    {% if comment.body|length > 160 %}
+                    <button class="comment-item__toggle" data-comment-toggle>
+                        <span class="toggle-less hidden">Show less</span>
+                        <span class="toggle-more">Show more</span>
+                    </button>
+                    {% endif %}
+                </div>
+                {% if comment.removal_reason %}
+                <p class="comment-item__removal-reason">Reason: {{ comment.removal_reason }}</p>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">You haven't posted any comments yet.</p>
+        {% endif %}
+
+        {% if own_comments.paginator.num_pages > 1 %}
+        <nav class="comments-pagination">
+            {% if own_comments.has_previous %}
+                <a href="?comments_page={{ own_comments.previous_page_number }}#comments-section" class="page-btn">← Previous</a>
+            {% else %}
+                <span class="page-btn page-btn--disabled">← Previous</span>
+            {% endif %}
+
+            <span class="page-indicator">
+                Page {{ own_comments.number }} of {{ own_comments.paginator.num_pages }}
+            </span>
+
+            {% if own_comments.has_next %}
+                <a href="?comments_page={{ own_comments.next_page_number }}#comments-section" class="page-btn">Next →</a>
+            {% else %}
+                <span class="page-btn page-btn--disabled">Next →</span>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
+
     {# ── Deactivation ── #}
     <div class="profile-section danger-zone">
         <div class="profile-section__header" style="border-bottom: none;">

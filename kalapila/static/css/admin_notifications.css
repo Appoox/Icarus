@@ -1,0 +1,129 @@
+/* Admin Notifications Container */
+#admin-toast-container {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 380px;
+    width: 100%;
+}
+
+/* Notification Toast Card */
+.admin-toast {
+    background: #1e293b; /* Dark charcoal */
+    color: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6; /* Blue indicator */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.2s, opacity 0.2s;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(110%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.admin-toast--removing {
+    transform: translateX(110%);
+    opacity: 0;
+}
+
+/* Header / Title */
+.admin-toast__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.admin-toast__title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #60a5fa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+.admin-toast__close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 2px;
+    line-height: 1;
+    transition: color 0.15s;
+}
+
+.admin-toast__close-btn:hover {
+    color: #f8fafc;
+}
+
+/* Body / Text Content */
+.admin-toast__body {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+}
+
+/* Actions / Buttons */
+.admin-toast__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.admin-toast__action-link {
+    background: #3b82f6;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.admin-toast__action-link:hover {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.admin-toast__dismiss-btn {
+    background: transparent;
+    border: 1px solid #475569;
+    color: #cbd5e1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.admin-toast__dismiss-btn:hover {
+    border-color: #94a3b8;
+    color: #f8fafc;
+}

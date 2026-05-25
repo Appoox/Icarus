@@ -1,0 +1,55 @@
+{% load static %}
+
+<section class="comment-section" id="comments-wrapper" data-page-id="{{ page.id }}">
+    <div class="comment-section__header">
+        <h3 class="comment-section__title">
+            <i class="far fa-comments"></i> 
+            അഭിപ്രായങ്ങൾ (<span id="comment-count-badge">{{ comment_count }}</span>)
+        </h3>
+    </div>
+
+    {% if user.is_authenticated %}
+        {% if user.can_comment %}
+            <!-- Main Comment Form -->
+            <form id="main-comment-form" class="comment-form">
+                {% csrf_token %}
+                <input type="hidden" name="page_id" value="{{ page.id }}">
+                <div class="comment-form__input-wrapper">
+                    <textarea 
+                        name="body" 
+                        class="comment-textarea" 
+                        placeholder="അഭിപ്രായം രേഖപ്പെടുത്തുക..." 
+                        maxlength="3000" 
+                        required
+                    ></textarea>
+                    <div class="comment-form__footer">
+                        <span class="char-counter"><span class="char-count-current">0</span> / 3000</span>
+                        <button type="submit" class="submit-comment-btn">
+                            കമന്റ് ചെയ്യുക <i class="far fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <div class="comment-section__notice comment-section__notice--error">
+                <i class="fas fa-ban"></i> നിങ്ങളുടെ അക്കൗണ്ടിൽ അഭിപ്രായങ്ങൾ രേഖപ്പെടുത്തുന്നത് താൽക്കാലികമായി വിലക്കിയിരിക്കുന്നു.
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="comment-section__notice comment-section__notice--info">
+            <i class="fas fa-info-circle"></i> അഭിപ്രായങ്ങൾ രേഖപ്പെടുത്താൻ ദയവായി 
+            <a href="{% url 'account_login' %}?next={{ page.url }}" class="comment-login-link">ലോഗിൻ ചെയ്യുക</a>.
+        </div>
+    {% endif %}
+
+    <!-- Comments List -->
+    <div class="comments-list" id="comments-list-container">
+        {% for comment in comments %}
+            {% include "kalapila/comment_single.html" with comment=comment %}
+        {% empty %}
+            <div class="comments-empty-state" id="comments-empty-message">
+                ആദ്യമായി ഒരു അഭിപ്രായം രേഖപ്പെടുത്തൂ!
+            </div>
+        {% endfor %}
+    </div>
+</section>

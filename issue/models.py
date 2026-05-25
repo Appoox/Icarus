@@ -368,6 +368,13 @@ class Issue(RoutablePageMixin, Page):
             except Exception:
                 reader = None
         context['reader'] = reader
+
+        # Inject approved and active comments (top-level only, replies rendered recursively)
+        context['comments'] = self.comments.filter(
+            is_approved=True, is_removed=False, parent__isnull=True
+        ).prefetch_related('replies', 'user', 'user__profile_image')
+        context['comment_count'] = self.comments.filter(is_approved=True, is_removed=False).count()
+
         return context
 
     @route(r'^pdf/$')
