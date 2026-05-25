@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-
+from wagtail.users.apps import WagtailUsersAppConfig
 
 class ReaderConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
@@ -10,3 +10,6 @@ class ReaderConfig(AppConfig):
         from .models import ReaderUser, PaymentDetails
         auditlog.register(ReaderUser)
         auditlog.register(PaymentDetails)
+
+class CustomWagtailUsersAppConfig(WagtailUsersAppConfig):
+    user_viewset = "reader.viewsets.ReaderUserViewSet"

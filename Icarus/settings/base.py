@@ -30,8 +30,6 @@ AUTH_USER_MODEL = 'reader.ReaderUser'
 ACCOUNT_SIGNUP_REDIRECT_URL = '/reader/profile/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from pathlib import Path
 from environs import Env
@@ -66,7 +64,8 @@ INSTALLED_APPS = [
     "wagtail.contrib.table_block",
     "wagtail.embeds",
     "wagtail.sites",
-    "wagtail.users",
+    # "wagtail.users",
+    "reader.apps.CustomWagtailUsersAppConfig",
     "wagtail.snippets",
     "wagtail.documents",
     "wagtail.images",

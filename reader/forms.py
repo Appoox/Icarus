@@ -1,13 +1,17 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+from datetime import date
+
 from .models import ReaderUser
 from issue.models import Topic
 from phonenumber_field.formfields import SplitPhoneNumberField
 
-User = get_user_model()
+# Wagtail user forms imports
+from wagtail.users.forms import UserEditForm, UserCreationForm
 
-from django.utils import timezone
-from datetime import date
+User = get_user_model()
 
 class AllauthSignupForm(forms.Form):
     """
@@ -140,6 +144,109 @@ class UpdateInterestsForm(forms.ModelForm):
         model = ReaderUser
         fields = ('interested_topics',)
 
+
+class CustomUserCreationForm(UserCreationForm):
+    """
+    Overridden UserCreationForm for Wagtail admin.
+    """
+    name = forms.CharField(required=True, label=_("Full Name"))
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = UserCreationForm.Meta.fields | {
+            'name', 'gender', 'gender_other', 'date_of_birth',
+            'address_line_1', 'address_line_2', 'city', 'post_office', 
+            'pincode', 'district', 'state', 'is_print_subscriber', 
+            'print_delivery_status', 'subscription_plan'
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # 1. Make email optional
+        if 'email' in self.fields:
+            self.fields['email'].required = False
+
+        # 2. Safely pop 'username' to prevent write errors on your read-only @property
+        if 'username' in self.fields:
+            self.fields.pop('username')
+            
+        # 3. Make first_name and last_name optional and set to HiddenInput
+        for field_name in ('first_name', 'last_name'):
+            if field_name in self.fields:
+                self.fields[field_name].required = False
+                self.fields[field_name].widget = forms.HiddenInput()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # 4. Auto-populate first_name and last_name from Full Name (name)
+        full_name = cleaned_data.get('name', '').strip()
+        if full_name:
+            parts = full_name.split(maxsplit=1)
+            if len(parts) == 1:
+                cleaned_data['first_name'] = parts[0]
+                cleaned_data['last_name'] = ""
+            else:
+                cleaned_data['first_name'] = parts[0]
+                cleaned_data['last_name'] = parts[1]
+        else:
+            cleaned_data['first_name'] = ""
+            cleaned_data['last_name'] = ""
+        
+        return cleaned_data
+
+
+class CustomUserEditForm(UserEditForm):
+    """
+    Overridden UserEditForm for Wagtail admin.
+    """
+    name = forms.CharField(required=True, label=_("Full Name"))
+
+    class Meta(UserEditForm.Meta):
+        model = User
+        fields = UserEditForm.Meta.fields | {
+            'name', 'gender', 'gender_other', 'date_of_birth',
+            'address_line_1', 'address_line_2', 'city', 'post_office', 
+            'pincode', 'district', 'state', 'is_print_subscriber', 
+            'print_delivery_status', 'subscription_plan'
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # 1. Make email optional
+        if 'email' in self.fields:
+            self.fields['email'].required = False
+
+        # 2. Safely pop 'username' to prevent write errors on your read-only @property
+        if 'username' in self.fields:
+            self.fields.pop('username')
+
+        # 3. Make first_name and last_name optional and set to HiddenInput
+        for field_name in ('first_name', 'last_name'):
+            if field_name in self.fields:
+                self.fields[field_name].required = False
+                self.fields[field_name].widget = forms.HiddenInput()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # 4. Auto-populate first_name and last_name from Full Name (name)
+        full_name = cleaned_data.get('name', '').strip()
+        if full_name:
+            parts = full_name.split(maxsplit=1)
+            if len(parts) == 1:
+                cleaned_data['first_name'] = parts[0]
+                cleaned_data['last_name'] = ""
+            else:
+                cleaned_data['first_name'] = parts[0]
+                cleaned_data['last_name'] = parts[1]
+        else:
+            cleaned_data['first_name'] = ""
+            cleaned_data['last_name'] = ""
+        
+        return cleaned_data
 
 
 # Custom allauth forms have been moved to reader/auth_forms.py 
