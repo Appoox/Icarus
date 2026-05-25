@@ -1,4 +1,9 @@
-from django.urls import reverse
+import hashlib
+from django.db.models import Q
+from django.urls import reverse, path
+from django.core.paginator import Paginator
+from django.http import HttpResponseForbidden
+from django.shortcuts import render
 from wagtail import hooks
 from wagtail.admin.ui.components import Component
 from wagtail.log_actions import log
@@ -14,6 +19,137 @@ User = get_user_model()
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
+ACTION_LABELS = {0: 'Created', 1: 'Updated', 2: 'Deleted'}
+
+
+def get_model_color(model_name):
+    """Generates an automatic stable HSL color based on the model name.
+    Ensures text remains highly legible against a balanced background."""
+    if not model_name or model_name == '—':
+        return '#475569'
+    hash_digest = hashlib.md5(model_name.encode('utf-8')).hexdigest()
+    hue = int(hash_digest, 16) % 360
+    return f"hsl({hue}, 65%, 35%)"
+
+
+def audit_log_list(request):
+    """Paginated audit log view mounted inside the Wagtail admin."""
+    # Adjusted check to include Wagtail administrative groups alongside standard staff users
+    is_admin_user = (
+        request.user.is_staff or 
+        request.user.is_superuser or 
+        request.user.groups.filter(name__in=['Editors', 'Moderators']).exists()
+    )
+    if not is_admin_user:
+        return HttpResponseForbidden()
+
+    from zoneinfo import ZoneInfo
+    ist = ZoneInfo('Asia/Kolkata')
+
+    qs = (
+        LogEntry.objects
+        .select_related('actor', 'content_type')
+        .order_by('-timestamp')
+    )
+
+    # ── Filters ────────────────────────────────────────────────────────
+    actor_id = request.GET.get('actor')
+    action   = request.GET.get('action')
+    model    = request.GET.get('model')
+
+    if actor_id:
+        qs = qs.filter(actor_id=actor_id)
+    if action in ('0', '1', '2'):
+        qs = qs.filter(action=int(action))
+    if model:
+        qs = qs.filter(content_type__model=model)
+
+    # ── Pagination ─────────────────────────────────────────────────────
+    paginator = Paginator(qs, 25)
+    page_obj  = paginator.get_page(request.GET.get('page'))
+
+    # ── Build rows ─────────────────────────────────────────────────────
+    rows = []
+    for entry in page_obj:
+        ts = entry.timestamp.astimezone(ist).strftime('%d %b %Y, %H:%M')
+
+        actor = (
+            entry.actor.name or str(entry.actor.phone_number)
+            if entry.actor else 'System'
+        )
+        model_name = (
+            entry.content_type.model.replace('_', ' ').title()
+            if entry.content_type else '—'
+        )
+
+        try:
+            changes = entry.changes_display_dict or {}
+        except Exception:
+            changes = {}
+
+        # Restructured into a clean array of structured dicts to fit your HTML cards
+        change_records = []
+        more_count = 0
+        for i, (field, vals) in enumerate(changes.items()):
+            if i >= 4:
+                more_count = len(changes) - i
+                break
+            old = str(vals[0])[:40] if vals[0] not in (None, '') else '—'
+            new = str(vals[1])[:40] if vals[1] not in (None, '') else '—'
+            change_records.append({
+                'field': field.replace("_", " ").title(),
+                'old': old,
+                'new': new
+            })
+
+        rows.append({
+            'ts':          ts,
+            'actor':       actor,
+            'action':      ACTION_LABELS.get(entry.action, 'Changed'),
+            'action_int':  entry.action,
+            'model':       model_name,
+            'model_color': get_model_color(model_name),
+            'object':      str(entry.object_repr or entry.object_id or '—'),
+            'changes':     change_records,
+            'more_count':  more_count,
+        })
+
+    # Updated filter option queries to capture Editors and Moderators who lack explicit is_staff flags
+    staff_users = (
+        get_user_model().objects
+        .filter(Q(is_staff=True) | Q(is_superuser=True) | Q(groups__name__in=['Editors', 'Moderators']))
+        .distinct()
+        .order_by('name')
+    )
+    distinct_models = (
+        LogEntry.objects
+        .select_related('content_type')
+        .values_list('content_type__model', flat=True)
+        .distinct()
+        .order_by('content_type__model')
+    )
+
+    return render(request, 'wagtailadmin/audit_log.html', {
+        'page_obj':       page_obj,
+        'rows':           rows,
+        'staff_users':    staff_users,
+        'distinct_models': distinct_models,
+        'action_labels':  ACTION_LABELS,
+        'filters': {
+            'actor':  actor_id or '',
+            'action': action  or '',
+            'model':  model   or '',
+        },
+    })
+
+
+@hooks.register('register_admin_urls')
+def register_audit_log_url():
+    return [
+        path('auditlog/', audit_log_list, name='icarus_audit_log'),
+    ]
+
+
 class CreatePagePanel(Component):
     order = 50
 
@@ -25,8 +161,6 @@ class CreatePagePanel(Component):
         literati_parent = AuthorIndexPage.objects.first()
         issue_parent = IssueIndexPage.objects.first()
 
- 
-        
         actions = [
             ('articles', 'article', '+ പുതിയ ലേഖനം', article_parent, 'page'),
             ('literati', 'literati', '+ പുതിയ ലേഖകര്‍', literati_parent, 'page'),
@@ -99,7 +233,7 @@ class AuditLogDashboardPanel(Component):
         entries = (
             LogEntry.objects
             .select_related('actor', 'content_type')
-            .order_by('-timestamp')[:10]
+            .order_by('-timestamp')[:5]
         )
 
         items_html = ''
@@ -155,7 +289,7 @@ class AuditLogDashboardPanel(Component):
         if not items_html:
             items_html = '<p style="color: var(--w-color-text-meta);">No activity recorded yet.</p>'
 
-        audit_url = reverse('auditlog_view')
+        audit_url = reverse('icarus_audit_log')
         return format_html(
             """
             <section class="panel summary-panel">

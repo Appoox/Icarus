@@ -1,0 +1,188 @@
+{% extends "wagtailadmin/base.html" %}
+
+{% block titletag %}Audit Log{% endblock %}
+
+{% block content %}
+<div class="nice-padding">
+
+    <header class="w-slim-header" style="margin-bottom: 24px;">
+        <h1 style="display:flex; align-items:center; gap:10px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Audit Log
+        </h1>
+    </header>
+
+    {# ── Filter bar ── #}
+    <form method="get" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:28px; padding:16px 20px; background:var(--w-color-surface-menus); border-radius:6px;">
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--w-color-text-meta);">Staff Member</label>
+            <select name="actor" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:180px;">
+                <option value="">All</option>
+                {% for u in staff_users %}
+                <option value="{{ u.pk }}" {% if filters.actor == u.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ u.name|default:u.phone_number }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--w-color-text-meta);">Action</label>
+            <select name="action" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:130px;">
+                <option value="">All</option>
+                {% for k, v in action_labels.items %}
+                <option value="{{ k }}" {% if filters.action == k|stringformat:"s" %}selected{% endif %}>{{ v }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--w-color-text-meta);">Model</label>
+            <select name="model" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:180px;">
+                <option value="">All</option>
+                {% for m in distinct_models %}
+                <option value="{{ m }}" {% if filters.model == m %}selected{% endif %}>{{ m|title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="button button-secondary button-small" style="align-self:flex-end;">Filter</button>
+        {% if filters.actor or filters.action or filters.model %}
+        <a href="{% url 'icarus_audit_log' %}" class="button button-secondary button-small" style="align-self:flex-end;">Clear</a>
+        {% endif %}
+    </form>
+
+    {# ── Table ── #}
+    <style>
+        .al-model-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.78em;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.02em;
+        }
+        .al-action-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.78em;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border: 2px solid;
+        }
+        .al-action-create { color: #2ecc71; border-color: #2ecc71; }
+        .al-action-update { color: #3ecfcf; border-color: #3ecfcf; }
+        .al-action-delete { color: #e74c3c; border-color: #e74c3c; }
+        .al-change-card {
+            background: var(--w-color-surface-field);
+            border: 1px solid var(--w-color-border-furniture);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+        }
+        .al-change-card:last-child { margin-bottom: 0; }
+        .al-change-label {
+            font-size: 0.72em;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--w-color-text-meta);
+            margin-bottom: 4px;
+        }
+        .al-change-old { color: #e74c3c; text-decoration: line-through; margin-right: 6px; }
+        .al-change-arrow { color: var(--w-color-text-meta); margin-right: 6px; }
+        .al-change-new { color: #2ecc71; }
+        .al-pagination { display:flex; align-items:center; gap:12px; margin-top:28px; }
+    </style>
+
+    <table class="listing" style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr>
+                <th style="width:160px;">Timestamp (IST)</th>
+                <th style="width:180px;">User</th>
+                <th style="width:160px;">Model</th>
+                <th style="width:100px;">Action</th>
+                <th>Changes</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+            <tr style="vertical-align:top; border-bottom: 1px solid var(--w-color-border-furniture);">
+                <td style="padding:16px 12px; color:var(--w-color-text-meta); font-size:0.85em; white-space:nowrap;">
+                    {{ row.ts }}
+                </td>
+                <td style="padding:16px 12px; font-weight:600;">
+                    {{ row.actor }}
+                </td>
+                <td style="padding:16px 12px;">
+                    {# Dynamic fallback background color based on automated hashed model name string #}
+                    <span class="al-model-badge" style="background: {{ row.model_color }};">{{ row.model }}</span>
+                </td>
+                <td style="padding:16px 12px;">
+                    {% if row.action_int == 0 %}
+                        <span class="al-action-badge al-action-create">CREATE</span>
+                    {% elif row.action_int == 1 %}
+                        <span class="al-action-badge al-action-update">UPDATE</span>
+                    {% else %}
+                        <span class="al-action-badge al-action-delete">DELETE</span>
+                    {% endif %}
+                </td>
+                <td style="padding:16px 12px;">
+                    {# Unpacked rows array safely as sequence items #}
+                    {% for change in row.changes %}
+                    <div class="al-change-card">
+                        <div class="al-change-label">{{ change.field|upper }}</div>
+                        <div>
+                            <span class="al-change-old">{{ change.old }}</span>
+                            <span class="al-change-arrow">→</span>
+                            <span class="al-change-new">{{ change.new }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <span style="color:var(--w-color-text-meta); font-size:0.85em;">—</span>
+                    {% endfor %}
+
+                    {# Safely appends an overflow text counter underneath change records #}
+                    {% if row.more_count > 0 %}
+                    <div style="font-size:0.75rem; font-style:italic; color:var(--w-color-text-meta); margin-top:4px; padding-left:4px;">
+                        … +{{ row.more_count }} more changes
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5" style="padding:32px; color:var(--w-color-text-meta); text-align:center;">
+                    No audit log entries found.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {# ── Pagination ── #}
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="al-pagination">
+        {% if page_obj.has_previous %}
+            <a href="?{% if filters.actor %}actor={{ filters.actor }}&{% endif %}{% if filters.action %}action={{ filters.action }}&{% endif %}{% if filters.model %}model={{ filters.model }}&{% endif %}page={{ page_obj.previous_page_number }}"
+               class="button button-secondary button-small">← Previous</a>
+        {% else %}
+            <button class="button button-secondary button-small" disabled>← Previous</button>
+        {% endif %}
+
+        <span style="color:var(--w-color-text-meta); font-size:0.9em;">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            &nbsp;&middot;&nbsp; {{ page_obj.paginator.count }} total entries
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?{% if filters.actor %}actor={{ filters.actor }}&{% endif %}{% if filters.action %}action={{ filters.action }}&{% endif %}{% if filters.model %}model={{ filters.model }}&{% endif %}page={{ page_obj.next_page_number }}"
+               class="button button-secondary button-small">Next →</a>
+        {% else %}
+            <button class="button button-secondary button-small" disabled>Next →</button>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}
