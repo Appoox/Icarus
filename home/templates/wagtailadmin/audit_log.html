@@ -93,6 +93,43 @@
         .al-change-arrow { color: var(--w-color-text-meta); margin-right: 6px; }
         .al-change-new { color: #2ecc71; }
         .al-pagination { display:flex; align-items:center; gap:12px; margin-top:28px; }
+
+        /* Styles for the collapsible details dropdown */
+        .al-more-changes-details summary::-webkit-details-marker {
+            display: none;
+        }
+        .al-more-changes-details summary {
+            font-size: 0.78em;
+            font-weight: 600;
+            color: var(--w-color-text-meta);
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: var(--w-color-surface-field);
+            border: 1px solid var(--w-color-border-furniture);
+            border-radius: 4px;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            margin-top: 6px;
+        }
+        .al-more-changes-details summary:hover {
+            background: var(--w-color-surface-menus);
+            border-color: var(--w-color-text-meta);
+            color: var(--w-color-text-label);
+        }
+        .al-more-changes-details[open] summary {
+            margin-bottom: 8px;
+        }
+        .al-more-changes-details .al-details-toggle-icon {
+            display: inline-block;
+            font-size: 0.7em;
+            transition: transform 0.2s ease;
+        }
+        .al-more-changes-details[open] .al-details-toggle-icon {
+            transform: rotate(90deg);
+        }
     </style>
 
     <table class="listing" style="width:100%; border-collapse:collapse;">
@@ -115,7 +152,7 @@
                     {{ row.actor }}
                 </td>
                 <td style="padding:16px 12px;">
-                    {# Dynamic fallback background color based on automated hashed model name string #}
+                    {# Dynamic background color generation based on hashed model string #}
                     <span class="al-model-badge" style="background: {{ row.model_color }};">{{ row.model }}</span>
                 </td>
                 <td style="padding:16px 12px;">
@@ -128,8 +165,7 @@
                     {% endif %}
                 </td>
                 <td style="padding:16px 12px;">
-                    {# Unpacked rows array safely as sequence items #}
-                    {% for change in row.changes %}
+                    {% for change in row.initial_changes %}
                     <div class="al-change-card">
                         <div class="al-change-label">{{ change.field|upper }}</div>
                         <div>
@@ -139,14 +175,31 @@
                         </div>
                     </div>
                     {% empty %}
-                    <span style="color:var(--w-color-text-meta); font-size:0.85em;">—</span>
+                        {% if not row.extra_changes %}
+                        <span style="color:var(--w-color-text-meta); font-size:0.85em;">—</span>
+                        {% endif %}
                     {% endfor %}
 
-                    {# Safely appends an overflow text counter underneath change records #}
-                    {% if row.more_count > 0 %}
-                    <div style="font-size:0.75rem; font-style:italic; color:var(--w-color-text-meta); margin-top:4px; padding-left:4px;">
-                        … +{{ row.more_count }} more changes
-                    </div>
+                    {# Collapsible details dropdown for remaining changes #}
+                    {% if row.extra_changes %}
+                    <details class="al-more-changes-details">
+                        <summary>
+                            <span class="al-details-toggle-icon">▶</span>
+                            Show {{ row.more_count }} more change{{ row.more_count|pluralize }}
+                        </summary>
+                        <div style="margin-top: 8px; border-left: 2px solid var(--w-color-border-furniture); padding-left: 10px;">
+                            {% for change in row.extra_changes %}
+                            <div class="al-change-card" style="margin-bottom: 6px;">
+                                <div class="al-change-label">{{ change.field|upper }}</div>
+                                <div>
+                                    <span class="al-change-old">{{ change.old }}</span>
+                                    <span class="al-change-arrow">→</span>
+                                    <span class="al-change-new">{{ change.new }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </details>
                     {% endif %}
                 </td>
             </tr>

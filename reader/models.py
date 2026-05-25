@@ -622,3 +622,10 @@ def update_user_login_ip(sender, request, user, **kwargs):
     
     user.last_login_ip = ip
     user.save(update_fields=['last_login_ip'])
+
+
+# ── Native Auditlog Tracking Registration ─────────────────────────────
+from auditlog.registry import auditlog
+
+if not auditlog.contains(ReaderUser):
+    auditlog.register(ReaderUser, m2m_fields={'groups'})
