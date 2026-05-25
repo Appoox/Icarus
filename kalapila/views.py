@@ -219,17 +219,22 @@ def admin_notifications(request):
     notifications = DashboardNotification.objects.filter(
         user=request.user,
         is_read=False
-    ).select_related('comment', 'comment__user', 'comment__page')
+    ).select_related('comment', 'comment__page')
 
-    data = []
-    for n in notifications:
-        data.append({
+    # Return count-only when nothing changed — avoids serialising the full list
+    count = notifications.count()
+    if count == 0:
+        return JsonResponse({"notifications": [], "count": 0})
+
+    data = [
+        {
             "id": n.id,
             "message": n.message,
-            "url": f"/admin/comments/edit/{n.comment.pk}/"
-        })
-
-    return JsonResponse({"notifications": data})
+            "url": f"/admin/snippets/kalapila/comment/edit/{n.comment.pk}/"
+        }
+        for n in notifications
+    ]
+    return JsonResponse({"notifications": data, "count": count})
 
 @login_required
 def mark_notification_read(request, pk):
