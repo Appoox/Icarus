@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.admin.panels import FieldPanel
+from auditlog.models import AuditlogHistoryField
 
 class Comment(models.Model):
     page = models.ForeignKey('wagtailcore.Page', on_delete=models.CASCADE,
@@ -16,6 +17,9 @@ class Comment(models.Model):
     is_approved = models.BooleanField(default=True)
     is_removed = models.BooleanField(default=False)
     removal_reason = models.CharField(max_length=255, blank=True)
+
+    # Full change history — queryable via comment.history.all()
+    history = AuditlogHistoryField()
 
     panels = [
         FieldPanel('page', read_only=True),

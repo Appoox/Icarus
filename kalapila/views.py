@@ -230,7 +230,7 @@ def admin_notifications(request):
         {
             "id": n.id,
             "message": n.message,
-            "url": f"/admin/snippets/kalapila/comment/edit/{n.comment.pk}/"
+            "url": f"/admin/comments/edit/{n.comment.pk}/"
         }
         for n in notifications
     ]
