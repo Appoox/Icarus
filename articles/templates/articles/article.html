@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/article.css' %}">
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
 <meta name="article-id" content="{{ page.id }}">
 {% endblock %}
 
@@ -487,6 +488,8 @@
       </div>
     </section>
 
+    {% include "kalapila/comment_section.html" %}
+
   </main>
   {% endif %}
 
@@ -536,5 +539,6 @@
 </div>{# /.article-container #}
 
 <script src="{% static 'js/article.js' %}" defer></script>
+<script src="{% static 'js/comments.js' %}" defer></script>
 
 {% endblock %}

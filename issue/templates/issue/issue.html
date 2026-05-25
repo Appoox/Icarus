@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/issue.css' %}">
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -320,6 +321,8 @@
             {% else %}
             <p class="editorial-empty">No editorial content for this issue.</p>
             {% endif %}
+
+            {% include "kalapila/comment_section.html" %}
         </div>
 
     </div>
@@ -396,4 +399,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/issue.js' %}" defer></script>
+<script src="{% static 'js/comments.js' %}" defer></script>
 {% endblock %}

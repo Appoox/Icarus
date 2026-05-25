@@ -57,10 +57,12 @@ INSTALLED_APPS = [
     "literati",
     "issue",
     "reader",
+    "kalapila",
     "hitcount",
     "the_librarian",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
+    "wagtail.contrib.settings",
     "wagtail.contrib.table_block",
     "wagtail.embeds",
     "wagtail.sites",
@@ -97,6 +99,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "kalapila.middleware.UserNotificationMiddleware",
 ]
 
 ROOT_URLCONF = "Icarus.urls"

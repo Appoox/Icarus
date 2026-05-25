@@ -20,6 +20,7 @@ urlpatterns = [
     path("issues/", include("issue.urls")),
     path("articles/", include("articles.urls")),
     path("librarian/", include("the_librarian.urls")),
+    path("kalapila/", include("kalapila.urls")),
 ]
 
 
