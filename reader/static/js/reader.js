@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelForm = document.getElementById('cancel-sub-form');
     if (cancelForm) {
         cancelForm.addEventListener('submit', function(e) {
-            if (!confirm('Are you sure you want to cancel your subscription?')) {
+            if (!confirm('Are you sure you want to cancel your subscription? You will continue to have access to all premium content until your current billing cycle ends, and your subscription will not auto-renew.')) {
                 e.preventDefault();
             }
         });
