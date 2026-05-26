@@ -98,44 +98,70 @@ img {
 
 /* ── Messages (Django Messages Framework) ──────── */
 .messages-container {
-    max-width: 1421px;
-    margin: 1rem auto;
-    padding: 0 1.25rem;
-    position: relative;
-    z-index: 1001;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 380px;
+    width: calc(100vw - 48px);
+    pointer-events: none;
 }
 .message {
-    padding: 1rem 1.25rem;
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
+    padding: 14px 16px;
+    border-radius: 8px;
     font-family: 'Source Sans 3', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.45;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    animation: slideDown 0.3s ease-out;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
+    pointer-events: auto;
+    animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-@keyframes slideDown {
-    from { transform: translateY(-10px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+.message.is-dismissing {
+    animation: toastOut 0.25s ease-in forwards;
 }
-.message--success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-.message--error   { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-.message--info    { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
-.message--warning { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+@keyframes toastIn {
+    from { transform: translateX(110%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes toastOut {
+    from { transform: translateX(0);    opacity: 1; max-height: 120px; margin-bottom: 0; }
+    to   { transform: translateX(110%); opacity: 0; max-height: 0;     margin-bottom: -10px; }
+}
+.message--success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+.message--error   { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
+.message--info    { background: #e3f2fd; color: #1565c0; border-left: 4px solid #1565c0; }
+.message--warning { background: #fff3e0; color: #e65100; border-left: 4px solid #e65100; }
 
 .message__close {
     background: none;
     border: none;
     cursor: pointer;
     color: inherit;
-    opacity: 0.5;
+    opacity: 0.45;
     font-size: 1.1rem;
-    padding: 0 0 0 1rem;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: opacity 0.15s;
 }
 .message__close:hover { opacity: 1; }
+
+@media (max-width: 500px) {
+    .messages-container {
+        bottom: 16px;
+        right: 16px;
+        width: calc(100vw - 32px);
+    }
+}
 
 /* ── StreamField Blocks ────────────────────────── */
 .audio-block, .video-block {
