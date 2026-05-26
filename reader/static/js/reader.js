@@ -24,6 +24,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Renew Subscription Options Toggle
+    const renewToggleBtn = document.getElementById('btn-renew-toggle');
+    const renewPlansContainer = document.getElementById('renew-plans-container');
+    if (renewToggleBtn && renewPlansContainer) {
+        renewToggleBtn.addEventListener('click', function() {
+            if (renewPlansContainer.style.display === 'none') {
+                renewPlansContainer.style.display = 'block';
+            } else {
+                renewPlansContainer.style.display = 'none';
+            }
+        });
+    }
+
     // Comment body expand / collapse
     document.querySelectorAll('[data-comment-toggle]').forEach(function(btn) {
         var bodyEl = btn.closest('.comment-item__body-wrap').querySelector('.comment-item__body');

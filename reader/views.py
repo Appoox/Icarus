@@ -40,6 +40,11 @@ def reader_profile(request):
     paginator = Paginator(comments_qs, 10)
     own_comments = paginator.get_page(request.GET.get('comments_page'))
 
+    # Fetch subscription history if any
+    subscription_history = []
+    if hasattr(reader, 'subscription_history_records'):
+        subscription_history = reader.subscription_history_records.all().order_by('-subscription_start')
+
     context = {
         'reader': reader,
         'read_articles': reader.read_articles.all().order_by('-first_published_at')[:20] if hasattr(reader.read_articles, 'all') else [],
@@ -47,6 +52,7 @@ def reader_profile(request):
         'all_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
         'plans': PLANS,
         'own_comments': own_comments,
+        'subscription_history': subscription_history,
     }
     return render(request, 'reader/profile.html', context)
 
@@ -135,16 +141,15 @@ def process_payment(request):
 @login_required(login_url='/reader/login/')
 @require_POST   # ✅ Cancellation must be a POST action, not a GET link
 def cancel_subscription(request):
-    """Cancel the reader's active subscription immediately."""
+    """Cancel the reader's active subscription, keeping access active until end date."""
     try:
         reader = request.user
-        if reader.is_subscribed:
-            reader.subscription_plan = 'none'
-            reader.subscription_end = timezone.now()
-            reader.save(update_fields=['subscription_plan', 'subscription_end'])
-            messages.success(request, "Your subscription has been cancelled.")
+        if reader.is_subscribed and not reader.is_cancelled:
+            reader.is_cancelled = True
+            reader.save(update_fields=['is_cancelled'])
+            messages.success(request, "Your subscription auto-renewal has been cancelled. You will continue to have access until your subscription expires.")
         else:
-            messages.info(request, "You don't have an active subscription.")
+            messages.info(request, "You don't have an active cancellable subscription.")
     except Exception:
         messages.error(request, "Reader profile not found.")
 
@@ -303,3 +308,35 @@ def export_mailing_list(request):
         ])
 
     return response
+
+
+from django.core.management import call_command
+
+@superuser_required
+def admin_trigger_purge_deactivated(request):
+    """Admin-only view to trigger the anonymize deactivation command."""
+    try:
+        call_command('purge_deactivated_users')
+        messages.success(request, "Successfully executed deactivation anonymization command.")
+    except Exception as e:
+        messages.error(request, f"Failed to run command: {e}")
+    
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('wagtailadmin_home')
+
+
+@superuser_required
+def admin_trigger_purge_expired(request):
+    """Admin-only view to trigger the 8-year purge expired data command."""
+    try:
+        call_command('purge_expired_data')
+        messages.success(request, "Successfully executed permanent 8-year expired data purge.")
+    except Exception as e:
+        messages.error(request, f"Failed to run command: {e}")
+    
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('wagtailadmin_home')

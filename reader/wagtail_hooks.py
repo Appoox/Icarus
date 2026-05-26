@@ -4,7 +4,7 @@ from django.utils import timezone
 from wagtail import hooks
 from wagtail.snippets.views.snippets import SnippetViewSet, IndexView
 from wagtail.admin.widgets import HeaderButton
-from .models import ReaderUser, PaymentDetails
+from .models import ReaderUser, PaymentDetails, SubscriptionHistory
 from django.urls import path
 from django.shortcuts import render
 from auditlog.models import LogEntry
@@ -45,6 +45,12 @@ class ReaderIndexView(IndexView):
             classname='button button-secondary',
             attrs={'target': '_blank'}
         ))
+        buttons.append(HeaderButton(
+            label='Run Deactivation Purge (Anonymize)',
+            url=reverse('admin_trigger_purge_deactivated'),
+            icon_name='user-times',
+            classname='button button-secondary',
+        ))
         return buttons
 
 class ReaderSnippetViewSet(SnippetViewSet):
@@ -70,11 +76,41 @@ class PaymentDetailsSnippetViewSet(SnippetViewSet):
     list_display = ("gateway_name", "amount", "status", "created_at")
     list_filter = ("status", "payment_method")
 
+class SubscriptionHistoryFilterSet(django_filters.FilterSet):
+    class Meta:
+        model = SubscriptionHistory
+        fields = ['subscription_plan', 'is_active', 'is_cancelled']
+
+class SubscriptionHistoryIndexView(IndexView):
+    def get_header_buttons(self):
+        buttons = super().get_header_buttons()
+        buttons.append(HeaderButton(
+            label='Run 8-Year Expired Data Purge',
+            url=reverse('admin_trigger_purge_expired'),
+            icon_name='bin',
+            classname='button button-danger',
+        ))
+        return buttons
+
+class SubscriptionHistorySnippetViewSet(SnippetViewSet):
+    model = SubscriptionHistory
+    index_view_class = SubscriptionHistoryIndexView
+    url_prefix = 'subscription-histories'
+    menu_label = 'Subscription Histories'
+    icon = 'history'
+    menu_order = 302
+    add_to_admin_menu = True
+    
+    list_display = ("reader", "subscription_plan", "subscription_start", "subscription_end", "is_active", "is_cancelled", "created_at")
+    filterset_class = SubscriptionHistoryFilterSet
+    search_fields = ("reader__name", "reader__phone_number", "reader__email")
+
 @hooks.register('register_admin_viewset')
 def register_reader_viewsets():
     return [
         ReaderSnippetViewSet(),
         PaymentDetailsSnippetViewSet(),
+        SubscriptionHistorySnippetViewSet(),
     ]
 
 # ── Custom User Forms ───────────────────────────────────────────────
@@ -112,8 +148,11 @@ def auditlog_view(request):
 
 @hooks.register("register_admin_urls")
 def register_auditlog_url():
+    from reader.views import admin_trigger_purge_deactivated, admin_trigger_purge_expired
     return [
         path("auditlog/", auditlog_view, name="auditlog_view"),
+        path("purge-deactivated/", admin_trigger_purge_deactivated, name="admin_trigger_purge_deactivated"),
+        path("purge-expired/", admin_trigger_purge_expired, name="admin_trigger_purge_expired"),
     ]
 
 @hooks.register("register_admin_menu_item")
