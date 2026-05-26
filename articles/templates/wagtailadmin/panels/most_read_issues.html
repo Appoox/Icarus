@@ -1,8 +1,8 @@
 {# Custom panel template designed to fit inside the standard Wagtail dashboard ecosystem #}
-<section class="panel summary html-panel" aria-label="Most Read Articles Analytics Grid">
+<section class="panel summary html-panel" aria-label="Most Read Issues Analytics Grid">
     {# Header panel title element #}
     <header class="panel-content">
-        <h2 class="panel-title"> ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട ലേഖനങ്ങൾ </h2>
+        <h2 class="panel-title"> ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട പതിപ്പുകൾ (Issues) </h2>
     </header>
     
     {# Core data table rendering section #}
@@ -10,35 +10,35 @@
         <table class="listing" style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr>
-                    <th style="text-align: left; padding: 0.5rem;">Article Title</th>
+                    <th style="text-align: left; padding: 0.5rem;">Issue Volume/Title</th>
                     <th style="text-align: left; padding: 0.5rem;">Publishing Date</th>
                     <th style="text-align: right; padding: 0.5rem;">Total Views</th>
                 </tr>
             </thead>
             <tbody>
-                {# Loop directly through our pre-queried popular articles list context #}
-                {% for article in articles %}
+                {# Loop directly through our pre-queried popular issues list context #}
+                {% for issue in issues %}
                     <tr style="border-bottom: 1px solid var(--w-color-grey-100);">
                         <td style="padding: 0.75rem 0.5rem;">
                             {# Direct editing link routing to make content workflow accessible #}
-                            <a href="{% url 'wagtailadmin_pages:edit' article.id %}" style="text-decoration: none;">
-                                <strong>{{ article.title }}</strong>
+                            <a href="{% url 'wagtailadmin_pages:edit' issue.id %}" style="text-decoration: none;">
+                                <strong>{{ issue.title }}</strong>
                             </a>
                         </td>
-                        {# FIX: Updated color code parameter variables to seamlessly adopt system theme rules #}
                         <td style="padding: 0.75rem 0.5rem; color: var(--w-color-text-label);">
-                            {{ article.date }}
+                            {{ issue.date_of_publishing|default:issue.first_published_at }}
                         </td>
-                        {# FIX: Removed raw color styling tags so metric alignment inherits default panel row colors natively #}
                         <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: normal; color: var(--w-color-text-context);">
-                            {{ article.total_views }}
+                            {# Outputs the rolling 30-day view value populated by our python map aggregation step #}
+                            {{ issue.total_views|default:"0" }}
                         </td>
                     </tr>
                 {% empty %}
-                    {# Fallback rendering context block when zero analytics hits are captured #}
+                    {# Fallback rendering context block when zero analytics hits are captured within the past month #}
                     <tr>
-                        <td colspan="3" style="padding: 1rem; text-align: center; color: var(--w-color-grey-400);">
-                            No view tracking analytics recorded yet.
+                        {# FIX FALLBACK COLOR: Switched from grey to text-context to inherit dark mode typography for empty state #}
+                        <td colspan="3" style="padding: 1rem; text-align: center; color: var(--w-color-text-context);">
+                            No view tracking analytics recorded for issues over the past month.
                         </td>
                     </tr>
                 {% endfor %}

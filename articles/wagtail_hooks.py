@@ -288,16 +288,6 @@ def register_tag_autocomplete_js():
 
 
 # ── Paste & Import block — Convert to Blocks button ───────────────────────
-#
-# How it works:
-#   1. MutationObserver watches for "Paste & Import" blocks in the stream editor.
-#   2. Each import block gets a "Convert to Blocks" button above its textarea.
-#   3. Clicking the button adds a hidden <input name="convert_block_id"> to the
-#      page edit form and programmatically clicks "Save Draft".
-#   4. ArticleForm.save() in models.py intercepts convert_block_id and converts
-#      that specific block. If convert_block_id is absent (e.g. JS failed to
-#      inject or the Save Draft selector missed), ArticleForm.save() falls back
-#      to converting ALL rich_text_import blocks automatically.
 
 @hooks.register('insert_editor_js')
 def richtext_import_block_js():
@@ -306,27 +296,10 @@ def richtext_import_block_js():
 (function () {
     'use strict';
 
-    /*
-     * Strategy: do NOT rely on any specific data attribute for block containers.
-     * Instead, find every <textarea> inside the StreamField, walk up the DOM
-     * to find its block wrapper (identified by containing the label text
-     * "Paste & Import"), and inject the button there.
-     *
-     * This works regardless of which data-* attribute Wagtail uses for blocks.
-     */
-
-    /* ── Helpers ──────────────────────────────────────────────────────────── */
-
     function wordCount(text) {
         return (text || '').trim() ? (text.trim().split(/\\s+/).length) : 0;
     }
 
-    /*
-     * Walk up from `el` up to `maxDepth` levels.
-     * Return the first ancestor whose textContent contains `needle`
-     * AND which itself has a textContent longer than the needle
-     * (i.e. it wraps the label, not just equals it).
-     */
     function closestContaining(el, needle, maxDepth) {
         var node = el.parentElement;
         for (var i = 0; i < (maxDepth || 12); i++) {
@@ -337,7 +310,6 @@ def richtext_import_block_js():
         return null;
     }
 
-    /* Find the Save Draft submit button. */
     function findSaveDraftButton() {
         var selectors = [
             'button[value="action-save-draft"]',
@@ -351,7 +323,6 @@ def richtext_import_block_js():
             var el = document.querySelector(selectors[i]);
             if (el) return el;
         }
-        // Text fallback
         var btns = document.querySelectorAll('button[type="submit"], input[type="submit"]');
         for (var j = 0; j < btns.length; j++) {
             if ((btns[j].textContent || btns[j].value || '').toLowerCase().indexOf('draft') !== -1)
@@ -360,27 +331,14 @@ def richtext_import_block_js():
         return null;
     }
 
-    /* ── Inject UI into one textarea ──────────────────────────────────────── */
-
     function instrumentTextarea(ta) {
         if (ta.dataset.rtiDone) return;
 
-        /*
-         * Find the block container: walk up until we find an element whose
-         * text includes "Paste & Import" (the block label rendered by Wagtail).
-         * Stop before <body> / <html>.
-         */
         var blockEl = closestContaining(ta, 'Paste & Import', 14);
-        if (!blockEl) return;   // not an import block textarea
+        if (!blockEl) return;
 
-        /*
-         * Tighten: we want the CLOSEST ancestor that contains the label,
-         * not a grand-ancestor that incidentally has it.  Keep walking
-         * *down* (i.e. try children of blockEl) to find a tighter wrapper.
-         */
         ta.dataset.rtiDone = '1';
 
-        /* ── Banner ──────────────────────────────────────────────────────── */
         if (!blockEl.querySelector('.rti-banner')) {
             var banner = document.createElement('div');
             banner.className = 'rti-banner';
@@ -398,11 +356,9 @@ def richtext_import_block_js():
                 '<strong>Paste &amp; Import</strong> — paste HTML or plain text ' +
                 'below, then click <em>Convert to Blocks</em>. ' +
                 'The page saves as a draft and reloads with the expanded blocks.';
-            /* Insert banner just before the textarea */
             ta.parentNode.insertBefore(banner, ta);
         }
 
-        /* ── Toolbar ─────────────────────────────────────────────────────── */
         if (!blockEl.querySelector('.rti-toolbar')) {
             var toolbar = document.createElement('div');
             toolbar.className = 'rti-toolbar';
@@ -429,7 +385,6 @@ def richtext_import_block_js():
             toolbar.appendChild(meta);
             ta.parentNode.insertBefore(toolbar, ta);
 
-            /* Live word count */
             var update = function () {
                 var n = wordCount(ta.value);
                 meta.textContent = n > 0 ? n.toLocaleString() + ' words' : '';
@@ -443,8 +398,6 @@ def richtext_import_block_js():
         }
     }
 
-    /* ── Conversion handler ───────────────────────────────────────────────── */
-
     function handleConvert(ta, blockEl, btn, meta) {
         if (!ta.value.trim()) {
             meta.style.color = '#dc2626';
@@ -453,7 +406,6 @@ def richtext_import_block_js():
             return;
         }
 
-        /* Find the form */
         var form =
             document.getElementById('page-edit-form') ||
             ta.closest('form') ||
@@ -465,15 +417,8 @@ def richtext_import_block_js():
             return;
         }
 
-        /*
-         * Set convert_block_id.
-         * Try to find a UUID in the block element's data attributes or
-         * in a hidden input near it.  Fall back to '__all__' which tells
-         * ArticleForm.save() to convert every import block on the page.
-         */
         var blockId = '__all__';
 
-        /* Check every data attribute on blockEl and its children for a UUID */
         var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         var allEls = [blockEl].concat(Array.from(blockEl.querySelectorAll('*')));
         outer: for (var i = 0; i < allEls.length; i++) {
@@ -481,7 +426,6 @@ def richtext_import_block_js():
             for (var key in ds) {
                 if (uuidRe.test(ds[key])) { blockId = ds[key]; break outer; }
             }
-            /* Also check hidden inputs */
             if (allEls[i].tagName === 'INPUT' && allEls[i].type === 'hidden') {
                 if (uuidRe.test(allEls[i].value)) { blockId = allEls[i].value; break; }
             }
@@ -496,7 +440,6 @@ def richtext_import_block_js():
         }
         hiddenField.value = blockId;
 
-        /* Find and click Save Draft */
         var saveDraftBtn = findSaveDraftButton();
         if (saveDraftBtn) {
             btn.disabled = true;
@@ -506,7 +449,6 @@ def richtext_import_block_js():
             meta.textContent = 'Page will reload with the converted blocks.';
             setTimeout(function () { saveDraftBtn.click(); }, 80);
         } else {
-            /* Hidden field is set — tell editor to click Save Draft manually */
             btn.style.background = '#b45309';
             btn.textContent = '\\u26a0\\ufe0f Click Save Draft to convert';
             meta.style.color = '#b45309';
@@ -514,13 +456,10 @@ def richtext_import_block_js():
         }
     }
 
-    /* ── Scan for import-block textareas ─────────────────────────────────── */
-
     function scan() {
         document.querySelectorAll('textarea').forEach(instrumentTextarea);
     }
 
-    /* MutationObserver: re-scan when new blocks are added */
     new MutationObserver(function (mutations) {
         var needsScan = false;
         mutations.forEach(function (m) {
@@ -531,7 +470,6 @@ def richtext_import_block_js():
         if (needsScan) scan();
     }).observe(document.body, { childList: true, subtree: true });
 
-    /* Initial scan — delayed to let Wagtail finish rendering */
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () { setTimeout(scan, 800); });
     } else {
@@ -542,57 +480,48 @@ def richtext_import_block_js():
 </script>
 """)
 
-# ── Custom Homepage Panel Definition ────────────────────────────────────
+
+# ── Custom Homepage Panel Definition: Articles ─────────────────────────────
+
 class MostReadArticlesDashboardPanel(Component):
     """
     A custom dashboard component panel that gathers metrics from django-hitcount
     and renders a leaderboard component directly on the Wagtail home view.
-    Inheriting from Component automatically registers the internal 'media' properties.
     """
-    # Determines the visual ordering sequence layout position on the dashboard screen
-    order = 150  
-    # Path referencing the target rendering template directly
+    # FIX: Shifted from 150 to 500 to render below 'Most Recent Edits' panel
+    order = 500  
     template_name = 'wagtailadmin/panels/most_read_articles.html'
 
     def get_context_data(self, parent_context):
-        """
-        Extends the standard parent template context dictionary, injecting 
-        the database rows containing popular hit analytics.
-        
-        CRITICAL CHANGE: This now queries individual Hit logs within a 30-day 
-        rolling window to capture true current performance rather than all-time totals.
-        """
-        # Fetch existing structural context from parent layout stack
         context = super().get_context_data(parent_context)
         
-        # Import Django utilities and the required hitcount log tables
         from .models import Article 
         from django.utils import timezone
         from datetime import timedelta
         from django.db.models import Count
         from django.contrib.contenttypes.models import ContentType
         from hitcount.models import Hit
+        from wagtail.models import Page
 
-        # Step 1: Calculate the exact timestamp representing exactly 30 days ago
         one_month_ago = timezone.now() - timedelta(days=30)
-
-        # Step 2: Fetch the django ContentType definition matching the Article page model
+        
         article_content_type = ContentType.objects.get_for_model(Article)
+        page_content_type = ContentType.objects.get_for_model(Page)
 
-        # Step 3: Query the Hit records directly within our 30-day timeline parameter window.
-        # Group the hits by hitcount__object_pk to sum view totals per distinct article instance.
+        live_article_ids = list(Article.objects.live().values_list('id', flat=True))
+        live_article_pks = [str(pk) for pk in live_article_ids]
+
         top_hits = (
             Hit.objects.filter(
                 created__gte=one_month_ago,
-                hitcount__content_type=article_content_type
+                hitcount__content_type__in=[article_content_type, page_content_type],
+                hitcount__object_pk__in=live_article_pks
             )
             .values('hitcount__object_pk')
             .annotate(total_views=Count('id'))
             .order_by('-total_views')[:5]
         )
 
-        # Step 4: Parse object primary keys safely back into an integer map index.
-        # This completely avoids mixed type-matching errors in relational databases like PostgreSQL.
         hit_maps = {}
         for hit in top_hits:
             try:
@@ -601,29 +530,216 @@ class MostReadArticlesDashboardPanel(Component):
             except (ValueError, TypeError):
                 continue
 
-        # Step 5: Gather matching live Article model rows in a single batch query
         articles_queryset = Article.objects.live().filter(id__in=hit_maps.keys())
 
-        # Step 6: Assign the rolling 30-day view totals to each article object
         articles_list = []
         for article in articles_queryset:
             article.total_views = hit_maps.get(article.id, 0)
             articles_list.append(article)
 
-        # Step 7: Re-sort the final list manually to ensure descending order sequence
         articles_list.sort(key=lambda x: x.total_views, reverse=True)
+        
+        if len(articles_list) < 5:
+            already_included = [a.id for a in articles_list]
+            extra_articles = Article.objects.live().exclude(id__in=already_included)[:5 - len(articles_list)]
+            for extra in extra_articles:
+                extra.total_views = 0
+                articles_list.append(extra)
 
-        # Append the compiled data collection directly to our template presentation layer
         context['articles'] = articles_list
+        return context
+
+
+# ── Custom Homepage Panel Definition: Issues ───────────────────────────────
+
+class MostReadIssuesDashboardPanel(Component):
+    """
+    A custom dashboard component panel that gathers rolling 30-day metrics 
+    from django-hitcount specifically for the Issue page model.
+    """
+    # FIX: Shifted from 160 to 510 to render below 'Most Recent Edits' panel
+    order = 510  
+    template_name = 'wagtailadmin/panels/most_read_issues.html'
+
+    def get_context_data(self, parent_context):
+        context = super().get_context_data(parent_context)
+        
+        from django.apps import apps
+        from django.utils import timezone
+        from datetime import timedelta
+        from django.db.models import Count
+        from django.contrib.contenttypes.models import ContentType
+        from hitcount.models import Hit
+        from wagtail.models import Page
+
+        one_month_ago = timezone.now() - timedelta(days=30)
+
+        Issue = apps.get_model('issue', 'Issue')
+        issue_content_type = ContentType.objects.get_for_model(Issue)
+        page_content_type = ContentType.objects.get_for_model(Page)
+
+        live_issue_ids = list(Issue.objects.live().values_list('id', flat=True))
+        live_issue_pks = [str(pk) for pk in live_issue_ids]
+
+        top_hits = (
+            Hit.objects.filter(
+                created__gte=one_month_ago,
+                hitcount__content_type__in=[issue_content_type, page_content_type],
+                hitcount__object_pk__in=live_issue_pks
+            )
+            .values('hitcount__object_pk')
+            .annotate(total_views=Count('id'))
+            .order_by('-total_views')[:5]
+        )
+
+        hit_maps = {}
+        for hit in top_hits:
+            try:
+                pk_int = int(hit['hitcount__object_pk'])
+                hit_maps[pk_int] = hit['total_views']
+            except (ValueError, TypeError):
+                continue
+
+        issues_queryset = Issue.objects.live().filter(id__in=hit_maps.keys())
+
+        issues_list = []
+        for issue in issues_queryset:
+            issue.total_views = hit_maps.get(issue.id, 0)
+            issues_list.append(issue)
+
+        issues_list.sort(key=lambda x: x.total_views, reverse=True)
+
+        if len(issues_list) < 5:
+            already_included = [i.id for i in issues_list]
+            extra_issues = Issue.objects.live().exclude(id__in=already_included)[:5 - len(issues_list)]
+            for extra in extra_issues:
+                extra.total_views = 0
+                issues_list.append(extra)
+
+        context['issues'] = issues_list
+        return context
+
+
+# ── Custom Homepage Panel Definition: Topics ───────────────────────────────
+
+class MostReadTopicsDashboardPanel(Component):
+    """
+    A custom dashboard component panel that gathers rolling 30-day metrics 
+    from django-hitcount by aggregating the view counts of all Articles 
+    and Issues belonging to each specific Topic.
+    """
+    # Determines the visual ordering sequence layout position on the dashboard screen
+    order = 520  
+    # Path referencing the target rendering template directly
+    template_name = 'wagtailadmin/panels/most_read_topics.html'
+
+    def get_context_data(self, parent_context):
+        """
+        Extends the standard parent template context dictionary, calculating 
+        the sum of all article and issue views for each topic.
+        """
+        # Fetch existing structural context from parent layout stack
+        context = super().get_context_data(parent_context)
+        
+        from django.apps import apps
+        from django.utils import timezone
+        from datetime import timedelta
+        from django.db.models import Count
+        from django.contrib.contenttypes.models import ContentType
+        from hitcount.models import Hit
+        from wagtail.models import Page
+
+        # Establish a rolling 30-day evaluation interval window
+        one_month_ago = timezone.now() - timedelta(days=30)
+
+        # Look up target models dynamically across application boundaries
+        Topic = apps.get_model('issue', 'Topic')
+        Issue = apps.get_model('issue', 'Issue')
+        Article = apps.get_model('articles', 'Article')
+
+        # Retrieve distinct content types for precision hit matching
+        article_content_type = ContentType.objects.get_for_model(Article)
+        issue_content_type = ContentType.objects.get_for_model(Issue)
+        page_content_type = ContentType.objects.get_for_model(Page)
+
+        # Gather all hits in the rolling 30-day window for Articles, Issues, or base Pages
+        all_hits = (
+            Hit.objects.filter(
+                created__gte=one_month_ago,
+                hitcount__content_type__in=[article_content_type, issue_content_type, page_content_type]
+            )
+            .values('hitcount__object_pk')
+            .annotate(total_views=Count('id'))
+        )
+
+        # Build a fast object_id -> hit_count map for O(1) lookups
+        hits_map = {}
+        for h in all_hits:
+            try:
+                pk = int(h['hitcount__object_pk'])
+                hits_map[pk] = hits_map.get(pk, 0) + h['total_views']
+            except (ValueError, TypeError):
+                continue
+
+        # Dictionary to accumulate aggregated view statistics per topic ID
+        topic_views = {}
+
+        # Map all live issues to their topic and aggregate their view hits
+        live_issues = Issue.objects.live().select_related('topic')
+        issue_paths = {}  # Map to match article tree paths to issue topics without N+1 queries
+        
+        for issue in live_issues:
+            if issue.topic_id:
+                issue_paths[issue.path] = issue.topic_id
+                # Add the issue's own page views to the topic total
+                topic_views[issue.topic_id] = topic_views.get(issue.topic_id, 0) + hits_map.get(issue.id, 0)
+
+        # Map all live articles to their topic and aggregate their view hits
+        live_articles = Article.objects.live()
+        
+        # Safe introspection to check if Article model contains a direct topic field relationship
+        has_direct_topic = False
+        try:
+            Article._meta.get_field('topic')
+            has_direct_topic = True
+        except Exception:
+            has_direct_topic = False
+
+        for article in live_articles:
+            t_id = None
+            if has_direct_topic and getattr(article, 'topic_id', None):
+                t_id = article.topic_id
+            else:
+                # Resolve via parent Issue path hierarchy mapping (Wagtail chops off last 4 chars per level)
+                parent_path = article.path[:-4]
+                t_id = issue_paths.get(parent_path)
+
+            if t_id:
+                # Add the article's page views to the topic total
+                topic_views[t_id] = topic_views.get(t_id, 0) + hits_map.get(article.id, 0)
+
+        # Fetch all existing Topic objects to compile the dashboard leaderboard rows
+        all_topics = Topic.objects.all()
+        topics_list = []
+        for topic in all_topics:
+            topic.total_views = topic_views.get(topic.id, 0)
+            topics_list.append(topic)
+
+        # Sort topics by total views in descending order and slice the top 5 records
+        topics_list.sort(key=lambda x: x.total_views, reverse=True)
+        context['topics'] = topics_list[:5]
         
         return context
 
+
 # ── Wagtail Dashboard Hook Registration ──────────────────────────────────
+
 @hooks.register('construct_homepage_panels')
 def add_most_read_articles_panel(request, panels):
     """
     Intercepts the homepage panel collection sequence and appends our 
-    custom analytics insight panel instance directly to the interface layout.
+    custom analytics insight panel instances directly to the interface layout.
     """
-    # Instantiate the component without passing request, as Component reads it from parent_context
     panels.append(MostReadArticlesDashboardPanel())
+    panels.append(MostReadIssuesDashboardPanel())
+    panels.append(MostReadTopicsDashboardPanel())

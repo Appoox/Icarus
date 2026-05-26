@@ -17,6 +17,9 @@ from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from articles.wagtail_widgets import ColorPickerWidget
 from articles.models import AudioBlock, VideoBlock
+from django.contrib.contenttypes.fields import GenericRelation
+from hitcount.models import HitCount
+from hitcount.utils import get_hitcount_model
 
 class IssueTag(TaggedItemBase):
     content_object = ParentalKey(
@@ -259,6 +262,13 @@ class Issue(RoutablePageMixin, Page):
         help_text="Paste an embed link for video (e.g., YouTube, Vimeo)"
     )
 
+    hit_count_generic = GenericRelation(
+        HitCount,
+        object_id_field='object_pk',
+        content_type_field='content_type',
+        related_query_name='issue_hitcount'
+    )
+
     editorial = StreamField([
         ('audio',      AudioBlock()),
         ('video',      VideoBlock()),
@@ -327,6 +337,7 @@ class Issue(RoutablePageMixin, Page):
     def board_members_only(self):
         return [m for m in self.board_members if m.role == 'board']
 
+    
     content_panels = Page.content_panels + [
         FieldPanel('slug', help_text="The slug is a URL-friendly name for this page. It is used as the end portion of the page's web address (URL). It should only contain lowercase letters, numbers, and hyphens. Changing the slug will change the URL of the page and may break existing links."),
         FieldPanel('tags'),
@@ -358,6 +369,23 @@ class Issue(RoutablePageMixin, Page):
             FieldPanel('show_in_menus'),
         ], heading="Settings"),
     ]
+
+    def serve(self, request, *args, **kwargs):
+        """
+        Overrides the native Wagtail page serving process to capture 
+        and record user view tracking metrics via django-hitcount.
+        """
+        from hitcount.views import HitCountMixin as HitCountViewProcessor
+        
+        # Safely attempt to record an analytics hit without disrupting page delivery if it fails
+        try:
+            hit_count_obj = get_hitcount_model().objects.get_for_object(self)
+            HitCountViewProcessor.hit_count(request, hit_count_obj)
+        except Exception:
+            # Silence background analytics exceptions to ensure the end-user always receives the page
+            pass
+
+        return super().serve(request, *args, **kwargs)
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
@@ -432,6 +460,13 @@ class Topic(index.Indexed, models.Model):
         FieldPanel('slug'),
         FieldPanel('color', widget=ColorPickerWidget),
     ]
+    def title(self):
+        """
+        Fallback property providing interface alignment across generic dashboard components.
+        Maps the .title lookup directly to the underlying model's .name attribute to
+        prevent Django template system VariableDoesNotExist exceptions.
+        """
+        return self.name
 
     def __str__(self):
         return self.name

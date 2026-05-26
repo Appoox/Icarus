@@ -1,0 +1,40 @@
+{# Custom panel template designed to fit inside the standard Wagtail dashboard ecosystem for Topics #}
+<section class="panel summary html-panel" aria-label="Most Read Topics Analytics Grid">
+    {# Header panel title element #}
+    <header class="panel-content">
+        <h2 class="panel-title"> ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ </h2>
+    </header>
+    
+    {# Core data table rendering section #}
+    <div class="panel-content" style="padding: 1.5rem;">
+        <table class="listing" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding: 0.5rem;">Topic Name</th>
+                    <th style="text-align: right; padding: 0.5rem;">Total Views</th>
+                </tr>
+            </thead>
+            <tbody>
+                {# Loop directly through our pre-queried popular topics list context #}
+                {% for topic in topics %}
+                    <tr style="border-bottom: 1px solid var(--w-color-grey-100);">
+                        <td style="padding: 0.75rem 0.5rem;">
+                            {# FIX: Changed from topic.title to topic.name to match the model schema #}
+                            <strong>{{ topic.name }}</strong>
+                        </td>
+                        <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: normal; color: var(--w-color-text-context);">
+                            {{ topic.total_views }}
+                        </td>
+                    </tr>
+                {% empty %}
+                    {# Fallback rendering context block when zero analytics hits are captured #}
+                    <tr>
+                        <td colspan="2" style="padding: 1rem; text-align: center; color: var(--w-color-grey-400);">
+                            No view tracking analytics recorded yet.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
