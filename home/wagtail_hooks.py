@@ -13,7 +13,10 @@ from issue.models import IssueIndexPage
 from django.utils.html import format_html, mark_safe
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from auditlog.models import LogEntry
+
+# Dynamically import the active LogEntry model (handles default or custom model configurations out of the box)
+from auditlog import get_logentry_model
+LogEntry = get_logentry_model()
 
 User = get_user_model()
 
@@ -46,6 +49,7 @@ def audit_log_list(request):
     qs = (
         LogEntry.objects
         .select_related('actor', 'content_type')
+        .prefetch_related('actor__groups')  # Cached to prevent N+1 database queries when rendering roles
         .order_by('-timestamp')
     )
 
@@ -74,6 +78,16 @@ def audit_log_list(request):
             entry.actor.name or str(entry.actor.phone_number)
             if entry.actor else 'System'
         )
+        
+        # Safely compile roles, prioritizing the frozen historical record, with current fallback
+        actor_roles = []
+        if hasattr(entry, 'actor_roles') and entry.actor_roles:
+            actor_roles = entry.actor_roles
+        elif entry.actor:
+            if entry.actor.is_superuser:
+                actor_roles.append("Superuser")
+            actor_roles.extend([group.name for group in entry.actor.groups.all()])
+
         model_name = (
             entry.content_type.model.replace('_', ' ').title()
             if entry.content_type else '—'
@@ -123,6 +137,7 @@ def audit_log_list(request):
         rows.append({
             'ts':              ts,
             'actor':           actor,
+            'actor_roles':     actor_roles,  # Sent to audit_log.html
             'action':          ACTION_LABELS.get(entry.action, 'Changed'),
             'action_int':      entry.action,
             'model':           model_name,

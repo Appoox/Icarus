@@ -8,6 +8,8 @@ from modelcluster.models import ClusterableModel # Needed for the Parent class
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 
+from auditlog.models import AbstractLogEntry
+
 @register_snippet
 class SiteHeader(models.Model):
     """
@@ -201,3 +203,21 @@ class HomePage(Page):
         context['article_index_page'] = ArticleIndexPage.objects.live().first()
 
         return context
+
+        
+class CustomLogEntry(AbstractLogEntry):
+    actor_roles = models.JSONField(default=list, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Only capture roles on creation to freeze them historically
+        if not self.pk and self.actor:
+            roles = []
+            if self.actor.is_superuser:
+                roles.append("Superuser")
+            roles.extend(list(self.actor.groups.values_list('name', flat=True)))
+            self.actor_roles = roles
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = 'Custom Log Entry'
+        verbose_name_plural = 'Custom Log Entries'

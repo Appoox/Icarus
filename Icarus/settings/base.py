@@ -30,6 +30,8 @@ AUTH_USER_MODEL = 'reader.ReaderUser'
 ACCOUNT_SIGNUP_REDIRECT_URL = '/reader/profile/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+AUDITLOG_LOGENTRY_MODEL = 'home.CustomLogEntry'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from pathlib import Path
 from environs import Env

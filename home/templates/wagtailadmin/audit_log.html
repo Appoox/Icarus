@@ -60,6 +60,22 @@
             color: #fff;
             letter-spacing: 0.02em;
         }
+        .al-role-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.78em;
+            font-weight: 600;
+            background: var(--w-color-surface-field);
+            color: var(--w-color-text-label);
+            border: 1px solid var(--w-color-border-furniture);
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+        .al-role-badge:last-child {
+            margin-right: 0;
+            margin-bottom: 0;
+        }
         .al-action-badge {
             display: inline-block;
             padding: 4px 14px;
@@ -137,6 +153,7 @@
             <tr>
                 <th style="width:160px;">Timestamp (IST)</th>
                 <th style="width:180px;">User</th>
+                <th style="width:150px;">Role/Groups</th>
                 <th style="width:160px;">Model</th>
                 <th style="width:100px;">Action</th>
                 <th>Changes</th>
@@ -150,6 +167,13 @@
                 </td>
                 <td style="padding:16px 12px; font-weight:600;">
                     {{ row.actor }}
+                </td>
+                <td style="padding:16px 12px;">
+                    {% for role in row.actor_roles %}
+                        <span class="al-role-badge">{{ role }}</span>
+                    {% empty %}
+                        <span style="color:var(--w-color-text-meta); font-size:0.85em; font-style:italic;">—</span>
+                    {% endfor %}
                 </td>
                 <td style="padding:16px 12px;">
                     {# Dynamic background color generation based on hashed model string #}
@@ -205,7 +229,7 @@
             </tr>
         {% empty %}
             <tr>
-                <td colspan="5" style="padding:32px; color:var(--w-color-text-meta); text-align:center;">
+                <td colspan="6" style="padding:32px; color:var(--w-color-text-meta); text-align:center;">
                     No audit log entries found.
                 </td>
             </tr>
