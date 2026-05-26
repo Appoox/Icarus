@@ -255,8 +255,9 @@ WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'tx
 
 # ── Reader / Paywall ──────────────────────────────────────────────────
 FREE_ARTICLE_LIMIT = env.int("FREE_ARTICLE_LIMIT", 3)  # Number of free articles for non-subscribed readers
-LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/reader/profile/')
+LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')
 LOGIN_URL = env.str("LOGIN_URL", '/accounts/login/')
+# ACCOUNT_LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')
 
 # ── The Librarian ─────────────────────────────────────────────────────
 ARCHIVE_DIR = env.path("ARCHIVE_DIR", BASE_DIR / "archive")

@@ -134,3 +134,33 @@ class CustomLoginForm(LoginForm):
         except Exception:
             pass
         return "24 hours"  # Fallback duration matching your custom cache signal period
+
+class CustomSignupForm(SignupForm):
+    """
+    Ensures all allauth signup fields have consistent styling
+    and restricts phone number input to numeric only.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if 'phone' in self.fields:
+            field = self.fields['phone']
+            if hasattr(field.widget, 'widgets'):
+                for widget in field.widget.widgets:
+                    existing_class = widget.attrs.get('class', '')
+                    widget.attrs['class'] = f"{existing_class} form-input".strip()
+                # Restrict national number input (index 1) to numeric only
+                if len(field.widget.widgets) > 1:
+                    field.widget.widgets[1].attrs.update({
+                        'inputmode': 'numeric',
+                        'pattern': '[0-9]*',
+                        'oninput': "this.value = this.value.replace(/[^0-9]/g, '');"
+                    })
+            else:
+                existing_class = field.widget.attrs.get('class', '')
+                field.widget.attrs['class'] = f"{existing_class} form-input".strip()
+
+        for field_name, field in self.fields.items():
+            if field_name != 'phone':
+                existing_class = field.widget.attrs.get('class', '')
+                field.widget.attrs['class'] = f"{existing_class} form-input".strip()

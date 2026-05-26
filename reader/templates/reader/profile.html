@@ -23,20 +23,6 @@
         </div>
     </div>
 
-    {# ── Profile completion notice ── #}
-    {% if not reader.is_profile_complete %}
-    <div class="notice-banner">
-        👋 Your profile is incomplete. <a href="{% url 'edit_profile' %}">Complete it now</a> to help us serve you better.
-    </div>
-    {% endif %}
-
-    {# ── Grace period warning ── #}
-    {% if reader.is_in_grace_period %}
-    <div class="grace-banner">
-        ⚠️ Your subscription expired recently. You're in a grace period — renew now to keep your access.
-    </div>
-    {% endif %}
-
     {# ── Personal Details ── #}
     <div class="profile-section">
         <div class="profile-section__header">

@@ -65,7 +65,7 @@
     <div class="messages-container">
         {% for message in messages %}
         <div class="message message--{{ message.tags }}">
-            <span>{{ message }}</span>
+            <span>{{ message|safe }}</span>
             <button class="message__close">×</button>
         </div>
         {% endfor %}
