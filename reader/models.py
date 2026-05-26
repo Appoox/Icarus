@@ -282,6 +282,14 @@ class ReaderUser(AbstractUser, index.Indexed):
         null=True, blank=True,
         help_text='When the current subscription period expires.',
     )
+    is_cancelled = models.BooleanField(
+        default=False,
+        help_text="Flag indicating if the active subscription has been cancelled but remains in grace period."
+    )
+    is_anonymized = models.BooleanField(
+        default=False,
+        help_text="Flag indicating if this account has been anonymized under DPDPA/GDPR rules."
+    )
 
     # ✅ NEW: Grace period for failed/lapsed renewals (e.g. 3 days leeway)
     GRACE_PERIOD = timedelta(days=3)
@@ -361,8 +369,9 @@ class ReaderUser(AbstractUser, index.Indexed):
         self.subscription_plan = plan_type
         self.subscription_start = new_start
         self.subscription_end = new_start + duration
+        self.is_cancelled = False
         self.save(update_fields=[
-            'subscription_plan', 'subscription_start', 'subscription_end',
+            'subscription_plan', 'subscription_start', 'subscription_end', 'is_cancelled',
         ])
 
     # ── Payment ───────────────────────────────────────────────────────
@@ -443,6 +452,7 @@ class ReaderUser(AbstractUser, index.Indexed):
         ], heading="Print Circulation Management"),
         MultiFieldPanel([
             FieldPanel('subscription_plan'),
+            FieldPanel('is_cancelled'),
             FieldRowPanel([
                 FieldPanel('subscription_start'),
                 FieldPanel('subscription_end'),
@@ -467,6 +477,7 @@ class ReaderUser(AbstractUser, index.Indexed):
             FieldPanel('last_login_ip', read_only=True),
             FieldPanel('deactivated_at', read_only=True),
             FieldPanel('is_verified'),
+            FieldPanel('is_anonymized'),
         ], heading="Legal, Security & Lifecycle"),
     ]
 
@@ -480,6 +491,65 @@ class ReaderUser(AbstractUser, index.Indexed):
         self.newsletter_opt_in = False
         self.newsletter_opt_in_at = timezone.now()
         self.save(update_fields=['is_active', 'deactivated_at', 'newsletter_opt_in', 'newsletter_opt_in_at'])
+
+    def anonymize_account(self):
+        """
+        Complies with DPDPA 'Right to Erasure' and GDPR 'Right to be Forgotten'.
+        Deletes credentials, profile data, and tracking logs, but preserves the financial
+        ledger and subscription history in an anonymized state.
+        """
+        self.set_unusable_password()
+        self.name = "Archived User"
+        self.email = f"archived_user_{self.id}@icarus.internal"
+        self.phone_number = f"+999{self.id:011d}"  # Unique E.164 dummy format
+        
+        self.profile_image = None
+        self.bio = ""
+        self.gender = ""
+        self.gender_other = ""
+        self.date_of_birth = None
+        
+        # Clear addresses
+        self.address_line_1 = ""
+        self.address_line_2 = ""
+        self.city = ""
+        self.post_office = ""
+        self.pincode = ""
+        self.district = ""
+        self.state = ""
+        
+        # Clear Care Of fields
+        self.care_of_name = ""
+        self.care_of_number = ""
+        self.care_of_district = ""
+        self.care_of_meghala = ""
+        self.care_of_unit = ""
+        
+        # Clear activity, favorites
+        if hasattr(self, 'read_articles') and self.read_articles:
+            self.read_articles.clear()
+        if hasattr(self, 'interested_topics') and self.interested_topics:
+            self.interested_topics.clear()
+        if hasattr(self, 'favorite_articles') and self.favorite_articles:
+            self.favorite_articles.clear()
+        if hasattr(self, 'favorite_issues') and self.favorite_issues:
+            self.favorite_issues.clear()
+            
+        self.newsletter_opt_in = False
+        self.registration_ip = None
+        self.last_login_ip = None
+        
+        self.is_active = False
+        self.is_anonymized = True
+        self.save()
+        
+        # Delete audit logs / tracking logs associated with this user
+        from auditlog.models import LogEntry
+        LogEntry.objects.filter(actor_id=self.id).delete()
+        
+        from django.contrib.contenttypes.models import ContentType
+        user_content_type = ContentType.objects.get_for_model(self.__class__)
+        LogEntry.objects.filter(content_type=user_content_type, object_id=self.id).delete()
 
     # ── Print Subscription Management ──
     is_print_subscriber = models.BooleanField(
@@ -508,12 +578,19 @@ class ReaderUser(AbstractUser, index.Indexed):
 
     def save(self, *args, **kwargs):
         """
-        Override save to handle audit logging for consent changes.
+        Override save to handle audit logging for consent changes
+        and manage subscription history tracking.
         """
         # Ensure that if a user is deactivated, we don't accidentally re-activate them 
         # unless specifically intended via the admin.
         if self.deactivated_at and not self.is_active:
              self.newsletter_opt_in = False
+
+        old_plan = 'none'
+        old_start = None
+        old_end = None
+        old_payment = None
+        old_cancelled = False
 
         if self.pk:
             # Check if opt-in status has changed to update the audit timestamp
@@ -521,6 +598,13 @@ class ReaderUser(AbstractUser, index.Indexed):
                 old_instance = ReaderUser.objects.get(pk=self.pk)
                 if old_instance.newsletter_opt_in != self.newsletter_opt_in:
                     self.newsletter_opt_in_at = timezone.now()
+                
+                # Capture old subscription details for history tracking and audit trail synchronization.
+                old_plan = old_instance.subscription_plan
+                old_start = old_instance.subscription_start
+                old_end = old_instance.subscription_end
+                old_payment = old_instance.payment_details
+                old_cancelled = old_instance.is_cancelled
             except ReaderUser.DoesNotExist:
                 pass
         elif self.newsletter_opt_in:
@@ -529,12 +613,137 @@ class ReaderUser(AbstractUser, index.Indexed):
             
         super().save(*args, **kwargs)
 
+        # ── Subscription History Tracking ──
+        # Check if subscription info changed
+        subscription_changed = (
+            old_plan != self.subscription_plan or
+            old_start != self.subscription_start or
+            old_end != self.subscription_end or
+            old_payment != self.payment_details or
+            old_cancelled != self.is_cancelled
+        )
+
+        if subscription_changed or (old_plan == 'none' and self.subscription_plan != 'none'):
+            if self.subscription_plan == 'none':
+                # Subscription cancelled or cleared.
+                # Deactivate all active history records for this user
+                active_histories = SubscriptionHistory.objects.filter(reader=self, is_active=True)
+                for history in active_histories:
+                    # Mark as inactive and cancelled in the database log.
+                    # Audit trail for tax compliance and user support.
+                    # Preserving these logs ensures tax authorities can verify historic transactions,
+                    # and customer support can trace billing issues.
+                    history.is_active = False
+                    if old_plan != 'none':
+                        history.is_cancelled = True
+                        if self.subscription_end:
+                            history.subscription_end = self.subscription_end
+                    history.save()
+            else:
+                # Subscription activated, renewed, or updated.
+                # Find if there is an active history record with the same plan to update.
+                active_history = SubscriptionHistory.objects.filter(
+                    reader=self, is_active=True, subscription_plan=self.subscription_plan
+                ).first()
+
+                if active_history:
+                    # Update fields on the existing active history record.
+                    # Audit trail for tax compliance and user support.
+                    # This ensures modifications to dates or payments on the active plan are captured.
+                    active_history.subscription_start = self.subscription_start
+                    active_history.subscription_end = self.subscription_end
+                    active_history.payment_details = self.payment_details
+                    active_history.is_cancelled = self.is_cancelled
+                    active_history.save()
+                else:
+                    # Deactivate all other active history records first.
+                    SubscriptionHistory.objects.filter(reader=self, is_active=True).update(is_active=False)
+
+                    # Create a new active history record.
+                    # Audit trail for tax compliance and user support.
+                    # When a subscriber activates a new plan type or starts a new cycle, we write a
+                    # new log entry to preserve the billing record and subscription dates.
+                    SubscriptionHistory.objects.create(
+                        reader=self,
+                        subscription_plan=self.subscription_plan,
+                        subscription_start=self.subscription_start,
+                        subscription_end=self.subscription_end,
+                        payment_details=self.payment_details,
+                        is_active=True,
+                        is_cancelled=self.is_cancelled
+                    )
+
     class Meta:
         verbose_name = 'Reader User'
         verbose_name_plural = 'Reader Users'
 
     def __str__(self):
         return f'{self.name or str(self.phone_number)} ({self.email or str(self.phone_number)})'
+
+
+class SubscriptionHistory(models.Model):
+    """
+    Tracks the historical records of reader subscriptions.
+    Acts as a secure ledger of all user subscription intervals.
+    """
+    reader = models.ForeignKey(
+        'ReaderUser',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='subscription_history_records',
+        help_text='The reader associated with this subscription record.'
+    )
+    subscription_plan = models.CharField(
+        max_length=20,
+        choices=ReaderUser.SUBSCRIPTION_PLANS,
+        help_text='Subscription plan type.'
+    )
+    subscription_start = models.DateTimeField(
+        help_text='When this subscription period began.'
+    )
+    subscription_end = models.DateTimeField(
+        help_text='When this subscription period expires/expired.'
+    )
+    payment_details = models.ForeignKey(
+        'PaymentDetails',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='subscription_history_records',
+        help_text='Payment transaction details associated with this subscription.'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # DB Flags
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Flag indicating if this is currently the active subscription record."
+    )
+    is_cancelled = models.BooleanField(
+        default=False,
+        help_text="Flag indicating if this subscription was cancelled prematurely."
+    )
+
+    panels = [
+        FieldPanel('reader', read_only=True),
+        FieldPanel('subscription_plan', read_only=True),
+        FieldRowPanel([
+            FieldPanel('subscription_start', read_only=True),
+            FieldPanel('subscription_end', read_only=True),
+        ]),
+        FieldPanel('payment_details', read_only=True),
+        FieldRowPanel([
+            FieldPanel('is_active', read_only=True),
+            FieldPanel('is_cancelled', read_only=True),
+        ]),
+    ]
+
+    class Meta:
+        verbose_name = 'Subscription History'
+        verbose_name_plural = 'Subscription Histories'
+        ordering = ['-subscription_start']
+
+    def __str__(self):
+        return f"{self.reader} - {self.get_subscription_plan_display()} ({self.subscription_start.date()} to {self.subscription_end.date()})"
 
 class PaymentDetails(models.Model):
     """

@@ -321,3 +321,95 @@ class ReaderViewsTests(TestCase):
         # Verify row fields
         names = [r[0] for r in rows]
         self.assertIn("Print Guy", names)
+
+
+class SubscriptionHistoryAndGDPRTests(TestCase):
+    """
+    Tests for SubscriptionHistory, cancellation grace period,
+    anonymization/soft delete, and the 8-year purge command.
+    """
+    def setUp(self):
+        self.user = User.objects.create_user(
+            phone_number="+919999988888",
+            name="John Smith",
+            password="testpassword"
+        )
+        self.payment = PaymentDetails.objects.create(
+            gateway_name="Razorpay",
+            amount=299.00,
+            status="success"
+        )
+
+    def test_activate_subscription_creates_history(self):
+        """Activating a subscription should create a SubscriptionHistory entry."""
+        self.user.payment_details = self.payment
+        self.user.activate_subscription("1_month")
+        
+        histories = SubscriptionHistory.objects.filter(reader=self.user)
+        self.assertEqual(histories.count(), 1)
+        history = histories.first()
+        self.assertEqual(history.subscription_plan, "1_month")
+        self.assertTrue(history.is_active)
+        self.assertFalse(history.is_cancelled)
+        self.assertEqual(history.payment_details, self.payment)
+
+    def test_cancellation_grace_period(self):
+        """Cancelling a subscription should not revoke access immediately, but update flags."""
+        self.user.payment_details = self.payment
+        self.user.activate_subscription("1_month")
+        
+        # Now cancel subscription via the views or directly
+        self.user.is_cancelled = True
+        self.user.save()
+        
+        # User should still be considered subscribed during grace period
+        self.assertTrue(self.user.is_subscribed)
+        
+        # SubscriptionHistory should reflect cancellation
+        history = SubscriptionHistory.objects.get(reader=self.user, is_active=True)
+        self.assertTrue(history.is_cancelled)
+        self.assertTrue(history.is_active)
+
+    def test_anonymize_account(self):
+        """Anonymizing a user clears PI but preserves subscription history and is_anonymized flag."""
+        self.user.payment_details = self.payment
+        self.user.activate_subscription("1_month")
+        
+        # Perform deactivation then anonymization
+        self.user.deactivate()
+        self.user.anonymize_account()
+        
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_anonymized)
+        self.assertEqual(self.user.name, "Archived User")
+        self.assertIn("archived_user_", self.user.email)
+        self.assertFalse(self.user.is_active)
+        
+        # Verify subscription history was preserved
+        histories = SubscriptionHistory.objects.filter(reader=self.user)
+        self.assertEqual(histories.count(), 1)
+        self.assertEqual(histories.first().subscription_plan, "1_month")
+
+    def test_purge_expired_data_command(self):
+        """Test the purge_expired_data management command deletes records older than 8 years."""
+        self.user.payment_details = self.payment
+        self.user.activate_subscription("1_month")
+        
+        self.user.deactivate()
+        self.user.anonymize_account()
+        
+        # Backdate the user's subscription_end to 9 years ago
+        nine_years_ago = timezone.now() - timezone.timedelta(days=9 * 365)
+        self.user.subscription_end = nine_years_ago
+        self.user.save()
+        
+        history = SubscriptionHistory.objects.get(reader=self.user)
+        history.subscription_end = nine_years_ago
+        history.save()
+        
+        # Call command
+        call_command('purge_expired_data')
+        
+        # The user and history should now be permanently deleted
+        self.assertFalse(User.objects.filter(id=self.user.id).exists())
+        self.assertFalse(SubscriptionHistory.objects.filter(id=history.id).exists())

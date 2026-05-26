@@ -109,6 +109,28 @@ h1 {
     background: #fce4ec;
 }
 
+.btn-renew {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    background: var(--navy);
+    color: var(--white);
+    border: 1px solid var(--navy);
+}
+
+.btn-renew:hover {
+    background: #143560;
+    border-color: #143560;
+}
+
 .checkout-submit, .auth-submit {
     width: 100%;
     background: var(--red);
