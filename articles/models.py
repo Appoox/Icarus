@@ -671,4 +671,9 @@ class ArticleIndexPage(Page):
         context = super().get_context(request)
         all_articles = self.get_children().live().order_by('-first_published_at')
         context['articles'] = all_articles
+        context['popular_articles'] = (
+            Article.objects.live()
+            .filter(hit_count_generic__isnull=False)
+            .order_by('-hit_count_generic__hits')[:5]
+        )
         return context
