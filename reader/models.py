@@ -12,6 +12,11 @@ from wagtail.search import index
 from phonenumber_field.modelfields import PhoneNumberField
 from kalapila.models import Comment
 
+from django.contrib.auth.signals import user_login_failed, user_logged_in
+from django.dispatch import receiver
+from django.core.cache import cache
+from django.db.models import Q
+
 # ── Single source of truth for plan configuration ───────────────────────
 PLANS = {
     '1_month':  {'name': '1 Month',   'price': 299,  'has_print': False, 'duration_days': 30},
@@ -629,3 +634,54 @@ from auditlog.registry import auditlog
 
 if not auditlog.contains(ReaderUser):
     auditlog.register(ReaderUser, m2m_fields={'groups'})
+
+# ── Tracking Failed Login Attempts ─────────────────────────────────────
+@receiver(user_login_failed)
+def track_failed_login(sender, credentials, request, **kwargs):
+    """
+    Tracks consecutive failed login attempts in the cache framework.
+    Inspects all credential values (excluding passwords) to find the correct ReaderUser.
+    """
+    # 1. Output a debug line to your terminal console to see exactly what Allauth sends
+    print(f"\n[DEBUG] Failed login attempt detected. Credentials sent: {credentials}\n")
+
+    user = None
+    
+    # 2. Iterate through all submitted credential values to find a matching phone/email
+    for key, value in credentials.items():
+        if key in ('password', 'password1', 'password2') or not value:
+            continue
+            
+        value_str = str(value).strip()
+        
+        # Look up ReaderUser by exact phone, ending phone segment (national), or email
+        user = ReaderUser.objects.filter(
+            Q(phone_number=value_str) | 
+            Q(phone_number__endswith=value_str) | 
+            Q(email__iexact=value_str)
+        ).first()
+        
+        if user:
+            break
+    
+    if not user:
+        print("[DEBUG] Could not match any credential value to a ReaderUser in the database.")
+        return
+
+    # 3. Save the incremented failed attempts count to cache
+    cache_key = f"consecutive_failed_logins_{user.pk}"
+    attempts = cache.get(cache_key, 0) + 1
+    cache.set(cache_key, attempts, timeout=86400)  # Reset after 24 hours
+    
+    print(f"[DEBUG] Logged failed attempt #{attempts} for user ID {user.pk} ({user.name})")
+
+
+@receiver(user_logged_in)
+def reset_failed_login_attempts(sender, request, user, **kwargs):
+    """
+    Clears the consecutive failed attempts count when the user successfully signs in.
+    """
+    if isinstance(user, ReaderUser):
+        cache_key = f"consecutive_failed_logins_{user.pk}"
+        cache.delete(cache_key)
+        print(f"[DEBUG] Successful login: Cleared failed attempts counter for user ID {user.pk}")

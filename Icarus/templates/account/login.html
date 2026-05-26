@@ -1,3 +1,4 @@
+{# templates/account/login.html #}
 {% extends "base.html" %}
 {% load static %}
 
@@ -20,9 +21,26 @@
     </ul>
     {% endif %}
 
-    {% if form.errors %}
+    {# ── Form Errors & Lockout Warnings ── #}
+    {% if form.non_field_errors %}
+    <div class="form-errors form-errors--center">
+        {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% elif form.errors %}
     <div class="form-errors form-errors--center">
         <p>Invalid phone/email or password. Please try again.</p>
+    </div>
+    {% endif %}
+
+    {# ── Dynamic Failed Attempts & Security Notice ── #}
+    {% if form.failed_attempts > 0 %}
+    <div class="form-errors form-errors--warning" style="border-left: 4px solid #e6a23c; background-color: rgba(230, 162, 60, 0.08); padding: 12px; margin-bottom: 1.5rem; border-radius: 4px; text-align: left;">
+        <p style="margin: 0; font-size: 0.9rem; color: #c8831a; line-height: 1.4;">
+            <strong>Security Notice:</strong> There have been {{ form.failed_attempts }} failed login attempts. 
+            If consecutive failures reach {{ form.max_attempts }}, access from this location/account will be restricted for {{ form.lockout_duration_text }}.
+        </p>
     </div>
     {% endif %}
 

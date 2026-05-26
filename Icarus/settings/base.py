@@ -40,10 +40,24 @@ env.read_env()
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = PROJECT_DIR.parent
 
+from datetime import timedelta
+
+AXES_FAILURE_LIMIT = env.int('AXES_FAILURE_LIMIT', default=5)                      # Lock out after 5 failures
+AXES_COOLOFF_TIME = env.int('AXES_COOLOFF_TIME', default=timedelta(hours=1))      # Duration of lockout
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'kadannal-koodu.miku-brill.ts.net',  
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://kadannal-koodu.miku-brill.ts.net',
+]
 
 # Application definition
 
@@ -55,6 +69,7 @@ INSTALLED_APPS = [
     "literati",
     "issue",
     "reader",
+    "axes",
     "kalapila",
     "hitcount",
     "the_librarian",
@@ -99,6 +114,7 @@ MIDDLEWARE = [
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "kalapila.middleware.UserNotificationMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "Icarus.urls"
@@ -148,6 +164,7 @@ DATABASES = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
