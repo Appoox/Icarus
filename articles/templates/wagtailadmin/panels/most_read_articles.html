@@ -1,0 +1,48 @@
+{# Clean, borderless dashboard section matching Wagtail's native design pattern #}
+<section class="w-my-8" aria-label="Most Read Articles Analytics Leaderboard">
+    
+    {# Section Header styled to seamlessly blend with surrounding dashboard elements #}
+    <h2 class="w-text-heading-2 w-mb-4" style="font-size: 1.4rem; font-weight: 700; color: var(--w-color-text-main); margin-bottom: 1rem;">
+        ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട ലേഖനങ്ങൾ
+    </h2>
+    
+    {# Responsive Data Table Wrapper #}
+    <div style="overflow-x: auto; width: 100%;">
+        <table class="listing" style="width: 100%; border-collapse: collapse; margin: 0;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--w-color-border-furniture, rgba(128, 128, 128, 0.2));">
+                    <th style="text-align: left; padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.95rem; color: var(--w-color-text-main);">Article Title</th>
+                    <th style="text-align: left; padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.95rem; color: var(--w-color-text-main);">Publishing Date</th>
+                    <th style="text-align: right; padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.95rem; color: var(--w-color-text-main);">Total Views</th>
+                </tr>
+            </thead>
+            <tbody>
+                {# Loop directly through our pre-queried annotated popular articles list context #}
+                {% for article in articles %}
+                    <tr style="border-bottom: 1px solid var(--w-color-border-furniture, rgba(128, 128, 128, 0.15)); transition: background-color 0.2s ease;">
+                        <td style="padding: 0.85rem 0.5rem; vertical-align: middle;">
+                            {# Direct editing link routing using native Wagtail admin URL namespacing #}
+                            <a href="{% url 'wagtailadmin_pages:edit' article.id %}" style="text-decoration: none; font-weight: 600;">
+                                {{ article.title }}
+                            </a>
+                        </td>
+                        <td style="padding: 0.85rem 0.5rem; vertical-align: middle; color: var(--w-color-text-muted); font-size: 0.9rem;">
+                            {{ article.date|date:"Y-m-d" }}
+                        </td>
+                        <td style="padding: 0.85rem 0.5rem; vertical-align: middle; text-align: right; font-weight: 700; color: var(--w-color-text-main); font-size: 0.95rem;">
+                            {# Safely extracts total hits via the annotated attribute from the query #}
+                            {{ article.total_views|default:"0" }}
+                        </td>
+                    </tr>
+                {% empty %}
+                    {# Fallback rendering context block when zero analytics hits are captured #}
+                    <tr>
+                        <td colspan="3" style="padding: 2rem; text-align: center; color: var(--w-color-text-muted);">
+                            No view tracking analytics recorded yet.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>

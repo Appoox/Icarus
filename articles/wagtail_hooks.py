@@ -5,8 +5,9 @@ from wagtail.admin.panels import Panel
 import wagtail.admin.rich_text.editors.draftail.features as draftail_features
 from wagtail.admin.rich_text.converters.html_to_contentstate import InlineStyleElementHandler
 from wagtail.admin.ui.tables import Column
-
-
+from django.template.loader import render_to_string
+# from .models import Article
+from wagtail.admin.ui.components import Component
 
 # ── Rich-text colour features ──────────────────────────────────────────────
 
@@ -540,3 +541,89 @@ def richtext_import_block_js():
 })();
 </script>
 """)
+
+# ── Custom Homepage Panel Definition ────────────────────────────────────
+class MostReadArticlesDashboardPanel(Component):
+    """
+    A custom dashboard component panel that gathers metrics from django-hitcount
+    and renders a leaderboard component directly on the Wagtail home view.
+    Inheriting from Component automatically registers the internal 'media' properties.
+    """
+    # Determines the visual ordering sequence layout position on the dashboard screen
+    order = 150  
+    # Path referencing the target rendering template directly
+    template_name = 'wagtailadmin/panels/most_read_articles.html'
+
+    def get_context_data(self, parent_context):
+        """
+        Extends the standard parent template context dictionary, injecting 
+        the database rows containing popular hit analytics.
+        
+        CRITICAL CHANGE: This now queries individual Hit logs within a 30-day 
+        rolling window to capture true current performance rather than all-time totals.
+        """
+        # Fetch existing structural context from parent layout stack
+        context = super().get_context_data(parent_context)
+        
+        # Import Django utilities and the required hitcount log tables
+        from .models import Article 
+        from django.utils import timezone
+        from datetime import timedelta
+        from django.db.models import Count
+        from django.contrib.contenttypes.models import ContentType
+        from hitcount.models import Hit
+
+        # Step 1: Calculate the exact timestamp representing exactly 30 days ago
+        one_month_ago = timezone.now() - timedelta(days=30)
+
+        # Step 2: Fetch the django ContentType definition matching the Article page model
+        article_content_type = ContentType.objects.get_for_model(Article)
+
+        # Step 3: Query the Hit records directly within our 30-day timeline parameter window.
+        # Group the hits by hitcount__object_pk to sum view totals per distinct article instance.
+        top_hits = (
+            Hit.objects.filter(
+                created__gte=one_month_ago,
+                hitcount__content_type=article_content_type
+            )
+            .values('hitcount__object_pk')
+            .annotate(total_views=Count('id'))
+            .order_by('-total_views')[:5]
+        )
+
+        # Step 4: Parse object primary keys safely back into an integer map index.
+        # This completely avoids mixed type-matching errors in relational databases like PostgreSQL.
+        hit_maps = {}
+        for hit in top_hits:
+            try:
+                pk_int = int(hit['hitcount__object_pk'])
+                hit_maps[pk_int] = hit['total_views']
+            except (ValueError, TypeError):
+                continue
+
+        # Step 5: Gather matching live Article model rows in a single batch query
+        articles_queryset = Article.objects.live().filter(id__in=hit_maps.keys())
+
+        # Step 6: Assign the rolling 30-day view totals to each article object
+        articles_list = []
+        for article in articles_queryset:
+            article.total_views = hit_maps.get(article.id, 0)
+            articles_list.append(article)
+
+        # Step 7: Re-sort the final list manually to ensure descending order sequence
+        articles_list.sort(key=lambda x: x.total_views, reverse=True)
+
+        # Append the compiled data collection directly to our template presentation layer
+        context['articles'] = articles_list
+        
+        return context
+
+# ── Wagtail Dashboard Hook Registration ──────────────────────────────────
+@hooks.register('construct_homepage_panels')
+def add_most_read_articles_panel(request, panels):
+    """
+    Intercepts the homepage panel collection sequence and appends our 
+    custom analytics insight panel instance directly to the interface layout.
+    """
+    # Instantiate the component without passing request, as Component reads it from parent_context
+    panels.append(MostReadArticlesDashboardPanel())
