@@ -10,13 +10,21 @@
 <div class="issue-page">
 
     {# ── HEADER ── #}
+    {# Fetching the cover image at the top of the section to reuse it for both side and behind placement #}
+    {% if page.cover_image %}
+    {% image page.cover_image width-600 as cover_img %}
+    {% endif %}
+
     <header class="issue-page-header">
+        {# Backdrop layer: Positioned absolutely behind all other header elements #}
+        {% if page.cover_image %}
+        <div class="issue-page-header__backdrop" style="background-image: url('{{ cover_img.url }}');" aria-hidden="true"></div>
+        {% endif %}
 
         {# Left: Cover image with inline placeholder fallback #}
         <div class="issue-page-header__cover"
              style="--cover-accent: {{ page.topic.color|default:'#0b1f3a' }};">
             {% if page.cover_image %}
-            {% image page.cover_image width-520 as cover_img %}
             <img src="{{ cover_img.url }}" alt="{{ page.title }}" onerror="this.closest('.issue-page-header__cover').classList.add('cover--broken')">
             {% endif %}
 

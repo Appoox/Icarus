@@ -12,16 +12,33 @@
 
 /* ── ISSUE HEADER ── */
 .issue-page-header {
+    position: relative; /* Required to limit absolute positioning of the backdrop within this container */
+    overflow: hidden; /* Prevents the scaled/blurred backdrop from spilling outside boundaries */
     display: flex;
     align-items: center;
     gap: 2.5rem;
     margin: 3rem 0 2.5rem;
-    padding-bottom: 2.5rem;
+    padding: 3rem 2.5rem; /* Expanded padding so the backdrop frames the inner elements nicely */
     border-bottom: 3px double var(--rule);
+    border-radius: 12px; /* Smooth container curves to blend with modern card aesthetics */
+    background-color: var(--bg, #fdfdfc); /* Reliable fallback base color */
 }
 
-/* Left: Cover image */
+.issue-page-header__backdrop {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(40px) scale(1.1); /* Generates a soft glow effect without harsh edges showing */
+    opacity: 0.15; /* Subtle visibility to optimize readability of typography */
+    z-index: 0; /* Locks the element below text and the foreground cover card */
+    pointer-events: none; /* Stops the backdrop from blocking interaction links or buttons */
+}
+
+/* Left: Cover image at the side */
 .issue-page-header__cover {
+    position: relative; /* Forces container above background layer */
+    z-index: 1; /* Lifts foreground container cleanly over z-index 0 */
     flex: 0 0 auto;
     width: clamp(200px, 22vw, 320px);
     border-radius: 4px;
@@ -44,6 +61,18 @@
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
     border-radius: 4px;
     pointer-events: none;
+}
+
+/* Right: Info column at the side */
+.issue-page-header__info {
+    position: relative; /* Forces content container above backdrop layer */
+    z-index: 1; /* Lifts typography and action options over z-index 0 */
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-top: 0;
 }
 
 /* ── Placeholder logic ──────────────────────────────────────
