@@ -559,7 +559,7 @@
 
 .toc-group__topic {
     font-family: var(--label);
-    font-size: .7rem;
+    font-size: 1.3rem;
     font-weight: 800;
     letter-spacing: .18em;
     text-transform: uppercase;
@@ -623,7 +623,7 @@
 
 .toc-item__link {
     font-family: var(--serif);
-    font-size: .9rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1.3;
     color: var(--ink);
