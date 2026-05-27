@@ -4,6 +4,82 @@
 ───────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    // ── AUTOMATIC HEADER CONTRAST ANALYSIS ──
+    // This function analyzes the issue cover image to determine if it is predominantly dark.
+    // If the image is dark, it applies a contrast-boosting dark class to the parent header container.
+    // By manipulating classes and using specific properties, it avoids wiping out background-image rules.
+    function initHeaderContrastAnalysis() {
+        const header = document.querySelector('.issue-page-header');
+        const coverImg = document.querySelector('.issue-page-header__cover img');
+
+        // Exit early if the elements do not exist on the current page
+        if (!header || !coverImg) return;
+
+        // Core analysis routine that reads pixel data via canvas
+        function analyzeLuminance() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                // Scale down dimensions significantly to keep processing fast and efficient
+                canvas.width = 40;
+                canvas.height = 60;
+
+                // Render the cover image into the miniature context bounds
+                ctx.drawImage(coverImg, 0, 0, canvas.width, canvas.height);
+
+                // Fetch raw RGBA pixel arrays from the canvas environment
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                let totalLuminance = 0;
+                let validPixels = 0;
+
+                // Iterate through pixel data chunks (each pixel takes 4 indices: R, G, B, A)
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const a = data[i + 3];
+
+                    // Ignore fully or heavily transparent pixels to ensure color accuracy
+                    if (a < 128) continue;
+
+                    // Apply standard YUV/HSP weights to calculate perceived brightness
+                    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+                    totalLuminance += luminance;
+                    validPixels++;
+                }
+
+                // Fallback exit if no opaque pixels were analyzed
+                if (validPixels === 0) return;
+
+                const averageLuminance = totalLuminance / validPixels;
+
+                // If average brightness drops below a mid-range threshold (125), trigger dark styling
+                if (averageLuminance < 125) {
+                    header.classList.add('header-contrast--dark-bg');
+                } else {
+                    header.classList.remove('header-contrast--dark-bg');
+                }
+            } catch (error) {
+                // Gracefully log exceptions if images are served across distinct domains violating CORS controls
+                console.warn('Header contrast analysis skipped due to cross-origin security constraints:', error);
+            }
+        }
+
+        // Execute immediately if the image is cached and complete, otherwise listen for its load completion
+        if (coverImg.complete) {
+            analyzeLuminance();
+        } else {
+            coverImg.addEventListener('load', analyzeLuminance);
+        }
+    }
+
+    // Invoke the analysis configuration sequence
+    initHeaderContrastAnalysis();
     
     // ── AUDIO PLAYERS ──
     function initAudioPlayer(playerId) {

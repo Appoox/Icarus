@@ -30,9 +30,10 @@
     background-size: cover;
     background-position: center;
     filter: blur(40px) scale(1.1); /* Generates a soft glow effect without harsh edges showing */
-    opacity: 0.15; /* Subtle visibility to optimize readability of typography */
+    opacity: 0.25; /* Adjusted slightly from 0.15 for richer baseline text contrast and visibility */
     z-index: 0; /* Locks the element below text and the foreground cover card */
     pointer-events: none; /* Stops the backdrop from blocking interaction links or buttons */
+    transition: opacity 0.3s ease, background-color 0.3s ease; /* Added transition for smooth adaptive contrast shifts */
 }
 
 /* Left: Cover image at the side */
@@ -1229,4 +1230,35 @@
     .issue-page-header__cover {
         width: clamp(140px, 50vw, 200px);
     }
+}
+
+/* ── DYNAMIC CONTRAST OVERRIDES ── */
+
+/* Triggered automatically when the underlying cover image is dark */
+.issue-page-header.header-contrast--dark-bg {
+    /* Kept intentionally empty of background overrides to preserve the pristine original image backdrop */
+    border-bottom: 3px double rgba(255, 255, 255, 0.2);
+}
+
+/* Use a glowing white drop shadow to cleanly separate the kicker text from complex/dark backgrounds */
+.issue-page-header.header-contrast--dark-bg .issue-page-header__kicker {
+    color: #ff4d73; /* Maintained vibrant bright red variant */
+    text-shadow: 0 2px 12px rgba(255, 255, 255, 0.9), 0 0 6px rgba(255, 255, 255, 0.75); /* Added layered white shadow glow */
+}
+
+/* Shifted the date to a deep solid color, framed perfectly by a powerful white shadow */
+.issue-page-header.header-contrast--dark-bg .issue-page-header__date {
+    color: #0b1f3a; /* Dark navy color to contrast effectively against the white shadow */
+    font-weight: 800; /* Increased weight slightly to anchor the text against the shadow spread */
+    text-shadow: 0 1px 8px rgba(255, 255, 255, 0.95), 0 0 5px rgba(255, 255, 255, 0.85); /* Added clean white backdrop shadow */
+}
+
+/* Sync action items to match date text styling and SVG shadow filters */
+.issue-page-header.header-contrast--dark-bg .favorite-btn {
+    color: #0b1f3a; /* Matching deep navy */
+    filter: drop-shadow(0 1px 4px rgba(255, 255, 255, 0.95)); /* SVGs require drop-shadow instead of text-shadow */
+}
+
+.issue-page-header.header-contrast--dark-bg .favorite-btn:hover {
+    color: #ff4d73; /* Vibrates back to red on hover */
 }
