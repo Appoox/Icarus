@@ -202,11 +202,50 @@ document.addEventListener('DOMContentLoaded', function() {
         banner.addEventListener('click', () => {
             wrapper.classList.add('expanded');
             content.style.maxHeight = content.scrollHeight + 'px';
-            
-            // After transition, set to none to handle dynamic content or resizing
-            setTimeout(() => {
-                content.style.maxHeight = 'none';
-            }, 650);
+            setTimeout(() => { content.style.maxHeight = 'none'; }, 650);
         });
     });
+
+    // ── SYNC EDITORIAL FADE HEIGHT TO TABLE OF CONTENTS ──
+    let syncTocDebounce;
+
+    function syncEditorialToToc() {
+        const tocCol  = document.querySelector('.editorial-toc-col');
+        const wrapper = document.querySelector('.editorial-content-col .expandable-wrapper');
+        if (!tocCol || !wrapper) return;
+        if (wrapper.classList.contains('expanded')) return;
+
+        const content = wrapper.querySelector('.expandable-content');
+        const banner  = wrapper.querySelector('.show-more-banner');
+        if (!content || !banner) return;
+
+        const isDesktop = window.innerWidth > 900;
+
+        if (!isDesktop) {
+            const fallback = parseInt(wrapper.dataset.expandHeight) || 400;
+            content.style.maxHeight = fallback + 'px';
+            banner.style.display    = content.scrollHeight > fallback + 20 ? 'flex' : 'none';
+            return;
+        }
+
+        const h = tocCol.offsetHeight;
+        if (h < 80) return;
+
+        content.style.maxHeight = h + 'px';
+
+        if (content.scrollHeight <= h + 20) {
+            banner.style.display    = 'none';
+            content.style.maxHeight = 'none';
+        } else {
+            banner.style.display = 'flex';
+        }
+    }
+
+    setTimeout(syncEditorialToToc, 350);
+
+    window.addEventListener('resize', () => {
+        clearTimeout(syncTocDebounce);
+        syncTocDebounce = setTimeout(syncEditorialToToc, 180);
+    });
+
 });

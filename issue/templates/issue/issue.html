@@ -11,29 +11,61 @@
 
     {# ── HEADER ── #}
     <header class="issue-page-header">
-        {% if page.volume %}
-        <div class="issue-page-header__kicker">
-            {% if page.volume.title %}{{ page.volume.title }}{% else %} വാല്യം {{ page.volume.number }}{% endif %}
-            {% if page.issue_number %}, ലക്കം {{ page.issue_number }}{% endif %}
-        </div>
-        {% endif %}
-        <div class="issue-page-header__date">
-            {{ page.date_of_publishing|date:"F j, Y" }}
-            {% if user.is_authenticated %}
-            <button class="favorite-btn" data-id="{{ page.id }}" data-type="issue" 
-                    data-favorited="{% if reader and page in reader.favorite_issues.all %}true{% else %}false{% endif %}"
-                    title="Toggle Favorite">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-              </svg>
-            </button>
+
+        {# Left: Cover image with inline placeholder fallback #}
+        <div class="issue-page-header__cover"
+             style="--cover-accent: {{ page.topic.color|default:'#0b1f3a' }};">
+            {% if page.cover_image %}
+            {% image page.cover_image width-520 as cover_img %}
+            <img src="{{ cover_img.url }}" alt="{{ page.title }}" onerror="this.closest('.issue-page-header__cover').classList.add('cover--broken')">
             {% endif %}
+
+            {# Placeholder — visible when no image or image fails to load #}
+            <div class="cover-placeholder__body">
+                <span class="cover-placeholder__pub">ശാസ്ത്രഗതി</span>
+                {% if page.issue_number %}
+                <span class="cover-placeholder__num">{{ page.issue_number }}</span>
+                <span class="cover-placeholder__label">ലക്കം</span>
+                {% endif %}
+                {% if page.topic %}
+                <span class="cover-placeholder__topic">{{ page.topic.name }}</span>
+                {% endif %}
+            </div>
         </div>
-        {% if page.topic %}
-        <a href="{% url 'topic_detail' slug=page.topic.slug %}" class="issue-page-header__topic"
-            style="--topic-color: {{ page.topic.color|default:'#0b1f3a' }};">
-            {{ page.topic.name }}</a>
-        {% endif %}
+
+        {# Right: Metadata #}
+        <div class="issue-page-header__info">
+
+            {% if page.volume %}
+            <div class="issue-page-header__kicker">
+                {% if page.volume.title %}{{ page.volume.title }}{% else %}വാല്യം {{ page.volume.number }}{% endif %}
+                {% if page.issue_number %}, ലക്കം {{ page.issue_number }}{% endif %}
+            </div>
+            {% endif %}
+
+            <div class="issue-page-header__date">
+                <time datetime="{{ page.date_of_publishing|date:'Y-m-d' }}">
+                    {{ page.date_of_publishing|date:"F j, Y" }}
+                </time>
+                {% if user.is_authenticated %}
+                <button class="favorite-btn" data-id="{{ page.id }}" data-type="issue"
+                        data-favorited="{% if reader and page in reader.favorite_issues.all %}true{% else %}false{% endif %}"
+                        title="Toggle Favorite">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+                {% endif %}
+            </div>
+
+            {% if page.topic %}
+            <a href="{% url 'topic_detail' slug=page.topic.slug %}" class="issue-page-header__topic"
+               style="--topic-color: {{ page.topic.color|default:'#0b1f3a' }};">
+                {{ page.topic.name }}
+            </a>
+            {% endif %}
+
+        </div>
 
         {% csrf_token %}
     </header>
@@ -298,10 +330,45 @@
         </div>
     </div>
 
-    {# ── EDITORIAL — single column layout now ── #}
+    {# ── EDITORIAL + TABLE OF CONTENTS ── #}
     <div class="editorial-layout">
 
-        {# RIGHT COLUMN: Editorial content (Moved to top on mobile via CSS) #}
+        {# LEFT COLUMN: Table of Contents grouped by topic #}
+        <aside class="editorial-toc-col">
+            <h2 class="editorial-toc-col__heading">ഉള്ളടക്കം</h2>
+
+            {% regroup page.get_all_articles by topic as toc_groups %}
+            {% if toc_groups %}
+                {% for group in toc_groups %}
+                <div class="toc-group">
+                    {% if group.grouper %}
+                    <h3 class="toc-group__topic"
+                        style="--tg-color: {{ group.grouper.color|default:'#0b1f3a' }};">
+                        <a href="{% url 'topic_detail' slug=group.grouper.slug %}">{{ group.grouper.name }}</a>
+                    </h3>
+                    {% else %}
+                    <h3 class="toc-group__topic toc-group__topic--general">പൊതു</h3>
+                    {% endif %}
+                    <ol class="toc-group__list">
+                        {% for article in group.list %}
+                        <li class="toc-item">
+                            <a href="{{ article.url }}" class="toc-item__link">{{ article.title }}</a>
+                            {% if article.article_authors.all %}
+                            <span class="toc-item__author">
+                                {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                            </span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="editorial-empty">ഈ ലക്കത്തിൽ ലേഖനങ്ങളൊന്നുമില്ല.</p>
+            {% endif %}
+        </aside>
+
+        {# RIGHT COLUMN: Editorial content #}
         <div class="editorial-content-col">
             <h2 class="editorial-content-col__heading">മുഖക്കുറിപ്പ്</h2>
 
