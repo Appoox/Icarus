@@ -1,5 +1,5 @@
 from django import template
-from ..models import SiteFooter  # replace your_app with your actual app name
+from ..models import SiteFooter
 
 register = template.Library()
 
