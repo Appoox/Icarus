@@ -1,0 +1,92 @@
+   {# includes/pagination.html #}
+   {# Usage: {% include "includes/pagination.html" with page_obj=page_obj %} #}
+
+   {# {# Renders:  ← Prev   1  2  …  5 [6]  …  11  12   Next → #}
+   {# Shows at most 2 page numbers on each side of the current page. #}
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pagination-wrapper" aria-label="Page navigation">
+
+  <p class="pagination-info">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    &nbsp;·&nbsp;
+    {{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}
+  </p>
+
+  <div class="pagination" role="list">
+
+    {# ── Previous button ────────────────────────────────────────── #}
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}"
+         class="page-btn page-btn--prev"
+         aria-label="Previous page"
+         role="listitem">
+        &#8592; <span>Prev</span>
+      </a>
+    {% else %}
+      <span class="page-btn page-btn--prev page-btn--disabled" aria-disabled="true" role="listitem">
+        &#8592; <span>Prev</span>
+      </span>
+    {% endif %}
+
+    {# ── Page number buttons ─────────────────────────────────────── #}
+    {% with current=page_obj.number total=page_obj.paginator.num_pages %}
+
+      {# Always show page 1 #}
+      {% if current == 1 %}
+        <span class="page-btn page-btn--active" aria-current="page" role="listitem">1</span>
+      {% else %}
+        <a href="?page=1" class="page-btn" role="listitem">1</a>
+      {% endif %}
+
+      {# Left ellipsis if current is far from the start #}
+      {% if current > 4 %}
+        <span class="page-ellipsis" role="listitem">…</span>
+      {% endif %}
+
+      {# Window: 2 pages before and after current, excluding 1 and last #}
+      {% for i in page_obj.paginator.page_range %}
+        {% if i > 1 and i < total %}
+          {% if i >= current|add:"-2" and i <= current|add:"2" %}
+            {% if i == current %}
+              <span class="page-btn page-btn--active" aria-current="page" role="listitem">{{ i }}</span>
+            {% else %}
+              <a href="?page={{ i }}" class="page-btn" role="listitem">{{ i }}</a>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {# Right ellipsis if current is far from the end #}
+      {% if current < total|add:"-3" %}
+        <span class="page-ellipsis" role="listitem">…</span>
+      {% endif %}
+
+      {# Always show last page #}
+      {% if total > 1 %}
+        {% if current == total %}
+          <span class="page-btn page-btn--active" aria-current="page" role="listitem">{{ total }}</span>
+        {% else %}
+          <a href="?page={{ total }}" class="page-btn" role="listitem">{{ total }}</a>
+        {% endif %}
+      {% endif %}
+
+    {% endwith %}
+
+    {# ── Next button ────────────────────────────────────────────── #}
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}"
+         class="page-btn page-btn--next"
+         aria-label="Next page"
+         role="listitem">
+        <span>Next</span> &#8594;
+      </a>
+    {% else %}
+      <span class="page-btn page-btn--next page-btn--disabled" aria-disabled="true" role="listitem">
+        <span>Next</span> &#8594;
+      </span>
+    {% endif %}
+
+  </div>
+</nav>
+{% endif %}

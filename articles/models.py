@@ -26,6 +26,7 @@ from hitcount.views import HitCountMixin as HitCountViewMixin
 from django.shortcuts import redirect
 
 import json
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 class ArticleTag(TaggedItemBase):
     content_object = ParentalKey(
@@ -683,8 +684,8 @@ class ArticleIndexPage(Page):
     def get_context(self, request):
         context = super().get_context(request)
         from django.apps import apps
-        article = apps.get_model('articles', 'Article')
-
+        Article = apps.get_model('articles', 'Article')
+    
         if self.sort_by == 'most_read':
             from datetime import timedelta
             from django.utils import timezone
@@ -692,13 +693,13 @@ class ArticleIndexPage(Page):
             from django.contrib.contenttypes.models import ContentType
             from hitcount.models import Hit
             from wagtail.models import Page as WagtailPage
-
+    
             one_month_ago = timezone.now() - timedelta(days=30)
             article_ct = ContentType.objects.get_for_model(Article)
-            page_ct  = ContentType.objects.get_for_model(WagtailPage)
-
+            page_ct    = ContentType.objects.get_for_model(WagtailPage)
+    
             live_pks = [str(pk) for pk in Article.objects.live().values_list('id', flat=True)]
-
+    
             top_hits = (
                 Hit.objects.filter(
                     created__gte=one_month_ago,
@@ -715,16 +716,28 @@ class ArticleIndexPage(Page):
                     hit_map[int(h['hitcount__object_pk'])] = h['total_views']
                 except (ValueError, TypeError):
                     pass
-
+    
             articles = list(Article.objects.live())
             for article in articles:
                 article.total_views = hit_map.get(article.id, 0)
             articles.sort(key=lambda x: x.total_views, reverse=True)
-
+    
         elif self.sort_by == 'oldest':
-            articles = Article.objects.live().order_by('date_of_publishing')
-        else:  # latest (default)
-            articles = Article.objects.live().order_by('-date_of_publishing')
-
-        context['articles'] = articles
+            articles = Article.objects.live().order_by('date')
+        else:
+            articles = Article.objects.live().order_by('-date')
+    
+        # ── Pagination (10 per page) ──────────────────────────────────────────
+        paginator = Paginator(articles, 10)
+        page_number = request.GET.get('page')
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+    
+        context['articles']  = page_obj
+        context['page_obj']  = page_obj
+        context['paginator'] = paginator
         return context

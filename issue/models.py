@@ -20,6 +20,8 @@ from articles.models import AudioBlock, VideoBlock
 from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.models import HitCount
 from hitcount.utils import get_hitcount_model
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 class IssueTag(TaggedItemBase):
     content_object = ParentalKey(
@@ -496,12 +498,12 @@ class IssueIndexPage(Page):
     ]
 
     subpage_types = ['Issue']
-
+ 
     def get_context(self, request):
         context = super().get_context(request)
         from django.apps import apps
         Issue = apps.get_model('issue', 'Issue')
-
+    
         if self.sort_by == 'most_read':
             from datetime import timedelta
             from django.utils import timezone
@@ -509,13 +511,13 @@ class IssueIndexPage(Page):
             from django.contrib.contenttypes.models import ContentType
             from hitcount.models import Hit
             from wagtail.models import Page as WagtailPage
-
+    
             one_month_ago = timezone.now() - timedelta(days=30)
             issue_ct = ContentType.objects.get_for_model(Issue)
             page_ct  = ContentType.objects.get_for_model(WagtailPage)
-
+    
             live_pks = [str(pk) for pk in Issue.objects.live().values_list('id', flat=True)]
-
+    
             top_hits = (
                 Hit.objects.filter(
                     created__gte=one_month_ago,
@@ -532,16 +534,28 @@ class IssueIndexPage(Page):
                     hit_map[int(h['hitcount__object_pk'])] = h['total_views']
                 except (ValueError, TypeError):
                     pass
-
+    
             issues = list(Issue.objects.live())
             for issue in issues:
                 issue.total_views = hit_map.get(issue.id, 0)
             issues.sort(key=lambda x: x.total_views, reverse=True)
-
+    
         elif self.sort_by == 'oldest':
             issues = Issue.objects.live().order_by('date_of_publishing')
-        else:  # latest (default)
+        else:
             issues = Issue.objects.live().order_by('-date_of_publishing')
-
-        context['issues'] = issues
+    
+        # ── Pagination (5 per page) ───────────────────────────────────────────
+        paginator = Paginator(issues, 5)
+        page_number = request.GET.get('page')
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+    
+        context['issues']    = page_obj          # replaces the plain queryset
+        context['page_obj']  = page_obj
+        context['paginator'] = paginator
         return context

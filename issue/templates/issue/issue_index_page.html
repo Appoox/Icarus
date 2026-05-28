@@ -12,7 +12,7 @@
             {% if page.sort_by == 'most_read' %}
                 <h1 class="archive-title">{{ page.title }}</h1>
             {% else %}
-                <h1 class="archive-title">{{ page.title }} ( {{ issues|length }} എണ്ണം )</h1>
+                <h1 class="archive-title">{{ page.title }} ( {{ paginator.count }} എണ്ണം )</h1>
             {% endif %}
             <span class="archive-rule"></span>
             {% if page.intro %}
@@ -29,7 +29,7 @@
                     <img src="{{ cover_img.url }}" alt="{{ issue.title }}">
                 </a>
                 {% endif %}
-                
+
                 <div class="issue-archive-card__content">
                     <div class="issue-archive-card__meta">
                         <span class="meta-date">{{ issue.date_of_publishing|date:"F Y" }}</span>
@@ -51,6 +51,9 @@
             </article>
             {% endfor %}
         </div>
+
+        {% include "includes/pagination.html" with page_obj=page_obj %}
+
     </div>
 </div>
 {% endblock %}

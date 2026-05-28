@@ -16,6 +16,7 @@ from wagtail.snippets.models import register_snippet
 from reader.models import ReaderUser
 from wagtail.search import index
 from modelcluster.models import ClusterableModel
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 class SocialMediaBlock(blocks.StructBlock):
@@ -228,10 +229,28 @@ class AuthorIndexPage(Page):
     max_count = 1
     subpage_types = ['Literati']
 
-    def get_context(self, request):
-        context = super().get_context(request)
-        context['authors'] = self.get_children().live().order_by('title')
-        return context
+def get_context(self, request):
+    context = super().get_context(request)
+    from django.apps import apps
+    Author = apps.get_model('articles', 'Author')   # adjust app label if needed
+ 
+    authors = Author.objects.live().order_by('title')
+ 
+    # ── Pagination (12 per page — fills a 4-col or 3-col grid neatly) ────
+    paginator = Paginator(authors, 12)
+    page_number = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+ 
+    context['authors']   = page_obj
+    context['page_obj']  = page_obj
+    context['paginator'] = paginator
+    return context
+ 
 
     content_panels = Page.content_panels + [
         FieldPanel('intro'),
