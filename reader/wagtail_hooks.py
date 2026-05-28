@@ -9,6 +9,8 @@ from django.urls import path
 from django.shortcuts import render
 from auditlog.models import LogEntry
 from wagtail.admin.menu import MenuItem
+from django.templatetags.static import static
+from django.utils.html import format_html
 
 class ReaderFilterSet(django_filters.FilterSet):
     sub_status = django_filters.ChoiceFilter(
@@ -164,3 +166,46 @@ def register_auditlog_menu_item():
         order=900,
     )
 
+
+@hooks.register('insert_global_admin_css')
+def global_admin_css():
+    """
+    Injects toast styles into the Wagtail admin.
+
+    The critical hide-rule is inlined directly so it takes effect even if
+    the external CSS file is not yet collected / served.  The inline rule
+    hides Wagtail's native message container immediately on paint, before
+    any JS runs, preventing the yellow banner from ever flashing.
+    The external file provides the full toast visual styles on top.
+    """
+    css_url = static('css/admin_toasts.css')
+    return format_html(
+        # External file: full toast styles (colours, animation, close button)
+        '<link rel="stylesheet" href="{}">'
+        # Inline fallback: the one rule that MUST be present even if the file
+        # is missing (e.g. collectstatic not yet run in production).
+        '<style>'
+        '[data-w-messages-target="container"]{{display:none!important}}'
+        '</style>',
+        css_url,
+    )
+
+
+@hooks.register('insert_global_admin_js')
+def global_admin_js():
+    """
+    Injects the toast JS into the Wagtail admin.
+
+    A small inline bootstrap script runs immediately and sets up the
+    MutationObserver so it is watching before Wagtail's own Stimulus
+    controllers initialise.  The external file contains the full logic.
+    """
+    js_url = static('js/admin_toasts.js')
+    return format_html(
+        # Inline bootstrap: confirm hook is alive, then load the full script
+        '<script>'
+        'console.log("[admin_toasts] hook injected");'
+        '</script>'
+        '<script src="{}" defer></script>',
+        js_url,
+    )

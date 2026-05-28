@@ -1,0 +1,94 @@
+/* reader/static/reader/css/admin_toasts.css */
+
+/*
+ * IMMEDIATE HIDE — CSS paints before any JS runs.
+ *
+ * Wagtail 7.4 renders server-side messages directly into the DOM as:
+ *   div.messages > ul[data-w-messages-target="container"] > li.warning
+ *
+ * We hide the <ul> container instantly so the yellow banner never
+ * flashes on screen, even for a frame. JS then reads the hidden items
+ * and promotes them to toast notifications.
+ *
+ * NOTE: We hide the <ul>, NOT the outer <div class="messages">, because
+ * Wagtail needs the outer div alive to receive dynamic w-messages events
+ * (e.g. "Page saved successfully" toasts after admin actions).
+ */
+[data-w-messages-target="container"] {
+    display: none !important;
+}
+
+/* ── Toast container ──────────────────────────────────────────────────── */
+.custom-admin-toasts-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+/* ── Toast base ───────────────────────────────────────────────────────── */
+.custom-admin-toast {
+    background-color: var(--w-color-warning, #fff3cd);
+    border-left: 5px solid var(--w-color-warning-dark, #ffc107);
+    color: #856404;
+    padding: 16px 40px 16px 16px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 0.95rem;
+    min-width: 320px;
+    max-width: 480px;
+    position: relative;
+    pointer-events: auto;
+    animation: slideInCustomToast 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 1;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* ── Toast variants ───────────────────────────────────────────────────── */
+.custom-admin-toast.error {
+    background-color: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.custom-admin-toast.info {
+    background-color: #d1ecf1;
+    border-left-color: #17a2b8;
+    color: #0c5460;
+}
+
+/* ── Close button ─────────────────────────────────────────────────────── */
+.custom-admin-toast .close-btn {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: inherit;
+    opacity: 0.5;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.custom-admin-toast .close-btn:hover {
+    opacity: 1;
+}
+
+/* ── Slide-in animation ───────────────────────────────────────────────── */
+@keyframes slideInCustomToast {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

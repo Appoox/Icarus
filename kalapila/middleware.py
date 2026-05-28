@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.safestring import mark_safe  # CRITICAL IMPORT: Fixes raw HTML string-escaping behavior
+from django.db.models import Q
 from .models import UserNotification
 
 
@@ -10,29 +11,40 @@ class UserNotificationMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         # ── Check 1: Anonymous Session Guard ───────────────────────────────
-        # Skip operations entirely if the visitor context is unauthenticated.
         if not request.user.is_authenticated:
             return
 
-        # ── Check 2: Administrative Dashboard Path Protection ──────────────
-        # CRITICAL FIX: This conditional early exit ensures frontend reader alerts 
-        # (like profile completion or billing syncs) do not bleed into Wagtail's 
-        # admin backend namespace. This halts continuous message-stacking loop cycles.
-        if request.path.startswith('/admin/'):
+        # ── Check 2: Administrative Dashboard & Asset Protection ───────────
+        # Halts frontend reader alerts from executing on admin backend paths,
+        # static assets, media paths, or background AJAX requests.
+        path = request.path
+        if (
+            path.startswith('/admin/') or 
+            path.startswith('/django-admin/') or
+            path.startswith('/static/') or 
+            path.startswith('/media/') or
+            request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        ):
             return
 
         # ── 1. Unread comment status notifications (fire every time) ──────
         unread = UserNotification.objects.filter(user=request.user, is_read=False)
         unread_list = list(unread)
         if unread_list:
+            # Inspect pending queue to prevent duplicate notifications from double-renders
+            storage = messages.get_messages(request)
+            pending_messages = [msg.message for msg in storage]
+            storage.used = False  # Reset storage iterator so messages still render in templates
+
             for notification in unread_list:
-                # Render content safely using mark_safe to allow clean HTML rendering
-                messages.info(request, mark_safe(notification.message))
+                safe_msg = mark_safe(notification.message)
+                if safe_msg not in pending_messages:
+                    messages.info(request, safe_msg)
+            
             ids = [n.pk for n in unread_list]
             UserNotification.objects.filter(pk__in=ids).update(is_read=True)
 
         # ── 2. Sticky account warnings (throttled via session counter) ────
-        # Increment a hit counter so we don't spam on every page
         session = request.session
         hit = session.get('_warn_hit', 0) + 1
         session['_warn_hit'] = hit
@@ -44,27 +56,29 @@ class UserNotificationMiddleware(MiddlewareMixin):
     def _add_account_warnings(self, request):
         user = request.user
 
+        # Fetch the pending messages to inspect for duplicates
+        storage = messages.get_messages(request)
+        pending_messages = [msg.message for msg in storage]
+        storage.used = False  # Reset storage iterator so messages still render in templates
+
         # Profile incomplete
         if hasattr(user, 'is_profile_complete') and not user.is_profile_complete:
-            # CRITICAL FIX: Wrapped with mark_safe() to ensure the anchor tag is parsed
-            # natively by the browser interface instead of escaping as raw string text.
-            messages.warning(
-                request,
-                mark_safe(
-                    '👋 Your profile is incomplete. '
-                    '<a href="/reader/profile/edit/" style="font-weight:700;text-decoration:underline;">Complete it now</a>'
-                    ' to help us serve you better.'
-                )
+            warn_msg = mark_safe(
+                '👋 Your profile is incomplete. '
+                '<a href="/reader/profile/edit/" style="font-weight:700;text-decoration:underline;">Complete it now</a>'
+                ' to help us serve you better.'
             )
+            # ONLY add the message if it is not already sitting in the queue
+            if warn_msg not in pending_messages:
+                messages.warning(request, warn_msg)
 
         # Grace period
         if hasattr(user, 'is_in_grace_period') and user.is_in_grace_period:
-            # CRITICAL FIX: Wrapped with mark_safe() to render the inline link cleanly.
-            messages.warning(
-                request,
-                mark_safe(
-                    '⚠️ Your subscription expired recently. You\'re in a grace period — '
-                    '<a href="/reader/profile/" style="font-weight:700;text-decoration:underline;">renew now</a>'
-                    ' to keep your...'
-                )
+            grace_msg = mark_safe(
+                '⚠️ Your subscription expired recently. You\'re in a grace period — '
+                '<a href="/reader/profile/" style="font-weight:700;text-decoration:underline;">renew now</a>'
+                ' to keep your...'
             )
+            # ONLY add the message if it is not already sitting in the queue
+            if grace_msg not in pending_messages:
+                messages.warning(request, grace_msg)
