@@ -665,3 +665,101 @@ select.form-input {
 .form-group--small {
     max-width: 200px;
 }
+
+/* ── Care-of collapsible — shared styles for profile.html & edit_profile.html ── */
+
+/* ── <details> wrapper replaces the old .form-fieldset border box ── */
+.care-of-details {
+    border: 1px solid var(--border-color, #ddd);
+  * ── Care-of collapsible section ───────────────────────────────────────── */
+
+/* Remove default <details> marker across browsers */
+.care-of-details {
+    list-style: none;
+}
+.care-of-details > summary {
+    list-style: none;
+}
+.care-of-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Summary row acts like the existing .profile-section__header */
+.care-of-summary {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Inherit the existing header padding/border from .profile-section__header */
+}
+
+/* Chevron arrow — rotates 90° when section is open */
+.care-of-chevron {
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--color-muted, #888);
+    transition: transform 0.2s ease;
+    transform: rotate(0deg);
+}
+
+.care-of-details[open] .care-of-chevron {
+    transform: rotate(90deg);
+}
+
+/* Slight top padding so content doesn't press against the summary */
+.care-of-body {
+    padding-top: 12px;
+}  border-radius: 6px;
+    margin-bottom: 20px;
+    /* Remove native disclosure triangle across all browsers */
+    list-style: none;
+}
+.care-of-details > summary { list-style: none; }
+.care-of-details > summary::-webkit-details-marker { display: none; }
+
+/* ── Summary row — looks like a fieldset legend / section header ── */
+.care-of-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-muted, #666);
+    border-radius: 6px;
+    /* Remove the default focus ring and replace with a clean one */
+    outline: none;
+}
+.care-of-summary:focus-visible {
+    outline: 2px solid var(--color-primary, #c0392b);
+    outline-offset: 2px;
+}
+
+/* Chevron rotates when open */
+.care-of-chevron {
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--color-muted, #aaa);
+    transition: transform 0.2s ease;
+    transform: rotate(0deg);
+}
+.care-of-details[open] .care-of-chevron {
+    transform: rotate(90deg);
+}
+
+/* ── Inner fieldset (edit form) — remove double-border ── */
+.form-fieldset--inner {
+    border: none;
+    padding: 0 16px 16px;
+    margin: 0;
+}
+
+/* ── Profile view body (profile.html) ── */
+.care-of-body {
+    padding: 0 16px 16px;
+}

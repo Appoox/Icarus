@@ -88,20 +88,25 @@
     </div>
     {% endif %}
 
-    {# ── Added By (Care Of) ── #}
+    {# ── Added By (Care Of) — collapsible section ── #}
+    {# Care-of details are secondary info; shown on demand to reduce visual clutter. #}
     {% if reader.care_of_name or reader.care_of_number %}
-    <div class="profile-section">
-        <div class="profile-section__header">
-            <h2>Membership Details (Added By)</h2>
-            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
-        </div>
-        <div class="address-block">
-            {% if reader.care_of_name %}<strong>Name:</strong> {{ reader.care_of_name }}<br>{% endif %}
-            {% if reader.care_of_number %}<strong>Phone:</strong> {{ reader.care_of_number }}<br>{% endif %}
-            {% if reader.care_of_district %}<strong>District:</strong> {{ reader.care_of_district }}<br>{% endif %}
-            {% if reader.care_of_meghala %}<strong>Meghala:</strong> {{ reader.care_of_meghala }}<br>{% endif %}
-            {% if reader.care_of_unit %}<strong>Unit:</strong> {{ reader.care_of_unit }}<br>{% endif %}
-        </div>
+    <div class="profile-section profile-section--collapsible">
+        <details class="care-of-details">
+            <summary class="profile-section__header care-of-summary">
+                <h2>Membership Details (Added By)</h2>
+                {# Chevron rotates via CSS when details is open #}
+                <span class="care-of-chevron" aria-hidden="true">&#8250;</span>
+            </summary>
+            <div class="address-block care-of-body">
+                {% if reader.care_of_name %}<strong>Name:</strong> {{ reader.care_of_name }}<br>{% endif %}
+                {% if reader.care_of_number %}<strong>Phone:</strong> {{ reader.care_of_number }}<br>{% endif %}
+                {% if reader.care_of_district %}<strong>District:</strong> {{ reader.care_of_district }}<br>{% endif %}
+                {% if reader.care_of_meghala %}<strong>Meghala:</strong> {{ reader.care_of_meghala }}<br>{% endif %}
+                {% if reader.care_of_unit %}<strong>Unit:</strong> {{ reader.care_of_unit }}<br>{% endif %}
+                <a href="{% url 'edit_profile' %}" class="link-edit" style="display:inline-block; margin-top: 10px;">Edit</a>
+            </div>
+        </details>
     </div>
     {% endif %}
 
