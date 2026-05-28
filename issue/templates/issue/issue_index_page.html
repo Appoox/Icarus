@@ -9,7 +9,11 @@
 <div class="sg-page">
     <div class="issue-container">
         <header class="issue-feed-header">
-            <h1 class="archive-title">{{ page.title }} ( {{ issues|length }} എണ്ണം )</h1>
+            {% if page.sort_by == 'most_read' %}
+                <h1 class="archive-title">{{ page.title }}</h1>
+            {% else %}
+                <h1 class="archive-title">{{ page.title }} ( {{ issues|length }} എണ്ണം )</h1>
+            {% endif %}
             <span class="archive-rule"></span>
             {% if page.intro %}
             <div class="intro">{{ page.intro|richtext }}</div>

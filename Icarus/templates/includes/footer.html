@@ -1,154 +1,185 @@
 {% load footer_tags wagtailcore_tags wagtailimages_tags %}
-{% get_site_footer as footer %}
+
+{# Single tag call — ctx holds footer object + all dynamic data #}
+{% get_site_footer as ctx %}
+{% with footer=ctx.footer %}
 
 {% if footer %}
 <footer class="site-footer">
-
   <div class="site-footer__inner">
 
-    {# ── Three-column link grid ─────────────────────────────────────────── #}
+    {# ── Three-column link grid ──────────────────────────────────────── #}
     <div class="site-footer__columns">
 
-      {# Column 1 #}
+      {# Column 1 — dynamic links + editor col1 extras #}
       <div class="site-footer__col">
         {% if footer.col1_header %}
           <h4 class="site-footer__col-heading">{{ footer.col1_header }}</h4>
         {% endif %}
         <ul class="site-footer__col-links">
+          {% if ctx.current_issue_url %}
+            <li><a href="{{ ctx.current_issue_url }}" class="site-footer__link">Latest Issue</a></li>
+          {% endif %}
+          {% if ctx.most_read_issue_url %}
+            <li><a href="{{ ctx.most_read_issue_url }}" class="site-footer__link">Most Read Issues</a></li>
+          {% endif %}
+          {% if ctx.latest_article_url %}
+            <li><a href="{{ ctx.latest_article_url }}" class="site-footer__link">All Articles</a></li>
+          {% endif %}
+          {% if ctx.most_read_article_url %}
+            <li><a href="{{ ctx.most_read_article_url }}" class="site-footer__link">Most Read Articles</a></li>
+          {% endif %}
           {% for link in footer.col1_links %}
-            <li><a href="{{ link.url }}" class="site-footer__link">{{ link.label }}</a></li>
+            <li><a href="{{ link.get_url }}" class="site-footer__link">{{ link.label }}</a></li>
           {% endfor %}
         </ul>
       </div>
 
-      {# Column 2 #}
+      {# Column 2 — editor-managed (Company, About, Contact…) #}
       <div class="site-footer__col">
         {% if footer.col2_header %}
           <h4 class="site-footer__col-heading">{{ footer.col2_header }}</h4>
         {% endif %}
         <ul class="site-footer__col-links">
           {% for link in footer.col2_links %}
-            <li><a href="{{ link.url }}" class="site-footer__link">{{ link.label }}</a></li>
+            <li><a href="{{ link.get_url }}" class="site-footer__link">{{ link.label }}</a></li>
           {% endfor %}
         </ul>
       </div>
 
-      {# Column 3 #}
+      {# Column 3 — editor-managed (Privacy, T&C, Accessibility…) #}
       <div class="site-footer__col">
         {% if footer.col3_header %}
           <h4 class="site-footer__col-heading">{{ footer.col3_header }}</h4>
         {% endif %}
         <ul class="site-footer__col-links">
           {% for link in footer.col3_links %}
-            <li><a href="{{ link.url }}" class="site-footer__link">{{ link.label }}</a></li>
+            <li><a href="{{ link.get_url }}" class="site-footer__link">{{ link.label }}</a></li>
           {% endfor %}
         </ul>
       </div>
 
     </div>{# /.site-footer__columns #}
 
-    {# ── Divider ───────────────────────────────────────────────────────── #}
+    {# ── Editorial Board accordion ────────────────────────────────────── #}
+    {% if ctx.editorial_board %}
+    <div class="site-footer__board-wrapper">
+      <hr class="site-footer__divider site-footer__divider--board">
+
+      <div class="editorial-board-btn-wrapper">
+        <button class="editorial-board-btn show-more-btn site-footer__board-btn"
+                aria-expanded="false"
+                aria-controls="editorial-board-content">
+          പത്രാധിപ സമിതി
+        </button>
+      </div>
+
+      <div class="editorial-board-content" id="editorial-board-content">
+        <div class="editorial-board-inner">
+
+          {% for section in ctx.editorial_board.sections %}
+          <div class="editorial-board-section">
+            <h3 class="editorial-board-role-heading site-footer__board-role-heading">
+              {{ section.heading }}
+            </h3>
+            <div class="editorial-board-members-grid">
+              {% for rel in section.members %}
+              <div class="board-member site-footer__board-member">
+                <div class="board-member__photo">
+                  {% if rel.editor.profile_image %}
+                    {% image rel.editor.profile_image fill-108x108 as ed_img %}
+                    <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}">
+                  {% else %}
+                    <div class="board-member__photo-placeholder">
+                      {{ rel.editor.title|first }}
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="board-member__info">
+                  <h3 class="board-member__name">
+                    <a href="{{ rel.editor.url }}">{{ rel.editor.title }}</a>
+                  </h3>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+
+        </div>{# /.editorial-board-inner #}
+      </div>{# /.editorial-board-content #}
+    </div>{# /.site-footer__board-wrapper #}
+    {% endif %}
+
+    {# ── Divider ─────────────────────────────────────────────────────── #}
     <hr class="site-footer__divider">
 
-    {# ── About paragraph ───────────────────────────────────────────────── #}
+    {# ── About paragraph ─────────────────────────────────────────────── #}
     {% if footer.about_text %}
       <p class="site-footer__about">{{ footer.about_text }}</p>
     {% endif %}
 
-    {# ── Bottom bar: copyright + logo + social ─────────────────────────── #}
+    {# ── Bottom bar: copyright + logo + social ────────────────────────── #}
     <div class="site-footer__bottom">
 
       <div class="site-footer__copyright-block">
         {% if footer.copyright_text %}
           <p>{{ footer.copyright_text }}</p>
         {% endif %}
-        {% if footer.tagline %}
-          <p class="site-footer__tagline">{{ footer.tagline }}</p>
-        {% endif %}
       </div>
 
       <div class="site-footer__branding">
 
-        {# Logo #}
         {% if footer.footer_logo %}
           {% image footer.footer_logo original as logo_img %}
-          <img
-            src="{{ logo_img.url }}"
-            alt="{{ footer.logo_alt_text|default:'Site logo' }}"
-            class="site-footer__logo"
-          >
+          <img src="{{ logo_img.url }}"
+               alt="{{ footer.logo_alt_text|default:'Site logo' }}"
+               class="site-footer__logo">
         {% endif %}
 
-        {# Social icons #}
         <div class="site-footer__social" aria-label="Social media links">
-
           {% if footer.facebook_url %}
           <a href="{{ footer.facebook_url }}" class="site-footer__social-link" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
           </a>
           {% endif %}
-
           {% if footer.instagram_url %}
           <a href="{{ footer.instagram_url }}" class="site-footer__social-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-              <circle cx="12" cy="12" r="4"/>
-              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
           </a>
           {% endif %}
-
           {% if footer.linkedin_url %}
           <a href="{{ footer.linkedin_url }}" class="site-footer__social-link" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/>
-              <circle cx="4" cy="4" r="2"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
           </a>
           {% endif %}
-
           {% if footer.tiktok_url %}
           <a href="{{ footer.tiktok_url }}" class="site-footer__social-link" aria-label="TikTok" target="_blank" rel="noopener noreferrer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.2 8.2 0 0 0 4.79 1.52V6.76a4.85 4.85 0 0 1-1.02-.07z"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.2 8.2 0 0 0 4.79 1.52V6.76a4.85 4.85 0 0 1-1.02-.07z"/></svg>
           </a>
           {% endif %}
-
           {% if footer.youtube_url %}
           <a href="{{ footer.youtube_url }}" class="site-footer__social-link" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
           </a>
           {% endif %}
-
           {% if footer.reddit_url %}
           <a href="{{ footer.reddit_url }}" class="site-footer__social-link" aria-label="Reddit" target="_blank" rel="noopener noreferrer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <path fill="var(--footer-bg, #3a3a3a)" d="M20 12a2 2 0 0 0-2-2 2 2 0 0 0-1.33.51A9.87 9.87 0 0 0 13 9.3l.54-2.54 1.76.37a1.4 1.4 0 1 0 .15-.67l-1.97-.41L12.8 9a9.86 9.86 0 0 0-3.62 1.2A2 2 0 0 0 4 12a2 2 0 0 0 1 1.72 3.63 3.63 0 0 0 0 .38c0 1.94 2.24 3.5 5 3.5s5-1.56 5-3.5a3.63 3.63 0 0 0 0-.38A2 2 0 0 0 20 12zm-10.5 1a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm5 2.5c-.62.41-1.56.6-2.5.6s-1.88-.19-2.5-.6a.25.25 0 0 1 .28-.41c.5.34 1.3.51 2.22.51s1.72-.17 2.22-.51a.25.25 0 0 1 .28.41zm-.5-1.5a1 1 0 1 1 1-1 1 1 0 0 1-1 1z"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path fill="var(--footer-bg,#3a3a3a)" d="M20 12a2 2 0 0 0-2-2 2 2 0 0 0-1.33.51A9.87 9.87 0 0 0 13 9.3l.54-2.54 1.76.37a1.4 1.4 0 1 0 .15-.67l-1.97-.41L12.8 9a9.86 9.86 0 0 0-3.62 1.2A2 2 0 0 0 4 12a2 2 0 0 0 1 1.72 3.63 3.63 0 0 0 0 .38c0 1.94 2.24 3.5 5 3.5s5-1.56 5-3.5a3.63 3.63 0 0 0 0-.38A2 2 0 0 0 20 12zm-10.5 1a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm5 2.5c-.62.41-1.56.6-2.5.6s-1.88-.19-2.5-.6a.25.25 0 0 1 .28-.41c.5.34 1.3.51 2.22.51s1.72-.17 2.22-.51a.25.25 0 0 1 .28.41zm-.5-1.5a1 1 0 1 1 1-1 1 1 0 0 1-1 1z"/></svg>
           </a>
           {% endif %}
-
           {% if footer.twitter_url %}
           <a href="{{ footer.twitter_url }}" class="site-footer__social-link" aria-label="X / Twitter" target="_blank" rel="noopener noreferrer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </a>
           {% endif %}
-
-        </div>{# /.site-footer__social #}
+        </div>
 
       </div>{# /.site-footer__branding #}
-
     </div>{# /.site-footer__bottom #}
 
   </div>{# /.site-footer__inner #}
-
 </footer>
 {% endif %}
+
+{% endwith %}

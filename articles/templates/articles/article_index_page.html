@@ -8,7 +8,11 @@
 {% block content %}
 <div class="article-container">
     <header class="article-feed-header">
+        {% if page.sort_by == 'most_read' %}
+        <h1>{{ page.title }}</h1>
+        {% else %}
         <h1>{{ page.title }} ( {{ articles|length }} എണ്ണം )</h1>
+        {% endif %}
         {% if page.intro %}
         <div class="intro">{{ page.intro|richtext }}</div>
         {% endif %}

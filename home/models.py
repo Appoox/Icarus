@@ -9,6 +9,7 @@ from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 
 from auditlog.models import AbstractLogEntry
+from wagtail.admin.panels import PageChooserPanel
 
 @register_snippet
 class SiteHeader(models.Model):
@@ -81,28 +82,28 @@ FOOTER_COLUMN_CHOICES = [
 
 
 class FooterLink(models.Model):
-    """A single link inside the footer, assigned to one of three columns."""
+    footer     = ParentalKey("SiteFooter", on_delete=models.CASCADE, related_name="links")
+    label      = models.CharField(max_length=100)
+    column     = models.CharField(max_length=10, choices=FOOTER_COLUMN_CHOICES, default="col1")
+    sort_order = models.IntegerField(default=0)
 
-    footer = ParentalKey(
-        "SiteFooter",
-        on_delete=models.CASCADE,
-        related_name="links",
+    # For internal Wagtail pages (About, Privacy Policy, Contact, T&C, etc.)
+    page = models.ForeignKey(
+        "wagtailcore.Page",
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Pick an internal page. Takes priority over the URL field.",
     )
-    label = models.CharField(max_length=100)
-    url = models.CharField(max_length=255)
-    column = models.CharField(
-        max_length=10,
-        choices=FOOTER_COLUMN_CHOICES,
-        default="col1",
-        help_text="Which column this link appears in.",
-    )
-    sort_order = models.IntegerField(
-        default=0,
-        help_text="Lower numbers appear first within the column.",
+    # Fallback for external links (social pages, partner sites)
+    url = models.CharField(
+        max_length=255, blank=True,
+        help_text="Used only when no page is chosen above.",
     )
 
     panels = [
         FieldPanel("label"),
+        PageChooserPanel("page"),
         FieldPanel("url"),
         FieldPanel("column"),
         FieldPanel("sort_order"),
@@ -110,6 +111,11 @@ class FooterLink(models.Model):
 
     class Meta:
         ordering = ["column", "sort_order", "label"]
+
+    def get_url(self):
+        if self.page_id:
+            return self.page.url   # always correct even if slug changes
+        return self.url
 
     def __str__(self):
         return f"{self.label} ({self.get_column_display()})"

@@ -654,26 +654,77 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
                 return block.value
         return ""
 
+
+SORT_CHOICES = [
+    ('latest',    'Latest First'),
+    ('oldest',    'Oldest First'),
+    ('most_read', 'Most Read (30-day views)'),
+]
+
 class ArticleIndexPage(Page):
     intro = RichTextField(blank=True)
     tags = ClusterTaggableManager(through=ArticleIndexPageTag, blank=True)
+    sort_by = models.CharField(
+        max_length=20,
+        choices=SORT_CHOICES,
+        default='latest',
+        help_text="How to order issues on this page.",
+    )
 
-    max_count = 1
+    max_count = 2
 
     content_panels = Page.content_panels + [
         FieldPanel('intro'),
-        FieldPanel('tags'),
+        FieldPanel('sort_by'),
     ]
 
     subpage_types = ['Article']
 
     def get_context(self, request):
         context = super().get_context(request)
-        all_articles = self.get_children().live().order_by('-first_published_at')
-        context['articles'] = all_articles
-        context['popular_articles'] = (
-            Article.objects.live()
-            .filter(hit_count_generic__isnull=False)
-            .order_by('-hit_count_generic__hits')[:5]
-        )
+        from django.apps import apps
+        article = apps.get_model('articles', 'Article')
+
+        if self.sort_by == 'most_read':
+            from datetime import timedelta
+            from django.utils import timezone
+            from django.db.models import Count
+            from django.contrib.contenttypes.models import ContentType
+            from hitcount.models import Hit
+            from wagtail.models import Page as WagtailPage
+
+            one_month_ago = timezone.now() - timedelta(days=30)
+            article_ct = ContentType.objects.get_for_model(Article)
+            page_ct  = ContentType.objects.get_for_model(WagtailPage)
+
+            live_pks = [str(pk) for pk in Article.objects.live().values_list('id', flat=True)]
+
+            top_hits = (
+                Hit.objects.filter(
+                    created__gte=one_month_ago,
+                    hitcount__content_type__in=[article_ct, page_ct],
+                    hitcount__object_pk__in=live_pks,
+                )
+                .values('hitcount__object_pk')
+                .annotate(total_views=Count('id'))
+                .order_by('-total_views')
+            )
+            hit_map = {}
+            for h in top_hits:
+                try:
+                    hit_map[int(h['hitcount__object_pk'])] = h['total_views']
+                except (ValueError, TypeError):
+                    pass
+
+            articles = list(Article.objects.live())
+            for article in articles:
+                article.total_views = hit_map.get(article.id, 0)
+            articles.sort(key=lambda x: x.total_views, reverse=True)
+
+        elif self.sort_by == 'oldest':
+            articles = Article.objects.live().order_by('date_of_publishing')
+        else:  # latest (default)
+            articles = Article.objects.live().order_by('-date_of_publishing')
+
+        context['articles'] = articles
         return context

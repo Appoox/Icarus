@@ -475,22 +475,73 @@ class Topic(index.Indexed, models.Model):
         ordering = ['-id']
         verbose_name_plural = "Topics"
 
+SORT_CHOICES = [
+    ('latest',    'Latest First'),
+    ('oldest',    'Oldest First'),
+    ('most_read', 'Most Read (30-day views)'),
+]
+
 class IssueIndexPage(Page):
     intro = RichTextField(blank=True)
-    tags = ClusterTaggableManager(through=IssueIndexPageTag, blank=True)
-
-    max_count = 1
-    subpage_types = ['Issue']
-    # Parent should be HomePage
-    parent_page_types = ['home.HomePage']
+    sort_by = models.CharField(
+        max_length=20,
+        choices=SORT_CHOICES,
+        default='latest',
+        help_text="How to order issues on this page.",
+    )
 
     content_panels = Page.content_panels + [
         FieldPanel('intro'),
-        FieldPanel('tags'),
+        FieldPanel('sort_by'),
     ]
+
+    subpage_types = ['Issue']
 
     def get_context(self, request):
         context = super().get_context(request)
-        # Get all child issues, ordered by publishing date
-        context['issues'] = Issue.objects.child_of(self).live().order_by('-date_of_publishing')
+        from django.apps import apps
+        Issue = apps.get_model('issue', 'Issue')
+
+        if self.sort_by == 'most_read':
+            from datetime import timedelta
+            from django.utils import timezone
+            from django.db.models import Count
+            from django.contrib.contenttypes.models import ContentType
+            from hitcount.models import Hit
+            from wagtail.models import Page as WagtailPage
+
+            one_month_ago = timezone.now() - timedelta(days=30)
+            issue_ct = ContentType.objects.get_for_model(Issue)
+            page_ct  = ContentType.objects.get_for_model(WagtailPage)
+
+            live_pks = [str(pk) for pk in Issue.objects.live().values_list('id', flat=True)]
+
+            top_hits = (
+                Hit.objects.filter(
+                    created__gte=one_month_ago,
+                    hitcount__content_type__in=[issue_ct, page_ct],
+                    hitcount__object_pk__in=live_pks,
+                )
+                .values('hitcount__object_pk')
+                .annotate(total_views=Count('id'))
+                .order_by('-total_views')
+            )
+            hit_map = {}
+            for h in top_hits:
+                try:
+                    hit_map[int(h['hitcount__object_pk'])] = h['total_views']
+                except (ValueError, TypeError):
+                    pass
+
+            issues = list(Issue.objects.live())
+            for issue in issues:
+                issue.total_views = hit_map.get(issue.id, 0)
+            issues.sort(key=lambda x: x.total_views, reverse=True)
+
+        elif self.sort_by == 'oldest':
+            issues = Issue.objects.live().order_by('date_of_publishing')
+        else:  # latest (default)
+            issues = Issue.objects.live().order_by('-date_of_publishing')
+
+        context['issues'] = issues
         return context
