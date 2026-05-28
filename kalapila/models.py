@@ -7,6 +7,12 @@ from auditlog.models import AuditlogHistoryField
 class Comment(models.Model):
     page = models.ForeignKey('wagtailcore.Page', on_delete=models.CASCADE,
                              related_name='comments')
+    
+    # Resolved the reverse accessor conflict by changing related_name to 'issue_comments'
+    # Added null=True and blank=True so it can safely be auto-populated on save
+    issue = models.ForeignKey('wagtailcore.Page', on_delete=models.CASCADE,
+                            related_name='issue_comments', null=True, blank=True)    
+    
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                              related_name='comments')
     parent = models.ForeignKey('self', null=True, blank=True,
@@ -23,6 +29,7 @@ class Comment(models.Model):
 
     panels = [
         FieldPanel('page', read_only=True),
+        FieldPanel('issue', read_only=True),
         FieldPanel('user', read_only=True),
         FieldPanel('parent', read_only=True),
         FieldPanel('body', read_only=True),
@@ -47,6 +54,10 @@ class Comment(models.Model):
     @property
     def page_display(self):
         return self.page.title
+    
+    @property
+    def issue_display(self):
+        return self.issue.title
 
     @property
     def body_truncated(self):
@@ -59,6 +70,16 @@ class Comment(models.Model):
         return self.reports.count()
 
     def save(self, *args, **kwargs):
+        # Automatically look up and populate the issue if it isn't set yet
+        if not self.issue and self.page:
+            # .specific fetches the actual page instance subclass (e.g., Article) instead of bare Wagtail Page
+            specific_page = self.page.specific
+            
+            # Checks if the specific page contains the 'main_issue' foreign key relation
+            if hasattr(specific_page, 'main_issue') and specific_page.main_issue:
+                # Since issue.Issue inherits from Wagtail's Page, it satisfies the ForeignKey constraint on self.issue
+                self.issue = specific_page.main_issue
+
         is_new = self.pk is None
         old_is_approved = False
         old_is_removed = False

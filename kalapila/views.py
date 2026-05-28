@@ -221,19 +221,25 @@ def admin_notifications(request):
         is_read=False
     ).select_related('comment', 'comment__page')
 
-    # Return count-only when nothing changed — avoids serialising the full list
     count = notifications.count()
     if count == 0:
         return JsonResponse({"notifications": [], "count": 0})
 
-    data = [
-        {
+    data = []
+    for n in notifications:
+        # Construct the target URL with a hash anchor pointing to the comment ID
+        page_url = "#"
+        if n.comment and n.comment.page:
+            page_url = f"{n.comment.page.url}#comment-{n.comment.pk}"
+
+        data.append({
             "id": n.id,
             "message": n.message,
-            "url": f"/admin/comments/edit/{n.comment.pk}/"
-        }
-        for n in notifications
-    ]
+            # Link directly to the Wagtail Snippets moderation module
+            "url": f"/admin/snippets/kalapila/comment/edit/{n.comment.pk}/" if n.comment else "#",
+            "page_url": page_url
+        })
+
     return JsonResponse({"notifications": data, "count": count})
 
 @login_required

@@ -247,4 +247,35 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
+
+    // ── HASH ANCHOR ROUTING & GLOW HIGHLIGHTS ────────────────────────────────
+    // Detects whether an inbound link points to a specific comment card
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#comment-")) {
+        // Execute after a minimal delay to ensure content structures are fully rendered
+        setTimeout(() => {
+            const targetComment = document.querySelector(hash);
+            if (targetComment) {
+                // Height allowance offset to clear any sticky navigation header
+                const headerOffset = 90; 
+                const elementPosition = targetComment.getBoundingClientRect().top + window.scrollY;
+                const offsetPosition = elementPosition - headerOffset;
+
+                // Smoothly slide the browser viewport to the comment card focus area
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+
+                // Attach the temporary soft glow contextual indicator classes
+                targetComment.classList.add("comment-card--highlighted");
+
+                // Cleanly purge the glow animation classes once execution finishes
+                setTimeout(() => {
+                    targetComment.classList.remove("comment-card--highlighted");
+                }, 4000);
+            }
+        }, 400);
+    }
+
 });

@@ -50,6 +50,7 @@
             const toast = document.createElement("div");
             toast.className = "admin-toast";
             toast.id = `toast-${notification.id}`;
+            // Inside your showToast(notification) function template mapping:
             toast.innerHTML = `
                 <div class="admin-toast__header">
                     <h4 class="admin-toast__title">
@@ -60,6 +61,7 @@
                 </div>
                 <div class="admin-toast__body">${notification.message}</div>
                 <div class="admin-toast__footer">
+                    <a href="${notification.page_url || '#'}" class="admin-toast__view-btn" target="_blank">View</a>
                     <button class="admin-toast__dismiss-btn">Dismiss</button>
                     <a href="${notification.url}" class="admin-toast__action-link" target="_blank">Moderate</a>
                 </div>
@@ -72,6 +74,7 @@
                 dismissTimeout = setTimeout(() => markAsRead(notification.id, toast), 8000);
             });
             toast.querySelector(".admin-toast__close-btn").addEventListener("click", () => markAsRead(notification.id, toast));
+            toast.querySelector(".admin-toast__view-btn").addEventListener("click", () => markAsRead(notification.id, toast));
             toast.querySelector(".admin-toast__dismiss-btn").addEventListener("click", () => markAsRead(notification.id, toast));
             toast.querySelector(".admin-toast__action-link").addEventListener("click", () => markAsRead(notification.id, toast));
         }

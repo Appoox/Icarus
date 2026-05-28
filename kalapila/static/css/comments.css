@@ -341,3 +341,28 @@
         font-size: 0.75rem;
     }
 }
+
+/* ── TARGET COMMENT SOFT GLOW ANIMATION ────────────────────────────── */
+
+/* Highlight status class injected by active hash router initialization rules */
+.comment-card--highlighted {
+    animation: commentPulseHighlight 3.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes commentPulseHighlight {
+    0% {
+        background-color: #eff6ff; /* Light azure blue tint */
+        border-color: #3b82f6;     /* Electric blue framework accents */
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.45), 0 10px 25px rgba(59, 130, 246, 0.1);
+    }
+    30% {
+        background-color: #f8fafc; /* Subtle normalization fading shift */
+        border-color: #60a5fa;     /* Moderate border glow relaxation transition */
+        box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.25), 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    100% {
+        background-color: #ffffff; /* Reverts fully back to base container defaults */
+        border-color: transparent; 
+        box-shadow: none;
+    }
+}
