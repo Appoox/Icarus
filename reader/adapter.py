@@ -20,6 +20,11 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         user.accepted_privacy_at = timezone.now()
         user.privacy_version = ReaderUser.CURRENT_PRIVACY_VERSION
         
+        # Capture 18+ age declaration from signup form
+        if form.cleaned_data.get('is_above_18'):
+            user.is_above_18 = True
+            user.age_declaration_at = timezone.now()
+        
         # Ensure phone is saved directly (this handles the phone field in the form)
         if 'phone' in form.cleaned_data:
             self.set_phone(user, form.cleaned_data['phone'], verified=True)

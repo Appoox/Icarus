@@ -41,11 +41,19 @@
                 <label for="id_gender">Gender</label>
                 {{ form.gender }}
                 {% if form.gender.errors %}<div class="form-errors">{{ form.gender.errors }}</div>{% endif %}
+                <div class="form-consent-inline">
+                    {{ form.gender_consent }}
+                    <label for="id_gender_consent" class="consent-label">{{ form.gender_consent.label }}</label>
+                </div>
             </div>
             <div class="form-group form-group--half">
                 <label for="id_date_of_birth">Date of Birth</label>
                 {{ form.date_of_birth }}
                 {% if form.date_of_birth.errors %}<div class="form-errors">{{ form.date_of_birth.errors }}</div>{% endif %}
+                <div class="form-consent-inline">
+                    {{ form.dob_consent }}
+                    <label for="id_dob_consent" class="consent-label">{{ form.dob_consent.label }}</label>
+                </div>
             </div>
         </div>
 

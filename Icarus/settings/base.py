@@ -14,6 +14,7 @@ ACCOUNT_SIGNUP_FIELDS = [
   'phone*',
   'name*',
   'password1*',
+  'password2*',
 ]
 ACCOUNT_USER_MODEL_PHONE_FIELD = 'phone_number'
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None

@@ -16,15 +16,22 @@ User = get_user_model()
 class AllauthSignupForm(forms.Form):
     """
     Custom signup form for django-allauth to capture Reader-specific fields
-    and ensure legal compliance (Consent & Age verification).
+    and ensure legal compliance (DPDP Age Consent & Terms acceptance).
+
+    DOB is NOT collected here — it is deferred to the post-login profile edit
+    flow where explicit consent is gathered.  Instead, we ask for a self-
+    declaration that the user is 18 or older, which is the legally meaningful
+    consent mechanism under the DPDP Act.
     """
     name = forms.CharField(
         max_length=255,
         widget=forms.TextInput(attrs={'placeholder': 'Full name', 'class': 'form-input'}),
     )
-    date_of_birth = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
-        help_text="Under-18 signups require parental consent under DPDP Act."
+    is_above_18 = forms.BooleanField(
+        required=True,
+        label="I confirm that I am 18 years of age or older.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        help_text="Required for legal consent under the DPDP Act.",
     )
     accept_terms = forms.BooleanField(
         required=True,
@@ -32,25 +39,17 @@ class AllauthSignupForm(forms.Form):
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'})
     )
 
-    def clean_date_of_birth(self):
-        dob = self.cleaned_data.get('date_of_birth')
-        if dob:
-            today = date.today()
-            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-            if age < 18:
-                raise forms.ValidationError(
-                    "You must be at least 18 years old to subscribe to Icarus independently."
-                )
-        return dob
-
     def signup(self, request, user):
         user.name = self.cleaned_data.get('name', '')
-        user.date_of_birth = self.cleaned_data.get('date_of_birth')
+        user.is_above_18 = True
+        user.age_declaration_at = timezone.now()
         user.save()
 
 class ReaderProfileEditForm(forms.ModelForm):
     """
     Allows a reader to update their profile details.
+    DOB and gender are only persisted when the corresponding consent checkbox
+    is checked — this satisfies DPDP explicit-consent requirements.
     """
     phone_number = SplitPhoneNumberField(
         region='IN',
@@ -59,6 +58,18 @@ class ReaderProfileEditForm(forms.ModelForm):
     care_of_number = SplitPhoneNumberField(
         region='IN',
         required=False,
+    )
+
+    # ── Transient consent checkboxes (not model fields) ──
+    dob_consent = forms.BooleanField(
+        required=False,
+        label="I consent to sharing my date of birth.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+    )
+    gender_consent = forms.BooleanField(
+        required=False,
+        label="I consent to sharing my gender.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
     )
 
     class Meta:
@@ -107,6 +118,13 @@ class ReaderProfileEditForm(forms.ModelForm):
                         'oninput': "this.value = this.value.replace(/[^0-9]/g, '');"
                     })
 
+        # Pre-check consent boxes if consent was previously given
+        if self.instance and self.instance.pk:
+            if self.instance.dob_consent_at:
+                self.fields['dob_consent'].initial = True
+            if self.instance.gender_consent_at:
+                self.fields['gender_consent'].initial = True
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
@@ -128,6 +146,30 @@ class ReaderProfileEditForm(forms.ModelForm):
             if not re.match(r'^[1-9][0-9]{5}$', pincode):
                 raise forms.ValidationError('Enter a valid 6-digit Indian pincode.')
         return pincode
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+
+        # Gate DOB persistence on explicit consent
+        if not self.cleaned_data.get('dob_consent'):
+            user.date_of_birth = None
+            user.dob_consent_at = None
+        elif self.cleaned_data.get('date_of_birth') and not user.dob_consent_at:
+            # First time giving consent — record timestamp
+            user.dob_consent_at = timezone.now()
+
+        # Gate gender persistence on explicit consent
+        if not self.cleaned_data.get('gender_consent'):
+            user.gender = ''
+            user.gender_other = ''
+            user.gender_consent_at = None
+        elif self.cleaned_data.get('gender') and not user.gender_consent_at:
+            # First time giving consent — record timestamp
+            user.gender_consent_at = timezone.now()
+
+        if commit:
+            user.save()
+        return user
 
 
 class UpdateInterestsForm(forms.ModelForm):

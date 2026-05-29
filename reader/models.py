@@ -105,6 +105,26 @@ class ReaderUser(AbstractUser, index.Indexed):
         max_length=20, blank=True,
         help_text="Specific version of Privacy Policy consented to (Required for Consent Versioning)."
     )
+    # ── Age Declaration (Signup Consent) ──
+    is_above_18 = models.BooleanField(
+        default=False,
+        help_text="Self-declaration that the user is 18 years or older, captured at signup for DPDP compliance."
+    )
+    age_declaration_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of the 18+ age self-declaration at signup."
+    )
+
+    # ── Explicit Consent for Optional Profile Fields ──
+    dob_consent_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of explicit consent to share date of birth."
+    )
+    gender_consent_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of explicit consent to share gender information."
+    )
+
     newsletter_opt_in = models.BooleanField(
         default=False,
         help_text="User's choice to receive non-essential marketing communications."
@@ -472,6 +492,10 @@ class ReaderUser(AbstractUser, index.Indexed):
             FieldPanel('terms_version', read_only=True),
             FieldPanel('accepted_privacy_at', read_only=True),
             FieldPanel('privacy_version', read_only=True),
+            FieldPanel('is_above_18', read_only=True),
+            FieldPanel('age_declaration_at', read_only=True),
+            FieldPanel('dob_consent_at', read_only=True),
+            FieldPanel('gender_consent_at', read_only=True),
             FieldPanel('newsletter_opt_in'),
             FieldPanel('registration_ip', read_only=True),
             FieldPanel('last_login_ip', read_only=True),
@@ -508,6 +532,11 @@ class ReaderUser(AbstractUser, index.Indexed):
         self.gender = ""
         self.gender_other = ""
         self.date_of_birth = None
+        
+        # Clear consent timestamps
+        self.dob_consent_at = None
+        self.gender_consent_at = None
+        self.age_declaration_at = None
         
         # Clear addresses
         self.address_line_1 = ""
