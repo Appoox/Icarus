@@ -638,7 +638,6 @@ class MostReadTopicsDashboardPanel(Component):
         Extends the standard parent template context dictionary, calculating 
         the sum of all article and issue views for each topic.
         """
-        # Fetch existing structural context from parent layout stack
         context = super().get_context_data(parent_context)
         
         from django.apps import apps
@@ -649,20 +648,16 @@ class MostReadTopicsDashboardPanel(Component):
         from hitcount.models import Hit
         from wagtail.models import Page
 
-        # Establish a rolling 30-day evaluation interval window
         one_month_ago = timezone.now() - timedelta(days=30)
 
-        # Look up target models dynamically across application boundaries
         Topic = apps.get_model('issue', 'Topic')
         Issue = apps.get_model('issue', 'Issue')
         Article = apps.get_model('articles', 'Article')
 
-        # Retrieve distinct content types for precision hit matching
         article_content_type = ContentType.objects.get_for_model(Article)
         issue_content_type = ContentType.objects.get_for_model(Issue)
         page_content_type = ContentType.objects.get_for_model(Page)
 
-        # Gather all hits in the rolling 30-day window for Articles, Issues, or base Pages
         all_hits = (
             Hit.objects.filter(
                 created__gte=one_month_ago,
@@ -672,7 +667,6 @@ class MostReadTopicsDashboardPanel(Component):
             .annotate(total_views=Count('id'))
         )
 
-        # Build a fast object_id -> hit_count map for O(1) lookups
         hits_map = {}
         for h in all_hits:
             try:
@@ -681,23 +675,20 @@ class MostReadTopicsDashboardPanel(Component):
             except (ValueError, TypeError):
                 continue
 
-        # Dictionary to accumulate aggregated view statistics per topic ID
         topic_views = {}
 
-        # Map all live issues to their topic and aggregate their view hits
-        live_issues = Issue.objects.live().select_related('topic')
-        issue_paths = {}  # Map to match article tree paths to issue topics without N+1 queries
+        # OPTIMIZATION: Only load and map issues that actually logged hits in the 30-day window
+        live_issues = Issue.objects.live().filter(id__in=hits_map.keys()).select_related('topic')
+        issue_paths = {}  
         
         for issue in live_issues:
             if issue.topic_id:
                 issue_paths[issue.path] = issue.topic_id
-                # Add the issue's own page views to the topic total
                 topic_views[issue.topic_id] = topic_views.get(issue.topic_id, 0) + hits_map.get(issue.id, 0)
 
-        # Map all live articles to their topic and aggregate their view hits
-        live_articles = Article.objects.live()
+        # OPTIMIZATION: Only evaluate active articles to prevent memory footprint bloat
+        live_articles = Article.objects.live().filter(id__in=hits_map.keys())
         
-        # Safe introspection to check if Article model contains a direct topic field relationship
         has_direct_topic = False
         try:
             Article._meta.get_field('topic')
@@ -710,22 +701,26 @@ class MostReadTopicsDashboardPanel(Component):
             if has_direct_topic and getattr(article, 'topic_id', None):
                 t_id = article.topic_id
             else:
-                # Resolve via parent Issue path hierarchy mapping (Wagtail chops off last 4 chars per level)
                 parent_path = article.path[:-4]
                 t_id = issue_paths.get(parent_path)
 
+                # EDGE CASE FALLBACK: If the parent issue had 0 hits, it won't be in issue_paths.
+                # Look up the parent issue directly if it isn't mapped yet.
+                if not t_id and parent_path:
+                    parent_issue = Issue.objects.live().filter(path=parent_path).first()
+                    if parent_issue and parent_issue.topic_id:
+                        issue_paths[parent_path] = parent_issue.topic_id
+                        t_id = parent_issue.topic_id
+
             if t_id:
-                # Add the article's page views to the topic total
                 topic_views[t_id] = topic_views.get(t_id, 0) + hits_map.get(article.id, 0)
 
-        # Fetch all existing Topic objects to compile the dashboard leaderboard rows
         all_topics = Topic.objects.all()
         topics_list = []
         for topic in all_topics:
             topic.total_views = topic_views.get(topic.id, 0)
             topics_list.append(topic)
 
-        # Sort topics by total views in descending order and slice the top 5 records
         topics_list.sort(key=lambda x: x.total_views, reverse=True)
         context['topics'] = topics_list[:5]
         
