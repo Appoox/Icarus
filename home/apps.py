@@ -7,13 +7,12 @@ class HomeConfig(AppConfig):
 
     def ready(self):
         from auditlog.registry import auditlog
-        from .models import SiteHeader, SiteFooter, FooterLink, HomePage
+        from .models import SiteHeader, SiteFooter, HomePage
         from wagtail.images.models import Image
         from wagtail.documents.models import Document
         
         auditlog.register(SiteHeader)
         auditlog.register(SiteFooter)
-        auditlog.register(FooterLink)
         auditlog.register(HomePage)
         auditlog.register(Image)
         auditlog.register(Document)

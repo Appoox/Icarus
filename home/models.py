@@ -1,7 +1,7 @@
 from django.db import models
 
 from wagtail.admin.panels import FieldPanel
-from wagtail.models import Page
+from wagtail.models import Page, Orderable  # Orderable added for footer hierarchy
 from wagtail.snippets.models import register_snippet
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
@@ -10,6 +10,7 @@ from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 
 from auditlog.models import AbstractLogEntry
 from wagtail.admin.panels import PageChooserPanel
+
 
 @register_snippet
 class SiteHeader(models.Model):
@@ -74,87 +75,255 @@ class SiteHeader(models.Model):
         return self.site_title
 
 
-FOOTER_COLUMN_CHOICES = [
-    ("col1", "Column 1"),
-    ("col2", "Column 2"),
-    ("col3", "Column 3"),
+# ─────────────────────────────────────────────────────────────────────────────
+#  Footer — three-level navigational hierarchy
+#
+#  SiteFooter
+#    └── FooterSection  (Orderable + ClusterableModel)
+#           • has a heading — e.g. "Explore", "Company", "Legal"
+#           • one section  = one heading spanning however many columns below
+#           └── FooterColumn  (Orderable + ClusterableModel)
+#                  • headingless — heading is on the parent section
+#                  • one column  = one vertical link list
+#                  • add 1 column for the simple/standard layout
+#                  • add 2+ columns to flow a long link list across multiple
+#                    side-by-side lists under the same shared heading
+#                  └── FooterColumnLink  (Orderable)
+#                         • label + internal Wagtail page OR external URL
+#
+#  ⚠ Wagtail version note:
+#    Three levels of nested InlinePanel are supported for ClusterableModel-
+#    based snippets in Wagtail ≥ 5.x.  If you are on 4.x the inner-most
+#    panel (column → links) may not render; upgrade to 5.x first.
+#
+#  ⚠ Migration note:
+#    See data_migration.py for the full expand-migrate-contract sequence
+#    that renames the old FooterColumn → FooterSection, inserts the new
+#    FooterColumn, and repoints FooterColumnLink rows.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class FooterSection(Orderable, ClusterableModel):
+    """
+    A navigational section in the site footer.
+
+    One section = one heading + one or more columns underneath it.
+    The most common use is one column per section (simple list).
+    Add two or more columns when a long link list should flow side-by-side
+    under the same shared heading.
+    """
+
+    footer = ParentalKey(
+        "SiteFooter",
+        on_delete=models.CASCADE,
+        related_name="sections",
+    )
+    heading = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Section heading shown above the link column(s) — e.g. 'Explore', 'Company'.",
+    )
+
+    # Panels rendered inside SiteFooter's InlinePanel("sections")
+    panels = [
+        FieldPanel("heading"),
+        InlinePanel(
+            "columns",
+            label="Column",
+            help_text=(
+                "One column = one vertical list of links. "
+                "Add a second column to split a long list side-by-side under this heading."
+            ),
+        ),
+    ]
+
+    class Meta(Orderable.Meta):
+        pass  # Inherits ordering = ['sort_order']
+
+    def __str__(self):
+        return self.heading or "(no heading)"
+
+
+class FooterColumn(Orderable, ClusterableModel):
+    """
+    A single link column within a FooterSection.
+
+    Headingless — the shared heading is on the parent FooterSection.
+    Use the admin-only 'label' field to tell columns apart when a section
+    has more than one (e.g. "Left", "Right").  The label is never
+    rendered on the public site.
+    """
+
+    section = ParentalKey(
+        "FooterSection",
+        on_delete=models.CASCADE,
+        related_name="columns",
+    )
+    # Admin-only label — helps editors identify columns in a multi-column section
+    label = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Internal label (never shown on the site). Useful when this section has multiple columns.",
+    )
+
+    # Panels rendered inside FooterSection's InlinePanel("columns")
+    panels = [
+        FieldPanel("label"),
+        InlinePanel("column_links", label="Link"),
+    ]
+
+    class Meta(Orderable.Meta):
+        pass  # Inherits ordering = ['sort_order']
+
+    def __str__(self):
+        return self.label or "Column"
+
+
+# Keys must match the keys returned in the context dict by get_site_footer()
+# in footer_tags.py.  Adding a new dynamic destination = add a choice here
+# AND a matching entry in the dynamic_url_map inside that tag function.
+DYNAMIC_URL_CHOICES = [
+    ('',                       '— Fixed page or URL (default) —'),
+    ('current_issue_url',      'Current Issue — updates when a new issue is published'),
+    ('previous_issue_url',     'Previous Issue — updates when a new issue is published'),
+    ('author_index_page_url',       'Author Index'),
+    ('article_index_page_url',      'Article Index'),
+    ('latest_issue_url',       'Issue Index: Latest'),
+    ('most_read_issue_url',    'Issue Index: Most Read'),
+    ('latest_article_url',     'Article Index: Latest'),
+    ('most_read_article_url',  'Article Index: Most Read'),
 ]
 
 
-class FooterLink(models.Model):
-    footer     = ParentalKey("SiteFooter", on_delete=models.CASCADE, related_name="links")
-    label      = models.CharField(max_length=100)
-    column     = models.CharField(max_length=10, choices=FOOTER_COLUMN_CHOICES, default="col1")
-    sort_order = models.IntegerField(default=0)
+class FooterColumnLink(Orderable):
+    """
+    A single navigational link within a FooterColumn.
 
-    # For internal Wagtail pages (About, Privacy Policy, Contact, T&C, etc.)
+    Destination priority (highest → lowest):
+      1. dynamic_url_key  — resolves at render time via the template tag context
+                            (e.g. always points to whichever issue is current)
+      2. page             — internal Wagtail page; URL updates automatically if
+                            the page slug changes
+      3. url              — raw string; use for external links only
+
+    The template tag (get_site_footer) injects the resolved URL as the private
+    attribute _resolved_dynamic_url onto each link instance so that get_url()
+    can return it without needing access to the request or template context.
+    """
+
+    column = ParentalKey(
+        "FooterColumn",
+        on_delete=models.CASCADE,
+        related_name="column_links",
+    )
+    label = models.CharField(max_length=100)
+
+    # ── Dynamic destination (auto-updating) ───────────────────────────
+    dynamic_url_key = models.CharField(
+        max_length=30,
+        blank=True,
+        default='',
+        choices=DYNAMIC_URL_CHOICES,
+        help_text=(
+            "Choose a destination that updates automatically. "
+            "If set, the Page and URL fields below are ignored."
+        ),
+    )
+
+    # ── Fixed destinations ─────────────────────────────────────────────
+    # Internal Wagtail page — URL auto-updates if the page slug changes
     page = models.ForeignKey(
         "wagtailcore.Page",
-        null=True, blank=True,
+        null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
         help_text="Pick an internal page. Takes priority over the URL field.",
     )
-    # Fallback for external links (social pages, partner sites)
+    # Fallback for external / absolute URLs (social pages, partner sites…)
     url = models.CharField(
-        max_length=255, blank=True,
-        help_text="Used only when no page is chosen above.",
+        max_length=255,
+        blank=True,
+        help_text="External URL — used only when no internal page is chosen above.",
     )
 
     panels = [
         FieldPanel("label"),
-        PageChooserPanel("page"),
-        FieldPanel("url"),
-        FieldPanel("column"),
-        FieldPanel("sort_order"),
+        MultiFieldPanel(
+            [FieldPanel("dynamic_url_key")],
+            heading="Dynamic destination (auto-updating)",
+        ),
+        MultiFieldPanel(
+            [PageChooserPanel("page"), FieldPanel("url")],
+            heading="Fixed destination (ignored when a dynamic option is selected above)",
+        ),
     ]
 
-    class Meta:
-        ordering = ["column", "sort_order", "label"]
+    class Meta(Orderable.Meta):
+        pass  # Inherits ordering = ['sort_order']
+
+    # URL schemes that are already absolute — never need a leading slash
+    _ABSOLUTE_SCHEMES = ('/', 'http://', 'https://', 'mailto:', 'tel:', '#')
 
     def get_url(self):
+        """
+        Return the resolved URL, ensuring it is always absolute.
+
+        - Internal page (page_id set): resolved via page.url, which is
+          slug-safe and always starts with '/'.
+        - Raw url field: normalised so that bare relative paths like
+          'latest-issue/' become '/latest-issue/', preventing browsers
+          from interpreting them relative to the current page.
+        """
+        # If a dynamic destination key is chosen, return the injected runtime URL
+        if self.dynamic_url_key:
+            resolved_url = getattr(self, "_resolved_dynamic_url", None)
+            if resolved_url:
+                return resolved_url
+
         if self.page_id:
-            return self.page.url   # always correct even if slug changes
-        return self.url
+            return self.page.url  # always correct even if the page slug changes
+
+        url = (self.url or '').strip()
+
+        # Prepend '/' when the value looks like a bare site-relative path
+        # (no scheme, no leading slash).  Genuine external URLs and anchors
+        # are left untouched.
+        if url and not url.startswith(self._ABSOLUTE_SCHEMES):
+            url = '/' + url
+
+        return url
+
+    def is_external(self):
+        """
+        True only for genuine off-site links (http/https without page_id).
+        Site-relative paths typed into the url field are NOT external.
+        """
+        if self.page_id:
+            return False
+        url = (self.url or '').strip()
+        return url.startswith(('http://', 'https://'))
 
     def __str__(self):
-        return f"{self.label} ({self.get_column_display()})"
+        return self.label
 
 
 @register_snippet
 class SiteFooter(ClusterableModel):
     """
     Singleton-style snippet for the global site footer.
-    Manage it via Wagtail Admin → Snippets → Site Footer.
+    Manage via Wagtail Admin → Snippets → Site Footer.
 
-    Supports three link columns (each with a heading), an about paragraph,
-    social-media URLs, a footer logo, and copyright text.
+    Navigation is managed as Sections → Columns → Links.
+    Add a section for each heading group.  Within a section, add one column
+    for a simple list or multiple columns to split a long list side-by-side
+    under the same heading.
     """
-
-    # ── Column headings ────────────────────────────────────────────────────
-    col1_header = models.CharField(
-        max_length=100,
-        blank=True,
-        default="Explore",
-        help_text="Heading for the first link column.",
-    )
-    col2_header = models.CharField(
-        max_length=100,
-        blank=True,
-        default="Company",
-        help_text="Heading for the second link column.",
-    )
-    col3_header = models.CharField(
-        max_length=100,
-        blank=True,
-        default="More",
-        help_text="Heading for the third link column.",
-    )
 
     # ── About / tagline text ───────────────────────────────────────────────
     about_text = models.TextField(
         blank=True,
-        help_text="Descriptive paragraph shown below the link columns (e.g. ownership/editorial independence statement).",
+        help_text="Descriptive paragraph shown below the link sections (e.g. editorial independence statement).",
     )
 
     # ── Branding ───────────────────────────────────────────────────────────
@@ -181,33 +350,32 @@ class SiteFooter(ClusterableModel):
     )
 
     # ── Social-media URLs ──────────────────────────────────────────────────
-    facebook_url = models.URLField(blank=True, help_text="Full URL including https://")
+    facebook_url  = models.URLField(blank=True, help_text="Full URL including https://")
     instagram_url = models.URLField(blank=True)
-    linkedin_url = models.URLField(blank=True)
-    youtube_url = models.URLField(blank=True)
-    tiktok_url = models.URLField(blank=True)
-    reddit_url = models.URLField(blank=True)
-    twitter_url = models.URLField(blank=True, help_text="X / Twitter URL")
+    linkedin_url  = models.URLField(blank=True)
+    youtube_url   = models.URLField(blank=True)
+    tiktok_url    = models.URLField(blank=True)
+    reddit_url    = models.URLField(blank=True)
+    twitter_url   = models.URLField(blank=True, help_text="X / Twitter URL")
 
     panels = [
         MultiFieldPanel(
             [
-                FieldPanel("col1_header"),
-                FieldPanel("col2_header"),
-                FieldPanel("col3_header"),
+                InlinePanel(
+                    "sections",
+                    label="Section",
+                    help_text=(
+                        "Each section has a heading and one or more columns. "
+                        "Use one column per section for the standard layout; "
+                        "use multiple columns under one heading for wide link groups. "
+                        "Drag the ⠿ handle to reorder."
+                    ),
+                ),
             ],
-            heading="Column Headings",
+            heading="Link Sections",
         ),
         MultiFieldPanel(
-            [
-                InlinePanel("links", label="Footer Link"),
-            ],
-            heading="Links (assign each to Column 1 / 2 / 3)",
-        ),
-        MultiFieldPanel(
-            [
-                FieldPanel("about_text"),
-            ],
+            [FieldPanel("about_text")],
             heading="About Text",
         ),
         MultiFieldPanel(
@@ -238,16 +406,6 @@ class SiteFooter(ClusterableModel):
 
     def __str__(self):
         return "Site Footer"
-
-    # ── Helpers used in the template ───────────────────────────────────────
-    def col1_links(self):
-        return self.links.filter(column="col1")
-
-    def col2_links(self):
-        return self.links.filter(column="col2")
-
-    def col3_links(self):
-        return self.links.filter(column="col3")
 
 
 class HomePage(Page):

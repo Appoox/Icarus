@@ -1,65 +1,69 @@
 {% load footer_tags wagtailcore_tags wagtailimages_tags %}
 
-{# Single tag call — ctx holds footer object + all dynamic data #}
+{# {# ───────────────────────────────────────────────────────────────────────── #}
+   {# footer.html  —  global site footer #}
+   {# Template tag get_site_footer returns ctx: #}
+     {# ctx.footer          → SiteFooter snippet instance #}
+     {# ctx.editorial_board → editorial board data (sections + members) #}
+
+   {# ⚠ Performance: update footer_tags.py to prefetch the full hierarchy: #}
+       {# SiteFooter.objects.prefetch_related('sections__columns__column_links__page' #}
+       {# #).first() #}
+{# ──────────────────────────────────────────────────────────────────────────── #}
+
 {% get_site_footer as ctx %}
 {% with footer=ctx.footer %}
 
 {% if footer %}
-<footer class="site-footer">
+<footer class="site-footer" role="contentinfo">
   <div class="site-footer__inner">
 
-    {# ── Three-column link grid ──────────────────────────────────────── #}
-    <div class="site-footer__columns">
+    {# ── Navigational sections ───────────────────────────────────────── #}
+    {# Each section = one heading + one or more columns.                  #}
+    {# One column → standard layout.                                      #}
+    {# Multiple columns → links flow side-by-side under the same heading. #}
+    {% with sections=footer.sections.all %}
+    {% if sections %}
+    <nav class="site-footer__sections" aria-label="Footer navigation">
+      {% for section in sections %}
 
-      {# Column 1 — dynamic links + editor col1 extras #}
-      <div class="site-footer__col">
-        {% if footer.col1_header %}
-          <h4 class="site-footer__col-heading">{{ footer.col1_header }}</h4>
+      {# Count columns so CSS can apply the right flex-grow basis #}
+      {% with col_count=section.columns.count %}
+      <div class="site-footer__section"
+           data-cols="{{ col_count }}">
+
+        {# Section heading spans the full width above all sub-columns #}
+        {% if section.heading %}
+          <h4 class="site-footer__section-heading">{{ section.heading }}</h4>
         {% endif %}
-        <ul class="site-footer__col-links">
-          {% if ctx.current_issue_url %}
-            <li><a href="{{ ctx.current_issue_url }}" class="site-footer__link">Latest Issue</a></li>
-          {% endif %}
-          {% if ctx.most_read_issue_url %}
-            <li><a href="{{ ctx.most_read_issue_url }}" class="site-footer__link">Most Read Issues</a></li>
-          {% endif %}
-          {% if ctx.latest_article_url %}
-            <li><a href="{{ ctx.latest_article_url }}" class="site-footer__link">All Articles</a></li>
-          {% endif %}
-          {% if ctx.most_read_article_url %}
-            <li><a href="{{ ctx.most_read_article_url }}" class="site-footer__link">Most Read Articles</a></li>
-          {% endif %}
-          {% for link in footer.col1_links %}
-            <li><a href="{{ link.get_url }}" class="site-footer__link">{{ link.label }}</a></li>
-          {% endfor %}
-        </ul>
-      </div>
 
-      {# Column 2 — editor-managed (Company, About, Contact…) #}
-      <div class="site-footer__col">
-        {% if footer.col2_header %}
-          <h4 class="site-footer__col-heading">{{ footer.col2_header }}</h4>
-        {% endif %}
-        <ul class="site-footer__col-links">
-          {% for link in footer.col2_links %}
-            <li><a href="{{ link.get_url }}" class="site-footer__link">{{ link.label }}</a></li>
+        {# Inner row: one div per column #}
+        <div class="site-footer__section-body">
+          {% for col in section.columns.all %}
+          <div class="site-footer__col">
+            <ul class="site-footer__col-links" role="list">
+              {% for link in col.column_links.all %}
+              <li>
+                {# Open external URLs in a new tab; internal pages open inline #}
+                <a href="{{ link.get_url }}"
+                   class="site-footer__link"
+                   {% if link.is_external %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                  {{ link.label }}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
           {% endfor %}
-        </ul>
-      </div>
+        </div>{# /.site-footer__section-body #}
 
-      {# Column 3 — editor-managed (Privacy, T&C, Accessibility…) #}
-      <div class="site-footer__col">
-        {% if footer.col3_header %}
-          <h4 class="site-footer__col-heading">{{ footer.col3_header }}</h4>
-        {% endif %}
-        <ul class="site-footer__col-links">
-          {% for link in footer.col3_links %}
-            <li><a href="{{ link.get_url }}" class="site-footer__link">{{ link.label }}</a></li>
-          {% endfor %}
-        </ul>
-      </div>
+      </div>{# /.site-footer__section #}
+      {% endwith %}
 
-    </div>{# /.site-footer__columns #}
+      {% endfor %}
+    </nav>
+    {% endif %}
+    {% endwith %}
 
     {# ── Editorial Board accordion ────────────────────────────────────── #}
     {% if ctx.editorial_board %}
@@ -74,7 +78,7 @@
         </button>
       </div>
 
-      <div class="editorial-board-content" id="editorial-board-content">
+      <div class="editorial-board-content" id="editorial-board-content" hidden>
         <div class="editorial-board-inner">
 
           {% for section in ctx.editorial_board.sections %}
@@ -137,7 +141,9 @@
                class="site-footer__logo">
         {% endif %}
 
+        {# Social icons — only rendered when a URL is set in the snippet #}
         <div class="site-footer__social" aria-label="Social media links">
+
           {% if footer.facebook_url %}
           <a href="{{ footer.facebook_url }}" class="site-footer__social-link" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
@@ -173,8 +179,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </a>
           {% endif %}
-        </div>
 
+        </div>{# /.site-footer__social #}
       </div>{# /.site-footer__branding #}
     </div>{# /.site-footer__bottom #}
 

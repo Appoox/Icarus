@@ -2,6 +2,18 @@
    FOOTER  —  Editorial magazine style (Scientific American-inspired)
    Palette : charcoal bg · white headings · warm-gray links
    Font    : inherits site body; headings use a slightly bolder weight
+
+   Navigation hierarchy reflected in the CSS:
+     .site-footer__sections       — flex row of sections (outer)
+       .site-footer__section      — one heading + its column(s)
+         .site-footer__section-heading  — spans full width above columns
+         .site-footer__section-body     — flex row of columns within section
+           .site-footer__col            — one vertical link list
+             .site-footer__col-links    — the <ul>
+
+   Multi-column sections (data-cols="2", "3"…) flex their body wider so
+   each sub-column fills proportionally.  Single-column sections (default)
+   look exactly like the previous design.
 ═══════════════════════════════════════════════════════════════ */
 
 :root {
@@ -12,8 +24,10 @@
   --footer-link:        #e0e0e0;
   --footer-link-hover:  #ffffff;
   --footer-muted:       #999999;
-  --footer-accent:      #c0392b;   /* Icarus red — used on heading underline */
+  --footer-accent:      #c0392b;   /* Icarus red */
   --footer-social-size: 22px;
+  /* Minimum width of one link column — used in flex-basis calculations */
+  --footer-col-min:     150px;
 }
 
 /* ── Shell ──────────────────────────────────────────────────────── */
@@ -22,6 +36,8 @@
   color: var(--footer-text);
   margin-top: auto;
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
+  /* Thin accent bar ties the footer to the site's brand colour */
+  border-top: 4px solid var(--footer-accent);
 }
 
 /* ── Inner wrapper ──────────────────────────────────────────────── */
@@ -31,16 +47,44 @@
   padding: 3.5rem 2.5rem 2rem;
 }
 
-/* ── Three-column grid ──────────────────────────────────────────── */
-.site-footer__columns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* ═══════════════════════════════════════════════════════════════
+   SECTION GRID
+   Sections sit in a flex row that wraps.  Each section grows from
+   --footer-col-min × its column count, so a 2-column section
+   naturally takes twice as much space as a 1-column section.
+═══════════════════════════════════════════════════════════════ */
+
+.site-footer__sections {
+  display: flex;
+  flex-wrap: wrap;
   gap: 2rem 3rem;
   padding-bottom: 2.5rem;
 }
 
-/* ── Column heading ─────────────────────────────────────────────── */
-.site-footer__col-heading {
+/* Every section: grow proportionally, never shrink below its column count */
+.site-footer__section {
+  /* Default (1 column): flex-basis = --footer-col-min */
+  flex: 1 1 var(--footer-col-min);
+  min-width: var(--footer-col-min);
+}
+
+/*
+   Multi-column sections get wider flex-basis so they attract more
+   space from the flex algorithm — a 2-col section gets ~2× a 1-col.
+   We set these via [data-cols] attribute written by the template.
+*/
+.site-footer__section[data-cols="2"] {
+  flex-basis: calc(var(--footer-col-min) * 2 + 2rem); /* 2 cols + 1 gap */
+}
+.site-footer__section[data-cols="3"] {
+  flex-basis: calc(var(--footer-col-min) * 3 + 4rem); /* 3 cols + 2 gaps */
+}
+.site-footer__section[data-cols="4"] {
+  flex-basis: calc(var(--footer-col-min) * 4 + 6rem); /* 4 cols + 3 gaps */
+}
+
+/* ── Section heading — spans the full width of all sub-columns ── */
+.site-footer__section-heading {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -48,8 +92,23 @@
   color: var(--footer-heading);
   margin: 0 0 1.25rem 0;
   padding-bottom: 0.6rem;
+  /* display: block so the border-bottom stretches across all sub-columns */
+  display: block;
   border-bottom: 2px solid var(--footer-accent);
-  display: inline-block;
+  width: 100%;
+}
+
+/* ── Section body — flex row of columns ─────────────────────── */
+.site-footer__section-body {
+  display: flex;
+  gap: 2rem;
+}
+
+/* ── Individual column ──────────────────────────────────────── */
+.site-footer__col {
+  /* Equal share of the section body width */
+  flex: 1 1 var(--footer-col-min);
+  min-width: 0; /* prevent overflow on very long link labels */
 }
 
 /* ── Link list ──────────────────────────────────────────────────── */
@@ -67,12 +126,15 @@
   color: var(--footer-link);
   text-decoration: none;
   line-height: 1.4;
-  transition: color 0.15s ease;
+  /* inline-block required for padding-left transition */
+  display: inline-block;
+  transition: color 0.15s ease, padding-left 0.15s ease;
 }
 
 .site-footer__link:hover {
   color: var(--footer-link-hover);
-  text-decoration: none;
+  /* Subtle indent gives tactile "pressing into" feedback */
+  padding-left: 4px;
 }
 
 /* ── Divider ────────────────────────────────────────────────────── */
@@ -166,37 +228,52 @@
   display: block;
 }
 
-/* ── Responsive: tablet (≤900 px) ───────────────────────────────── */
+/* ── Responsive: tablet (≤ 900 px) ─────────────────────────────── */
 @media (max-width: 900px) {
-  .site-footer__columns {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-  }
-
-  /* Push third column to its own full-width row */
-  .site-footer__col:nth-child(3) {
-    grid-column: span 2;
-  }
-
   .site-footer__inner {
     padding: 3rem 2rem 1.75rem;
   }
+
+  /* Collapse multi-column section bodies to single column on tablet */
+  .site-footer__section-body {
+    flex-wrap: wrap;
+  }
+
+  /* Prevent any single section from being too narrow after wrapping */
+  .site-footer__section {
+    flex-basis: calc(50% - 1.5rem);  /* 2-up layout */
+  }
+
+  /* Wide sections (3–4 cols) drop to 2 sub-columns on tablet */
+  .site-footer__section[data-cols="3"],
+  .site-footer__section[data-cols="4"] {
+    flex-basis: 100%;
+  }
 }
 
-/* ── Responsive: mobile (≤600 px) ───────────────────────────────── */
+/* ── Responsive: mobile (≤ 600 px) ─────────────────────────────── */
 @media (max-width: 600px) {
-  .site-footer__columns {
-    grid-template-columns: 1fr;
+  .site-footer__sections {
     gap: 1.75rem;
     padding-bottom: 2rem;
   }
 
-  .site-footer__col:nth-child(3) {
-    grid-column: span 1;
-  }
-
   .site-footer__inner {
     padding: 2.5rem 1.25rem 1.5rem;
+  }
+
+  /* Full-width sections, stacked */
+  .site-footer__section,
+  .site-footer__section[data-cols="2"],
+  .site-footer__section[data-cols="3"],
+  .site-footer__section[data-cols="4"] {
+    flex-basis: 100%;
+  }
+
+  /* Stack sub-columns vertically on mobile */
+  .site-footer__section-body {
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   .site-footer__bottom {
@@ -216,8 +293,8 @@
 /* ═══════════════════════════════════════════════════════════════
    EDITORIAL BOARD — footer dark-theme overrides
    The base accordion structure (grid-template-rows transition,
-   board-member card layout) is defined in issue.css and reused
-   here. Only colour/border values are overridden for the dark bg.
+   board-member card layout) is defined below.  Only colour/border
+   values are overridden for the dark background here.
 ═══════════════════════════════════════════════════════════════ */
 
 /* ── Wrapper divider + button row ─────────────────────────────── */
@@ -257,13 +334,8 @@
   border-color: var(--footer-accent);
 }
 
-.site-footer__board-btn[aria-expanded="true"]::after {
-  content: ' ↑';
-}
-
-.site-footer__board-btn[aria-expanded="false"]::after {
-  content: ' ↓';
-}
+.site-footer__board-btn[aria-expanded="true"]::after  { content: ' ↑'; }
+.site-footer__board-btn[aria-expanded="false"]::after { content: ' ↓'; }
 
 /* ── Role section headings ────────────────────────────────────── */
 .site-footer__board-role-heading {
@@ -303,22 +375,23 @@
 }
 
 /* ── Spacing: give the board section breathing room ───────────── */
-.editorial-board-content {
-  padding-bottom: 0.5rem;
-}
-
-.editorial-board-section {
-  margin-bottom: 1.75rem;
-}
+.editorial-board-content  { padding-bottom: 0.5rem; }
+.editorial-board-section  { margin-bottom: 1.75rem; }
 
 
 /* ═══════════════════════════════════════════════════════════════
    EDITORIAL BOARD — self-contained structural CSS
-   These rules must live here (not in issue.css) because the
-   footer renders on every page, not just the issue page.
+   Must live here (not in issue.css) because the footer renders
+   on every page, not just the issue page.
 ═══════════════════════════════════════════════════════════════ */
 
 /* ── Accordion mechanism ──────────────────────────────────────── */
+/*
+   grid-template-rows 0fr → 1fr gives a smooth height animation
+   without JavaScript measuring.  The HTML `hidden` attribute hides
+   the content before JS runs (progressive enhancement).
+   JS removes `hidden`, then toggles `is-expanded`.
+*/
 .editorial-board-content {
   display: grid;
   grid-template-rows: 0fr;           /* collapsed by default */
@@ -404,9 +477,7 @@
 }
 
 /* ── Name ─────────────────────────────────────────────────────── */
-.board-member__info {
-  min-width: 0;
-}
+.board-member__info  { min-width: 0; }
 
 .board-member__name {
   font-size: 0.9rem;
@@ -421,15 +492,11 @@
   transition: color 0.15s;
 }
 
-.board-member__name a:hover {
-  color: var(--footer-link-hover);
-}
+.board-member__name a:hover { color: var(--footer-link-hover); }
 
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .editorial-board-members-grid {
-    gap: 1rem;
-  }
+  .editorial-board-members-grid { gap: 1rem; }
 
   .board-member {
     width: 100%;
