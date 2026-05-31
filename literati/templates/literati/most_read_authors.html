@@ -91,7 +91,7 @@
         {# Generate unique preview item indexes corresponding to each parent author object #}
         {% for author in page_obj %}
         <div id="pane-{{ author.id }}" class="articles-preview-pane">
-          <h3 class="preview-pane-title">{{ author.title }} — ജനപ്രിയ രചനകൾ</h3>
+          <h3 class="preview-pane-title">{{ author.title }}</h3>
           <ul class="preview-article-list">
             {% for article in author.top_articles %}
             <li class="preview-article-item">
@@ -134,47 +134,9 @@
 
 </div>
 
-{# Interactive script handling real-time panel state toggles and staggered navigation animations #}
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const pills = document.querySelectorAll('.trending-pill');
-    const panes = document.querySelectorAll('.articles-preview-pane');
-    const defaultPane = document.getElementById('pane-default');
-    const layoutGrid = document.querySelector('.trending-layout-grid');
+{% block extra_js %}
+{# Reuses the high-fidelity dual-column rigid grid styles from the topics view layout #}
+<script src="{% static 'js/most_read_topics.js' %}"></script>
+{% endblock %}
 
-    pills.forEach(pill => {
-      pill.addEventListener('mouseenter', function() {
-        const targetId = this.getAttribute('data-target');
-        
-        // Deactivate all active preview states cleanly
-        panes.forEach(pane => pane.classList.remove('active'));
-        
-        // Target and activate corresponding list container item
-        const activePane = document.getElementById(targetId);
-        if (activePane) {
-          activePane.classList.add('active');
-          
-          // Select list child items and programmatically trigger CSS staggered fade-ins
-          const items = activePane.querySelectorAll('.preview-article-item');
-          items.forEach((item, index) => {
-            item.style.animation = 'none';
-            void item.offsetHeight; // Triggers browser layout reflow cleanly to clear state
-            item.style.animation = `articleItemFadeIn 0.35s cubic-bezier(0.215, 0.610, 0.355, 1) forwards ${index * 0.04}s`;
-          });
-        }
-      });
-    });
-
-    // Tracks boundaries on the outer grid layout workspace instead of the left column list.
-    // This makes the active preview pane fully navigable so users can mouse into it and click links safely.
-    if (layoutGrid) {
-      layoutGrid.addEventListener('mouseleave', function() {
-        panes.forEach(pane => pane.classList.remove('active'));
-        if (defaultPane) {
-          defaultPane.classList.add('active');
-        }
-      });
-    }
-  });
-</script>
 {% endblock %}
