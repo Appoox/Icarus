@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags humanize %}
+
+{% comment %}
+  templates/issue/trending_topics.html
+  Rendered by: issue.views.trending_topics
+  Context: topics (list of Topic objects with total_views and pre-sorted top_articles)
+  
+  Updated: Changed data loop targets to fetch pre-sorted article properties
+           passed down securely via views.py tracking logic.
+{% endcomment %}
+
+{% block extra_css %}
+{# Link to the updated trending topics list configuration #}
+<link rel="stylesheet" href="{% static 'css/most_read_topics.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="trending-container">
+
+  {# Page header section #}
+  <header class="trending-header">
+    <span class="trending-header__kicker">Analytics</span>
+    <h1>ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ</h1>
+    <p class="trending-header__period">കഴിഞ്ഞ 30 ദിവസത്തെ വായനകൾ</p>
+  </header>
+
+  {# Split Screen Grid Layout Container #}
+  <div class="trending-layout-grid">
+    
+    {# Left Main Column: Expanded Topic Rank Rows #}
+    <div class="trending-main-col">
+      {% if topics %}
+      <ol class="trending-list" role="list">
+        {% for topic in topics %}
+        <li>
+          {# Interactive card element with hover data attribute maps #}
+          <a href="{% url 'topic_detail' topic.slug %}"
+             class="trending-pill"
+             data-target="pane-{{ topic.slug }}"
+             title="{{ topic.name }} — {{ topic.total_views|intcomma }} വായനകൾ">
+
+            {# Numerical ranking text layout (Colors completely removed) #}
+            <span class="trending-pill__rank" aria-label="Rank {{ forloop.counter }}">
+              {{ forloop.counter }}
+            </span>
+
+            {# Enclosing container wrapping the article-style tag components #}
+            <div class="trending-pill__name-group">
+              <span class="topic-tag"
+                    style="--topic-color: {{ topic.color|default:'#c0392b' }}; background-color: {{ topic.color|default:'#c0392b' }};">
+                {{ topic.name }}
+              </span>
+            </div>
+
+            {# Total metrics spacing block #}
+            <span class="trending-pill__views" aria-label="{{ topic.total_views|intcomma }} വായനകൾ">
+              <span class="trending-pill__count">{{ topic.total_views|intcomma }}</span>
+              <span class="trending-pill__unit">വായനകൾ</span>
+            </span>
+
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <div class="trending-empty">
+        <p>നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    {# Right Sticky Column: Real-time Articles Preview Showcase #}
+    <div class="trending-side-col">
+      <div class="preview-panel-sticky">
+        
+        {# Default State Message Box #}
+        <div id="pane-default" class="articles-preview-pane active">
+          <h3 class="preview-pane-title">ലേഖനങ്ങൾ</h3>
+          <p class="pane-placeholder-text">ജനപ്രിയ ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു വിഷയം തിരഞ്ഞെടുക്കുക.</p>
+        </div>
+
+        {# Generate descriptive article index blocks linked to each parent slug element #}
+        {% for topic in topics %}
+        <div id="pane-{{ topic.slug }}" class="articles-preview-pane">
+          <h3 class="preview-pane-title">{{ topic.name }}</h3>
+          <ul class="preview-article-list">
+            {# Loops through the pre-computed most read items from context #}
+            {% for article in topic.top_articles %}
+            <li class="preview-article-item">
+              <a href="{{ article.url|default:'#' }}" class="preview-article-link">
+                <span class="preview-article-headline">{{ article.title }}</span>
+              </a>
+            </li>
+            {% empty %}
+            <li class="pane-placeholder-text">ഈ വിഷയത്തിൽ ലേഖനങ്ങൾ ലഭ്യമായിട്ടില്ല.</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{# Interactive script handling lightning-fast panel rendering toggles #}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const pills = document.querySelectorAll('.trending-pill');
+    const panes = document.querySelectorAll('.articles-preview-pane');
+    const defaultPane = document.getElementById('pane-default');
+
+    pills.forEach(pill => {
+      pill.addEventListener('mouseenter', function() {
+        const targetId = this.getAttribute('data-target');
+        
+        // Deactivate all running preview states cleanly
+        panes.forEach(pane => pane.classList.remove('active'));
+        
+        // Target and activate corresponding list container item
+        const activePane = document.getElementById(targetId);
+        if (activePane) {
+          activePane.classList.add('active');
+        }
+      });
+    });
+
+    // Reset view configuration back to default state upon list focus exits
+    const mainList = document.querySelector('.trending-list');
+    if (mainList) {
+      mainList.addEventListener('mouseleave', function() {
+        panes.forEach(pane => pane.classList.remove('active'));
+        if (defaultPane) {
+          defaultPane.classList.add('active');
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

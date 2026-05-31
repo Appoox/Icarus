@@ -184,14 +184,16 @@ class FooterColumn(Orderable, ClusterableModel):
 # AND a matching entry in the dynamic_url_map inside that tag function.
 DYNAMIC_URL_CHOICES = [
     ('',                       '— Fixed page or URL (default) —'),
+    # ── Issue destinations ──────────────────────────────────────────
     ('current_issue_url',      'Current Issue — updates when a new issue is published'),
-    ('previous_issue_url',     'Previous Issue — updates when a new issue is published'),
-    ('author_index_page_url',       'Author Index'),
-    ('article_index_page_url',      'Article Index'),
+    ('previous_issue_url',     'Previous Issue'),
     ('latest_issue_url',       'Issue Index: Latest'),
     ('most_read_issue_url',    'Issue Index: Most Read'),
+    # ── Article destinations ────────────────────────────────────────
     ('latest_article_url',     'Article Index: Latest'),
     ('most_read_article_url',  'Article Index: Most Read'),
+    # ── Topic / analytics destinations ─────────────────────────────
+    ('most_read_topics_url',    'Most Read Topics — rolling 30-day most read'),
 ]
 
 
@@ -267,19 +269,20 @@ class FooterColumnLink(Orderable):
 
     def get_url(self):
         """
-        Return the resolved URL, ensuring it is always absolute.
+        Return the resolved URL.  Priority order (highest → lowest):
 
-        - Internal page (page_id set): resolved via page.url, which is
-          slug-safe and always starts with '/'.
-        - Raw url field: normalised so that bare relative paths like
-          'latest-issue/' become '/latest-issue/', preventing browsers
-          from interpreting them relative to the current page.
+        1. _resolved_dynamic_url  — injected at render time by get_site_footer()
+           in footer_tags.py when dynamic_url_key is set.  Always an internal
+           Wagtail / Django-resolved URL, so no normalisation is needed.
+        2. page.url               — slug-safe, always starts with '/'.
+        3. url field              — normalised so that bare site-relative paths
+           like 'trending/' become '/trending/', preventing browsers from
+           interpreting them relative to the current page.
         """
-        # If a dynamic destination key is chosen, return the injected runtime URL
-        if self.dynamic_url_key:
-            resolved_url = getattr(self, "_resolved_dynamic_url", None)
-            if resolved_url:
-                return resolved_url
+        # Dynamic destination — URL injected by the footer template tag at render time
+        resolved = getattr(self, '_resolved_dynamic_url', None)
+        if self.dynamic_url_key and resolved:
+            return resolved
 
         if self.page_id:
             return self.page.url  # always correct even if the page slug changes
@@ -297,8 +300,12 @@ class FooterColumnLink(Orderable):
     def is_external(self):
         """
         True only for genuine off-site links (http/https without page_id).
-        Site-relative paths typed into the url field are NOT external.
+        Dynamic destinations always resolve to internal URLs — never external.
+        Site-relative paths typed into the url field are also NOT external.
         """
+        # Dynamic links always point to internal Wagtail / Django views
+        if self.dynamic_url_key:
+            return False
         if self.page_id:
             return False
         url = (self.url or '').strip()
