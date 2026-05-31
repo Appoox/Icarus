@@ -5,7 +5,7 @@
      templates/issue/most_read_topics.html
 
    Design language: Icarus editorial — Source Sans 3, #c0392b red,
-   clean whitespace, ranked list with split layout preview frames.
+   clean whitespace, dual fixed-column layouts, staggered animations.
 ═══════════════════════════════════════════════════════════════ */
 
 :root {
@@ -14,12 +14,12 @@
   --tr-muted:     #757575;
   --tr-border:    #e8e8e8;
   --tr-bg:        #ffffff;
-  --tr-hover-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --tr-hover-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 /* ── Page shell ─────────────────────────────────────────────── */
 .trending-container {
-  max-width: 1240px; /* Extended boundary space width limits to hold multi-columns safely */
+  max-width: 1240px; /* Extended boundary layout container width */
   margin: 0 auto;
   padding: 3rem 1.5rem 5rem;
 }
@@ -27,7 +27,7 @@
 /* ── Page header ────────────────────────────────────────────── */
 .trending-header {
   text-align: center;
-  margin-bottom: 2.75rem;
+  margin-bottom: 3.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 3px solid var(--tr-accent);
 }
@@ -58,17 +58,19 @@
   font-style: italic;
 }
 
-/* ── Two-Column Split Architecture Grid ──────────────────────── */
+/* ── Two-Column Split Architecture Grid (Dual Fixed Column Lock) ── */
 .trending-layout-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr; /* Shifts cards wider left, leaves side column space right */
-  gap: 2.5rem;
+  grid-template-columns: 380px 640px; /* Both left and right columns are now explicitly locked to absolute fixed widths */
+  gap: 3.5rem;
   align-items: start;
+  justify-content: center; /* Beautifully centers the rigid layout block inside the fluid page container wrapper */
 }
 
 /* ── Left Side Layout column wrapper ─────────────────────────── */
 .trending-main-col {
   min-width: 0;
+  width: 380px; /* Enforces exact pixel containment matching the grid definition */
 }
 
 .trending-list {
@@ -77,41 +79,43 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
 /* ── Individual pill card item settings ─────────────────────── */
 .trending-pill {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1rem 1.25rem;
+  gap: 1.15rem;
+  padding: 1.1rem 1.25rem;
   background: var(--tr-bg);
   border: 1px solid var(--tr-border);
   border-radius: 12px;
   text-decoration: none;
   color: inherit;
+  /* Hardware-accelerated transformation and lighting transitions */
   transition:
-    transform     0.18s ease,
-    border-color  0.18s ease,
-    box-shadow    0.18s ease;
+    transform     0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    border-color  0.25s ease,
+    box-shadow    0.25s ease;
+  will-change: transform, box-shadow;
 }
 
 .trending-pill:hover,
 .trending-pill:focus-visible {
-  transform:    translateX(6px);
+  transform:    translateX(8px);
   border-color: var(--tr-accent);
   box-shadow:   var(--tr-hover-shadow);
   outline: none;
 }
 
-/* ── Rank Badge (All custom colors entirely removed) ────────── */
+/* ── Rank Typography Configurations (All custom backgrounds removed) ── */
 .trending-pill__rank {
-  width: 1.75rem;
+  width: 1.5rem;
   height: auto;
-  background: none !important; /* Total removal of old bubble background fills */
-  color: var(--tr-muted); /* Uniform non-colored editorial slate text color */
-  font-size: 1.15rem;
+  background: none !important;
+  color: var(--tr-muted);
+  font-size: 1.1rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   display: flex;
@@ -121,12 +125,12 @@
   line-height: 1;
 }
 
-/* Clean uniform dark typography hierarchy sizing for top 3 positions without colors */
+/* Clean uniform dark typography hierarchy sizing for top 3 positions */
 .trending-list li:nth-child(1) .trending-pill__rank { color: var(--tr-text); font-size: 1.35rem; }
 .trending-list li:nth-child(2) .trending-pill__rank { color: var(--tr-text); font-size: 1.25rem; }
 .trending-list li:nth-child(3) .trending-pill__rank { color: var(--tr-text); font-size: 1.2rem; }
 
-/* ── Name+role element groups ───────────────────────────────── */
+/* ── Name + Role element groups ───────────────────────────────── */
 .trending-pill__name-group {
   flex: 1;
   min-width: 0;
@@ -142,30 +146,30 @@
   font-family: var(--font-ui, sans-serif);
   font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #ffffff;
   padding: 6px 14px;
   border-radius: 20px;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .trending-pill:hover .topic-tag {
   filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
 /* ── View metrics tracking elements ──────────────────────────── */
 .trending-pill__views {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
+  gap: 0.3rem;
   flex-shrink: 0;
   text-align: right;
 }
@@ -178,7 +182,7 @@
 }
 
 .trending-pill__unit {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--tr-muted);
   white-space: nowrap;
 }
@@ -186,70 +190,87 @@
 /* ── Right Column: Sticky Live Articles Preview Framework ────── */
 .trending-side-col {
   position: relative;
+  min-width: 0;
+  width: 640px; /* Confirms fixed viewport limit sizing matching the parent layout setup */
 }
 
 .preview-panel-sticky {
   position: sticky;
-  top: 2rem; /* Fixes panel in position cleanly during long scrolling actions */
-  background: #fcfcfc;
+  top: 3rem; /* Dynamic sticky offset for vertical scroll layout alignment */
+  background: #fbfbfb;
   border: 1px solid var(--tr-border);
-  border-radius: 14px;
-  padding: 2rem;
-  min-height: 420px;
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.015);
+  border-radius: 16px;
+  padding: 2.5rem;
+  min-height: 460px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.01);
 }
 
-/* Handle presentation visibility loops via dynamic target states */
+/* Panel presentation visibility rules handled via Javascript hooks */
 .articles-preview-pane {
   display: none;
 }
 
 .articles-preview-pane.active {
   display: block;
-  animation: panelFadeIn 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes panelFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .preview-pane-title {
   font-family: 'Source Sans 3', sans-serif;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 800;
   color: var(--tr-text);
   margin-top: 0;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.6rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--tr-accent);
+  animation: panelHeaderFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes panelHeaderFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .pane-placeholder-text {
   color: var(--tr-muted);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   line-height: 1.6;
   font-style: italic;
+  animation: panelHeaderFadeIn 0.3s ease-out forwards;
 }
 
-/* Preview article sub-list row designs */
+/* Preview article sub-list row alignments */
 .preview-article-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 1.25rem;
 }
 
+/* Micro-staggered keyframe item configurations triggered via Javascript injection */
 .preview-article-item {
   border-bottom: 1px dashed var(--tr-border);
-  padding-bottom: 0.8rem;
+  padding-bottom: 0.9rem;
+  opacity: 0; /* Starts hidden; animated into view by script values */
+  will-change: transform, opacity;
 }
 
 .preview-article-item:last-child {
   border-bottom: none;
   padding-bottom: 0;
+}
+
+@keyframes articleItemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .preview-article-link {
@@ -258,15 +279,16 @@
 }
 
 .preview-article-headline {
-  font-size: 0.98rem;
+  font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.45;
   color: var(--tr-text);
-  transition: color 0.15s ease;
+  transition: color 0.18s ease, transform 0.18s ease;
 }
 
 .preview-article-link:hover .preview-article-headline {
   color: var(--tr-accent);
+  transform: translateX(4px);
 }
 
 /* ── Empty state fallback elements ───────────────────────────── */
@@ -277,15 +299,23 @@
   font-size: 0.95rem;
 }
 
-/* ── Responsive adjustments ─────────────────────────────────── */
+/* ── Responsive breakpoints ─────────────────────────────────── */
+@media (max-width: 1120px) {
+  /* Recalculate or scale back boundaries cleanly if the device viewport drops below total locked width constraints */
+  .trending-layout-grid {
+    grid-template-columns: 320px 1fr;
+    gap: 2rem;
+  }
+  .trending-main-col { width: 320px; }
+  .trending-side-col { width: auto; }
+}
+
 @media (max-width: 992px) {
   .trending-layout-grid {
-    grid-template-columns: 1fr; /* Collapse smoothly into singular layout block on tablets */
+    grid-template-columns: 1fr; /* Fallback cleanly to standard stack on tablet dimensions */
   }
-
-  .trending-side-col {
-    display: none; /* Safely hides interactive preview columns on smaller devices */
-  }
+  .trending-main-col { width: 100%; }
+  .trending-side-col { display: none; /* Hides preview system layouts completely on smaller portable screens */ }
 }
 
 @media (max-width: 600px) {
@@ -298,7 +328,7 @@
   }
 
   .trending-pill {
-    padding: 0.85rem 1rem;
+    padding: 0.95rem 1.1rem;
     gap: 0.85rem;
   }
 }

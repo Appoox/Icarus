@@ -4,10 +4,11 @@
 {% comment %}
   templates/issue/trending_topics.html
   Rendered by: issue.views.trending_topics
-  Context: topics (list of Topic objects with total_views and pre-sorted top_articles)
+  Context: page_obj (Paginator page instance referencing the current active slice of 10 topics)
   
-  Updated: Changed data loop targets to fetch pre-sorted article properties
-           passed down securely via views.py tracking logic.
+  Updated: Converted target rendering loops to map over page_obj parameters.
+           Implemented a mathematical start index accumulator to generate continuous
+           absolute rank tracking digits across varying pages. Included shared sitewide pagination component.
 {% endcomment %}
 
 {% block extra_css %}
@@ -28,11 +29,11 @@
   {# Split Screen Grid Layout Container #}
   <div class="trending-layout-grid">
     
-    {# Left Main Column: Expanded Topic Rank Rows #}
+    {# Left Main Column: Fixed Width Topic Rank Rows #}
     <div class="trending-main-col">
-      {% if topics %}
+      {% if page_obj %}
       <ol class="trending-list" role="list">
-        {% for topic in topics %}
+        {% for topic in page_obj %}
         <li>
           {# Interactive card element with hover data attribute maps #}
           <a href="{% url 'topic_detail' topic.slug %}"
@@ -40,9 +41,9 @@
              data-target="pane-{{ topic.slug }}"
              title="{{ topic.name }} — {{ topic.total_views|intcomma }} വായനകൾ">
 
-            {# Numerical ranking text layout (Colors completely removed) #}
-            <span class="trending-pill__rank" aria-label="Rank {{ forloop.counter }}">
-              {{ forloop.counter }}
+            {# Numerical ranking layout: Calculates true position across multiple pages via start_index #}
+            <span class="trending-pill__rank" aria-label="Rank {{ page_obj.start_index|add:forloop.counter0 }}">
+              {{ page_obj.start_index|add:forloop.counter0 }}
             </span>
 
             {# Enclosing container wrapping the article-style tag components #}
@@ -70,7 +71,7 @@
       {% endif %}
     </div>
 
-    {# Right Sticky Column: Real-time Articles Preview Showcase #}
+    {# Right Column: Expansive, Fixed Width Prominent Preview Framework #}
     <div class="trending-side-col">
       <div class="preview-panel-sticky">
         
@@ -81,11 +82,11 @@
         </div>
 
         {# Generate descriptive article index blocks linked to each parent slug element #}
-        {% for topic in topics %}
+        {% for topic in page_obj %}
         <div id="pane-{{ topic.slug }}" class="articles-preview-pane">
           <h3 class="preview-pane-title">{{ topic.name }}</h3>
           <ul class="preview-article-list">
-            {# Loops through the pre-computed most read items from context #}
+            {# Loops through pre-computed popular items passed down via context #}
             {% for article in topic.top_articles %}
             <li class="preview-article-item">
               <a href="{{ article.url|default:'#' }}" class="preview-article-link">
@@ -103,9 +104,13 @@
     </div>
 
   </div>
+
+  {# Include sitewide navigation block, securely mapping layout states through your shared pagination system template #}
+  {% include "includes/pagination.html" with page_obj=page_obj %}
+
 </div>
 
-{# Interactive script handling lightning-fast panel rendering toggles #}
+{# Interactive script handling real-time panel state toggles and staggered animations #}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const pills = document.querySelectorAll('.trending-pill');
@@ -116,18 +121,26 @@
       pill.addEventListener('mouseenter', function() {
         const targetId = this.getAttribute('data-target');
         
-        // Deactivate all running preview states cleanly
+        // Deactivate all active panel states cleanly
         panes.forEach(pane => pane.classList.remove('active'));
         
         // Target and activate corresponding list container item
         const activePane = document.getElementById(targetId);
         if (activePane) {
           activePane.classList.add('active');
+          
+          // Select list child items and programmatically trigger CSS staggered fade-ins
+          const items = activePane.querySelectorAll('.preview-article-item');
+          items.forEach((item, index) => {
+            item.style.animation = 'none';
+            void item.offsetHeight; // Triggers browser layout reflow cleanly to clear state
+            item.style.animation = `articleItemFadeIn 0.35s cubic-bezier(0.215, 0.610, 0.355, 1) forwards ${index * 0.04}s`;
+          });
         }
       });
     });
 
-    // Reset view configuration back to default state upon list focus exits
+    // Reset layout panel state back to default placeholder text view when mouse leaves the list completely
     const mainList = document.querySelector('.trending-list');
     if (mainList) {
       mainList.addEventListener('mouseleave', function() {

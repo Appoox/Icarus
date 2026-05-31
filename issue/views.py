@@ -12,6 +12,8 @@ from django.apps import apps
 from hitcount.models import Hit
 from wagtail.models import Page as WagtailPage
 from collections import defaultdict
+# Import Django's structural paginator classes to handle page distribution splits
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .models import Topic, Issue
 from articles.models import Article
@@ -43,7 +45,7 @@ def most_read_topics(request):
         article_ct = ContentType.objects.get_for_model(Article_model)
         page_ct = ContentType.objects.get_for_model(WagtailPage)
     except LookupError:
-        return render(request, 'issue/most_read_topics.html', {'topics': []})
+        return render(request, 'issue/most_read_topics.html', {'page_obj': None})
 
     # Pull live articles to establish an ID-to-Topic relational mapping reference
     live_articles = Article_model.objects.live().values('id', 'topic_id')
@@ -103,6 +105,19 @@ def most_read_topics(request):
     # Sort items sequentially based on highest cumulative reader engagement
     topics.sort(key=lambda x: x.total_views, reverse=True)
 
+    # Instantiate core Paginator container, enforcing a limit of 10 items per page block
+    paginator = Paginator(topics, 10)
+    page_request = request.GET.get('page')
+    
+    try:
+        page_obj = paginator.page(page_request)
+    except PageNotAnInteger:
+        # If page parameter is missing or non-numeric, fallback smoothly onto the first slice page
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        # If target parameter breaks upper limits, drop context safely into the final page window
+        page_obj = paginator.page(paginator.num_pages)
+
     return render(request, 'issue/most_read_topics.html', {
-        'topics': topics,
+        'page_obj': page_obj,
     })
