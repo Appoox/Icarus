@@ -58,6 +58,12 @@ def get_site_footer():
     except NoReverseMatch:
         most_read_topics_url = '/topics/most_read/'
 
+    # Added: Dynamically resolve the author analytics view route name
+    try:
+        most_read_authors_url = reverse('most_read_authors')
+    except NoReverseMatch:
+        most_read_authors_url = '/authors/most-read/'
+
     # ── Current and previous issue tracking ──────────────────────────────
     current_issue  = Issue.objects.live().order_by('-date_of_publishing').first()
     previous_issue = Issue.objects.live().order_by('-date_of_publishing')[1:2].first()
@@ -98,6 +104,7 @@ def get_site_footer():
         'latest_article_url':    latest_article_page.url if latest_article_page else '/articles/',
         'most_read_article_url': most_read_article_page.url if most_read_article_page else None,
         'most_read_topics_url':   most_read_topics_url,
+        'most_read_authors_url':  most_read_authors_url,  # Added: Maps authors destination key to resolved URL string
     }
 
     # ── Inject resolved URLs into prefetched link instances ───────────────
@@ -124,6 +131,7 @@ def get_site_footer():
         'most_read_issue_url':     dynamic_url_map['most_read_issue_url'],
         'most_read_article_url':   dynamic_url_map['most_read_article_url'],
         'most_read_topics_url':     most_read_topics_url,
+        'most_read_authors_url':    most_read_authors_url,  # Added: Pass down to template runtime context parameters
         'current_issue_url':       dynamic_url_map['current_issue_url'],
         'previous_issue_url':      dynamic_url_map['previous_issue_url'],
         'editorial_board':         editorial_board,

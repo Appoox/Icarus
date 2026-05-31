@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags humanize %}
+{#
+  templates/literati/most_read_authors.html
+  Rendered by: literati.views.most_read_authors
+  Context:     page_obj — Paginator page instance referencing the current active slice of 10 authors.
+               Each author has: .title  .role  .profile_image  .url
+                                .total_views .top_articles
+  Requires:    django.contrib.humanize in INSTALLED_APPS (for |intcomma)
+#}
+
+{% block extra_css %}
+{# Reuses the high-fidelity dual-column rigid grid styles from the topics view layout #}
+<link rel="stylesheet" href="{% static 'css/most_read_topics.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="trending-container">
+
+  {# ── Page header ──────────────────────────────────────────────── #}
+  <header class="trending-header">
+    <h1>ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട എഴുത്തുകാർ</h1>
+    <p class="trending-header__period">കഴിഞ്ഞ 30 ദിവസത്തെ ലേഖന വായനകൾ</p>
+  </header>
+
+  {# Split Screen Grid Layout Container #}
+  <div class="trending-layout-grid">
+    
+    {# Left Main Column: Fixed Width Author Rank Rows (Locked at 380px) #}
+    <div class="trending-main-col">
+      {% if page_obj %}
+      <ol class="trending-list" role="list">
+        {% for author in page_obj %}
+        <li>
+          {# Interactive card element binding target pane references via author ID strings #}
+          <a href="{{ author.url }}"
+             class="trending-pill trending-pill--author"
+             data-target="pane-{{ author.id }}"
+             title="{{ author.title }} — {{ author.total_views|intcomma }} ലേഖന വായനകൾ">
+
+            {# Numerical ranking layout: Calculates true absolute position across paginated subsets #}
+            <span class="trending-pill__rank" aria-label="Rank {{ page_obj.start_index|add:forloop.counter0 }}">
+              {{ page_obj.start_index|add:forloop.counter0 }}
+            </span>
+
+            {# Profile photo — falls back to first initial if no image asset is available #}
+            <span class="trending-pill__photo" aria-hidden="true" style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f0f0f0; flex-shrink: 0; border: 1px solid var(--tr-border, #e8e8e8);">
+              {% if author.profile_image %}
+                {% image author.profile_image fill-48x48 as thumb %}
+                <img src="{{ thumb.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+              {% else %}
+                <span class="trending-pill__initials" style="font-weight: 700; color: var(--tr-muted, #757575); font-size: 1.1rem;">{{ author.title|first }}</span>
+              {% endif %}
+            </span>
+
+            {# Name and role layout stack grouping #}
+            <span class="trending-pill__name-group">
+              <span class="trending-pill__name" style="font-weight: 700; color: var(--tr-text, #111111); font-size: 1rem; line-height: 1.3;">{{ author.title }}</span>
+              {% if author.role %}
+              <span class="trending-pill__role" style="font-size: 0.72rem; color: var(--tr-muted, #757575); margin-top: 2px;">{{ author.role }}</span>
+              {% endif %}
+            </span>
+
+            {# View count metrics box #}
+            <span class="trending-pill__views" aria-label="{{ author.total_views|intcomma }} ലേഖന വായനകൾ">
+              <span class="trending-pill__count">{{ author.total_views|intcomma }}</span>
+              <span class="trending-pill__unit">വായനകൾ</span>
+            </span>
+
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <div class="trending-empty">
+        <p>നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    {# Right Column: Expansive, Fixed Width Prominent Preview Framework (Locked at 640px) #}
+    <div class="trending-side-col">
+      <div class="preview-panel-sticky">
+        
+        {# Default State Message Box #}
+        <div id="pane-default" class="articles-preview-pane active">
+          <h3 class="preview-pane-title">ലേഖനങ്ങൾ</h3>
+          <p class="pane-placeholder-text">ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക.</p>
+        </div>
+
+        {# Generate unique preview item indexes corresponding to each parent author object #}
+        {% for author in page_obj %}
+        <div id="pane-{{ author.id }}" class="articles-preview-pane">
+          <h3 class="preview-pane-title">{{ author.title }} — ജനപ്രിയ രചനകൾ</h3>
+          <ul class="preview-article-list">
+            {% for article in author.top_articles %}
+            <li class="preview-article-item">
+              <a href="{{ article.url|default:'#' }}" class="preview-article-link">
+                
+                {# Miniature Cover Thumbnail Frame Container #}
+                <div class="preview-article-thumbnail">
+                  {% if article.cover_image %}
+                    {% image article.cover_image fill-50x50 class="thumb-img" %}
+                  {% elif article.main_image %}
+                    {% image article.main_image fill-50x50 class="thumb-img" %}
+                  {% elif article.image %}
+                    <img src="{{ article.image.url }}" alt="" class="thumb-img">
+                  {% else %}
+                    {# Typographic fallback container if no visual asset exists #}
+                    <div class="thumb-placeholder-fallback">
+                      <span>{{ author.title|slice:":1" }}</span>
+                    </div>
+                  {% endif %}
+                </div>
+
+                {# Article title identifier text #}
+                <span class="preview-article-headline">{{ article.title }}</span>
+              </a>
+            </li>
+            {% empty %}
+            <li class="pane-placeholder-text">ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങൾ നിലവിൽ ലഭ്യമായിട്ടില്ല.</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+
+  {# Include sitewide navigation block, mapping parameters through your shared pagination system layout #}
+  {% include "includes/pagination.html" with page_obj=page_obj %}
+
+</div>
+
+{# Interactive script handling real-time panel state toggles and staggered navigation animations #}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const pills = document.querySelectorAll('.trending-pill');
+    const panes = document.querySelectorAll('.articles-preview-pane');
+    const defaultPane = document.getElementById('pane-default');
+    const layoutGrid = document.querySelector('.trending-layout-grid');
+
+    pills.forEach(pill => {
+      pill.addEventListener('mouseenter', function() {
+        const targetId = this.getAttribute('data-target');
+        
+        // Deactivate all active preview states cleanly
+        panes.forEach(pane => pane.classList.remove('active'));
+        
+        // Target and activate corresponding list container item
+        const activePane = document.getElementById(targetId);
+        if (activePane) {
+          activePane.classList.add('active');
+          
+          // Select list child items and programmatically trigger CSS staggered fade-ins
+          const items = activePane.querySelectorAll('.preview-article-item');
+          items.forEach((item, index) => {
+            item.style.animation = 'none';
+            void item.offsetHeight; // Triggers browser layout reflow cleanly to clear state
+            item.style.animation = `articleItemFadeIn 0.35s cubic-bezier(0.215, 0.610, 0.355, 1) forwards ${index * 0.04}s`;
+          });
+        }
+      });
+    });
+
+    // Tracks boundaries on the outer grid layout workspace instead of the left column list.
+    // This makes the active preview pane fully navigable so users can mouse into it and click links safely.
+    if (layoutGrid) {
+      layoutGrid.addEventListener('mouseleave', function() {
+        panes.forEach(pane => pane.classList.remove('active'));
+        if (defaultPane) {
+          defaultPane.classList.add('active');
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

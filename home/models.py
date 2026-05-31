@@ -194,6 +194,7 @@ DYNAMIC_URL_CHOICES = [
     ('most_read_article_url',  'Article Index: Most Read'),
     # ── Topic / analytics destinations ─────────────────────────────
     ('most_read_topics_url',    'Most Read Topics — rolling 30-day most read'),
+    ('most_read_authors_url',   'Most Read Authors — rolling 30-day most read'),  # Added: Registers the authors path inside the admin options list
 ]
 
 
