@@ -32,15 +32,6 @@
   border-bottom: 3px solid var(--tr-accent);
 }
 
-.trending-header__kicker {
-  display: block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--tr-accent);
-  margin-bottom: 0.5rem;
-}
 
 .trending-header h1 {
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
@@ -61,10 +52,10 @@
 /* ── Two-Column Split Architecture Grid (Dual Fixed Column Lock) ── */
 .trending-layout-grid {
   display: grid;
-  grid-template-columns: 380px 640px; /* Both left and right columns are now explicitly locked to absolute fixed widths */
+  grid-template-columns: 380px 640px; /* Both left and right columns are explicitly locked to absolute fixed widths */
   gap: 3.5rem;
   align-items: start;
-  justify-content: center; /* Beautifully centers the rigid layout block inside the fluid page container wrapper */
+  justify-content: center; /* Centers the rigid layout block inside the fluid page container wrapper */
 }
 
 /* ── Left Side Layout column wrapper ─────────────────────────── */
@@ -191,7 +182,7 @@
 .trending-side-col {
   position: relative;
   min-width: 0;
-  width: 640px; /* Confirms fixed viewport limit sizing matching the parent layout setup */
+  width: 640px; /* Absolute fixed width layout configuration matching grid */
 }
 
 .preview-panel-sticky {
@@ -246,13 +237,13 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 /* Micro-staggered keyframe item configurations triggered via Javascript injection */
 .preview-article-item {
   border-bottom: 1px dashed var(--tr-border);
-  padding-bottom: 0.9rem;
+  padding-bottom: 0.75rem;
   opacity: 0; /* Starts hidden; animated into view by script values */
   will-change: transform, opacity;
 }
@@ -273,22 +264,70 @@
   }
 }
 
+/* Flex row setup to position thumbnails neatly next to text content */
 .preview-article-link {
   text-decoration: none;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
 }
 
+/* ── Miniature Thumbnail Media Styling ───────────────────────── */
+.preview-article-thumbnail {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--tr-border);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+  transition: transform 0.22s ease;
+}
+
+.preview-article-thumbnail .thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* High-contrast geometric fallback decoration box if no cover image exists */
+.thumb-placeholder-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumb-placeholder-fallback span {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--tr-muted);
+}
+
+/* Shared link hover interaction states */
 .preview-article-headline {
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.45;
   color: var(--tr-text);
   transition: color 0.18s ease, transform 0.18s ease;
+  flex: 1;
 }
 
 .preview-article-link:hover .preview-article-headline {
   color: var(--tr-accent);
   transform: translateX(4px);
+}
+
+.preview-article-link:hover .preview-article-thumbnail {
+  transform: scale(1.05);
+  border-color: var(--tr-accent);
 }
 
 /* ── Empty state fallback elements ───────────────────────────── */

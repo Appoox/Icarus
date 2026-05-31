@@ -100,7 +100,7 @@ def most_read_topics(request):
         # Pull associated articles, sort by views, and isolate top entries for preview panel
         associated_articles = topic_to_articles_group.get(topic.id, [])
         associated_articles.sort(key=lambda x: x.views_30_days, reverse=True)
-        topic.top_articles = associated_articles[:5]
+        topic.top_articles = associated_articles[:10]
 
     # Sort items sequentially based on highest cumulative reader engagement
     topics.sort(key=lambda x: x.total_views, reverse=True)
