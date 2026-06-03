@@ -11,5 +11,9 @@ class ReaderConfig(AppConfig):
         auditlog.register(ReaderUser)
         auditlog.register(PaymentDetails)
 
+        # Register the page_published → newsletter signal.
+        # Must be imported here, not at module level, to avoid AppRegistryNotReady errors.
+        from . import signals  # noqa: F401
+
 class CustomWagtailUsersAppConfig(WagtailUsersAppConfig):
     user_viewset = "reader.viewsets.ReaderUserViewSet"

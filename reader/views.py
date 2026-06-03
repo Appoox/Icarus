@@ -296,7 +296,8 @@ def export_mailing_list(request):
     for reader in active_print_readers:
         writer.writerow([
             reader.name,
-            str(reader.phone_number),
+            # phone_number_encrypted is the decrypted display value — Fernet decrypts on access.
+            reader.phone_number_encrypted,
             reader.address_line_1,
             reader.address_line_2,
             reader.post_office,

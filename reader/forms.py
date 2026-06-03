@@ -48,9 +48,13 @@ class AllauthSignupForm(forms.Form):
 class ReaderProfileEditForm(forms.ModelForm):
     """
     Allows a reader to update their profile details.
-    DOB and gender are only persisted when the corresponding consent checkbox
+    birth_year and gender are only persisted when the corresponding consent checkbox
     is checked — this satisfies DPDP explicit-consent requirements.
+    Reading history is only tracked when read_history_consent is given.
     """
+    # Custom non-model field — the model no longer has a single phone_number column.
+    # We accept the E.164 number here, validate uniqueness via the HMAC hash,
+    # and call user.set_phone() in save() to keep hash and ciphertext in sync.
     phone_number = SplitPhoneNumberField(
         region='IN',
         required=False,
@@ -61,9 +65,9 @@ class ReaderProfileEditForm(forms.ModelForm):
     )
 
     # ── Transient consent checkboxes (not model fields) ──
-    dob_consent = forms.BooleanField(
+    birth_year_consent = forms.BooleanField(      # was dob_consent
         required=False,
-        label="I consent to sharing my date of birth.",
+        label="I consent to sharing my birth year.",
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
     )
     gender_consent = forms.BooleanField(
@@ -71,14 +75,23 @@ class ReaderProfileEditForm(forms.ModelForm):
         label="I consent to sharing my gender.",
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
     )
+    read_history_consent = forms.BooleanField(
+        required=False,
+        label="I consent to my reading history being tracked to personalise my experience.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        help_text="If revoked, your existing reading history will be cleared.",
+    )
 
     class Meta:
         model = ReaderUser
         fields = (
-            'name', 'email', 'phone_number', 'profile_image', 'bio', 
-            'gender', 'gender_other', 'date_of_birth',
-            'address_line_1', 'address_line_2', 'city', 'post_office', 'pincode', 'district', 'state',
-            'care_of_name', 'care_of_number', 'care_of_district', 'care_of_meghala', 'care_of_unit'
+            # phone_number is intentionally absent — it is handled as a custom field above.
+            'name', 'email', 'profile_image', 'bio',
+            'gender', 'gender_other', 'birth_year',     # was date_of_birth
+            'address_line_1', 'address_line_2', 'city', 'post_office',
+            'pincode', 'district', 'state',
+            'care_of_name', 'care_of_district', 'care_of_meghala', 'care_of_unit'
+            # care_of_number is also a non-model field override below
         )
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Full name', 'class': 'form-input'}),
@@ -86,7 +99,13 @@ class ReaderProfileEditForm(forms.ModelForm):
             'bio': forms.Textarea(attrs={'placeholder': 'Tell us about yourself...', 'class': 'form-input', 'rows': 3}),
             'gender': forms.Select(attrs={'class': 'form-input'}),
             'gender_other': forms.TextInput(attrs={'placeholder': 'If other, please specify', 'class': 'form-input'}),
-            'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+            # Year only — NumberInput with a sensible range.
+            'birth_year': forms.NumberInput(attrs={
+                'placeholder': 'e.g. 1990',
+                'class': 'form-input',
+                'min': '1900',
+                'max': '2099',
+            }),
             'address_line_1': forms.TextInput(attrs={'placeholder': 'House / flat no., street', 'class': 'form-input'}),
             'address_line_2': forms.TextInput(attrs={'placeholder': 'Landmark, area, locality', 'class': 'form-input'}),
             'city': forms.TextInput(attrs={'placeholder': 'City / town', 'class': 'form-input'}),
@@ -109,7 +128,7 @@ class ReaderProfileEditForm(forms.ModelForm):
                 # Style all sub-widgets
                 for widget in field.widget.widgets:
                     widget.attrs.update({'class': 'form-input'})
-                
+
                 # Restrict national number input to numeric only
                 if len(field.widget.widgets) > 1:
                     field.widget.widgets[1].attrs.update({
@@ -118,12 +137,18 @@ class ReaderProfileEditForm(forms.ModelForm):
                         'oninput': "this.value = this.value.replace(/[^0-9]/g, '');"
                     })
 
+        # Pre-populate phone input from the encrypted value
+        if self.instance and self.instance.pk and self.instance.phone_number_encrypted:
+            self.fields['phone_number'].initial = self.instance.phone_number_encrypted
+
         # Pre-check consent boxes if consent was previously given
         if self.instance and self.instance.pk:
-            if self.instance.dob_consent_at:
-                self.fields['dob_consent'].initial = True
+            if self.instance.birth_year_consent_at:     # was dob_consent_at
+                self.fields['birth_year_consent'].initial = True
             if self.instance.gender_consent_at:
                 self.fields['gender_consent'].initial = True
+            if self.instance.read_history_consent_at:
+                self.fields['read_history_consent'].initial = True
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -135,7 +160,9 @@ class ReaderProfileEditForm(forms.ModelForm):
     def clean_phone_number(self):
         phone_number = self.cleaned_data.get('phone_number')
         if phone_number:
-            if User.objects.filter(phone_number=phone_number).exclude(pk=self.instance.pk).exists():
+            # Uniqueness check via HMAC hash — never compare plaintext phone numbers.
+            hashed = ReaderUser.hash_phone(str(phone_number))
+            if User.objects.filter(phone_number_hash=hashed).exclude(pk=self.instance.pk).exists():
                 raise forms.ValidationError('This phone number is already registered.')
         return phone_number
 
@@ -150,22 +177,39 @@ class ReaderProfileEditForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
 
-        # Gate DOB persistence on explicit consent
-        if not self.cleaned_data.get('dob_consent'):
-            user.date_of_birth = None
-            user.dob_consent_at = None
-        elif self.cleaned_data.get('date_of_birth') and not user.dob_consent_at:
-            # First time giving consent — record timestamp
-            user.dob_consent_at = timezone.now()
+        # ── Phone number — must be handled manually (not a model field in Meta.fields) ──
+        phone_number = self.cleaned_data.get('phone_number')
+        if phone_number:
+            # set_phone() updates both hash and ciphertext atomically.
+            user.set_phone(str(phone_number))
 
-        # Gate gender persistence on explicit consent
+        # ── Birth year — gate persistence on explicit consent ──
+        if not self.cleaned_data.get('birth_year_consent'):
+            # Consent withheld or revoked: wipe the value and its timestamp.
+            user.birth_year = None
+            user.birth_year_consent_at = None   # was dob_consent_at
+        elif self.cleaned_data.get('birth_year') and not user.birth_year_consent_at:
+            # First time giving consent — stamp the timestamp.
+            user.birth_year_consent_at = timezone.now()
+
+        # ── Gender — gate persistence on explicit consent ──
         if not self.cleaned_data.get('gender_consent'):
             user.gender = ''
             user.gender_other = ''
             user.gender_consent_at = None
         elif self.cleaned_data.get('gender') and not user.gender_consent_at:
-            # First time giving consent — record timestamp
             user.gender_consent_at = timezone.now()
+
+        # ── Read history — gate tracking on explicit consent ──
+        if not self.cleaned_data.get('read_history_consent'):
+            # Consent revoked: clear the consent timestamp AND the existing M2M rows.
+            # Clearing now (before save) ensures the M2M clear uses the correct PK.
+            if user.pk and user.read_history_consent_at:
+                user.read_articles.clear()
+            user.read_history_consent_at = None
+        elif not user.read_history_consent_at:
+            # First time giving consent — stamp the timestamp.
+            user.read_history_consent_at = timezone.now()
 
         if commit:
             user.save()
@@ -196,7 +240,7 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
         fields = UserCreationForm.Meta.fields | {
-            'name', 'gender', 'gender_other', 'date_of_birth',
+            'name', 'gender', 'gender_other', 'birth_year',
             'address_line_1', 'address_line_2', 'city', 'post_office', 
             'pincode', 'district', 'state', 'is_print_subscriber', 
             'print_delivery_status', 'subscription_plan'
@@ -248,7 +292,7 @@ class CustomUserEditForm(UserEditForm):
     class Meta(UserEditForm.Meta):
         model = User
         fields = UserEditForm.Meta.fields | {
-            'name', 'gender', 'gender_other', 'date_of_birth',
+            'name', 'gender', 'gender_other', 'birth_year',
             'address_line_1', 'address_line_2', 'city', 'post_office', 
             'pincode', 'district', 'state', 'is_print_subscriber', 
             'print_delivery_status', 'subscription_plan'

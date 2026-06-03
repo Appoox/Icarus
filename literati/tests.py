@@ -218,18 +218,25 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         with self.assertRaises(ValidationError):
             lit.full_clean()
 
-    def test_validation_phone_taken_by_reader_user(self):
-        """Validation fails if phone number is already registered in ReaderUser."""
+    def test_phone_shared_with_reader_does_not_block_create(self):
+        """
+        Creating a Literati whose phone matches an existing ReaderUser must NOT
+        raise ValidationError. The after_create_page hook auto-links them instead.
+        This is the normal real-world case: a reader who later becomes an author.
+        """
         phone = "+919999999999"
         User.objects.create_user(phone_number=phone, name="Existing Reader")
-        
+
         lit = Literati(
             title="New Literati",
             slug="new-literati",
-            phone_number=phone
+            phone_number=phone,
         )
-        with self.assertRaises(ValidationError):
+        # Should pass cleanly — the hook, not validation, handles the merge
+        try:
             lit.full_clean()
+        except ValidationError as e:
+            self.fail(f"full_clean() raised ValidationError unexpectedly: {e}")
 
     def test_validation_phone_taken_by_another_literati(self):
         """Validation fails if phone number is already registered on another Literati page."""
@@ -287,7 +294,7 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
             lit2.full_clean()
 
     def test_after_create_hook_creates_reader_user(self):
-        """Wagtail hook automatically creates a ReaderUser with username+123 password and address fields."""
+        """Wagtail hook automatically creates a ReaderUser and links it to the Literati."""
         phone = "+919999999999"
         lit = Literati(
             title="Jane Doe",
@@ -303,21 +310,19 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
             state="Kerala"
         )
         self.author_index.add_child(instance=lit)
-        
-        # Initially, reader_user is None
+
         self.assertIsNone(lit.reader_user)
-        
-        # Trigger Wagtail hook
+
         request = self.factory.get("/")
         setattr(request, '_messages', FallbackStorage(request))
         after_create_literati(request, lit)
-        
-        # Verify reader_user is created and linked
+
         lit.refresh_from_db()
         self.assertIsNotNone(lit.reader_user)
-        
+
         user = lit.reader_user
-        self.assertEqual(user.phone_number, phone)
+        # phone_number_encrypted is the decrypted display value (Fernet decrypts on access)
+        self.assertEqual(user.phone_number_encrypted_encrypted, phone)
         self.assertEqual(user.name, "Jane Doe")
         self.assertEqual(user.email, "jane@example.com")
         self.assertEqual(user.address_line_1, "123 Baker Street")
@@ -327,14 +332,47 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         self.assertEqual(user.pincode, "682025")
         self.assertEqual(user.district, "Ernakulam")
         self.assertEqual(user.state, "Kerala")
-        
-        # Verify password follows pattern username+123
+
+        # Password follows the pattern: stripped E.164 number + "123"
         clean_phone = phone.replace(' ', '').replace('-', '')
-        expected_pass = f"{clean_phone}123"
-        self.assertTrue(user.check_password(expected_pass))
+        self.assertTrue(user.check_password(f"{clean_phone}123"))
+
+    def test_auto_link_existing_reader_on_literati_create(self):
+        """
+        When creating a Literati whose phone already belongs to a ReaderUser,
+        the hook links the existing reader instead of creating a duplicate account.
+        The existing reader's name is updated to match the Literati title.
+        """
+        phone = "+919999999988"
+        existing = User.objects.create_user(
+            phone_number=phone, name="Original Reader Name"
+        )
+        original_pk = existing.pk
+
+        lit = Literati(
+            title="Author Name",
+            slug="author-name",
+            phone_number=phone,
+        )
+        self.author_index.add_child(instance=lit)
+
+        request = self.factory.get("/")
+        setattr(request, '_messages', FallbackStorage(request))
+        after_create_literati(request, lit)
+
+        lit.refresh_from_db()
+        # Must link to the EXISTING reader, not create a new one
+        self.assertIsNotNone(lit.reader_user)
+        self.assertEqual(lit.reader_user.pk, original_pk)
+        # No extra reader accounts should have been created
+        from reader.models import ReaderUser
+        hashed = ReaderUser.hash_phone(phone)
+        self.assertEqual(
+            ReaderUser.objects.filter(phone_number_hash=hashed).count(), 1
+        )
 
     def test_field_syncs_on_save(self):
-        """Saving Literati page syncs title, phone_number, email, and address fields to ReaderUser."""
+        """Saving Literati page syncs title, phone, email, and address fields to the linked ReaderUser."""
         phone = "+919999999999"
         lit = Literati(
             title="Original Name",
@@ -350,8 +388,7 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
             state="Kerala"
         )
         self.author_index.add_child(instance=lit)
-        
-        # Manually create and associate reader user
+
         user = User.objects.create_user(
             phone_number=phone,
             name="Original Name",
@@ -366,28 +403,29 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         )
         lit.reader_user = user
         lit.save()
-        
-        # Update Literati details
-        lit.title = "Updated Name"
-        lit.phone_number = "+919999999990"
-        lit.email = "updated@example.com"
+
+        # Update all Literati fields
+        lit.title          = "Updated Name"
+        lit.phone_number   = "+919999999990"
+        lit.email          = "updated@example.com"
         lit.address_line_1 = "Updated Address 1"
         lit.address_line_2 = "Updated Address 2"
-        lit.city = "Updated City"
-        lit.post_office = "Updated PO"
-        lit.pincode = "682001"
-        lit.district = "Updated District"
-        lit.state = "Tamil Nadu"
+        lit.city           = "Updated City"
+        lit.post_office    = "Updated PO"
+        lit.pincode        = "682001"
+        lit.district       = "Updated District"
+        lit.state          = "Tamil Nadu"
         lit.save()
-        
+
         user.refresh_from_db()
-        self.assertEqual(user.name, "Updated Name")
-        self.assertEqual(user.phone_number, "+919999999990")
-        self.assertEqual(user.email, "updated@example.com")
-        self.assertEqual(user.address_line_1, "Updated Address 1")
-        self.assertEqual(user.address_line_2, "Updated Address 2")
-        self.assertEqual(user.city, "Updated City")
-        self.assertEqual(user.post_office, "Updated PO")
-        self.assertEqual(user.pincode, "682001")
-        self.assertEqual(user.district, "Updated District")
-        self.assertEqual(user.state, "Tamil Nadu")
+        self.assertEqual(user.name,              "Updated Name")
+        # phone_number_encrypted is the decrypted display value (Fernet decrypts on access)
+        self.assertEqual(user.phone_number_encrypted_encrypted, "+919999999990")
+        self.assertEqual(user.email,             "updated@example.com")
+        self.assertEqual(user.address_line_1,    "Updated Address 1")
+        self.assertEqual(user.address_line_2,    "Updated Address 2")
+        self.assertEqual(user.city,              "Updated City")
+        self.assertEqual(user.post_office,       "Updated PO")
+        self.assertEqual(user.pincode,           "682001")
+        self.assertEqual(user.district,          "Updated District")
+        self.assertEqual(user.state,             "Tamil Nadu")

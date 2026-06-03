@@ -65,14 +65,27 @@ class CustomLoginForm(LoginForm):
                 pass
             return 0
 
-        # B. Query the user to find the standardized database identifier
+        # B. Query the user to find the standardized database identifier.
+        # With the encrypted phone model we can't do __endswith on a hash.
+        # Instead, normalize the input (add +91 prefix for bare 10-digit Indian numbers)
+        # and do an exact hash lookup, falling back to email.
         user = None
         try:
             from django.contrib.auth import get_user_model
-            from django.db.models import Q
             User = get_user_model()
-            # Match either exact email or phone number ending with the entered national number
-            user = User.objects.filter(Q(phone_number__endswith=login_val) | Q(email=login_val)).first()
+
+            # Try to normalize a bare 10-digit number to E.164 (+91 prefix for India)
+            normalized = login_val.strip()
+            if normalized.isdigit() and len(normalized) == 10:
+                normalized = f"+91{normalized}"
+
+            # Hash the normalized number and do a single exact-match lookup
+            hashed = User.hash_phone(normalized)
+            user = User.objects.filter(phone_number_hash=hashed).first()
+
+            # If no match by phone, try email fallback
+            if not user:
+                user = User.objects.filter(email=login_val).first()
         except Exception:
             pass
 
@@ -82,7 +95,7 @@ class CustomLoginForm(LoginForm):
             if 'axes' in settings.INSTALLED_APPS:
                 from axes.helpers import get_failures
                 if hasattr(self, 'request') and self.request:
-                    username = str(user.phone_number) if user else login_val
+                    username = str(user.phone_number_encrypted) if user else login_val
                     credentials = {'username': username}
                     return get_failures(self.request, credentials)
         except Exception:

@@ -47,14 +47,26 @@
                 </div>
             </div>
             <div class="form-group form-group--half">
-                <label for="id_date_of_birth">Date of Birth</label>
-                {{ form.date_of_birth }}
-                {% if form.date_of_birth.errors %}<div class="form-errors">{{ form.date_of_birth.errors }}</div>{% endif %}
+                <label for="id_birth_year">Birth Year</label>
+                {{ form.birth_year }}
+                {% if form.birth_year.errors %}<div class="form-errors">{{ form.birth_year.errors }}</div>{% endif %}
                 <div class="form-consent-inline">
-                    {{ form.dob_consent }}
-                    <label for="id_dob_consent" class="consent-label">{{ form.dob_consent.label }}</label>
+                    {{ form.birth_year_consent }}
+                    <label for="id_birth_year_consent" class="consent-label">{{ form.birth_year_consent.label }}</label>
                 </div>
             </div>
+        </div>
+
+        {# ── Reading History Consent ── #}
+        <div class="form-group">
+            <div class="form-consent-inline">
+                {{ form.read_history_consent }}
+                <label for="id_read_history_consent" class="consent-label">{{ form.read_history_consent.label }}</label>
+            </div>
+            {% if form.read_history_consent.help_text %}
+                <p class="form-help-text">{{ form.read_history_consent.help_text }}</p>
+            {% endif %}
+            {% if form.read_history_consent.errors %}<div class="form-errors">{{ form.read_history_consent.errors }}</div>{% endif %}
         </div>
 
         <div class="form-group hidden" id="gender-other-group">

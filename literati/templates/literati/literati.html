@@ -23,13 +23,13 @@
                 </div>
 
                 <div class="author-contact-social">
-                    {% if page.email or page.phone_number %}
+                    {% if public_email or public_phone %}
                     <div class="contact-info">
-                        {% if page.email %}
-                        <a href="mailto:{{ page.email }}" class="contact-link"><i class="fas fa-envelope"></i> {{ page.email }}</a>
+                        {% if public_email %}
+                        <a href="mailto:{{ public_email }}" class="contact-link"><i class="fas fa-envelope"></i> {{ public_email }}</a>
                         {% endif %}
-                        {% if page.phone_number %}
-                        <span class="contact-item"><i class="fas fa-phone"></i> {{ page.phone_number }}</span>
+                        {% if public_phone %}
+                        <span class="contact-item"><i class="fas fa-phone"></i> {{ public_phone }}</span>
                         {% endif %}
                     </div>
                     {% endif %}

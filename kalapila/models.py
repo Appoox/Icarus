@@ -49,7 +49,7 @@ class Comment(models.Model):
 
     @property
     def user_display(self):
-        return self.user.name or str(self.user.phone_number)
+        return self.user.name or str(self.user.phone_number_encrypted_encrypted_encrypted)
 
     @property
     def page_display(self):
@@ -121,7 +121,7 @@ class CommentReport(models.Model):
         unique_together = ('comment', 'user')
 
     def __str__(self):
-        user_display = self.user.name or str(self.user.phone_number)
+        user_display = self.user.name or str(self.user.phone_number_encrypted)
         return f"Report by {user_display} on comment {self.comment_id}"
 
 class CommentNotificationPreference(models.Model):
@@ -131,7 +131,7 @@ class CommentNotificationPreference(models.Model):
     receive_notifications = models.BooleanField(default=True)
 
     def __str__(self):
-        user_display = self.user.name or str(self.user.phone_number)
+        user_display = self.user.name or str(self.user.phone_number_encrypted)
         return f"{user_display} - Notifications: {self.receive_notifications}"
 
 @register_setting
@@ -167,7 +167,7 @@ class DashboardNotification(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        user_display = self.user.name or str(self.user.phone_number)
+        user_display = self.user.name or str(self.user.phone_number_encrypted)
         return f"Notification for {user_display} - Read: {self.is_read}"
 
 class UserNotification(models.Model):
@@ -182,5 +182,5 @@ class UserNotification(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        user_display = self.user.name or str(self.user.phone_number)
+        user_display = self.user.name or str(self.user.phone_number_encrypted)
         return f"User Notification for {user_display} - Read: {self.is_read}"

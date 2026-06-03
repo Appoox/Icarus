@@ -75,7 +75,7 @@ def audit_log_list(request):
         ts = entry.timestamp.astimezone(ist).strftime('%d %b %Y, %H:%M')
 
         actor = (
-            entry.actor.name or str(entry.actor.phone_number)
+            entry.actor.name or str(entry.actor.phone_number_encrypted)
             if entry.actor else 'System'
         )
         
