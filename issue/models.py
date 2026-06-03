@@ -320,7 +320,7 @@ class Issue(RoutablePageMixin, Page):
     @property
     def board_members(self):
         if self.editorial_board:
-            return self.editorial_board.members.all()
+            return self.editorial_board.members.filter(is_active=True)
         return []
 
     @property

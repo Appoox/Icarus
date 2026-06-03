@@ -342,7 +342,118 @@ class EditorialBoardMember(Orderable):
         default='editor',
     )
 
+    # ── Membership Tracking ──
+    joined_at = models.DateField(
+        null=True, blank=True,
+        help_text="Date when this member joined the editorial board."
+    )
+    left_at = models.DateField(
+        null=True, blank=True,
+        help_text="Date when this member left the editorial board."
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this member is currently active on the board."
+    )
+
     panels = [
         FieldPanel('editor'),
         FieldPanel('role'),
+        FieldPanel('joined_at'),
+        FieldPanel('left_at'),
+        FieldPanel('is_active'),
     ]
+
+    def save(self, *args, **kwargs):
+        from datetime import date
+
+        is_new = not self.pk
+        create_history = False
+
+        # Auto-set joined_at on first creation if not explicitly provided
+        if is_new:
+            if not self.joined_at:
+                self.joined_at = date.today()
+            create_history = True
+        else:
+            try:
+                old = EditorialBoardMember.objects.get(pk=self.pk)
+
+                # Deactivation: is_active True → False
+                if old.is_active and not self.is_active:
+                    if not self.left_at:
+                        self.left_at = date.today()
+                    # Close the open history entry for this member
+                    EditorialBoardMembershipHistory.objects.filter(
+                        board=self.board,
+                        editor=self.editor,
+                        left_at__isnull=True,
+                    ).update(left_at=self.left_at)
+
+                # Re-activation: is_active False → True
+                elif not old.is_active and self.is_active:
+                    self.joined_at = date.today()
+                    self.left_at = None
+                    create_history = True
+
+            except EditorialBoardMember.DoesNotExist:
+                pass
+
+        super().save(*args, **kwargs)
+
+        # Create a new history entry after save so all FKs are populated
+        if create_history and self.board_id:
+            EditorialBoardMembershipHistory.objects.create(
+                board_id=self.board_id,
+                editor=self.editor,
+                role=self.role,
+                joined_at=self.joined_at,
+            )
+
+
+@register_snippet
+class EditorialBoardMembershipHistory(models.Model):
+    """
+    Immutable audit log of editorial board membership periods.
+    A new row is created each time a member joins (or re-joins) a board,
+    and the row is closed (left_at stamped) when they leave.
+    """
+    board = models.ForeignKey(
+        EditorialBoard,
+        on_delete=models.CASCADE,
+        related_name='membership_history',
+    )
+    editor = models.ForeignKey(
+        'Literati',
+        on_delete=models.CASCADE,
+        related_name='board_membership_history',
+    )
+    role = models.CharField(
+        max_length=50,
+        choices=EditorialBoardMember.ROLE_CHOICES,
+    )
+    joined_at = models.DateField(
+        help_text="Date when this membership period began."
+    )
+    left_at = models.DateField(
+        null=True, blank=True,
+        help_text="Date when this membership period ended. Null if still active."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    panels = [
+        FieldPanel('board'),
+        FieldPanel('editor'),
+        FieldPanel('role'),
+        FieldPanel('joined_at'),
+        FieldPanel('left_at'),
+    ]
+
+    class Meta:
+        ordering = ['-joined_at']
+        verbose_name = "Board Membership History"
+        verbose_name_plural = "Board Membership History"
+
+    def __str__(self):
+        status = f"left {self.left_at}" if self.left_at else "active"
+        return f"{self.editor.title} — {self.get_role_display()} ({self.joined_at} – {status})"
