@@ -80,7 +80,7 @@ def post_comment(request):
     notified_staff = staff_users.exclude(id__in=opted_out_ids)
 
     # 1. Create Dashboard Notifications
-    commenter_name = request.user.name or str(request.user.phone_number)
+    commenter_name = request.user.name or str(request.user.phone_number_encrypted)
     for staff in notified_staff:
         DashboardNotification.objects.create(
             user=staff,
@@ -175,8 +175,8 @@ def report_comment(request, pk):
     ).values_list('user_id', flat=True)
     notified_staff = staff_users.exclude(id__in=opted_out_ids)
 
-    reporter_name = request.user.name or str(request.user.phone_number)
-    comment_author = comment.user.name or str(comment.user.phone_number)
+    reporter_name = request.user.name or str(request.user.phone_number_encrypted)
+    comment_author = comment.user.name or str(comment.user.phone_number_encrypted)
 
     # 1. Create Dashboard Notification
     for staff in notified_staff:

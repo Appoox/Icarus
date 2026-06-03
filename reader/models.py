@@ -1,6 +1,10 @@
+import hmac
+import hashlib
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.contrib.auth.signals import user_logged_in
+from django.conf import settings
 from django.dispatch import receiver
 from django.core.validators import RegexValidator
 from django.utils import timezone
@@ -10,6 +14,7 @@ from wagtail.admin.panels import FieldPanel, MultiFieldPanel, FieldRowPanel
 from wagtail.snippets.models import register_snippet
 from wagtail.search import index
 from phonenumber_field.modelfields import PhoneNumberField
+from encrypted_fields.fields import EncryptedCharField
 from kalapila.models import Comment
 
 from django.contrib.auth.signals import user_login_failed, user_logged_in
@@ -31,12 +36,10 @@ class ReaderUserManager(BaseUserManager):
             raise ValueError('The Phone Number must be set')
         if not name:
             raise ValueError('The Name must be set')
-        
-        user = self.model(
-            phone_number=phone_number,
-            name=name,
-            **extra_fields
-        )
+
+        user = self.model(name=name, **extra_fields)
+        # Use set_phone() so the hash and encryption are both populated atomically.
+        user.set_phone(str(phone_number))
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -60,9 +63,26 @@ class ReaderUser(AbstractUser, index.Indexed):
     """
     username = None
     name = models.CharField(max_length=255)
-    phone_number = PhoneNumberField("Phone Number", blank=True, unique=True)
+
+    # ── Phone number stored as HMAC hash (for lookups) + Fernet encryption (for display) ──
+    # The raw E.164 string never touches the DB in plaintext, so a stolen pg_dump
+    # leaks nothing usable. The hash is stable (same input → same output) so exact-match
+    # lookups still work for login and uniqueness checks.
+    phone_number_hash = models.CharField(
+        "Phone Number (Hash)",
+        max_length=64,
+        unique=True,
+        help_text="HMAC-SHA256 of the phone number. Used for fast, secure exact-match lookups.",
+    )
+    phone_number_encrypted = EncryptedCharField(
+        "Phone Number (Encrypted)",
+        max_length=255,
+        blank=True,
+        help_text="Fernet-encrypted phone number. Unreadable in raw DB dumps.",
+    )
+
     email = models.EmailField(unique=True, blank=True, null=True)
-    
+
     objects = ReaderUserManager()
     profile_image = models.ForeignKey(
         'wagtailimages.Image',
@@ -116,13 +136,17 @@ class ReaderUser(AbstractUser, index.Indexed):
     )
 
     # ── Explicit Consent for Optional Profile Fields ──
-    dob_consent_at = models.DateTimeField(
+    birth_year_consent_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Timestamp of explicit consent to share date of birth."
+        help_text="Timestamp of explicit consent to share birth year for demographic analytics."
     )
     gender_consent_at = models.DateTimeField(
         null=True, blank=True,
         help_text="Timestamp of explicit consent to share gender information."
+    )
+    read_history_consent_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of explicit consent to track reading history. Cleared on revocation."
     )
 
     newsletter_opt_in = models.BooleanField(
@@ -154,21 +178,53 @@ class ReaderUser(AbstractUser, index.Indexed):
         help_text="Account status based on successful verification of primary contact method."
     )
 
-    USERNAME_FIELD = 'phone_number'
+    USERNAME_FIELD = 'phone_number_hash'
     REQUIRED_FIELDS = ['name', 'email']
+
+    # ── Phone utility methods ───────────────────────────────────────────
+    @staticmethod
+    def hash_phone(raw_number: str) -> str:
+        """
+        Produce a stable HMAC-SHA256 of the phone number.
+        Uses PHONE_HASH_KEY (separate from SECRET_KEY) so the two can be
+        rotated independently. Always call this instead of constructing the
+        HMAC inline.
+        """
+        return hmac.new(
+            settings.PHONE_HASH_KEY.encode(),
+            raw_number.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+
+    def set_phone(self, raw_number: str) -> None:
+        """
+        Hash and encrypt the phone number atomically.
+        Always call this instead of assigning to the fields directly —
+        it guarantees hash and ciphertext are never out of sync.
+        """
+        normalized = str(raw_number).strip()
+        self.phone_number_hash = self.hash_phone(normalized)
+        self.phone_number_encrypted = normalized
 
     @property
     def username(self):
-        """Wagtail and some internal Django apps expect a string 'username'."""
-        return str(self.phone_number)
+        """
+        Wagtail and some internal Django apps expect a string 'username'.
+        Return the human-readable encrypted value, not the internal HMAC hash.
+        """
+        return self.phone_number_encrypted or ''
 
     def get_username(self):
-        """Return the string representation of the phone number."""
-        return str(self.phone_number)
+        """
+        Override Django's default which would return the USERNAME_FIELD value
+        (the HMAC hash). Templates, the Wagtail toolbar, and log output all
+        call this — they should see the real phone number, not a 64-char hex string.
+        """
+        return self.phone_number_encrypted or ''
 
     def natural_key(self):
-        """Required for some serialization flows."""
-        return (str(self.phone_number),)
+        """Required for some serialization flows. Uses the hash (the DB key)."""
+        return (self.phone_number_hash,)
 
     GENDER_CHOICES = [
         ('പുരുഷന്‍', 'Male'),
@@ -180,7 +236,14 @@ class ReaderUser(AbstractUser, index.Indexed):
 
     gender = models.CharField(max_length=100, choices=GENDER_CHOICES, blank=True)
     gender_other = models.CharField("Other Gender", max_length=100, blank=True)
-    date_of_birth = models.DateField(null=True, blank=True)
+
+    # Birth year only — the full date (day + month) is not needed for any use case
+    # here and is a meaningfully higher-risk identifier when combined with name.
+    # A plain integer is safe, indexable, and directly usable for GROUP BY age-bracket queries.
+    birth_year = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        help_text="Year of birth only. Sufficient for demographic analytics; safer than full DOB.",
+    )
 
     # ── Address ──────────────────────────────────────────────────────
     INDIAN_STATES = [
@@ -253,7 +316,7 @@ class ReaderUser(AbstractUser, index.Indexed):
         choices=INDIAN_STATES,
     )
 
-# ചേര്‍ക്കുന്ന ആളുടെ വിവരങ്ങൾ
+    # ചേര്‍ക്കുന്ന ആളുടെ വിവരങ്ങൾ
     care_of_name = models.CharField(max_length=255, blank=True)
     care_of_number = PhoneNumberField("C/O Phone Number", blank=True)
     care_of_district = models.CharField(max_length=100, blank=True)
@@ -263,9 +326,10 @@ class ReaderUser(AbstractUser, index.Indexed):
     search_fields = [
         index.SearchField('name'),
         index.SearchField('email'),
-        index.SearchField('phone_number'),
+        # phone_number_hash is intentionally excluded — the hash is not human-readable,
+        # and phone_number_encrypted cannot be searched at the DB level.
+        # Admins can look up readers by name or email instead.
         index.SearchField('care_of_name'),
-        index.SearchField('care_of_number'),
         index.SearchField('care_of_district'),
         index.SearchField('care_of_meghala'),
         index.SearchField('care_of_unit'),
@@ -323,7 +387,7 @@ class ReaderUser(AbstractUser, index.Indexed):
         # Essential fields for a "complete" profile
         essential_fields = [
             self.gender,
-            self.date_of_birth,
+            self.birth_year,      # was date_of_birth — year-only is sufficient
             self.address_line_1,
             self.city,
             self.state,
@@ -430,14 +494,24 @@ class ReaderUser(AbstractUser, index.Indexed):
         help_text='Issues this reader has bookmarked.',
     )
 
+    def phone_display(self):
+        """
+        Returns the decrypted phone number for Wagtail admin list_display.
+        Wagtail calls this as a callable, so it must be a method, not a property.
+        """
+        return self.phone_number_encrypted or '—'
+    phone_display.short_description = "Phone"
+
     panels = [
         MultiFieldPanel([
             FieldPanel('name'),
             FieldPanel('email'),
-            FieldPanel('phone_number'),
+            # phone_number_encrypted is read-only here; editing goes through the
+            # snippet edit form which calls set_phone() to keep hash in sync.
+            FieldPanel('phone_number_encrypted', read_only=True),
             FieldPanel('gender'),
             FieldPanel('gender_other'),
-            FieldPanel('date_of_birth'),
+            FieldPanel('birth_year'),   # was date_of_birth
         ], heading="Personal Information"),
         MultiFieldPanel([
             FieldPanel('profile_image'),
@@ -494,8 +568,9 @@ class ReaderUser(AbstractUser, index.Indexed):
             FieldPanel('privacy_version', read_only=True),
             FieldPanel('is_above_18', read_only=True),
             FieldPanel('age_declaration_at', read_only=True),
-            FieldPanel('dob_consent_at', read_only=True),
+            FieldPanel('birth_year_consent_at', read_only=True),     # was dob_consent_at
             FieldPanel('gender_consent_at', read_only=True),
+            FieldPanel('read_history_consent_at', read_only=True),   # new
             FieldPanel('newsletter_opt_in'),
             FieldPanel('registration_ip', read_only=True),
             FieldPanel('last_login_ip', read_only=True),
@@ -508,13 +583,21 @@ class ReaderUser(AbstractUser, index.Indexed):
     def deactivate(self):
         """
         Executes a soft-deactivation. Revokes access immediately and starts
-        the statutory retention clock for data purging.
+        the statutory retention clock for data purging. Revoking read_history_consent_at
+        prevents any further tracking from the moment of deactivation.
         """
         self.is_active = False
         self.deactivated_at = timezone.now()
         self.newsletter_opt_in = False
         self.newsletter_opt_in_at = timezone.now()
-        self.save(update_fields=['is_active', 'deactivated_at', 'newsletter_opt_in', 'newsletter_opt_in_at'])
+        # Revoke read history tracking consent on account closure.
+        # Actual history M2M rows are cleared in anonymize_account() per the retention schedule.
+        self.read_history_consent_at = None
+        self.save(update_fields=[
+            'is_active', 'deactivated_at',
+            'newsletter_opt_in', 'newsletter_opt_in_at',
+            'read_history_consent_at',
+        ])
 
     def anonymize_account(self):
         """
@@ -525,19 +608,22 @@ class ReaderUser(AbstractUser, index.Indexed):
         self.set_unusable_password()
         self.name = "Archived User"
         self.email = f"archived_user_{self.id}@icarus.internal"
-        self.phone_number = f"+999{self.id:011d}"  # Unique E.164 dummy format
-        
+        # Replace both phone fields with non-reversible dummy values.
+        dummy_phone = f"+999{self.id:011d}"
+        self.set_phone(dummy_phone)
+
         self.profile_image = None
         self.bio = ""
         self.gender = ""
         self.gender_other = ""
-        self.date_of_birth = None
-        
-        # Clear consent timestamps
-        self.dob_consent_at = None
+        self.birth_year = None      # was date_of_birth
+
+        # Clear all consent timestamps
+        self.birth_year_consent_at = None   # was dob_consent_at
         self.gender_consent_at = None
         self.age_declaration_at = None
-        
+        self.read_history_consent_at = None
+
         # Clear addresses
         self.address_line_1 = ""
         self.address_line_2 = ""
@@ -546,15 +632,15 @@ class ReaderUser(AbstractUser, index.Indexed):
         self.pincode = ""
         self.district = ""
         self.state = ""
-        
+
         # Clear Care Of fields
         self.care_of_name = ""
         self.care_of_number = ""
         self.care_of_district = ""
         self.care_of_meghala = ""
         self.care_of_unit = ""
-        
-        # Clear activity, favorites
+
+        # Clear activity, favorites, and read history
         if hasattr(self, 'read_articles') and self.read_articles:
             self.read_articles.clear()
         if hasattr(self, 'interested_topics') and self.interested_topics:
@@ -563,19 +649,19 @@ class ReaderUser(AbstractUser, index.Indexed):
             self.favorite_articles.clear()
         if hasattr(self, 'favorite_issues') and self.favorite_issues:
             self.favorite_issues.clear()
-            
+
         self.newsletter_opt_in = False
         self.registration_ip = None
         self.last_login_ip = None
-        
+
         self.is_active = False
         self.is_anonymized = True
         self.save()
-        
+
         # Delete audit logs / tracking logs associated with this user
         from auditlog.models import LogEntry
         LogEntry.objects.filter(actor_id=self.id).delete()
-        
+
         from django.contrib.contenttypes.models import ContentType
         user_content_type = ContentType.objects.get_for_model(self.__class__)
         LogEntry.objects.filter(content_type=user_content_type, object_id=self.id).delete()
@@ -707,7 +793,9 @@ class ReaderUser(AbstractUser, index.Indexed):
         verbose_name_plural = 'Reader Users'
 
     def __str__(self):
-        return f'{self.name or str(self.phone_number)} ({self.email or str(self.phone_number)})'
+        # Fall back gracefully if the encrypted field hasn't been populated yet.
+        phone_display = self.phone_number_encrypted or f"user #{self.pk}"
+        return f'{self.name or phone_display} ({self.email or phone_display})'
 
 
 class SubscriptionHistory(models.Model):
@@ -892,10 +980,12 @@ def track_failed_login(sender, credentials, request, **kwargs):
             
         value_str = str(value).strip()
         
-        # Look up ReaderUser by exact phone, ending phone segment (national), or email
+        # Hash the submitted value so we can look it up against the blind index.
+        # The endswith partial match is intentionally removed — it is impossible
+        # to suffix-search an HMAC hash, and the phone_number column no longer exists.
+        hashed = ReaderUser.hash_phone(value_str)
         user = ReaderUser.objects.filter(
-            Q(phone_number=value_str) | 
-            Q(phone_number__endswith=value_str) | 
+            Q(phone_number_hash=hashed) |
             Q(email__iexact=value_str)
         ).first()
         

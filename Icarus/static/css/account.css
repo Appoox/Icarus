@@ -276,7 +276,6 @@
 }
 
 .helptext, .help-text {
-
     display: block;
     font-family: var(--font-ui);
     font-size: 12px;
@@ -291,4 +290,82 @@ select.form-input {
     background-repeat: no-repeat;
     background-position: right 12px center;
     padding-right: 32px;
+}
+
+/* ── Password show/hide positioning rules ─────────────────────────── */
+.password-wrapper {
+    position: relative;
+}
+
+/* Padding added to the right side of the input to clear space for the absolute icon button */
+.password-wrapper input {
+    padding-right: 42px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+    /* Prevents interactive focus rings from misbehaving during tab indexing */
+    outline: none;
+}
+
+.password-toggle:hover {
+    color: #333;
+}
+
+/* ── Failed-attempts security banner states ──────────────────────── */
+.login-attempts-warning {
+    border-left: 4px solid #e6a23c;
+    background: rgba(230, 162, 60, .08);
+    padding: 12px;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+    text-align: left;
+}
+
+.login-attempts-warning p {
+    margin: 0;
+    font-size: .9rem;
+    color: #c8831a;
+    line-height: 1.4;
+}
+
+/* Contextual lock states injected cleanly via python conditionals */
+.login-attempts-warning.lockout {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+    border-color: #f5c6cb;
+}
+
+.login-attempts-warning.lockout p {
+    color: #721c24;
+}
+
+/* Checkbox alignment correction formatting */
+.form-group--checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group--checkbox input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+.form-group--checkbox label {
+    margin: 0;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
 }

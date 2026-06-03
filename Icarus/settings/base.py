@@ -16,7 +16,8 @@ ACCOUNT_SIGNUP_FIELDS = [
   'password1*',
   'password2*',
 ]
-ACCOUNT_USER_MODEL_PHONE_FIELD = 'phone_number'
+# ACCOUNT_USER_MODEL_PHONE_FIELD = 'phone_number'
+ACCOUNT_USER_MODEL_PHONE_FIELD = 'phone_number_encrypted'
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_PHONE_VERIFICATION = "none"  # No SMS backend; skip phone verification
@@ -48,6 +49,10 @@ from datetime import timedelta
 AXES_FAILURE_LIMIT = env.int('AXES_FAILURE_LIMIT', default=5)                      # Lock out after 5 failures
 AXES_COOLOFF_TIME = env.int('AXES_COOLOFF_TIME', default=timedelta(hours=1))      # Duration of lockout
 
+# ── Cryptographic Field Encryption Settings ───────────────────────────
+# Required by django-fernet-encrypted-fields for field-level encryption.
+# In your production environment file (.env), declare a cryptographically secure string.
+SALT_KEY = env.str('SALT_KEY')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -171,6 +176,7 @@ AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
+    'reader.backends.PhoneNumberBackend',
 ]
 
 AUTH_PASSWORD_VALIDATORS = [

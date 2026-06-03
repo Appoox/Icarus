@@ -52,34 +52,38 @@ class CustomAccountAdapter(DefaultAccountAdapter):
 
     def clean_phone(self, phone):
         """
-        Validate the phone number and check for uniqueness.
+        Validate the phone number and check for uniqueness via HMAC hash.
+        Never compare plaintext phone numbers at the DB level.
         """
         phone = super().clean_phone(phone)
-        if ReaderUser.objects.filter(phone_number=phone).exists():
+        hashed = ReaderUser.hash_phone(str(phone))
+        if ReaderUser.objects.filter(phone_number_hash=hashed).exists():
             raise forms.ValidationError('This phone number is already registered.')
         return phone
 
     def set_phone(self, user, phone, verified):
         """
-        Save the phone number directly to the User.
+        Save the phone number by calling user.set_phone() which updates both
+        the HMAC hash (for lookups) and the Fernet-encrypted value (for display).
         """
-        user.phone_number = str(phone)
+        user.set_phone(str(phone))
         user.save()
 
     def get_user_by_phone(self, phone):
         """
-        Look up a user by their phone number.
+        Look up a user by their phone number via the HMAC hash.
         """
         try:
-            return ReaderUser.objects.get(phone_number=phone)
+            hashed = ReaderUser.hash_phone(str(phone))
+            return ReaderUser.objects.get(phone_number_hash=hashed)
         except ReaderUser.DoesNotExist:
             return None
 
     def get_phone(self, user):
         """
-        Return the phone number for the given user.
+        Return the decrypted phone number for the given user.
         """
-        phone = getattr(user, 'phone_number', None)
+        phone = getattr(user, 'phone_number_encrypted', None)
         if phone:
             return (str(phone), True)
         return None

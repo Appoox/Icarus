@@ -69,11 +69,11 @@ class ReaderUserModelAndPropertiesTests(TestCase):
         )
 
     def test_is_profile_complete(self):
-        """Profile completeness requires gender, date_of_birth, address, city, state, and pincode."""
+        """Profile completeness requires gender, birth_year, address, city, state, and pincode."""
         self.assertFalse(self.user.is_profile_complete)
 
         self.user.gender = "സ്ത്രീ"
-        self.user.date_of_birth = date(1995, 5, 5)
+        self.user.birth_year = 1995      # was date_of_birth = date(1995, 5, 5)
         self.user.address_line_1 = "Baker St"
         self.user.city = "London"
         self.user.state = "Kerala"

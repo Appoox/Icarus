@@ -63,7 +63,22 @@ class Literati(Page, HitCountMixin):
     )
     
     email = models.EmailField("Email", blank=True)
+    # Controls whether the email address is shown on the public author profile page.
+    # Defaults to False (private) — authors must explicitly opt in to exposure.
+    show_email = models.BooleanField(
+        "Show email publicly",
+        default=False,
+        help_text="Tick to display this email address on the public author profile page.",
+    )
+
     phone_number = PhoneNumberField("Phone Number", blank=False)
+    # Controls whether the phone number is shown on the public author profile page.
+    # Defaults to False (private) — phone numbers are sensitive; opt-in only.
+    show_phone_number = models.BooleanField(
+        "Show phone number publicly",
+        default=False,
+        help_text="Tick to display this phone number on the public author profile page.",
+    )
     address_line_1 = models.CharField(
         max_length=255, blank=True,
         help_text='House / flat number, street name.',
@@ -107,9 +122,22 @@ class Literati(Page, HitCountMixin):
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
+
+        # Gate contact details behind the author's own visibility preference.
+        # Templates use {{ public_phone }} / {{ public_email }} directly —
+        # they never need to branch on show_* themselves.
+        context['public_phone'] = (
+            self.phone_number if self.show_phone_number else None
+        )
+        context['public_email'] = (
+            self.email if self.show_email else None
+        )
+
+        # Hit count — only track for non-staff visitors.
         if not (request.user.is_superuser or request.user.is_staff):
             hit_count = HitCount.objects.get_for_object(self)
             HitCountViewMixin().hit_count(request, hit_count)
+
         return context
 
     def get_articles(self):
@@ -117,74 +145,78 @@ class Literati(Page, HitCountMixin):
 
     def clean(self):
         super().clean()
-        
+
         if not self.phone_number:
             return
 
         from reader.models import ReaderUser
 
-        # Check if phone number is already registered in ReaderUser
-        phone_exists = ReaderUser.objects.filter(phone_number=self.phone_number)
-        if self.reader_user:
-            phone_exists = phone_exists.exclude(pk=self.reader_user.pk)
-        if phone_exists.exists():
-            raise ValidationError({'phone_number': 'A Reader User with this phone number already exists.'})
+        # ── ReaderUser phone ─────────────────────────────────────────────────
+        # We intentionally do NOT raise a ValidationError when a ReaderUser with
+        # the same phone exists. The common real-world case is a reader who later
+        # becomes an author — the after_create_page hook auto-links them.
+        # For existing pages, the admin can use the "Link / Merge Reader" action.
+        # (Phone lookup now uses HMAC hash because the field is encrypted.)
 
-        # Check if email is already registered in ReaderUser
+        # ── ReaderUser email — still a hard block ────────────────────────────
+        # Unlike phone, we have no auto-merge path for email conflicts.
         if self.email:
-            email_exists = ReaderUser.objects.filter(email=self.email)
+            email_qs = ReaderUser.objects.filter(email=self.email)
             if self.reader_user:
-                email_exists = email_exists.exclude(pk=self.reader_user.pk)
-            if email_exists.exists():
-                raise ValidationError({'email': 'A Reader User with this email already exists.'})
+                email_qs = email_qs.exclude(pk=self.reader_user.pk)
+            if email_qs.exists():
+                raise ValidationError({
+                    'email': (
+                        'A reader account with this email already exists. '
+                        'Use "Link / Merge Reader" on the author page to link them.'
+                    )
+                })
 
-        # Check if another Literati page has the same phone number
-        literati_phone_exists = Literati.objects.filter(phone_number=self.phone_number).exclude(pk=self.pk)
-        if literati_phone_exists.exists():
-            raise ValidationError({'phone_number': 'Another Author page is already registered with this phone number.'})
+        # ── Literati-to-Literati uniqueness ──────────────────────────────────
+        if Literati.objects.filter(phone_number=self.phone_number).exclude(pk=self.pk).exists():
+            raise ValidationError({
+                'phone_number': 'Another author page is already registered with this phone number.'
+            })
 
-        # Check if another Literati page has the same email
         if self.email:
-            literati_email_exists = Literati.objects.filter(email=self.email).exclude(pk=self.pk)
-            if literati_email_exists.exists():
-                raise ValidationError({'email': 'Another Author page is already registered with this email.'})
+            if Literati.objects.filter(email=self.email).exclude(pk=self.pk).exists():
+                raise ValidationError({
+                    'email': 'Another author page is already registered with this email.'
+                })
 
     def save(self, *args, **kwargs):
         if self.reader_user:
             user = self.reader_user
             updated_fields = []
-            if user.phone_number != self.phone_number:
-                user.phone_number = self.phone_number
-                updated_fields.append('phone_number')
-            if user.email != self.email:
-                user.email = self.email
-                updated_fields.append('email')
-            if user.name != self.title:
-                user.name = self.title
-                updated_fields.append('name')
-            if user.address_line_1 != self.address_line_1:
-                user.address_line_1 = self.address_line_1
-                updated_fields.append('address_line_1')
-            if user.address_line_2 != self.address_line_2:
-                user.address_line_2 = self.address_line_2
-                updated_fields.append('address_line_2')
-            if user.city != self.city:
-                user.city = self.city
-                updated_fields.append('city')
-            if user.post_office != self.post_office:
-                user.post_office = self.post_office
-                updated_fields.append('post_office')
-            if user.pincode != self.pincode:
-                user.pincode = self.pincode
-                updated_fields.append('pincode')
-            if user.district != self.district:
-                user.district = self.district
-                updated_fields.append('district')
-            if user.state != self.state:
-                user.state = self.state
-                updated_fields.append('state')
+
+            # Phone: compare via HMAC hash — Fernet ciphertexts are non-deterministic
+            # so comparing them directly would always look like a change.
+            from reader.models import ReaderUser as _RU
+            new_hash = _RU.hash_phone(str(self.phone_number))
+            if user.phone_number_hash != new_hash:
+                # set_phone() updates both the hash and the ciphertext atomically
+                user.set_phone(str(self.phone_number))
+                updated_fields.extend(['phone_number_hash', 'phone_number_encrypted'])
+
+            # All plain-text fields — one loop instead of repeated if-blocks
+            for literati_attr, user_attr in [
+                ('email',          'email'),
+                ('title',          'name'),
+                ('address_line_1', 'address_line_1'),
+                ('address_line_2', 'address_line_2'),
+                ('city',           'city'),
+                ('post_office',    'post_office'),
+                ('pincode',        'pincode'),
+                ('district',       'district'),
+                ('state',          'state'),
+            ]:
+                if getattr(user, user_attr, '') != getattr(self, literati_attr, ''):
+                    setattr(user, user_attr, getattr(self, literati_attr, ''))
+                    updated_fields.append(user_attr)
+
             if updated_fields:
                 user.save(update_fields=updated_fields)
+
         super().save(*args, **kwargs)
 
     content_panels = [
@@ -195,8 +227,12 @@ class Literati(Page, HitCountMixin):
         FieldPanel('profile_image'),
         FieldPanel('bio'),
         MultiFieldPanel([
+            # Each field is followed immediately by its visibility toggle so the
+            # relationship is obvious to editors without reading help text.
             FieldPanel('email'),
+            FieldPanel('show_email'),
             FieldPanel('phone_number'),
+            FieldPanel('show_phone_number'),
             FieldPanel('reader_user', read_only=True),
         ], heading="Contact Information"),
         MultiFieldPanel([
@@ -229,28 +265,25 @@ class AuthorIndexPage(Page):
     max_count = 1
     subpage_types = ['Literati']
 
-def get_context(self, request):
-    context = super().get_context(request)
-    from django.apps import apps
-    Author = apps.get_model('articles', 'Author')   # adjust app label if needed
- 
-    authors = Author.objects.live().order_by('title')
- 
-    # ── Pagination (12 per page — fills a 4-col or 3-col grid neatly) ────
-    paginator = Paginator(authors, 12)
-    page_number = request.GET.get('page')
-    try:
-        page_obj = paginator.page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
- 
-    context['authors']   = page_obj
-    context['page_obj']  = page_obj
-    context['paginator'] = paginator
-    return context
- 
+    def get_context(self, request):
+        context = super().get_context(request)
+        # Use Literati directly — AuthorIndexPage owns Literati children
+        authors = Literati.objects.live().order_by('title')
+
+        # 12 per page fills a 4-col or 3-col grid neatly
+        paginator = Paginator(authors, 12)
+        page_number = request.GET.get('page')
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+
+        context['authors']   = page_obj
+        context['page_obj']  = page_obj
+        context['paginator'] = paginator
+        return context
 
     content_panels = Page.content_panels + [
         FieldPanel('intro'),
@@ -313,4 +346,3 @@ class EditorialBoardMember(Orderable):
         FieldPanel('editor'),
         FieldPanel('role'),
     ]
-

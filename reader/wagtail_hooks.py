@@ -55,6 +55,31 @@ class ReaderIndexView(IndexView):
         ))
         return buttons
 
+    def search_queryset(self, queryset):
+        """
+        Intercepts Wagtail's search workflow to allow looking up readers by their 
+        exact phone number using a deterministic blind index hash strategy.
+        """
+        # Retrieve and clean the query string input by the administrator
+        search_query = self.search_query.strip() if self.search_query else ""
+        
+        if search_query:
+            # Check if the query resembles a phone number string (has digits or starts with +)
+            if search_query.startswith('+') or any(char.isdigit() for char in search_query):
+                # Calculate the exact SHA-256 blind index hash via the model's helper method
+                hashed_phone = ReaderUser.hash_phone(search_query)
+                from django.db.models import Q
+                
+                # Perform a direct ORM evaluation bypassing full-text search constraints
+                return queryset.filter(
+                    Q(name__icontains=search_query) |
+                    Q(email__icontains=search_query) |
+                    Q(phone_number_hash=hashed_phone)
+                )
+                
+        # Default back to standard text-search indexing for ordinary word queries
+        return super().search_queryset(queryset)
+
 class ReaderSnippetViewSet(SnippetViewSet):
     model = ReaderUser
     index_view_class = ReaderIndexView
@@ -64,9 +89,12 @@ class ReaderSnippetViewSet(SnippetViewSet):
     menu_order = 300
     add_to_admin_menu = True
     
-    list_display = ("name", "email", "phone_number", "subscription_plan", "subscription_end", "status_display")
+    # phone_display is a model method that decrypts on access — Wagtail calls it as a callable.
+    list_display = ("name", "email", "phone_display", "subscription_plan", "subscription_end", "status_display")
     filterset_class = ReaderFilterSet
-    search_fields = ("phone_number", "name", "email")
+    # phone_number removed: encrypted fields can't be searched at DB level.
+    # Admins can find readers by name or email.
+    search_fields = ("name", "email")
 
 class PaymentDetailsSnippetViewSet(SnippetViewSet):
     model = PaymentDetails
@@ -105,7 +133,7 @@ class SubscriptionHistorySnippetViewSet(SnippetViewSet):
     
     list_display = ("reader", "subscription_plan", "subscription_start", "subscription_end", "is_active", "is_cancelled", "created_at")
     filterset_class = SubscriptionHistoryFilterSet
-    search_fields = ("reader__name", "reader__phone_number", "reader__email")
+    search_fields = ("reader__name", "reader__email")
 
 @hooks.register('register_admin_viewset')
 def register_reader_viewsets():
