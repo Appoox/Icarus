@@ -50,7 +50,8 @@
     margin-bottom: 6px;
 }
 
-.form-input {
+.form-input,
+.password-wrapper input {
     width: 100%;
     padding: 10px 14px;
     font-family: var(--font-ui);
@@ -62,7 +63,8 @@
     transition: border-color 0.15s;
 }
 
-.form-input:focus {
+.form-input:focus,
+.password-wrapper input:focus {
     outline: none;
     border-color: var(--navy);
     box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.08);

@@ -143,20 +143,6 @@ def register_reader_viewsets():
         SubscriptionHistorySnippetViewSet(),
     ]
 
-# ── Custom User Forms ───────────────────────────────────────────────
-from wagtail.users.forms import UserEditForm, UserCreationForm
-
-class CustomUserEditForm(UserEditForm):
-    pass # ReaderUser fields are already in panels if defined in the model
-
-class CustomUserCreationForm(UserCreationForm):
-    pass
-
-@hooks.register('construct_user_edit_form')
-def construct_user_edit_form(form, user, **kwargs):
-    # This hook can be used to further customize the form if needed
-    pass
-
 # ── Audit Log Admin View ──────────────────────────────────────────────
 def auditlog_view(request):
     entries = (

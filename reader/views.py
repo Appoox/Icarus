@@ -264,7 +264,7 @@ def deactivate_account(request):
         "Your account has been deactivated. In accordance with our data retention policy, "
         "your personal data will be permanently purged after the statutory period."
     )
-    return redirect('home')
+    return redirect('/')
 
 import csv
 from django.http import HttpResponse
