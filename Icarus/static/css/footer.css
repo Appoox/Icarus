@@ -146,11 +146,11 @@
 
 /* ── About paragraph ────────────────────────────────────────────── */
 .site-footer__about {
-  font-size: 0.875rem;
+  font-size: 1.7rem;
+  display: flex;
+  justify-content: center;
   line-height: 1.7;
   color: var(--footer-muted);
-  max-width: 860px;
-  margin: 0 0 2rem 0;
 }
 
 .site-footer__about a {
