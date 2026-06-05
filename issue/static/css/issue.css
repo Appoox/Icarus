@@ -226,10 +226,9 @@
     margin-top: 1rem;
     padding: .6rem 1.6rem;
     font-family: var(--label);
-    font-size: .72rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    
-        color: #fff;
+    color: #fff;
     background: var(--navy, #0b1f3a);
     border-radius: 24px;
     text-decoration: none;
@@ -562,10 +561,9 @@
 
 .editorial-toc-col__heading {
     font-family: var(--label);
-    font-size: .78rem;
+    font-size: 1rem;
     font-weight: 800;
-    
-        color: var(--navy);
+    color: var(--navy);
     padding-bottom: .65rem;
     border-bottom: 2px solid var(--navy);
     margin-bottom: 1.5rem;
@@ -676,18 +674,16 @@
 
 .toc-item__author {
     font-family: var(--label);
-    font-size: .65rem;
+    font-size: .8rem;
     font-weight: 600;
-    
-        color: var(--caption);
+    color: var(--caption);
 }
 
 .editorial-content-col__heading {
     font-family: var(--label);
-    font-size: .78rem;
+    font-size: 1rem;
     font-weight: 800;
-    
-        color: var(--navy);
+    color: var(--navy);
     padding-bottom: .65rem;
     border-bottom: 2px solid var(--navy);
     margin-bottom: 1.5rem;
