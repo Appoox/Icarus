@@ -16,7 +16,7 @@
     font-family: var(--label);
     font-size: .7rem;
     font-weight: 800;
-    letter-spacing: .2em;
+    
     text-transform: uppercase;
     color: var(--red);
     display: inline-flex;
@@ -59,7 +59,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .25em;
+    
     text-transform: uppercase;
     color: var(--navy);
     padding-bottom: .75rem;
@@ -101,7 +101,7 @@
     font-size: clamp(2rem, 3.5vw, 2.5rem);
     font-weight: 900;
     line-height: 1.1;
-    letter-spacing: -.03em;
+    
     margin-bottom: .5rem;
 }
 
@@ -120,7 +120,7 @@
     font-family: var(--label);
     font-size: .75rem;
     font-weight: 600;
-    letter-spacing: .12em;
+    
     color: var(--caption);
     text-transform: uppercase;
 }
@@ -130,7 +130,7 @@
     font-family: var(--label);
     font-size: .9rem;
     font-weight: 800;
-    letter-spacing: .15em;
+    
     text-transform: uppercase;
     color: #fff;
     padding: 4px 14px;
@@ -151,7 +151,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 700;
-    letter-spacing: .16em;
+    
     text-transform: uppercase;
     padding: .85rem 2rem;
     border-radius: 2px;
@@ -178,7 +178,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .22em;
+    
     text-transform: uppercase;
     color: var(--navy);
     padding-bottom: .6rem;
@@ -257,7 +257,7 @@
     font-family: var(--label);
     font-size: .80rem;
     font-weight: 800;
-    letter-spacing: .15em;
+    
     text-transform: uppercase;
     color: #fff;
     background: var(--red);
@@ -282,7 +282,7 @@
 .sg-issue-card__date {
     font-family: var(--label);
     font-size: .6rem;
-    letter-spacing: .08em;
+    
     color: var(--caption);
     margin-top: .2rem;
 }
@@ -296,7 +296,7 @@
     margin-bottom: .2rem;
     display: block;
     text-transform: uppercase;
-    letter-spacing: .05em;
+    
 }
 
 
@@ -328,7 +328,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .22em;
+    
     text-transform: uppercase;
     color: var(--navy);
     padding-bottom: .6rem;
@@ -447,7 +447,7 @@
     font-family: var(--label);
     font-size: .80rem;
     font-weight: 800;
-    letter-spacing: .15em;
+    
     text-transform: uppercase;
     color: #fff;
     background: var(--muted);
@@ -472,7 +472,7 @@
 .sg-issue-small-card__date {
     font-family: var(--label);
     font-size: .55rem;
-    letter-spacing: .08em;
+    
     color: var(--caption);
     margin-top: .15rem;
 }
@@ -513,7 +513,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .22em;
+    
     text-transform: uppercase;
     color: var(--red);
     margin-bottom: .5rem;
@@ -554,7 +554,7 @@
     font-family: var(--label);
     font-weight: 700;
     font-size: 1.5rem;
-    letter-spacing: .16em;
+    
     text-transform: uppercase;
     padding: .7rem 2rem;
     border-radius: 2px;
@@ -581,7 +581,7 @@
     font-family: var(--label);
     font-size: 1.05rem;
     font-weight: 800;
-    letter-spacing: .18em;
+    
     text-transform: uppercase;
     color: var(--navy);
     white-space: nowrap;
@@ -645,7 +645,7 @@
     font-family: var(--label);
     font-size: .8rem;
     font-weight: 800;
-    letter-spacing: .15em;
+    
     text-transform: uppercase;
     color: #fff;
     background: var(--red);
@@ -670,7 +670,7 @@
 .sg-article-card__date {
     font-family: var(--label);
     font-size: .63rem;
-    letter-spacing: .08em;
+    
     color: var(--caption);
     margin-top: auto;
 }
@@ -844,7 +844,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 700;
-    letter-spacing: .12em;
+    
     text-transform: uppercase;
     padding: 1rem 2.5rem;
     border-radius: 2px;
@@ -907,7 +907,7 @@
     font-family: var(--label);
     font-size: 0.8rem;
     font-weight: 800;
-    letter-spacing: 0.12em;
+    
     text-transform: uppercase;
     color: #fff;
     padding: 2px 8px;
@@ -933,7 +933,7 @@
     font-size: 0.65rem;
     color: var(--caption);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    
 }
 
 .sg-more-issues {
@@ -952,7 +952,7 @@
     font-family: var(--label);
     font-size: 0.9rem;
     font-weight: 700;
-    letter-spacing: .1em;
+    
     text-transform: uppercase;
     padding: 0.8rem 2rem;
     border-radius: 2px;

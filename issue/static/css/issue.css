@@ -124,7 +124,7 @@
     font-family: var(--label);
     font-size: .7rem;
     font-weight: 800;
-    letter-spacing: .3em;
+    
     text-transform: uppercase;
     opacity: .7;
     border-bottom: 1px solid rgba(255,255,255,.3);
@@ -143,7 +143,7 @@
     font-family: var(--label);
     font-size: .65rem;
     font-weight: 700;
-    letter-spacing: .25em;
+    
     text-transform: uppercase;
     opacity: .65;
     margin-top: -.4rem;
@@ -154,7 +154,7 @@
     font-family: var(--label);
     font-size: .75rem;
     font-weight: 700;
-    letter-spacing: .15em;
+    
     text-transform: uppercase;
     background: rgba(255,255,255,.15);
     border: 1px solid rgba(255,255,255,.25);
@@ -177,7 +177,7 @@
     font-size: clamp(2rem, 3.5vw, 2.8rem);
     font-weight: 900;
     line-height: 1.1;
-    letter-spacing: -.02em;
+    
     color: var(--red);
     margin-bottom: 1rem;
     display: block;
@@ -187,7 +187,7 @@
     font-family: var(--label);
     font-size: .78rem;
     font-weight: 600;
-    letter-spacing: .1em;
+    
     color: var(--caption);
     text-transform: uppercase;
     display: flex;
@@ -202,7 +202,7 @@
     font-family: var(--label);
     font-size: .9rem;
     font-weight: 700;
-    letter-spacing: .14em;
+    
     text-transform: uppercase;
     color: #fff;
     background-color: var(--topic-color, var(--navy));
@@ -233,7 +233,7 @@
     font-family: var(--label);
     font-size: .72rem;
     font-weight: 700;
-    letter-spacing: .12em;
+    
     text-transform: uppercase;
     color: #fff;
     background: var(--navy, #0b1f3a);
@@ -317,7 +317,7 @@
     text-transform: uppercase;
     color: var(--muted);
     margin-bottom: 16px;
-    letter-spacing: 0.1em;
+    
     text-align: center;
 }
 
@@ -571,7 +571,7 @@
     font-family: var(--label);
     font-size: .78rem;
     font-weight: 800;
-    letter-spacing: .22em;
+    
     text-transform: uppercase;
     color: var(--navy);
     padding-bottom: .65rem;
@@ -591,7 +591,7 @@
     font-family: var(--label);
     font-size: 1.3rem;
     font-weight: 800;
-    letter-spacing: .18em;
+    
     text-transform: uppercase;
     color: var(--tg-color, var(--navy));
     padding: .3rem .7rem;
@@ -644,7 +644,7 @@
     font-size: .65rem;
     font-weight: 700;
     color: var(--caption);
-    letter-spacing: .05em;
+    
 }
 
 .toc-item:last-child {
@@ -669,7 +669,7 @@
     font-family: var(--label);
     font-size: .65rem;
     font-weight: 600;
-    letter-spacing: .06em;
+    
     text-transform: uppercase;
     color: var(--caption);
 }
@@ -678,7 +678,7 @@
     font-family: var(--label);
     font-size: .78rem;
     font-weight: 800;
-    letter-spacing: .22em;
+    
     text-transform: uppercase;
     color: var(--navy);
     padding-bottom: .65rem;
@@ -720,7 +720,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .22em;
+    
     text-transform: uppercase;
     color: var(--navy);
     border-bottom: 1px solid var(--rule);
@@ -782,7 +782,7 @@
     font-family: var(--label);
     font-size: .62rem;
     font-weight: 700;
-    letter-spacing: .15em;
+    
     text-transform: uppercase;
     color: var(--red);
     display: block;
@@ -872,7 +872,7 @@
     font-size: 1rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    
     box-shadow: 0 4px 15px rgba(11, 31, 58, 0.2);
     cursor: pointer;
     transition: all 0.3s ease;
@@ -903,7 +903,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .2em;
+    
     text-transform: uppercase;
     color: var(--navy);
     white-space: nowrap;
@@ -968,7 +968,7 @@
   font-family: var(--label);
   font-size: .63rem;
   font-weight: 800;
-  letter-spacing: .15em;
+  
   text-transform: uppercase;
   color: #fff;
   background-color: var(--category-color, var(--red));
@@ -994,13 +994,13 @@
     margin-bottom: .2rem;
     display: block;
     text-transform: uppercase;
-    letter-spacing: .05em;
+    
 }
 
 .sg-article-card__date {
   font-family: var(--label);
   font-size: .63rem;
-  letter-spacing: .08em;
+  
   color: var(--caption);
   margin-top: auto;
 }
@@ -1037,7 +1037,7 @@
     font-family: var(--label);
     font-size: 0.9rem;
     font-weight: 800;
-    letter-spacing: 0.25em;
+    
     text-transform: uppercase;
     margin-bottom: 1rem;
     opacity: 0.9;
@@ -1049,7 +1049,7 @@
     font-size: clamp(2.5rem, 5vw, 4rem);
     font-weight: 900;
     margin: 0;
-    letter-spacing: -0.02em;
+    
     line-height: 1.1;
 }
 
@@ -1067,7 +1067,7 @@
     font-family: var(--label);
     font-size: 1.25rem;
     font-weight: 800;
-    letter-spacing: 0.2em;
+    
     text-transform: uppercase;
     color: var(--navy);
     border-bottom: 2px solid var(--navy);
@@ -1118,7 +1118,7 @@
     font-family: var(--label);
     font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    
     text-transform: uppercase;
     color: var(--caption);
     margin-bottom: 0.5rem;

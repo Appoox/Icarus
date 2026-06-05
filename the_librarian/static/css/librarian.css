@@ -171,7 +171,7 @@ h1 {
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    
 }
 
 .select-input {

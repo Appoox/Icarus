@@ -87,7 +87,7 @@
 .site-footer__section-heading {
   font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  
   text-transform: uppercase;
   color: var(--footer-heading);
   margin: 0 0 1.25rem 0;
@@ -317,7 +317,7 @@
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.15em;
+  
   text-transform: uppercase;
   color: var(--footer-muted);
   background: transparent;
@@ -453,7 +453,7 @@
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  
   text-transform: uppercase;
   color: var(--footer-heading);
   border-bottom: 1px solid var(--footer-border);

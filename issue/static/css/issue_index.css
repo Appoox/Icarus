@@ -22,7 +22,7 @@
     font-family: var(--label);
     font-size: 2rem;
     font-weight: 800;
-    letter-spacing: .15em;
+    
     text-transform: uppercase;
     color: var(--navy);
     margin-bottom: 1rem;
@@ -55,7 +55,7 @@
   font-family: var(--label);
   font-size: .63rem;
   font-weight: 800;
-  letter-spacing: .15em;
+  
   text-transform: uppercase;
   color: #fff;
   background-color: var(--category-color, var(--red));
@@ -111,7 +111,7 @@
     font-family: var(--label);
     font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    
     text-transform: uppercase;
     color: var(--caption);
 }
@@ -120,7 +120,7 @@
     font-family: var(--label);
     font-size: 0.6rem;
     color: var(--muted);
-    letter-spacing: 0.05em;
+    
 }
 
 .issue-archive-card__title {
@@ -144,7 +144,7 @@
     font-family: var(--label);
     font-size: 0.6rem;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    
     text-transform: uppercase;
     color: #fff;
     padding: 3px 10px;
@@ -159,7 +159,7 @@
     font-weight: 800;
     color: var(--navy);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    
     text-decoration: none;
     border-bottom: 2px solid var(--rule);
     padding-bottom: 2px;
