@@ -52,7 +52,7 @@
 .issue-card__category {
   display: inline-block;
   font-family: var(--label);
-  font-size: .63rem;
+  font-size: .9rem;
   font-weight: 800;
   
     color: #fff;
@@ -107,14 +107,14 @@
 
 .meta-date {
     font-family: var(--label);
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--caption);
 }
 
 .meta-volume {
     font-family: var(--label);
-    font-size: 0.6rem;
+    font-size: 0.9rem;
     color: var(--muted);
     
 }
@@ -150,7 +150,7 @@
 
 .issue-archive-card__cta {
     font-family: var(--label);
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     font-weight: 800;
     color: var(--navy);
         

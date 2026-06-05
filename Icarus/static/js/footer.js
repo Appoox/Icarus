@@ -12,7 +12,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    const boardToggle  = document.querySelector('.editorial-board-btn');
+    const boardToggle  = document.querySelector('.site-footer__board-btn');
     const boardContent = document.getElementById('editorial-board-content');
 
     // Guard: both elements must exist (footer may be absent on some pages)

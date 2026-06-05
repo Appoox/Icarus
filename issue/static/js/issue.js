@@ -234,21 +234,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ── EDITORIAL BOARD ACCORDION TOGGLE ──
+    // ── EDITORIAL BOARD MODAL TOGGLE ──
     const boardToggle = document.querySelector('.editorial-board-btn');
-    const boardContent = document.getElementById('editorial-board-content');
+    const boardContent = document.getElementById('issue-editorial-board-content');
     if (boardToggle && boardContent) {
-        boardToggle.addEventListener('click', () => {
-            const isExpanded = boardToggle.getAttribute('aria-expanded') === 'true';
-            boardToggle.setAttribute('aria-expanded', !isExpanded);
-            
-            if (isExpanded) {
-                boardContent.classList.remove('is-expanded');
-                boardToggle.textContent = 'പത്രാധിപ സമിതി';
-            } else {
-                boardContent.classList.add('is-expanded');
-                boardToggle.textContent = 'കുറച്ചു കാണുക';
+        const closeBtn = document.querySelector('.issue-editorial-board-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                boardContent.close();
+            });
+        }
+
+        boardContent.addEventListener('click', function(e) {
+            const dialogBox = boardContent.getBoundingClientRect();
+            const clickedInDialogBox = (
+                e.clientY >= dialogBox.top &&
+                e.clientY <= dialogBox.top + dialogBox.height &&
+                e.clientX >= dialogBox.left &&
+                e.clientX <= dialogBox.left + dialogBox.width
+            );
+            if (!clickedInDialogBox) {
+                boardContent.close();
             }
+        });
+
+        boardContent.addEventListener('close', () => {
+            boardToggle.setAttribute('aria-expanded', 'false');
+        });
+
+        boardToggle.addEventListener('click', () => {
+            boardToggle.setAttribute('aria-expanded', 'true');
+            boardContent.showModal();
         });
     }
 

@@ -620,16 +620,26 @@
     display: flex;
     flex-direction: column;
     gap: .15rem;
-    padding: .55rem 0;
+    padding: .55rem 1rem .55rem 2rem;
     border-bottom: 1px solid var(--rule);
     position: relative;
-    padding-left: 2rem;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, border-color 0.2s ease;
+    border-radius: 6px;
+    margin-bottom: 2px;
+}
+
+.toc-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background-color: var(--bg, #fff);
+    border-bottom-color: transparent;
+    z-index: 1;
 }
 
 .toc-item::before {
     content: counter(toc-counter, decimal-leading-zero);
     position: absolute;
-    left: 0;
+    left: 0.5rem;
     top: .6rem;
     font-family: var(--label);
     font-size: .65rem;
@@ -650,6 +660,14 @@
     color: var(--ink);
     text-decoration: none;
     transition: color 0.2s;
+}
+
+.toc-item__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 6px;
 }
 
 .toc-item__link:hover {
@@ -677,19 +695,65 @@
 
 /* ── EDITORIAL BOARD ACCORDION TOGGLE ── */
 .editorial-board-btn {
+    font-family: var(--label, 'Source Sans 3', 'Source Sans Pro', sans-serif);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
     position: relative;
 }
 
-.editorial-board-content {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
-    width: 100%;
+.editorial-board-btn:hover,
+.editorial-board-btn[aria-expanded="true"] {
+    color: var(--navy);
+    border-color: var(--red);
 }
 
-.editorial-board-content.is-expanded {
-    grid-template-rows: 1fr;
+.editorial-board-btn[aria-expanded="true"]::after  { content: ' ↑'; }
+.editorial-board-btn[aria-expanded="false"]::after { content: ' ↓'; }
+
+.issue-editorial-board-content {
+    padding: 2.5rem 3rem 1.5rem;
+    background-color: var(--bg, #fdfdfc);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    color: var(--ink);
+    
+    max-width: 900px;
+    width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    
+    margin: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.issue-editorial-board-content::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.issue-editorial-board-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s;
+    padding: 0;
+}
+
+.issue-editorial-board-close-btn:hover {
+    color: var(--navy);
 }
 
 .editorial-board-inner {
@@ -782,6 +846,16 @@
     font-weight: 700;
     color: var(--ink);
     margin: 0;
+}
+
+.issue-editorial-board-content .board-member__name a {
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.issue-editorial-board-content .board-member__name a:hover {
+    color: var(--red);
 }
 
 .editorial-content-col {
@@ -951,7 +1025,7 @@
 .sg-article-card__category {
   display: inline-block;
   font-family: var(--label);
-  font-size: .63rem;
+  font-size: .8rem;
   font-weight: 800;
   
     color: #fff;
