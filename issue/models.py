@@ -21,6 +21,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.models import HitCount
 from hitcount.utils import get_hitcount_model
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from articles.wagtail_widgets import ColorPickerBlock
+from articles.models import ColoredHeadingBlock, BlockQuoteBlock, ImageBlock, AudioBlock, VideoBlock, RichTextImportBlock
 
 
 class IssueTag(TaggedItemBase):
@@ -36,46 +38,6 @@ class IssueIndexPageTag(TaggedItemBase):
         related_name='tagged_items',
         on_delete=models.CASCADE
     )
-
-
-
-class BlockQuoteBlock(blocks.StructBlock):
-    text = blocks.RichTextBlock()
-    attribute_name = blocks.CharBlock(
-        required=False,
-        label='e.g. Mary Berry',
-        help_text="The person to attribute the quote to"
-    )
-
-    class Meta:
-        icon = 'openquote'
-        label = 'Blockquote'
-        template = 'blocks/blockquote_block.html'
-
-
-class ImageBlock(blocks.StructBlock):
-    """Image with optional caption and text-wrap alignment."""
-    image = ImageChooserBlock()
-    caption = blocks.RichTextBlock(
-        required=False,
-        label='Caption',
-        help_text="Optional caption displayed below the image"
-    )
-    alignment = blocks.ChoiceBlock(
-        choices=[
-            ('full',  'Full width - image fills the entire text column, no wrap'),
-            ('left',  'Float left - image sits left, text flows around the right side'),
-            ('right', 'Float right - image sits right, text flows around the left side'),
-        ],
-        default='full',
-        label='Image placement',
-        help_text="Choose how the image sits relative to the surrounding text"
-    )
-
-    class Meta:
-        icon = 'image'
-        label = 'Image'
-
 
 class VolumeForm(WagtailAdminModelForm):
     """Pre-fills the number field with the next volume number (last + 1)."""
@@ -272,42 +234,52 @@ class Issue(RoutablePageMixin, Page):
     )
 
     editorial = StreamField([
-        ('audio',      AudioBlock()),
-        ('video',      VideoBlock()),
-        ('heading',    blocks.RichTextBlock(form_classname="full title")),
-        ('paragraph',  blocks.RichTextBlock()),
-        ('image',      ImageBlock()),                                   # ← StructBlock with caption
-        ('blockquote', BlockQuoteBlock()),
-        ('embed',      EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
-        ('document',   DocumentChooserBlock()),
-        ('table',      TableBlock()),
-        ('raw_html',   blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
-        ('text',       blocks.TextBlock()),
-        ('email',      blocks.EmailBlock()),
-        ('url',        blocks.URLBlock()),
-        ('boolean',    blocks.BooleanBlock(required=False)),
-        ('integer',    blocks.IntegerBlock()),
-        ('float',      blocks.FloatBlock()),
-        ('decimal',    blocks.DecimalBlock()),
-        ('date',       blocks.DateBlock()),
-        ('time',       blocks.TimeBlock()),
-        ('datetime',   blocks.DateTimeBlock()),
-        ('rich_text',  blocks.RichTextBlock(label="Rich Text (Full)")),
-        ('choice',     blocks.ChoiceBlock(choices=[
-            ('left',   'Left'),
-            ('center', 'Centre'),
-            ('right',  'Right'),
-        ], help_text="Alignment choice")),
-        ('page',       blocks.PageChooserBlock()),
-        ('static',     blocks.StaticBlock(
-            admin_text="This is a placeholder block — content is defined in the template.",
-            label="Divider / Separator",
-        )),
-        ('list',       blocks.ListBlock(blocks.CharBlock(), label="List of items")),
-        ('stream',     blocks.StreamBlock([
-            ('text',  blocks.CharBlock()),
-            ('image', ImageChooserBlock()),
-        ], label="Nested Stream")),
+        ('rich_text_import', RichTextImportBlock()),
+
+    # ── Media ──────────────────────────────────────────────────────────────
+    ('audio',           AudioBlock()),
+    ('video',           VideoBlock()),
+
+    # ── Text ───────────────────────────────────────────────────────────────
+    ('heading',         blocks.RichTextBlock(form_classname="full title")),
+    ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
+    ('paragraph',       blocks.RichTextBlock()),
+    ('blockquote',      BlockQuoteBlock()),
+    ('text',            blocks.TextBlock()),
+
+    # ── Media & Embeds ─────────────────────────────────────────────────────
+    ('image',           ImageBlock()),
+    ('embed',           EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
+    ('document',        DocumentChooserBlock()),
+    ('table',           TableBlock()),
+    ('raw_html',        blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
+
+    # ── Typed primitives ───────────────────────────────────────────────────
+    ('email',           blocks.EmailBlock()),
+    ('url',             blocks.URLBlock()),
+    ('boolean',         blocks.BooleanBlock(required=False)),
+    ('integer',         blocks.IntegerBlock()),
+    ('float',           blocks.FloatBlock()),
+    ('decimal',         blocks.DecimalBlock()),
+    ('date',            blocks.DateBlock()),
+    ('time',            blocks.TimeBlock()),
+    ('datetime',        blocks.DateTimeBlock()),
+    ('rich_text',       blocks.RichTextBlock(label="Rich Text (Full)")),
+    ('choice',          blocks.ChoiceBlock(choices=[
+        ('left',   'Left'),
+        ('center', 'Centre'),
+        ('right',  'Right'),
+    ], help_text="Alignment choice")),
+    ('page',            blocks.PageChooserBlock()),
+    ('static',          blocks.StaticBlock(
+        admin_text="This is a placeholder block — content is defined in the template.",
+        label="Divider / Separator",
+    )),
+    ('list',            blocks.ListBlock(blocks.CharBlock(), label="List of items")),
+    ('stream',          blocks.StreamBlock([
+        ('text',  blocks.CharBlock()),
+        ('image', ImageChooserBlock()),
+    ], label="Nested Stream")),
     ], use_json_field=True, null=True, blank=True)
 
     def get_all_articles(self):
