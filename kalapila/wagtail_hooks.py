@@ -23,7 +23,7 @@ class CommenterFilter(django_filters.ModelChoiceFilter):
         Shows "Full Name (phone)" when a name exists, otherwise just the phone.
         """
         name = obj.get_full_name().strip()  # AbstractUser provides get_full_name()
-        phone = str(obj.phone_number_encrypted) if obj.phone_number_encrypted_encrypted else ''
+        phone = str(obj.phone_number_encrypted) if obj.phone_number_encrypted else ''
         if name and phone:
             return f"{name} ({phone})"
         # Fall back to whichever piece of info is available

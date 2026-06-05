@@ -15,18 +15,18 @@
     {# ── Filter bar ── #}
     <form method="get" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:28px; padding:16px 20px; background:var(--w-color-surface-menus); border-radius:6px;">
         <div style="display:flex; flex-direction:column; gap:4px;">
-            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; 
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">User</label>
             <select name="actor" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:180px;">
                 <option value="">All</option>
                 {% for u in staff_users %}
                 <option value="{{ u.pk }}" {% if filters.actor == u.pk|stringformat:"s" %}selected{% endif %}>
-                    {{ u.name|default:u.phone_number }}
+                    {{ u.name|default:u.phone_number_encrypted }}
                 </option>
                 {% endfor %}
             </select>
         </div>
         <div style="display:flex; flex-direction:column; gap:4px;">
-            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; 
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">Action</label>
             <select name="action" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:130px;">
                 <option value="">All</option>
                 {% for k, v in action_labels.items %}
@@ -35,7 +35,7 @@
             </select>
         </div>
         <div style="display:flex; flex-direction:column; gap:4px;">
-            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; 
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">Model</label>
             <select name="model" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:180px;">
                 <option value="">All</option>
                 {% for m in distinct_models %}
