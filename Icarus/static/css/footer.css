@@ -87,7 +87,7 @@
 .site-footer__section-heading {
   font-size: 0.8rem;
   font-weight: 700;
-  
+  text-align: center;
   text-transform: uppercase;
   color: var(--footer-heading);
   margin: 0 0 1.25rem 0;
@@ -114,6 +114,7 @@
 /* ── Link list ──────────────────────────────────────────────────── */
 .site-footer__col-links {
   list-style: none;
+  text-align: center;
   margin: 0;
   padding: 0;
   display: flex;
