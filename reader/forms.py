@@ -108,17 +108,26 @@ class CustomWagtailUserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = {'name', 'email', 'is_active'}
+        fields = {'phone_number_hash', 'name', 'email', 'is_active'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        if 'phone_number_hash' in self.fields:
+            self.fields['phone_number_hash'].widget = forms.HiddenInput()
+            self.fields['phone_number_hash'].required = False
+            
         if 'email' in self.fields:
             self.fields['email'].required = False
-    
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        # Convert empty strings to None to prevent unique constraint errors
-        return email if email else None
+            self.fields['email'].empty_value = None
+
+    def validate_unique(self):
+        """
+        Catch the email before uniqueness validation.
+        """
+        if self.instance.email == "":
+            self.instance.email = None
+        super().validate_unique()
 
 
 class CustomWagtailUserEditForm(UserEditForm):
@@ -131,44 +140,32 @@ class CustomWagtailUserEditForm(UserEditForm):
     class Meta:
         model = User
         fields = {
-            'phone_number_hash',
-            'name', 'email', 'is_active', 'gender', 'birth_year',  # was 'dob'
+            'phone_number_hash', 
+            'name', 'email', 'is_active', 'gender', 'birth_year',
             'subscription_plan', 'subscription_end',
-            'print_delivery_status',  # was 'delivery_status'
+            'print_delivery_status',
             'pincode'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        
         if 'phone_number_hash' in self.fields:
             self.fields['phone_number_hash'].widget = forms.HiddenInput()
             self.fields['phone_number_hash'].disabled = True
             self.fields['phone_number_hash'].required = False
-        
-        # 1. Make email optional
+            
         if 'email' in self.fields:
             self.fields['email'].required = False
+            self.fields['email'].empty_value = None  # Force empty to None early
 
-        # 2. Safely pop 'username' to prevent write errors on your read-only @property
-        if 'username' in self.fields:
-            self.fields.pop('username')
-
-        # 3. Make first_name and last_name optional and set to HiddenInput
         for field_name in ('first_name', 'last_name'):
             if field_name in self.fields:
                 self.fields[field_name].required = False
                 self.fields[field_name].widget = forms.HiddenInput()
 
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        # Convert empty strings to None to prevent unique constraint errors
-        return email if email else None
-
     def clean(self):
         cleaned_data = super().clean()
-        
-        # 4. Auto-populate first_name and last_name from Full Name (name)
         full_name = cleaned_data.get('name', '').strip()
         if full_name:
             parts = full_name.split(maxsplit=1)
@@ -181,5 +178,15 @@ class CustomWagtailUserEditForm(UserEditForm):
         else:
             cleaned_data['first_name'] = ""
             cleaned_data['last_name'] = ""
-        
         return cleaned_data
+
+    def validate_unique(self):
+        """
+        Crucial fix for Django's AbstractUser:
+        AbstractUser.clean() normalizes email addresses and automatically mutates 
+        `None` back into `""` (empty string). This triggers a unique constraint 
+        violation. We force it back to `None` right before the uniqueness check runs.
+        """
+        if self.instance.email == "":
+            self.instance.email = None
+        super().validate_unique()
