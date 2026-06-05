@@ -47,10 +47,6 @@
               {% endif %}
             </span>
 
-            <span class="trending-pill__views">
-                <span class="trending-pill__unit" style="font-size: 0.75rem;">പ്രൊഫൈൽ</span>
-            </span>
-
           </a>
         </li>
         {% endwith %}
@@ -74,7 +70,19 @@
         {% for author_page in authors %}
         {% with author=author_page.specific %}
         <div id="pane-{{ author.id }}" class="articles-preview-pane">
-          <h3 class="preview-pane-title">{{ author.title }}</h3>
+          <div class="preview-pane-header" style="margin-bottom: 1.5rem;">
+            <h3 class="preview-pane-title" style="margin-bottom: 0.25rem; border-bottom: none; padding-bottom: 0;">{{ author.title }}</h3>
+            {% if author.role %}
+            <div class="preview-pane-role" style="font-size: 0.9rem; color: var(--tr-muted, #757575); font-weight: 600; margin-bottom: 0.75rem;">{{ author.role }}</div>
+            {% endif %}
+            {% if author.bio %}
+            <div class="preview-pane-bio" style="font-size: 0.95rem; line-height: 1.5; color: var(--tr-text, #333);">
+              {{ author.bio|truncatechars_html:150|safe }}
+              <a href="{{ author.url }}" style="font-size: 0.85rem; color: var(--tr-accent, #c0392b); font-weight: 600; margin-left: 0.25rem; text-decoration: none; display: inline-block; margin-top: 0.5rem;">പ്രൊഫൈൽ കാണുക &rarr;</a>
+            </div>
+            {% endif %}
+          </div>
+          <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--tr-border, #e8e8e8); padding-bottom: 0.5rem; color: var(--tr-text); margin-top: 0;">ലേഖനങ്ങൾ</h4>
           <ul class="preview-article-list">
             {% for article in author.get_articles|slice:":5" %}
             <li class="preview-article-item">
