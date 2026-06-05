@@ -530,6 +530,8 @@
             {{ article.topic.name }}</span>
           {% endif %}
           <p class="related-card__title">{{ article.title }}</p>
+          <span class="card-date">{{ article.date|date:"F j, Y" }}</span>
+
         </div>
       </a>
       {% endfor %}
