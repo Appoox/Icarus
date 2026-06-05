@@ -1,4 +1,40 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    // ── Fix 3: sync right-column height to the left cover-card height ─────────
+    // Pure CSS cannot achieve this: overflow:hidden on a grid item prevents visual
+    // overflow but does NOT stop the browser from measuring the element's full
+    // content height when sizing the grid row.  The cover-image height is also
+    // dynamic (depends on the image's aspect ratio), so a fixed max-height would
+    // only match by coincidence.
+    //
+    // Solution: after the cover image has loaded (window 'load'), measure the left
+    // card's rendered height and apply it as max-height on the right column.
+    // A ResizeObserver keeps them in sync when the viewport is resized.
+    // ─────────────────────────────────────────────────────────────────────────
+    const syncRightColHeight = () => {
+        const leftCard = document.querySelector('.sg-issue-cover');
+        const rightCol = document.querySelector('.sg-issue-other-topics');
+        if (!leftCard || !rightCol) return;
+        const h = leftCard.getBoundingClientRect().height;
+        if (h > 0) rightCol.style.maxHeight = h + 'px';
+    };
+
+    // Fire after all sub-resources (including the cover image) have loaded so
+    // the card has its final rendered height.
+    if (document.readyState === 'complete') {
+        syncRightColHeight();
+    } else {
+        window.addEventListener('load', syncRightColHeight);
+    }
+
+    // Keep in sync when the window is resized (cover reflows → new height).
+    let heightSyncDebounce;
+    window.addEventListener('resize', () => {
+        clearTimeout(heightSyncDebounce);
+        heightSyncDebounce = setTimeout(syncRightColHeight, 150);
+    });
+    // ─────────────────────────────────────────────────────────────────────────
+
     const wrapper = document.querySelector('.sg-issue-articles__scroll-wrapper');
     const grid    = document.querySelector('.sg-issue-articles__grid');
     if (!wrapper || !grid) return;
