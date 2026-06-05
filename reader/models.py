@@ -226,6 +226,13 @@ class ReaderUser(AbstractUser, index.Indexed):
         """Required for some serialization flows. Uses the hash (the DB key)."""
         return (self.phone_number_hash,)
 
+    def get_full_name(self):
+        """Used by Wagtail and Django admin to display the user's name."""
+        return self.name or self.phone_number_encrypted or ''
+
+    def get_short_name(self):
+        return self.name or self.phone_number_encrypted or ''
+
     GENDER_CHOICES = [
         ('പുരുഷന്‍', 'Male'),
         ('സ്ത്രീ', 'Female'),
