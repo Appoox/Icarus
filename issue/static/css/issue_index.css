@@ -23,8 +23,7 @@
     font-size: 2rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     margin-bottom: 1rem;
 }
 
@@ -56,8 +55,7 @@
   font-size: .63rem;
   font-weight: 800;
   
-  text-transform: uppercase;
-  color: #fff;
+    color: #fff;
   background-color: var(--category-color, var(--red));
   padding: 3px 10px;
   border-radius: 12px;
@@ -111,8 +109,6 @@
     font-family: var(--label);
     font-size: 0.7rem;
     font-weight: 700;
-    
-    text-transform: uppercase;
     color: var(--caption);
 }
 
@@ -145,8 +141,7 @@
     font-size: 0.6rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: #fff;
+        color: #fff;
     padding: 3px 10px;
     border-radius: 2px;
     align-self: flex-start;
@@ -158,8 +153,7 @@
     font-size: 0.75rem;
     font-weight: 800;
     color: var(--navy);
-    text-transform: uppercase;
-    
+        
     text-decoration: none;
     border-bottom: 2px solid var(--rule);
     padding-bottom: 2px;

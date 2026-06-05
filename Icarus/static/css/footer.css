@@ -318,8 +318,7 @@
   font-size: 1rem;
   font-weight: 700;
   
-  text-transform: uppercase;
-  color: var(--footer-muted);
+    color: var(--footer-muted);
   background: transparent;
   border: 1px solid var(--footer-border);
   border-radius: 2px;
@@ -454,8 +453,7 @@
   font-size: 1rem;
   font-weight: 800;
   
-  text-transform: uppercase;
-  color: var(--footer-heading);
+    color: var(--footer-heading);
   border-bottom: 1px solid var(--footer-border);
   padding-bottom: 0.5rem;
   margin: 1.5rem 0 0.5rem;

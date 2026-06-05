@@ -17,8 +17,7 @@
     font-size: .7rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--red);
+        color: var(--red);
     display: inline-flex;
     align-items: center;
     gap: .5rem;
@@ -60,8 +59,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     padding-bottom: .75rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.5rem;
@@ -122,7 +120,6 @@
     font-weight: 600;
     
     color: var(--caption);
-    text-transform: uppercase;
 }
 
 .sg-issue-cover__topic {
@@ -131,8 +128,7 @@
     font-size: .9rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: #fff;
+        color: #fff;
     padding: 4px 14px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -152,8 +148,7 @@
     font-size: 1rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    padding: .85rem 2rem;
+        padding: .85rem 2rem;
     border-radius: 2px;
     transition: background .2s, transform .2s;
 }
@@ -179,8 +174,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     padding-bottom: .6rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 3rem; /* INCREASED from 1.25rem: pushes carousel down toward vertical centre (Fix 4) */
@@ -258,8 +252,7 @@
     font-size: .80rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: #fff;
+        color: #fff;
     background: var(--red);
     padding: 3px 10px;
     border-radius: 12px;
@@ -282,7 +275,6 @@
 .sg-issue-card__date {
     font-family: var(--label);
     font-size: .6rem;
-    text-transform: uppercase;
     color: var(--caption);
     margin-top: .2rem;
 }
@@ -295,8 +287,7 @@
     color: var(--muted);
     margin-bottom: .2rem;
     display: block;
-    text-transform: uppercase;
-    
+        
 }
 
 
@@ -329,8 +320,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     padding-bottom: .6rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.25rem;
@@ -448,8 +438,7 @@
     font-size: .80rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: #fff;
+        color: #fff;
     background: var(--muted);
     padding: 2px 8px;
     border-radius: 12px;
@@ -472,7 +461,6 @@
 .sg-issue-small-card__date {
     font-family: var(--label);
     font-size: .55rem;
-    text-transform: uppercase;
     color: var(--caption);
     margin-top: .15rem;
 }
@@ -514,8 +502,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--red);
+        color: var(--red);
     margin-bottom: .5rem;
     display: flex;
     align-items: center;
@@ -555,8 +542,7 @@
     font-weight: 700;
     font-size: 1.5rem;
     
-    text-transform: uppercase;
-    padding: .7rem 2rem;
+        padding: .7rem 2rem;
     border-radius: 2px;
     transition: background .15s, transform .15s;
     position: relative;
@@ -582,8 +568,7 @@
     font-size: 1.05rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     white-space: nowrap;
 }
 
@@ -646,8 +631,7 @@
     font-size: .8rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: #fff;
+        color: #fff;
     background: var(--red);
     padding: 3px 10px;
     border-radius: 12px;
@@ -670,7 +654,6 @@
 .sg-article-card__date {
     font-family: var(--label);
     font-size: .63rem;
-    text-transform: uppercase;
     color: var(--caption);
     margin-top: auto;
 }
@@ -845,8 +828,7 @@
     font-size: 1rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    padding: 1rem 2.5rem;
+        padding: 1rem 2.5rem;
     border-radius: 2px;
     transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     box-shadow: 0 4px 15px rgba(11, 31, 58, 0.15);
@@ -908,8 +890,7 @@
     font-size: 0.8rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: #fff;
+        color: #fff;
     padding: 2px 8px;
     border-radius: 4px;
     margin-bottom: 0.5rem;
@@ -932,7 +913,6 @@
     font-family: var(--label);
     font-size: 0.65rem;
     color: var(--caption);
-    text-transform: uppercase;
     
 }
 
@@ -953,8 +933,7 @@
     font-size: 0.9rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    padding: 0.8rem 2rem;
+        padding: 0.8rem 2rem;
     border-radius: 2px;
     transition: all 0.3s ease;
 }

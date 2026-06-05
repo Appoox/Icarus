@@ -125,8 +125,7 @@
     font-size: .7rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    opacity: .7;
+        opacity: .7;
     border-bottom: 1px solid rgba(255,255,255,.3);
     padding-bottom: .5rem;
     width: 100%;
@@ -144,8 +143,7 @@
     font-size: .65rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    opacity: .65;
+        opacity: .65;
     margin-top: -.4rem;
 }
 
@@ -155,8 +153,7 @@
     font-size: .75rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    background: rgba(255,255,255,.15);
+        background: rgba(255,255,255,.15);
     border: 1px solid rgba(255,255,255,.25);
     border-radius: 20px;
     padding: .3rem .9rem;
@@ -189,7 +186,6 @@
     font-weight: 600;
     
     color: var(--caption);
-    text-transform: uppercase;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -203,8 +199,7 @@
     font-size: .9rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    color: #fff;
+        color: #fff;
     background-color: var(--topic-color, var(--navy));
     padding: .4rem 1.2rem;
     border-radius: 20px;
@@ -234,8 +229,7 @@
     font-size: .72rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    color: #fff;
+        color: #fff;
     background: var(--navy, #0b1f3a);
     border-radius: 24px;
     text-decoration: none;
@@ -314,8 +308,7 @@
     font-family: var(--label);
     font-size: 14px;
     font-weight: 700;
-    text-transform: uppercase;
-    color: var(--muted);
+        color: var(--muted);
     margin-bottom: 16px;
     
     text-align: center;
@@ -572,8 +565,7 @@
     font-size: .78rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     padding-bottom: .65rem;
     border-bottom: 2px solid var(--navy);
     margin-bottom: 1.5rem;
@@ -592,8 +584,7 @@
     font-size: 1.3rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--tg-color, var(--navy));
+        color: var(--tg-color, var(--navy));
     padding: .3rem .7rem;
     background: color-mix(in srgb, var(--tg-color, var(--navy)) 10%, transparent);
     border-left: 3px solid var(--tg-color, var(--navy));
@@ -670,8 +661,7 @@
     font-size: .65rem;
     font-weight: 600;
     
-    text-transform: uppercase;
-    color: var(--caption);
+        color: var(--caption);
 }
 
 .editorial-content-col__heading {
@@ -679,8 +669,7 @@
     font-size: .78rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     padding-bottom: .65rem;
     border-bottom: 2px solid var(--navy);
     margin-bottom: 1.5rem;
@@ -721,8 +710,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     border-bottom: 1px solid var(--rule);
     padding-bottom: 0.5rem;
     margin: 1.5rem auto 0.5rem;
@@ -783,8 +771,7 @@
     font-size: .62rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    color: var(--red);
+        color: var(--red);
     display: block;
     margin-bottom: .15rem;
 }
@@ -871,8 +858,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    text-transform: uppercase;
-    
+        
     box-shadow: 0 4px 15px rgba(11, 31, 58, 0.2);
     cursor: pointer;
     transition: all 0.3s ease;
@@ -904,8 +890,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     white-space: nowrap;
     margin: 0;
 }
@@ -969,8 +954,7 @@
   font-size: .63rem;
   font-weight: 800;
   
-  text-transform: uppercase;
-  color: #fff;
+    color: #fff;
   background-color: var(--category-color, var(--red));
   padding: 3px 10px;
   border-radius: 12px;
@@ -993,14 +977,12 @@
     color: var(--muted);
     margin-bottom: .2rem;
     display: block;
-    text-transform: uppercase;
-    
+        
 }
 
 .sg-article-card__date {
   font-family: var(--label);
   font-size: .63rem;
-  
   color: var(--caption);
   margin-top: auto;
 }
@@ -1038,8 +1020,7 @@
     font-size: 0.9rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    margin-bottom: 1rem;
+        margin-bottom: 1rem;
     opacity: 0.9;
     display: block;
 }
@@ -1068,8 +1049,7 @@
     font-size: 1.25rem;
     font-weight: 800;
     
-    text-transform: uppercase;
-    color: var(--navy);
+        color: var(--navy);
     border-bottom: 2px solid var(--navy);
     padding-bottom: 0.75rem;
     margin-bottom: 2rem;
@@ -1119,8 +1099,7 @@
     font-size: 0.75rem;
     font-weight: 700;
     
-    text-transform: uppercase;
-    color: var(--caption);
+        color: var(--caption);
     margin-bottom: 0.5rem;
 }
 

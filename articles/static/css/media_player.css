@@ -101,8 +101,7 @@
     font-weight: 700;
     font-size: 0.95rem;
     transition: color 0.2s;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+        letter-spacing: 0.1em;
 }
 
 .back-link:hover {
