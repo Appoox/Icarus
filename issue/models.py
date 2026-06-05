@@ -315,7 +315,14 @@ class Issue(RoutablePageMixin, Page):
         primary = self.primary_articles.live()
         # 2. Get articles where this is a reprint
         reprints = [rel.article for rel in self.reprinted_articles.select_related('article').filter(article__live=True)]
-        return list(primary) + reprints
+        
+        all_articles = list(primary) + reprints
+        
+        # Sort by topic name so that Django's regroup tag clusters identical topics together.
+        # Articles without a topic are sorted to the end.
+        all_articles.sort(key=lambda a: a.topic.name if getattr(a, 'topic', None) else "\uffff")
+        
+        return all_articles
 
     @property
     def board_members(self):
