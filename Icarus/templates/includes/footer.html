@@ -66,19 +66,27 @@
     {% endwith %}
 
     {# ── Editorial Board accordion ────────────────────────────────────── #}
+    {# MODIFIED: Changed from accordion to modal popup. Kept original comment structure above. #}
     {% if ctx.editorial_board %}
     <div class="site-footer__board-wrapper">
       <hr class="site-footer__divider site-footer__divider--board">
 
       <div class="editorial-board-btn-wrapper">
+        {# MODIFIED: Added aria-haspopup="dialog" for proper accessibility #}
         <button class="editorial-board-btn show-more-btn site-footer__board-btn"
                 aria-expanded="false"
-                aria-controls="editorial-board-content">
+                aria-controls="editorial-board-content"
+                aria-haspopup="dialog">
           പത്രാധിപ സമിതി
         </button>
       </div>
 
-      <div class="editorial-board-content" id="editorial-board-content" hidden>
+      {# MODIFIED: Changed from <div hidden> to a native <dialog> element for the floating screen #}
+      <dialog class="editorial-board-content" id="editorial-board-content">
+        
+        {# NEW: Added a dedicated close button inside the modal #}
+        <button class="editorial-board-close-btn" aria-label="Close modal">&times;</button>
+
         <div class="editorial-board-inner">
 
           {% for section in ctx.editorial_board.sections %}
@@ -111,7 +119,7 @@
           {% endfor %}
 
         </div>{# /.editorial-board-inner #}
-      </div>{# /.editorial-board-content #}
+      </dialog>{# /.editorial-board-content #}
     </div>{# /.site-footer__board-wrapper #}
     {% endif %}
 

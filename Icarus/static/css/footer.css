@@ -310,7 +310,7 @@
 .editorial-board-btn-wrapper {
   display: flex;
   justify-content: center;
-  padding: 1.5rem 0 0;
+  padding: 1.5rem
 }
 
 .site-footer__board-btn {
@@ -387,25 +387,60 @@
 
 /* ── Accordion mechanism ──────────────────────────────────────── */
 /*
+   PRESERVED COMMENT (From old accordion logic):
    grid-template-rows 0fr → 1fr gives a smooth height animation
    without JavaScript measuring.  The HTML `hidden` attribute hides
    the content before JS runs (progressive enhancement).
    JS removes `hidden`, then toggles `is-expanded`.
 */
+
+/* MODIFIED: Converted from a grid transition trick into native <dialog> modal styling */
 .editorial-board-content {
-  display: grid;
-  grid-template-rows: 0fr;           /* collapsed by default */
-  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  width: 100%;
+  /* Setup native dialog appearance */
+  padding: 2.5rem 3rem 1.5rem;
+  background-color: var(--footer-bg);
+  border: 1px solid var(--footer-border);
+  border-radius: 12px;
+  color: var(--footer-text);
+  
+  /* Sizing and scrolling */
+  max-width: 900px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  
+  /* Reset default dialog margins to ensure proper centering */
+  margin: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-.editorial-board-content.is-expanded {
-  grid-template-rows: 1fr;
+/* NEW: Dim the page content behind the modal */
+.editorial-board-content::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* NEW: Styles for the absolute positioned close button inside the modal */
+.editorial-board-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: var(--footer-muted);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 0;
+}
+
+.editorial-board-close-btn:hover {
+  color: var(--footer-heading);
 }
 
 .editorial-board-inner {
-  min-height: 0;                     /* required for the 0fr trick to work */
+  min-height: 0;                     /* required for the 0fr trick to work - PRESERVED COMMENT */
 }
 
 /* ── Role section headings ────────────────────────────────────── */
@@ -498,6 +533,9 @@
 @media (max-width: 600px) {
   .editorial-board-members-grid { gap: 1rem; }
 
+  /* MODIFIED: Tighten padding on mobile dialog */
+  .editorial-board-content { padding: 1.5rem; }
+  
   .board-member {
     width: 100%;
     max-width: 320px;
