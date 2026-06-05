@@ -282,7 +282,7 @@
 .sg-issue-card__date {
     font-family: var(--label);
     font-size: .6rem;
-    
+    text-transform: uppercase;
     color: var(--caption);
     margin-top: .2rem;
 }
@@ -472,7 +472,7 @@
 .sg-issue-small-card__date {
     font-family: var(--label);
     font-size: .55rem;
-    
+    text-transform: uppercase;
     color: var(--caption);
     margin-top: .15rem;
 }
@@ -670,7 +670,7 @@
 .sg-article-card__date {
     font-family: var(--label);
     font-size: .63rem;
-    
+    text-transform: uppercase;
     color: var(--caption);
     margin-top: auto;
 }
