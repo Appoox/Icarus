@@ -85,10 +85,9 @@
 
 /* ── Section heading — spans the full width of all sub-columns ── */
 .site-footer__section-heading {
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 700;
   text-align: center;
-  text-transform: uppercase;
   color: var(--footer-heading);
   margin: 0 0 1.25rem 0;
   padding-bottom: 0.6rem;
@@ -316,7 +315,7 @@
 
 .site-footer__board-btn {
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 700;
   
   text-transform: uppercase;
@@ -452,7 +451,7 @@
 
 .editorial-board-role-heading {
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
-  font-size: 0.72rem;
+  font-size: 1rem;
   font-weight: 800;
   
   text-transform: uppercase;
