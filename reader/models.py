@@ -226,6 +226,13 @@ class ReaderUser(AbstractUser, index.Indexed):
         """Required for some serialization flows. Uses the hash (the DB key)."""
         return (self.phone_number_hash,)
 
+    def get_full_name(self):
+        """Used by Wagtail and Django admin to display the user's name."""
+        return self.name or self.phone_number_encrypted or ''
+
+    def get_short_name(self):
+        return self.name or self.phone_number_encrypted or ''
+
     GENDER_CHOICES = [
         ('പുരുഷന്‍', 'Male'),
         ('സ്ത്രീ', 'Female'),
@@ -493,6 +500,34 @@ class ReaderUser(AbstractUser, index.Indexed):
         related_name='favorited_by',
         help_text='Issues this reader has bookmarked.',
     )
+
+    # ── Reading History Consent Gate ──────────────────────────────────
+
+    @property
+    def tracking_consent(self):
+        """
+        Returns True if the user has consented to reading history tracking.
+
+        The source of truth is read_history_consent_at: a non-null timestamp
+        means opted in; null (cleared on revocation/deactivation) means opted out.
+        This is a read-only derived property — never assign to it directly.
+        To grant consent: set read_history_consent_at = timezone.now() and save.
+        To revoke consent: set read_history_consent_at = None and save
+        (deactivate() already does this on account closure).
+        """
+        return self.read_history_consent_at is not None
+
+    def record_read_article(self, article):
+        """
+        Single enforcement point for reading history consent.
+
+        Records an article as read ONLY if the user has explicitly opted in via
+        the signup form's read_history_consent checkbox.
+        Always call this instead of user.read_articles.add(article) directly
+        so the consent gate can never be accidentally bypassed.
+        """
+        if self.tracking_consent:
+            self.read_articles.add(article)
 
     def phone_display(self):
         """

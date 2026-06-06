@@ -4,7 +4,7 @@ from django import forms
 from django.utils import timezone
 from reader.models import ReaderUser
 from phonenumber_field.formfields import SplitPhoneNumberField as BaseSplitPhoneNumberField
-from allauth.account.internal.flows import phone_verification
+# 'phone_verification' import removed — was imported but never used
 
 class CustomAccountAdapter(DefaultAccountAdapter):
     def save_user(self, request, user, form, commit=True):
@@ -24,6 +24,10 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         if form.cleaned_data.get('is_above_18'):
             user.is_above_18 = True
             user.age_declaration_at = timezone.now()
+            
+        # NEW: Check if the user opted in to tracking on the signup form
+        if form.cleaned_data.get('read_history_consent'):
+            user.read_history_consent_at = timezone.now()
         
         # Ensure phone is saved directly (this handles the phone field in the form)
         if 'phone' in form.cleaned_data:
