@@ -198,16 +198,40 @@ class CustomSignupForm(forms.Form):
         """
         Save custom fields to the user model upon successful signup.
 
-        NOTE: read_history_consent_at (the consent timestamp) is already set in
-        adapter.save_user() when the user checks read_history_consent — do not
-        duplicate or overwrite it here.
-        tracking_consent is a @property derived from read_history_consent_at;
-        it is not a writable model field and must never be assigned directly.
+        This method is the *definitive* place to set read_history_consent_at for
+        the signup flow.  The adapter's save_user() also attempts to handle it via
+        form.cleaned_data, but the 'form' object passed to save_user() is allauth's
+        own SignupForm — NOT this class — when using ACCOUNT_SIGNUP_FORM_CLASS.
+        In that configuration read_history_consent is absent from the adapter's
+        form.cleaned_data entirely, so the adapter silently does nothing.
+        signup() is always called with self = this CustomSignupForm instance, so
+        self.cleaned_data is always the correct and complete source.
+
+        NOTE: tracking_consent is a @property derived from read_history_consent_at;
+        it is not a writable field and must never be assigned directly.
         """
         user.name = self.cleaned_data.get('name', '')
         user.is_above_18 = self.cleaned_data.get('is_above_18', False)
         if user.is_above_18:
             user.age_declaration_at = timezone.now()
+
+        # FIX (Bug 1): Handle read_history_consent here — not (only) in the adapter.
+        #
+        # Grant path: stamp the timestamp only if not already set (the adapter may
+        # have handled it correctly when using ACCOUNT_FORMS — avoid overwriting its
+        # timestamp with a slightly later one).
+        #
+        # Revoke path: explicitly force None so that even if the adapter accidentally
+        # set a stale timestamp (e.g., a misconfigured form), signup() clears it.
+        # A new user who leaves the checkbox unchecked must never have tracking active.
+        if self.cleaned_data.get('read_history_consent'):
+            if not user.read_history_consent_at:
+                # Adapter didn't handle it — set the timestamp now.
+                user.read_history_consent_at = timezone.now()
+        else:
+            # Checkbox was left unchecked: ensure the timestamp is always None.
+            user.read_history_consent_at = None
+
         user.save()
         return user
 

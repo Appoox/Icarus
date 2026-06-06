@@ -47,7 +47,11 @@ def reader_profile(request):
 
     context = {
         'reader': reader,
-        'read_articles': reader.read_articles.all().order_by('-first_published_at')[:20] if hasattr(reader.read_articles, 'all') else [],
+        # Only surface read history when tracking consent is active.
+        # When consent is off (read_history_consent_at is None), pass an empty list
+        # so the template's "tracking disabled" branch renders instead of stale data
+        # that may have accumulated before revocation or via a direct .add() bypass.
+        'read_articles': reader.read_articles.all().order_by('-first_published_at')[:20] if reader.tracking_consent else [],
         'interested_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
         'all_topics': reader.interested_topics.all() if hasattr(reader.interested_topics, 'all') else [],
         'plans': PLANS,

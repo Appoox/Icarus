@@ -1,9 +1,7 @@
-# reader/forms.py
-
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
-# 'timezone' and 'date' removed — not used anywhere in this module
+from django.utils import timezone  # needed for consent timestamp writes in save()
 
 from .models import ReaderUser
 from issue.models import Topic
@@ -20,18 +18,47 @@ User = get_user_model()
 
 class ReaderProfileEditForm(forms.ModelForm):
     """
-    Form for readers to update their personal details, subscription delivery settings,
-    and mailing address options. Includes complete tracking for local magazine variations.
+    Form for readers to update their personal details, delivery address, and
+    data-sharing consent preferences.
+
+    Consent fields (read_history_consent, gender_consent, birth_year_consent)
+    are boolean form fields — NOT model fields.  They map to the model's *_at
+    timestamp columns:
+        checked   (True)  →  *_at = timezone.now()  (consent active)
+        unchecked (False) →  *_at = None             (consent revoked)
+    Translation happens in save(); initial state is derived in __init__.
     """
     phone_number = SplitPhoneNumberField(
         label=_("Phone Number"),
         required=True
     )
 
+    # ── Consent toggle fields ────────────────────────────────────────────────
+    # These are declared form fields (not model fields).  Django's construct_instance()
+    # skips non-model fields during save, so the translation to *_at timestamps is
+    # handled entirely by our custom save() below.
+    read_history_consent = forms.BooleanField(
+        required=False,
+        label=_("Track my reading history for personalised recommendations."),
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        # Shown below the checkbox in the template via form.read_history_consent.help_text
+        help_text=_("Revoking this consent will permanently delete your saved reading history."),
+    )
+    gender_consent = forms.BooleanField(
+        required=False,
+        label=_("Include my gender in demographic analytics."),
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+    )
+    birth_year_consent = forms.BooleanField(
+        required=False,
+        label=_("Include my birth year in demographic analytics."),
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+    )
+
     class Meta:
         model = ReaderUser
         fields = [
-            'name', 'email', 'phone_number', 'gender', 'birth_year',  # was 'dob' (renamed field)
+            'name', 'email', 'phone_number', 'gender', 'gender_other', 'birth_year',  # was 'dob' (renamed field); gender_other added
             'profile_image', 'bio',
             # 'magazine_format' removed — field no longer exists on ReaderUser
             'address_line_1', 'address_line_2', 'post_office',
@@ -81,6 +108,94 @@ class ReaderProfileEditForm(forms.ModelForm):
             decrypted_phone = getattr(self.instance, 'phone_number_encrypted', None)
             if decrypted_phone:
                 self.fields['phone_number'].initial = str(decrypted_phone)
+
+            # Initialise consent checkboxes from model's *_at timestamp fields.
+            # A non-null timestamp means consent is currently active → box should be ticked.
+            self.fields['read_history_consent'].initial = bool(self.instance.read_history_consent_at)
+            self.fields['gender_consent'].initial = bool(self.instance.gender_consent_at)
+            self.fields['birth_year_consent'].initial = bool(self.instance.birth_year_consent_at)
+
+    def save(self, commit=True):
+        """
+        Custom save with three responsibilities the default ModelForm.save() can't handle:
+
+        1.  Phone number: phone_number is a declared non-model field — Django's
+            construct_instance() skips it entirely, so the change would be silently
+            discarded.  We call set_phone() here instead to keep phone_number_hash
+            (blind index) and phone_number_encrypted (ciphertext) atomically in sync.
+
+        2.  Consent grant / revoke: translates the boolean checkboxes into *_at
+            timestamp columns on the model instance:
+              checked   (True)  → *_at = timezone.now()  (newly granted)
+              unchecked (False) → *_at = None             (revoked)
+            No-op when the state has not changed since the last save.
+
+        3.  Read-history purge: when read_history_consent is revoked the
+            read_articles M2M is cleared AFTER the row is committed so there is
+            never a window where consent_at is already null but history rows still
+            exist for record_read_article() to race against.
+        """
+        # Apply Meta.fields model values (name, email, gender, etc.) to the instance.
+        # phone_number (non-model) is skipped by construct_instance(); so are the
+        # three consent fields — both are handled manually below.
+        instance = super().save(commit=False)
+        now = timezone.now()
+
+        # ── 1. Phone ────────────────────────────────────────────────────────────
+        phone_val = self.cleaned_data.get('phone_number')
+        if phone_val:
+            # set_phone() updates both phone_number_hash and phone_number_encrypted
+            # atomically; never assign to those fields individually.
+            instance.set_phone(str(phone_val))
+
+        # ── 2. Consent timestamps ────────────────────────────────────────────────
+        # `had_*` reads the DB value from BEFORE this form submission.
+        # The *_at fields are NOT in Meta.fields so super().save(commit=False)
+        # leaves them untouched on the instance — their value here is the original
+        # DB value, which is exactly what we need for the before/after comparison.
+
+        # ── Read History ──
+        had_read_history = bool(instance.read_history_consent_at)
+        wants_read_history = self.cleaned_data.get('read_history_consent', False)
+
+        if wants_read_history and not had_read_history:
+            # Newly granted: stamp the timestamp.
+            instance.read_history_consent_at = now
+        elif not wants_read_history and had_read_history:
+            # Revoked: clear the timestamp.
+            # The M2M purge happens after commit below to avoid a partial-save race.
+            instance.read_history_consent_at = None
+
+        # ── Gender ──
+        had_gender = bool(instance.gender_consent_at)
+        wants_gender = self.cleaned_data.get('gender_consent', False)
+
+        if wants_gender and not had_gender:
+            instance.gender_consent_at = now
+        elif not wants_gender and had_gender:
+            instance.gender_consent_at = None
+
+        # ── Birth Year ──
+        had_birth_year = bool(instance.birth_year_consent_at)
+        wants_birth_year = self.cleaned_data.get('birth_year_consent', False)
+
+        if wants_birth_year and not had_birth_year:
+            instance.birth_year_consent_at = now
+        elif not wants_birth_year and had_birth_year:
+            instance.birth_year_consent_at = None
+
+        if commit:
+            instance.save()
+            # Save any M2M fields declared in Meta.fields (none currently, but
+            # future-safe and required to satisfy super().save(commit=False)'s contract).
+            self._save_m2m()
+            # ── 3. Read-history purge ────────────────────────────────────────────
+            # Must run AFTER instance.save() so the consent_at column is already
+            # null in the DB before we remove the history rows.
+            if not wants_read_history and had_read_history:
+                instance.read_articles.clear()
+
+        return instance
 
 
 class UpdateInterestsForm(forms.ModelForm):
