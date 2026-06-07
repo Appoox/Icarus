@@ -1,3 +1,5 @@
+# reader/forms.py
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
@@ -6,6 +8,7 @@ from django.utils import timezone  # needed for consent timestamp writes in save
 from .models import ReaderUser
 from issue.models import Topic
 from phonenumber_field.formfields import SplitPhoneNumberField
+from phonenumber_field.phonenumber import PhoneNumber as PhoneNumberObj  # for safe parse in __init__
 
 # Wagtail user forms imports
 from wagtail.users.forms import UserEditForm, UserCreationForm
@@ -30,7 +33,14 @@ class ReaderProfileEditForm(forms.ModelForm):
     """
     phone_number = SplitPhoneNumberField(
         label=_("Phone Number"),
-        required=True
+        required=True,
+        # region='IN' propagates to SplitPhoneNumberWidget(region='IN').
+        # The widget stores it as self.region, which is passed to
+        # PhoneNumber.from_string(value, region=self.region) inside decompress().
+        # Without this, national-format numbers ("9876543210") cannot be parsed
+        # at decompress() time because there is no country hint — the call returns
+        # [None, None] and the field renders completely blank.
+        region='IN',
     )
 
     # ── Consent toggle fields ────────────────────────────────────────────────
@@ -107,13 +117,52 @@ class ReaderProfileEditForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             decrypted_phone = getattr(self.instance, 'phone_number_encrypted', None)
             if decrypted_phone:
-                self.fields['phone_number'].initial = str(decrypted_phone)
+                phone_str = str(decrypted_phone).strip()
+                try:
+                    # 1. Parse to a PhoneNumber object with 'IN' as the default region.
+                    #    This handles both E.164 ("+919876543210") and national-format
+                    #    ("9876543210") numbers stored before E.164 normalisation was
+                    #    enforced, making pre-population robust to the storage format.
+                    # 2. Pass the *object* (not the string) to decompress().
+                    #    SplitPhoneNumberWidget.decompress() checks:
+                    #      isinstance(value, PhoneNumber) → fast path, no re-parse
+                    #      else → PhoneNumber.from_string(value) — may fail on national fmt
+                    #    Passing the object guarantees the fast path in all lib versions.
+                    # 3. Store the resulting list in self.initial so MultiWidget.render()
+                    #    receives a list and skips its own internal decompress() call.
+                    phone_obj = PhoneNumberObj.from_string(phone_str, region='IN')
+                    if phone_obj.is_valid():
+                        decomposed = self.fields['phone_number'].widget.decompress(phone_obj)
+                        self.initial['phone_number'] = decomposed
+                    else:
+                        # Parsed but not a valid number — surface the raw string so the
+                        # user can see and correct it rather than getting a blank field.
+                        self.initial['phone_number'] = phone_str
+                except Exception:
+                    # Last resort: pass the raw string; render-time decompress will try.
+                    self.initial['phone_number'] = phone_str
 
-            # Initialise consent checkboxes from model's *_at timestamp fields.
-            # A non-null timestamp means consent is currently active → box should be ticked.
-            self.fields['read_history_consent'].initial = bool(self.instance.read_history_consent_at)
-            self.fields['gender_consent'].initial = bool(self.instance.gender_consent_at)
-            self.fields['birth_year_consent'].initial = bool(self.instance.birth_year_consent_at)
+            # Consent checkboxes: same reasoning — put them in self.initial so the
+            # bool value is guaranteed to reach CheckboxInput.get_context() correctly.
+            # A non-null timestamp means consent is currently active → box ticked.
+            self.initial['read_history_consent'] = bool(self.instance.read_history_consent_at)
+            self.initial['gender_consent'] = bool(self.instance.gender_consent_at)
+            self.initial['birth_year_consent'] = bool(self.instance.birth_year_consent_at)
+
+
+    def validate_unique(self):
+        """
+        AbstractUser.clean() calls normalize_email() which maps None → ''.
+        That happens inside _post_clean() BEFORE validate_unique() runs, so by the
+        time uniqueness is checked, instance.email is already '' even if the field
+        was left blank.  A UNIQUE constraint on '' fires if any other row has ''.
+
+        Re-force '' → None here (mirrors CustomWagtailUserEditForm.validate_unique())
+        so the DB sees NULL, which SQL UNIQUE allows to appear multiple times.
+        """
+        if self.instance.email == "":
+            self.instance.email = None
+        super().validate_unique()
 
     def save(self, commit=True):
         """
@@ -147,6 +196,13 @@ class ReaderProfileEditForm(forms.ModelForm):
             # set_phone() updates both phone_number_hash and phone_number_encrypted
             # atomically; never assign to those fields individually.
             instance.set_phone(str(phone_val))
+
+        # ── 1b. Email null safety ────────────────────────────────────────────────
+        # validate_unique() already fixed this once, but AbstractUser.clean() can
+        # re-run between there and here (e.g., when super().save() triggers it again).
+        # Force '' → None a final time so the ORM writes NULL, never empty string.
+        if not instance.email:
+            instance.email = None
 
         # ── 2. Consent timestamps ────────────────────────────────────────────────
         # `had_*` reads the DB value from BEFORE this form submission.
