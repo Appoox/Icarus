@@ -16,8 +16,4 @@ urlpatterns = [
     # ViewerJS PDF display
     path("viewer/<int:document_id>/", views.viewer_view, name="viewer"),
     path("pdf/<int:document_id>/", views.serve_pdf, name="serve_pdf"),
-    # Archive direct access
-    path("archive/", views.archive_list, name="archive_list"),
-    path("archive/view/<str:filename>/", views.archive_viewer, name="archive_viewer"),
-    path("archive/download/<str:filename>/", views.archive_download, name="archive_download"),
 ]
