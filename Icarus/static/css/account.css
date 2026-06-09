@@ -44,13 +44,13 @@
     font-family: var(--font-ui);
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
+    
+        color: var(--muted);
     margin-bottom: 6px;
 }
 
-.form-input {
+.form-input,
+.password-wrapper input {
     width: 100%;
     padding: 10px 14px;
     font-family: var(--font-ui);
@@ -62,7 +62,8 @@
     transition: border-color 0.15s;
 }
 
-.form-input:focus {
+.form-input:focus,
+.password-wrapper input:focus {
     outline: none;
     border-color: var(--navy);
     box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.08);
@@ -87,9 +88,8 @@
     font-family: var(--font-ui);
     font-size: 14px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: var(--red);
+    
+        background: var(--red);
     color: var(--white);
     border: none;
     border-radius: 4px;
@@ -155,9 +155,8 @@
     font-family: var(--font-ui);
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
+    
+        color: var(--muted);
     padding: 0 8px;
 }
 
@@ -221,9 +220,8 @@
     font-family: var(--font-ui);
     font-size: 14px;
     font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    transition: background 0.2s;
+    
+        transition: background 0.2s;
 }
 
 .auth-back:hover {
@@ -265,7 +263,7 @@
     text-transform: none;
     font-weight: 500;
     font-size: 11px;
-    letter-spacing: 0;
+    
     color: var(--red);
     text-decoration: none;
     transition: color 0.2s;
@@ -366,6 +364,424 @@ select.form-input {
 .form-group--checkbox label {
     margin: 0;
     text-transform: none;
-    letter-spacing: normal;
+    
     cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   1. ACCOUNT DEACTIVATION PAGE
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Extra vertical rhythm on the reused .lockout banner */
+.deactivate-banner {
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+}
+
+/* The card that wraps the consequence list + multi-step form */
+.deactivate-card {
+    /* Inherits background / border / border-radius from .auth-form */
+    padding-bottom: 28px;
+}
+
+/* "What will happen immediately:" micro-label */
+.deactivate-section-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin-bottom: 14px;
+}
+
+/* ── Consequence list ──────────────────────────────────────────────── */
+.consequence-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.consequence-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.45;
+}
+
+/* Filled circular ✕ badge */
+.consequence-icon {
+    flex-shrink: 0;
+    width: 18px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffebee;
+    color: var(--red);
+    font-size: 9px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Align vertically with the first line of text */
+    margin-top: 2px;
+}
+
+/* Rule between the consequence list and the confirmation steps */
+.consequence-divider {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 24px 0;
+}
+
+/* Inline <kbd> showing the keyword the user must type */
+kbd.confirm-keyword {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.82em;
+    font-weight: 700;
+    font-style: normal;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    /* Heavier bottom border gives it the classic keyboard-key look */
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    white-space: nowrap;
+}
+
+/* ── Two-step confirmation structure ──────────────────────────────── */
+
+/* Outer wrapper for each numbered step */
+.deactivate-step {
+    margin-bottom: 20px;
+    /* Smooth transition when the locked state is toggled */
+    transition: opacity 0.2s ease;
+}
+
+/* Step header: number badge + label on one line */
+.deactivate-step__header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+/* Circular number badge */
+.deactivate-step__num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: var(--white);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Align with the text baseline of the label beside it */
+    align-self: center;
+}
+
+/* Step label — overrides .form-group label defaults where needed */
+.deactivate-step__label {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    display: block;
+    margin: 0;
+    line-height: 1.35;
+}
+
+/* Locked state — applied to Step 2 until Step 1 is satisfied */
+.deactivate-step--locked {
+    opacity: 0.35;
+    /* Prevent all mouse/keyboard interaction while locked */
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ── Destructive submit button ─────────────────────────────────────── */
+
+/* Disabled: muted grey, visually inert */
+.auth-submit--danger:disabled,
+.auth-submit--danger[aria-disabled="true"] {
+    background: var(--muted);
+    opacity: 0.6;
+    cursor: not-allowed;
+    /* Override the base .auth-submit hover transforms while disabled */
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Armed: both gates cleared — button becomes the standard red CTA */
+.auth-submit--danger-armed,
+.auth-submit--danger:not(:disabled) {
+    background: var(--red);
+    cursor: pointer;
+}
+
+.auth-submit--danger-armed:hover {
+    background: var(--red-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   2. ACCOUNT INACTIVE PAGE
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* The outer .auth-page already handles centering; this adds a touch more top space */
+.inactive-page {
+    margin-top: 100px;
+}
+
+/* Card — extends .auth-card with centred text and generous padding */
+.inactive-card {
+    text-align: center;
+    padding: 48px 36px 40px;
+}
+
+/* Circular icon container */
+.inactive-icon {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 24px;
+    border-radius: 50%;
+    /* Muted neutral background — deliberately not red; the decision is done */
+    background: #f0f0ed;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* h1 and .subtitle already styled globally; just remove the bottom gap on h1
+   so the subtitle sits tight below it */
+.inactive-card h1 {
+    margin-bottom: 8px;
+}
+
+/* Body paragraphs inside the card */
+.inactive-body-wrap {
+    text-align: left;
+    margin: 24px 0 0;
+}
+
+.inactive-body {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.65;
+    margin-bottom: 14px;
+}
+
+/* ── Action buttons ────────────────────────────────────────────────── */
+.inactive-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 28px 0 0;
+    flex-wrap: wrap;
+}
+
+.inactive-btn {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 11px 24px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+    white-space: nowrap;
+}
+
+/* Primary: navy fill — contact support is the action we want them to take */
+.inactive-btn--primary {
+    background: var(--navy);
+    color: var(--white);
+    border: 1px solid var(--navy);
+}
+
+.inactive-btn--primary:hover {
+    background: var(--navy-mid);
+    border-color: var(--navy-mid);
+    color: var(--white);
+    transform: translateY(-1px);
+}
+
+/* Ghost: outlined, no fill — secondary hierarchy */
+.inactive-btn--ghost {
+    background: transparent;
+    color: var(--navy);
+    border: 1px solid var(--rule);
+}
+
+.inactive-btn--ghost:hover {
+    border-color: var(--navy);
+    background: rgba(11, 31, 58, 0.04);
+    color: var(--navy);
+}
+
+/* Small footnote about the retention window */
+.inactive-meta {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--caption);
+    line-height: 1.55;
+    text-align: center;
+    border-top: 1px solid var(--rule);
+    margin-top: 28px;
+    padding-top: 20px;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   3. OTP / CONFIRM LOGIN CODE PAGE
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Centre the digit group and submit button within the .auth-form card */
+.otp-form {
+    text-align: center;
+}
+
+/* ── Six-box digit group ──────────────────────────────────────────── */
+.otp-digit-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 24px 0 20px;
+}
+
+/* Individual digit input */
+.otp-digit {
+    width: 52px;
+    height: 60px;
+    text-align: center;
+    font-family: var(--font-ui);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--white);
+    border: 2px solid var(--rule);
+    border-radius: 8px;
+    padding: 0;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    /* Hide the text cursor — each box holds exactly one character */
+    caret-color: transparent;
+}
+
+.otp-digit:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(11, 31, 58, 0.1);
+}
+
+/* Subtle filled state — shows progress at a glance */
+.otp-digit--filled {
+    border-color: var(--navy-mid);
+    background: #f0f4f8;
+}
+
+/* Dash separator between the two triplets */
+.otp-sep {
+    font-family: var(--font-ui);
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--muted);
+    line-height: 1;
+    user-select: none;
+    margin: 0 2px;
+}
+
+/* Container for the hidden allauth `code` field — present in DOM for submit,
+   but completely invisible and non-interactive */
+.otp-hidden-field {
+    display: none;
+    visibility: hidden;
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* Error block positioned below the digit group */
+.otp-error {
+    margin-top: 0;
+    margin-bottom: 14px;
+}
+
+/* ── Resend section ───────────────────────────────────────────────── */
+.otp-resend-section {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.otp-timer-line {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.otp-timer-line strong {
+    color: var(--ink);
+    font-weight: 700;
+}
+
+/* Ghost link-style resend button — lower visual hierarchy than the main submit */
+.otp-resend-btn {
+    background: none;
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--red);
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.otp-resend-btn:hover:not(:disabled) {
+    background: rgba(200, 16, 46, 0.06);
+    color: var(--red-hover);
+}
+
+.otp-resend-btn:disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+    /* Keep element in flow — layout stays stable when the button becomes active */
+    visibility: visible;
+}
+
+/* ── Narrow-screen adjustments ────────────────────────────────────── */
+@media (max-width: 440px) {
+    /* Slightly smaller digit boxes so all six fit without wrapping */
+    .otp-digit {
+        width: 44px;
+        height: 52px;
+        font-size: 20px;
+        border-radius: 6px;
+    }
+
+    .otp-digit-group {
+        gap: 7px;
+    }
 }

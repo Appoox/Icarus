@@ -2,42 +2,125 @@
 {% load wagtailcore_tags wagtailimages_tags static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/author_list.css' %}">
+<link rel="stylesheet" href="{% static 'css/most_read_topics.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="author-container">
-    <header class="author-index-header">
-        <h1>{{ page.title }} ({{ paginator.count }} പേർ)</h1>
-        {% if page.intro %}
-        <div class="intro">{{ page.intro|richtext }}</div>
-        {% endif %}
-    </header>
+<div class="trending-container">
+  <header class="trending-header">
+    <h1>{{ page.title }} ({{ paginator.count }} പേർ)</h1>
+    {% if page.intro %}
+    <div class="trending-header__period">{{ page.intro|richtext }}</div>
+    {% endif %}
+  </header>
 
-    <div class="author-grid">
+  <div class="trending-layout-grid">
+    
+    <div class="trending-main-col">
+      {% if authors %}
+      <ol class="trending-list" role="list">
         {% for author_page in authors %}
         {% with author=author_page.specific %}
-        <div class="author-card">
-            <div class="author-photo">
-                {% if author.profile_image %}
-                {% image author.profile_image fill-200x200 as img %}
-                <img src="{{ img.url }}" alt="{{ author.title }}">
-                {% else %}
-                <div class="photo-placeholder"></div>
-                {% endif %}
-            </div>
+        <li>
+          <a href="{{ author.url }}"
+             class="trending-pill trending-pill--author"
+             data-target="pane-{{ author.id }}"
+             title="{{ author.title }}">
 
-            <div class="author-info">
-                <h2><a href="{{ author.url }}">{{ author.title }}</a></h2>
-                <span class="author-role">{{ author.role }}</span>
-                <a href="{{ author.url }}" class="view-profile">ലേഖനങ്ങൾ കാണുക →</a>
+            <span class="trending-pill__rank" aria-label="Rank {{ page_obj.start_index|add:forloop.counter0 }}">
+              {{ page_obj.start_index|add:forloop.counter0 }}
+            </span>
+
+            <span class="trending-pill__photo" aria-hidden="true" style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f0f0f0; flex-shrink: 0; border: 1px solid var(--tr-border, #e8e8e8);">
+              {% if author.profile_image %}
+                {% image author.profile_image fill-48x48 as thumb %}
+                <img src="{{ thumb.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+              {% else %}
+                <span class="trending-pill__initials" style="font-weight: 700; color: var(--tr-muted, #757575); font-size: 1.1rem;">{{ author.title|first }}</span>
+              {% endif %}
+            </span>
+
+            <span class="trending-pill__name-group">
+              <span class="trending-pill__name" style="font-weight: 700; color: var(--tr-text, #111111); font-size: 1rem; line-height: 1.3;">{{ author.title }}</span>
+              {% if author.role %}
+              <span class="trending-pill__role" style="font-size: 0.72rem; color: var(--tr-muted, #757575); margin-top: 2px;">{{ author.role }}</span>
+              {% endif %}
+            </span>
+
+          </a>
+        </li>
+        {% endwith %}
+        {% endfor %}
+      </ol>
+      {% else %}
+      <div class="trending-empty">
+        <p>നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="trending-side-col">
+      <div class="preview-panel-sticky">
+        
+        <div id="pane-default" class="articles-preview-pane active">
+          <h3 class="preview-pane-title">ലേഖനങ്ങൾ</h3>
+          <p class="pane-placeholder-text">ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക.</p>
+        </div>
+
+        {% for author_page in authors %}
+        {% with author=author_page.specific %}
+        <div id="pane-{{ author.id }}" class="articles-preview-pane">
+          <div class="preview-pane-header" style="margin-bottom: 1.5rem;">
+            <h3 class="preview-pane-title" style="margin-bottom: 0.25rem; border-bottom: none; padding-bottom: 0;">{{ author.title }}</h3>
+            {% if author.role %}
+            <div class="preview-pane-role" style="font-size: 0.9rem; color: var(--tr-muted, #757575); font-weight: 600; margin-bottom: 0.75rem;">{{ author.role }}</div>
+            {% endif %}
+            {% if author.bio %}
+            <div class="preview-pane-bio" style="font-size: 0.95rem; line-height: 1.5; color: var(--tr-text, #333);">
+              {{ author.bio|truncatechars_html:150|safe }}
+              <a href="{{ author.url }}" style="font-size: 0.85rem; color: var(--tr-accent, #c0392b); font-weight: 600; margin-left: 0.25rem; text-decoration: none; display: inline-block; margin-top: 0.5rem;">പ്രൊഫൈൽ കാണുക &rarr;</a>
             </div>
+            {% endif %}
+          </div>
+          <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--tr-border, #e8e8e8); padding-bottom: 0.5rem; color: var(--tr-text); margin-top: 0;">ലേഖനങ്ങൾ</h4>
+          <ul class="preview-article-list">
+            {% for article in author.get_articles|slice:":5" %}
+            <li class="preview-article-item">
+              <a href="{{ article.url|default:'#' }}" class="preview-article-link">
+                
+                <div class="preview-article-thumbnail">
+                  {% if article.cover_image %}
+                    {% image article.cover_image fill-50x50 class="thumb-img" %}
+                  {% elif article.main_image %}
+                    {% image article.main_image fill-50x50 class="thumb-img" %}
+                  {% else %}
+                    <div class="thumb-placeholder-fallback">
+                      <span>{{ author.title|slice:":1" }}</span>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <span class="preview-article-headline">{{ article.title }}</span>
+              </a>
+            </li>
+            {% empty %}
+            <li class="pane-placeholder-text">ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങൾ നിലവിൽ ലഭ്യമായിട്ടില്ല.</li>
+            {% endfor %}
+          </ul>
         </div>
         {% endwith %}
         {% endfor %}
+
+      </div>
     </div>
 
-    {% include "includes/pagination.html" with page_obj=page_obj %}
+  </div>
+
+  {% include "includes/pagination.html" with page_obj=page_obj %}
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/most_read_topics.js' %}"></script>
 {% endblock %}

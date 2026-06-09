@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{# ─────────────────────────────────────────────────────────────────────────────
+   Template : account/confirm_login_code.html   (allauth built-in OTP step)
+   Allauth  : Rendered after allauth sends a login-by-code to the user's phone.
+              The form exposes a single `code` field (LoginByCodeForm).
+   URL name : account_confirm_login_code  (allauth >= 0.56)
+              Resend URL: account_request_login_code (adjust if your version differs)
+
+   UX notes :
+     • Six individual digit boxes sync to the hidden allauth `code` field.
+     • Auto-advances focus, handles backspace/arrows, supports paste of a full code.
+     • Auto-submits the form once all six digits are entered.
+     • A 60-second countdown disables the Resend button until the timer expires.
+     • `autocomplete="one-time-code"` on the first box enables iOS/Android SMS autofill.
+   ───────────────────────────────────────────────────────────────────────────── #}
+
+{% block title %}{% trans "Verify Code" %} — Icarus{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <h1>{% trans "Check Your Phone" %}</h1>
+    <p class="subtitle">
+        {% trans "We sent a 6-digit code to your registered phone number." %}
+        {% trans "It expires in 10 minutes." %}
+    </p>
+
+    {# ── Django system messages (e.g. "Code resent") ─────────────────── #}
+    {% if messages %}
+    <ul class="messages" role="status">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {# ── OTP Form ─────────────────────────────────────────────────────── #}
+    <form method="post" class="auth-form otp-form" id="otp-form" novalidate
+          autocomplete="off">
+        {% csrf_token %}
+
+        {# Global / code-field errors from allauth (e.g. "Invalid or expired code") #}
+        {% if form.non_field_errors %}
+        <div class="form-errors form-errors--center otp-error" role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+        {% if form.code.errors %}
+        <div class="form-errors form-errors--center otp-error" role="alert">
+            {{ form.code.errors }}
+        </div>
+        {% endif %}
+
+        {# ── Six decorative digit inputs (pure UI layer) ────────────── #}
+        {# JS syncs their values into the hidden allauth `code` field.   #}
+        <div class="otp-digit-group"
+             role="group"
+             aria-label="{% trans 'One-time verification code' %}">
+
+            {# First box gets autocomplete="one-time-code" for SMS autofill #}
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
+                   class="otp-digit" aria-label="{% trans 'Digit 1' %}"
+                   autocomplete="one-time-code">
+
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
+                   class="otp-digit" aria-label="{% trans 'Digit 2' %}">
+
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
+                   class="otp-digit" aria-label="{% trans 'Digit 3' %}">
+
+            {# Visual separator between the two triplets #}
+            <span class="otp-sep" aria-hidden="true">–</span>
+
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
+                   class="otp-digit" aria-label="{% trans 'Digit 4' %}">
+
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
+                   class="otp-digit" aria-label="{% trans 'Digit 5' %}">
+
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
+                   class="otp-digit" aria-label="{% trans 'Digit 6' %}">
+        </div>
+
+        {# ── Hidden allauth field — rendered but visually hidden ──────── #}
+        {# JS writes the assembled code here before each submit.           #}
+        <div class="otp-hidden-field" aria-hidden="true">{{ form.code }}</div>
+
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+        {% endif %}
+
+        <button type="submit" class="auth-submit" id="otp-submit">
+            {% trans "Verify Code" %}
+        </button>
+    </form>
+
+    {# ── Resend section (outside the card) ───────────────────────────── #}
+    <div class="otp-resend-section">
+        <p class="otp-timer-line">
+            {% trans "Didn't receive it?" %}
+            <span id="otp-timer-wrap">
+                {% trans "Resend in" %} <strong id="otp-countdown">60</strong>s
+            </span>
+        </p>
+        {# allauth's request_login_code view re-sends the code and redirects back #}
+        <form method="post" action="{% url 'account_request_login_code' %}" id="resend-form">
+            {% csrf_token %}
+            <button type="submit" class="otp-resend-btn" id="otp-resend-btn" disabled>
+                {% trans "Resend Code" %}
+            </button>
+        </form>
+    </div>
+
+    <p class="auth-footer">
+        <a href="{% url 'account_login' %}">← {% trans "Back to Sign In" %}</a>
+    </p>
+</div>{# /.auth-page #}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    /* ── Element references ──────────────────────────────────────────── */
+    var digits      = Array.from(document.querySelectorAll('.otp-digit'));
+    var hiddenField = document.getElementById('id_code');   /* allauth default id */
+    var form        = document.getElementById('otp-form');
+    var countdownEl = document.getElementById('otp-countdown');
+    var timerWrap   = document.getElementById('otp-timer-wrap');
+    var resendBtn   = document.getElementById('otp-resend-btn');
+
+    /* ── Helpers ──────────────────────────────────────────────────────── */
+
+    /** Reads all six digit boxes and returns the assembled code string. */
+    function getCode() {
+        return digits.map(function (d) { return d.value; }).join('');
+    }
+
+    /** Writes the assembled code into the hidden allauth field. */
+    function syncHidden() {
+        if (hiddenField) {
+            hiddenField.value = getCode();
+        }
+    }
+
+    /** Adds or removes the filled visual modifier class. */
+    function updateFilledState(digit) {
+        digit.classList.toggle('otp-digit--filled', digit.value.length > 0);
+    }
+
+    /* ── Digit input event wiring ─────────────────────────────────────── */
+    digits.forEach(function (digit, idx) {
+
+        /* ── input: sanitise, advance, sync, maybe auto-submit ── */
+        digit.addEventListener('input', function () {
+            /* Strip non-digits and keep only the last character (handles
+               mobile keyboards that may fire the event with >1 char). */
+            var cleaned = digit.value.replace(/\D/g, '').slice(-1);
+            digit.value = cleaned;
+            updateFilledState(digit);
+            syncHidden();
+
+            /* Move focus to next box if a valid digit was entered */
+            if (cleaned && idx < digits.length - 1) {
+                digits[idx + 1].focus();
+            }
+
+            /* Auto-submit once all six digits are present */
+            if (getCode().length === 6 && form) {
+                form.submit();
+            }
+        });
+
+        /* ── keydown: backspace, arrow navigation ── */
+        digit.addEventListener('keydown', function (e) {
+
+            if (e.key === 'Backspace') {
+                if (digit.value) {
+                    /* Clear the current box */
+                    digit.value = '';
+                    updateFilledState(digit);
+                    syncHidden();
+                } else if (idx > 0) {
+                    /* Already empty — move back and clear previous box */
+                    digits[idx - 1].focus();
+                    digits[idx - 1].value = '';
+                    updateFilledState(digits[idx - 1]);
+                    syncHidden();
+                }
+                e.preventDefault();
+                return;
+            }
+
+            /* Arrow key navigation for keyboard accessibility */
+            if (e.key === 'ArrowLeft'  && idx > 0)               { digits[idx - 1].focus(); e.preventDefault(); }
+            if (e.key === 'ArrowRight' && idx < digits.length-1) { digits[idx + 1].focus(); e.preventDefault(); }
+        });
+
+        /* ── paste: distribute pasted code across all boxes ── */
+        digit.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var raw  = (e.clipboardData || window.clipboardData).getData('text');
+            var nums = raw.replace(/\D/g, '').slice(0, 6).split('');
+
+            /* Fill boxes starting from the first one, regardless of which box was focused */
+            nums.forEach(function (n, i) {
+                if (digits[i]) {
+                    digits[i].value = n;
+                    updateFilledState(digits[i]);
+                }
+            });
+
+            /* Focus the last populated box (or last box if all filled) */
+            var lastIdx = Math.min(nums.length - 1, digits.length - 1);
+            if (lastIdx >= 0) { digits[lastIdx].focus(); }
+
+            syncHidden();
+
+            /* Auto-submit if the paste gave us a full code */
+            if (getCode().length === 6 && form) {
+                form.submit();
+            }
+        });
+
+        /* ── click/focus: select any existing single character ── */
+        digit.addEventListener('focus', function () {
+            digit.select();
+        });
+    });
+
+    /* Sync hidden field once on page load in case the browser restores values */
+    syncHidden();
+
+    /* ── Resend countdown ─────────────────────────────────────────────── */
+    if (countdownEl && resendBtn) {
+        var COUNTDOWN_SECONDS = 60;
+        var remaining         = COUNTDOWN_SECONDS;
+
+        var interval = setInterval(function () {
+            remaining--;
+            countdownEl.textContent = remaining;
+
+            if (remaining <= 0) {
+                clearInterval(interval);
+                /* Hide the timer text and enable the resend button */
+                if (timerWrap)  { timerWrap.style.display   = 'none'; }
+                resendBtn.disabled = false;
+            }
+        }, 1000);
+    }
+
+}());
+</script>
+{% endblock %}

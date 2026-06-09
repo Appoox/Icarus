@@ -1,5 +1,19 @@
 /* articles/static/css/article_index.css */
 
+.related-card__tag {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--white);
+    background: var(--category-color, var(--red));
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-bottom: 4px;
+}
+
 .article-container {
     max-width: 900px;
     margin: 40px auto;
@@ -51,7 +65,6 @@
 .meta-date {
     font-size: 0.85rem;
     color: #666;
-    text-transform: uppercase;
     display: block;
     margin-bottom: 5px;
     font-family: sans-serif;

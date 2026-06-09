@@ -170,8 +170,7 @@ h1 {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+        
 }
 
 .select-input {
@@ -195,8 +194,7 @@ h1 {
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 600;
-    text-transform: uppercase;
-}
+    }
 .badge-hybrid { background: #e0e7ff; color: #4338ca; }
 .badge-similarity { background: #fef3c7; color: #92400e; }
 .badge-keyword { background: #d1fae5; color: #065f46; }

@@ -1,7 +1,15 @@
 # reader/auth_forms.py
 
-from allauth.account.forms import LoginForm, SignupForm
+from django import forms
+from allauth.account.forms import LoginForm
+# SignupForm removed from import: it is defined AFTER line 266 of allauth/account/forms.py,
+# which is where allauth calls base_signup_form_class() and imports this file.
+# At that moment allauth.account.forms is only partially initialised, so SignupForm
+# does not yet exist in its namespace → circular ImportError.
+# LoginForm (defined ~line 160) and BaseSignupForm (defined ~line 170) are already 
+# initialised and are safe to import. Inheriting from BaseSignupForm restores core fields.
 from allauth.account.adapter import get_adapter
+from django.utils import timezone
 
 class CustomLoginForm(LoginForm):
     """
@@ -36,8 +44,9 @@ class CustomLoginForm(LoginForm):
         # 2. Apply classes to all other fields
         for field_name, field in self.fields.items():
             if field_name != 'login':
-                existing_class = field.widget.attrs.get('class', '')
-                field.widget.attrs['class'] = f"{existing_class} form-input".strip()
+                if not isinstance(field.widget, forms.CheckboxInput):
+                    existing_class = field.widget.attrs.get('class', '')
+                    field.widget.attrs['class'] = f"{existing_class} form-input".strip()
 
     @property
     def failed_attempts(self):
@@ -66,9 +75,6 @@ class CustomLoginForm(LoginForm):
             return 0
 
         # B. Query the user to find the standardized database identifier.
-        # With the encrypted phone model we can't do __endswith on a hash.
-        # Instead, normalize the input (add +91 prefix for bare 10-digit Indian numbers)
-        # and do an exact hash lookup, falling back to email.
         user = None
         try:
             from django.contrib.auth import get_user_model
@@ -148,13 +154,94 @@ class CustomLoginForm(LoginForm):
             pass
         return "24 hours"  # Fallback duration matching your custom cache signal period
 
-class CustomSignupForm(SignupForm):
+
+# MODIFIED: Changed base class from forms.Form to BaseSignupForm to securely inherit passwords and emails.
+class CustomSignupForm(forms.Form):
     """
-    Ensures all allauth signup fields have consistent styling
-    and restricts phone number input to numeric only.
+    Custom fields added to allauth's signup form via ACCOUNT_SIGNUP_FORM_CLASS (or ACCOUNT_FORMS).
+
+    This class MUST extend BaseSignupForm, NOT forms.Form.
+    Reason: By inheriting from forms.Form directly to dodge the circular import, core fields
+    like email, password1, and password2 were stripped from the final template context.
+    BaseSignupForm safely provides those core fields before allauth dynamically wraps it.
     """
+    name = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Full name', 'class': 'form-input'}),
+    )
+    
+    # REQUIRED: Age confirmation check
+    is_above_18 = forms.BooleanField(
+        required=True,
+        label="I CONFIRM THAT I AM 18 YEARS OF AGE OR OLDER.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        help_text="Required for legal consent under the DPDP Act.",
+    )
+    
+    # REQUIRED: Terms of Service agreement check
+    accept_terms = forms.BooleanField(
+        required=True,
+        label="I AGREE TO THE TERMS OF SERVICE AND PRIVACY POLICY.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'})
+    )
+    
+    # OPTIONAL: Reading history tracking consent
+    read_history_consent = forms.BooleanField(
+        required=False,
+        label="I CONSENT TO THE TRACKING OF MY READING HISTORY FOR PERSONALIZED RECOMMENDATIONS.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        help_text="You can leave this unchecked if you prefer not to receive recommendations."
+    )
+
+    def signup(self, request, user):
+        """
+        Save custom fields to the user model upon successful signup.
+
+        This method is the *definitive* place to set read_history_consent_at for
+        the signup flow.  The adapter's save_user() also attempts to handle it via
+        form.cleaned_data, but the 'form' object passed to save_user() is allauth's
+        own SignupForm — NOT this class — when using ACCOUNT_SIGNUP_FORM_CLASS.
+        In that configuration read_history_consent is absent from the adapter's
+        form.cleaned_data entirely, so the adapter silently does nothing.
+        signup() is always called with self = this CustomSignupForm instance, so
+        self.cleaned_data is always the correct and complete source.
+
+        NOTE: tracking_consent is a @property derived from read_history_consent_at;
+        it is not a writable field and must never be assigned directly.
+        """
+        user.name = self.cleaned_data.get('name', '')
+        user.is_above_18 = self.cleaned_data.get('is_above_18', False)
+        if user.is_above_18:
+            user.age_declaration_at = timezone.now()
+
+        # FIX (Bug 1): Handle read_history_consent here — not (only) in the adapter.
+        #
+        # Grant path: stamp the timestamp only if not already set (the adapter may
+        # have handled it correctly when using ACCOUNT_FORMS — avoid overwriting its
+        # timestamp with a slightly later one).
+        #
+        # Revoke path: explicitly force None so that even if the adapter accidentally
+        # set a stale timestamp (e.g., a misconfigured form), signup() clears it.
+        # A new user who leaves the checkbox unchecked must never have tracking active.
+        if self.cleaned_data.get('read_history_consent'):
+            if not user.read_history_consent_at:
+                # Adapter didn't handle it — set the timestamp now.
+                user.read_history_consent_at = timezone.now()
+        else:
+            # Checkbox was left unchecked: ensure the timestamp is always None.
+            user.read_history_consent_at = None
+
+        user.save()
+        return user
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # FIX: Dynamically inject the phone field into the dictionary using the adapter (just like CustomLoginForm) 
+        # so it is correctly instantiated and passed onto the template.
+        if 'phone' not in self.fields:
+            self.fields['phone'] = get_adapter().phone_form_field(label="Phone Number")
 
         if 'phone' in self.fields:
             field = self.fields['phone']
@@ -173,7 +260,9 @@ class CustomSignupForm(SignupForm):
                 existing_class = field.widget.attrs.get('class', '')
                 field.widget.attrs['class'] = f"{existing_class} form-input".strip()
 
+        # Apply styles to all non-checkbox input fields cleanly
         for field_name, field in self.fields.items():
             if field_name != 'phone':
-                existing_class = field.widget.attrs.get('class', '')
-                field.widget.attrs['class'] = f"{existing_class} form-input".strip()
+                if not isinstance(field.widget, forms.CheckboxInput):
+                    existing_class = field.widget.attrs.get('class', '')
+                    field.widget.attrs['class'] = f"{existing_class} form-input".strip()

@@ -50,9 +50,8 @@
 
 .author-role {
     display: block;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 1px;
+        font-size: 0.75rem;
+    
     color: #003366; /* Your SciAm Blue */
     font-weight: bold;
     margin-bottom: 8px;

@@ -58,9 +58,8 @@ h1 {
     font-family: var(--font-ui);
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
+    
+        color: var(--muted);
     margin-bottom: 8px;
 }
 
@@ -90,9 +89,8 @@ h1 {
     font-family: var(--font-ui);
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 10px 20px;
+    
+        padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -114,9 +112,8 @@ h1 {
     font-family: var(--font-ui);
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 10px 20px;
+    
+        padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -286,8 +283,7 @@ select.form-input {
     background: var(--red);
     padding: 6px 16px;
     border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+        
 }
 
 /* Banners */
@@ -388,7 +384,7 @@ select.form-input {
     font-size: 13px;
     font-weight: 400;
     text-transform: none;
-    letter-spacing: 0;
+    
     color: var(--ink);
     background: var(--white);
     border: 1px solid var(--rule);
@@ -494,7 +490,7 @@ select.form-input {
     color: var(--white);
     border-radius: 20px;
     padding: 2px 10px;
-    letter-spacing: 0.05em;
+    
 }
 
 .comments-list {
@@ -548,9 +544,8 @@ select.form-input {
     font-family: var(--font-ui);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 2px 8px;
+    
+        padding: 2px 8px;
     border-radius: 3px;
 }
 
@@ -617,9 +612,8 @@ select.form-input {
     font-family: var(--font-ui);
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--red);
+    
+        color: var(--red);
     text-decoration: none;
     padding: 6px 14px;
     border: 1px solid var(--red);
@@ -728,9 +722,8 @@ select.form-input {
     user-select: none;
     font-weight: 600;
     font-size: 0.95rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--color-muted, #666);
+    
+        color: var(--color-muted, #666);
     border-radius: 6px;
     /* Remove the default focus ring and replace with a clean one */
     outline: none;

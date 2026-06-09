@@ -1,6 +1,4 @@
 from django.db import models
-
-from wagtail.admin.panels import FieldPanel
 from wagtail.models import Page, Orderable  # Orderable added for footer hierarchy
 from wagtail.snippets.models import register_snippet
 from modelcluster.fields import ParentalKey
@@ -11,6 +9,16 @@ from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 from auditlog.models import AbstractLogEntry
 from wagtail.admin.panels import PageChooserPanel
 
+from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
+
+@register_setting
+class SiteContactSettings(BaseGenericSetting):
+    contact_email = models.EmailField(blank=True)
+
+    panels = [FieldPanel('contact_email')]
+
+    class Meta:
+        verbose_name = 'Contact Settings'
 
 @register_snippet
 class SiteHeader(models.Model):

@@ -208,11 +208,12 @@
 
 
     <div class="editorial-board-btn-wrapper">
-        <button class="editorial-board-btn show-more-btn" aria-expanded="false" aria-controls="editorial-board-content">
+        <button class="editorial-board-btn" aria-expanded="false" aria-controls="issue-editorial-board-content">
             പത്രാധിപ സമിതി
         </button>
 
-        <div class="editorial-board-content" id="editorial-board-content">
+        <dialog class="issue-editorial-board-content" id="issue-editorial-board-content">
+            <button class="issue-editorial-board-close-btn" aria-label="Close modal">&times;</button>
             <div class="editorial-board-inner">
                 
                 {# 1. EDITOR #}
@@ -335,7 +336,7 @@
                 <p class="editorial-empty">No editorial board members listed.</p>
                 {% endif %}
             </div>
-        </div>
+        </dialog>
     </div>
 
     {# ── EDITORIAL + TABLE OF CONTENTS ── #}

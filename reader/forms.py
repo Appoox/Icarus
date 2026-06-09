@@ -1,135 +1,111 @@
+# reader/forms.py
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
-from datetime import date
+from django.utils import timezone  # needed for consent timestamp writes in save()
 
 from .models import ReaderUser
 from issue.models import Topic
 from phonenumber_field.formfields import SplitPhoneNumberField
+from phonenumber_field.phonenumber import PhoneNumber as PhoneNumberObj  # for safe parse in __init__
 
 # Wagtail user forms imports
 from wagtail.users.forms import UserEditForm, UserCreationForm
 
 User = get_user_model()
 
-class AllauthSignupForm(forms.Form):
-    """
-    Custom signup form for django-allauth to capture Reader-specific fields
-    and ensure legal compliance (DPDP Age Consent & Terms acceptance).
+# NOTE: AllauthSignupForm fields have been migrated directly to CustomSignupForm 
+# inside `auth_forms.py` to prevent circular lookup issues during account creation.
 
-    DOB is NOT collected here — it is deferred to the post-login profile edit
-    flow where explicit consent is gathered.  Instead, we ask for a self-
-    declaration that the user is 18 or older, which is the legally meaningful
-    consent mechanism under the DPDP Act.
-    """
-    name = forms.CharField(
-        max_length=255,
-        widget=forms.TextInput(attrs={'placeholder': 'Full name', 'class': 'form-input'}),
-    )
-    is_above_18 = forms.BooleanField(
-        required=True,
-        label="I confirm that I am 18 years of age or older.",
-        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
-        help_text="Required for legal consent under the DPDP Act.",
-    )
-    accept_terms = forms.BooleanField(
-        required=True,
-        label="I agree to the Terms of Service and Privacy Policy.",
-        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'})
-    )
-
-    def signup(self, request, user):
-        user.name = self.cleaned_data.get('name', '')
-        user.is_above_18 = True
-        user.age_declaration_at = timezone.now()
-        user.save()
 
 class ReaderProfileEditForm(forms.ModelForm):
     """
-    Allows a reader to update their profile details.
-    birth_year and gender are only persisted when the corresponding consent checkbox
-    is checked — this satisfies DPDP explicit-consent requirements.
-    Reading history is only tracked when read_history_consent is given.
+    Form for readers to update their personal details, delivery address, and
+    data-sharing consent preferences.
+
+    Consent fields (read_history_consent, gender_consent, birth_year_consent)
+    are boolean form fields — NOT model fields.  They map to the model's *_at
+    timestamp columns:
+        checked   (True)  →  *_at = timezone.now()  (consent active)
+        unchecked (False) →  *_at = None             (consent revoked)
+    Translation happens in save(); initial state is derived in __init__.
     """
-    # Custom non-model field — the model no longer has a single phone_number column.
-    # We accept the E.164 number here, validate uniqueness via the HMAC hash,
-    # and call user.set_phone() in save() to keep hash and ciphertext in sync.
     phone_number = SplitPhoneNumberField(
+        label=_("Phone Number"),
+        required=True,
+        # region='IN' propagates to SplitPhoneNumberWidget(region='IN').
+        # The widget stores it as self.region, which is passed to
+        # PhoneNumber.from_string(value, region=self.region) inside decompress().
+        # Without this, national-format numbers ("9876543210") cannot be parsed
+        # at decompress() time because there is no country hint — the call returns
+        # [None, None] and the field renders completely blank.
         region='IN',
-        required=False,
-    )
-    care_of_number = SplitPhoneNumberField(
-        region='IN',
-        required=False,
     )
 
-    # ── Transient consent checkboxes (not model fields) ──
-    birth_year_consent = forms.BooleanField(      # was dob_consent
+    # ── Consent toggle fields ────────────────────────────────────────────────
+    # These are declared form fields (not model fields).  Django's construct_instance()
+    # skips non-model fields during save, so the translation to *_at timestamps is
+    # handled entirely by our custom save() below.
+    read_history_consent = forms.BooleanField(
         required=False,
-        label="I consent to sharing my birth year.",
+        label=_("Track my reading history for personalised recommendations."),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        # Shown below the checkbox in the template via form.read_history_consent.help_text
+        help_text=_("Revoking this consent will permanently delete your saved reading history."),
     )
     gender_consent = forms.BooleanField(
         required=False,
-        label="I consent to sharing my gender.",
+        label=_("Include my gender in demographic analytics."),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
     )
-    read_history_consent = forms.BooleanField(
+    birth_year_consent = forms.BooleanField(
         required=False,
-        label="I consent to my reading history being tracked to personalise my experience.",
+        label=_("Include my birth year in demographic analytics."),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
-        help_text="If revoked, your existing reading history will be cleared.",
     )
 
     class Meta:
         model = ReaderUser
-        fields = (
-            # phone_number is intentionally absent — it is handled as a custom field above.
-            'name', 'email', 'profile_image', 'bio',
-            'gender', 'gender_other', 'birth_year',     # was date_of_birth
-            'address_line_1', 'address_line_2', 'city', 'post_office',
-            'pincode', 'district', 'state',
-            'care_of_name', 'care_of_district', 'care_of_meghala', 'care_of_unit'
-            # care_of_number is also a non-model field override below
-        )
+        fields = [
+            'name', 'email', 'phone_number', 'gender', 'gender_other', 'birth_year',  # was 'dob' (renamed field); gender_other added
+            'profile_image', 'bio',
+            # 'magazine_format' removed — field no longer exists on ReaderUser
+            'address_line_1', 'address_line_2', 'post_office',
+            'city', 'pincode', 'district', 'state', 'delivery_notes',
+            'care_of_name', 'care_of_number', 'care_of_district',
+            'care_of_meghala', 'care_of_unit'
+        ]
         widgets = {
-            'name': forms.TextInput(attrs={'placeholder': 'Full name', 'class': 'form-input'}),
-            'email': forms.EmailInput(attrs={'placeholder': 'Email address', 'class': 'form-input'}),
-            'bio': forms.Textarea(attrs={'placeholder': 'Tell us about yourself...', 'class': 'form-input', 'rows': 3}),
+            'birth_year': forms.NumberInput(attrs={'class': 'form-input', 'min': 1900, 'max': 2099}),  # was 'dob'
+            'bio': forms.Textarea(attrs={'rows': 3, 'class': 'form-input'}),
+            # 'magazine_format' widget removed — field no longer exists on ReaderUser
             'gender': forms.Select(attrs={'class': 'form-input'}),
-            'gender_other': forms.TextInput(attrs={'placeholder': 'If other, please specify', 'class': 'form-input'}),
-            # Year only — NumberInput with a sensible range.
-            'birth_year': forms.NumberInput(attrs={
-                'placeholder': 'e.g. 1990',
-                'class': 'form-input',
-                'min': '1900',
-                'max': '2099',
-            }),
-            'address_line_1': forms.TextInput(attrs={'placeholder': 'House / flat no., street', 'class': 'form-input'}),
-            'address_line_2': forms.TextInput(attrs={'placeholder': 'Landmark, area, locality', 'class': 'form-input'}),
-            'city': forms.TextInput(attrs={'placeholder': 'City / town', 'class': 'form-input'}),
-            'state': forms.Select(attrs={'class': 'form-input'}),
-            'pincode': forms.TextInput(attrs={'placeholder': '6-digit pincode', 'class': 'form-input', 'inputmode': 'numeric', 'maxlength': '6'}),
-            'post_office': forms.TextInput(attrs={'placeholder': 'Post Office', 'class': 'form-input'}),
-            'district': forms.TextInput(attrs={'placeholder': 'District', 'class': 'form-input'}),
-            'care_of_name': forms.TextInput(attrs={'placeholder': 'Name of the person who added you', 'class': 'form-input'}),
-            'care_of_district': forms.TextInput(attrs={'placeholder': 'District of the person who added you', 'class': 'form-input'}),
-            'care_of_meghala': forms.TextInput(attrs={'placeholder': 'Meghala', 'class': 'form-input'}),
-            'care_of_unit': forms.TextInput(attrs={'placeholder': 'Unit', 'class': 'form-input'}),
+            'delivery_notes': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Eg: Leave at security desk', 'class': 'form-input'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Apply styling and numeric restriction to the split phone widgets
-        for field_name in ['phone_number', 'care_of_number']:
+        
+        # Explicit layout configurations for profile field sets
+        text_fields = [
+            'name', 'email', 'address_line_1', 'address_line_2', 
+            'post_office', 'city', 'pincode', 'district', 'state',
+            'care_of_name', 'care_of_number', 'care_of_district',
+            'care_of_meghala', 'care_of_unit'
+        ]
+        for field_name in text_fields:
             if field_name in self.fields:
-                field = self.fields[field_name]
-                # Style all sub-widgets
-                for widget in field.widget.widgets:
-                    widget.attrs.update({'class': 'form-input'})
+                existing_class = self.fields[field_name].widget.attrs.get('class', '')
+                self.fields[field_name].widget.attrs['class'] = f"{existing_class} form-input".strip()
 
-                # Restrict national number input to numeric only
+        # Setup phone sub-widgets correctly
+        if 'phone_number' in self.fields:
+            field = self.fields['phone_number']
+            if hasattr(field.widget, 'widgets'):
+                for widget in field.widget.widgets:
+                    existing_class = widget.attrs.get('class', '')
+                    widget.attrs['class'] = f"{existing_class} form-input".strip()
                 if len(field.widget.widgets) > 1:
                     field.widget.widgets[1].attrs.update({
                         'inputmode': 'numeric',
@@ -137,179 +113,223 @@ class ReaderProfileEditForm(forms.ModelForm):
                         'oninput': "this.value = this.value.replace(/[^0-9]/g, '');"
                     })
 
-        # Pre-populate phone input from the encrypted value
-        if self.instance and self.instance.pk and self.instance.phone_number_encrypted:
-            self.fields['phone_number'].initial = self.instance.phone_number_encrypted
-
-        # Pre-check consent boxes if consent was previously given
+        # Initialize field instance values cleanly
         if self.instance and self.instance.pk:
-            if self.instance.birth_year_consent_at:     # was dob_consent_at
-                self.fields['birth_year_consent'].initial = True
-            if self.instance.gender_consent_at:
-                self.fields['gender_consent'].initial = True
-            if self.instance.read_history_consent_at:
-                self.fields['read_history_consent'].initial = True
+            decrypted_phone = getattr(self.instance, 'phone_number_encrypted', None)
+            if decrypted_phone:
+                phone_str = str(decrypted_phone).strip()
+                try:
+                    # 1. Parse to a PhoneNumber object with 'IN' as the default region.
+                    #    This handles both E.164 ("+919876543210") and national-format
+                    #    ("9876543210") numbers stored before E.164 normalisation was
+                    #    enforced, making pre-population robust to the storage format.
+                    # 2. Pass the *object* (not the string) to decompress().
+                    #    SplitPhoneNumberWidget.decompress() checks:
+                    #      isinstance(value, PhoneNumber) → fast path, no re-parse
+                    #      else → PhoneNumber.from_string(value) — may fail on national fmt
+                    #    Passing the object guarantees the fast path in all lib versions.
+                    # 3. Store the resulting list in self.initial so MultiWidget.render()
+                    #    receives a list and skips its own internal decompress() call.
+                    phone_obj = PhoneNumberObj.from_string(phone_str, region='IN')
+                    if phone_obj.is_valid():
+                        decomposed = self.fields['phone_number'].widget.decompress(phone_obj)
+                        self.initial['phone_number'] = decomposed
+                    else:
+                        # Parsed but not a valid number — surface the raw string so the
+                        # user can see and correct it rather than getting a blank field.
+                        self.initial['phone_number'] = phone_str
+                except Exception:
+                    # Last resort: pass the raw string; render-time decompress will try.
+                    self.initial['phone_number'] = phone_str
 
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if email:
-            if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
-                raise forms.ValidationError('This email is already registered.')
-        return email
+            # Consent checkboxes: same reasoning — put them in self.initial so the
+            # bool value is guaranteed to reach CheckboxInput.get_context() correctly.
+            # A non-null timestamp means consent is currently active → box ticked.
+            self.initial['read_history_consent'] = bool(self.instance.read_history_consent_at)
+            self.initial['gender_consent'] = bool(self.instance.gender_consent_at)
+            self.initial['birth_year_consent'] = bool(self.instance.birth_year_consent_at)
 
-    def clean_phone_number(self):
-        phone_number = self.cleaned_data.get('phone_number')
-        if phone_number:
-            # Uniqueness check via HMAC hash — never compare plaintext phone numbers.
-            hashed = ReaderUser.hash_phone(str(phone_number))
-            if User.objects.filter(phone_number_hash=hashed).exclude(pk=self.instance.pk).exists():
-                raise forms.ValidationError('This phone number is already registered.')
-        return phone_number
 
-    def clean_pincode(self):
-        pincode = self.cleaned_data.get('pincode')
-        if pincode:
-            import re
-            if not re.match(r'^[1-9][0-9]{5}$', pincode):
-                raise forms.ValidationError('Enter a valid 6-digit Indian pincode.')
-        return pincode
+    def validate_unique(self):
+        """
+        AbstractUser.clean() calls normalize_email() which maps None → ''.
+        That happens inside _post_clean() BEFORE validate_unique() runs, so by the
+        time uniqueness is checked, instance.email is already '' even if the field
+        was left blank.  A UNIQUE constraint on '' fires if any other row has ''.
+
+        Re-force '' → None here (mirrors CustomWagtailUserEditForm.validate_unique())
+        so the DB sees NULL, which SQL UNIQUE allows to appear multiple times.
+        """
+        if self.instance.email == "":
+            self.instance.email = None
+        super().validate_unique()
 
     def save(self, commit=True):
-        user = super().save(commit=False)
+        """
+        Custom save with three responsibilities the default ModelForm.save() can't handle:
 
-        # ── Phone number — must be handled manually (not a model field in Meta.fields) ──
-        phone_number = self.cleaned_data.get('phone_number')
-        if phone_number:
-            # set_phone() updates both hash and ciphertext atomically.
-            user.set_phone(str(phone_number))
+        1.  Phone number: phone_number is a declared non-model field — Django's
+            construct_instance() skips it entirely, so the change would be silently
+            discarded.  We call set_phone() here instead to keep phone_number_hash
+            (blind index) and phone_number_encrypted (ciphertext) atomically in sync.
 
-        # ── Birth year — gate persistence on explicit consent ──
-        if not self.cleaned_data.get('birth_year_consent'):
-            # Consent withheld or revoked: wipe the value and its timestamp.
-            user.birth_year = None
-            user.birth_year_consent_at = None   # was dob_consent_at
-        elif self.cleaned_data.get('birth_year') and not user.birth_year_consent_at:
-            # First time giving consent — stamp the timestamp.
-            user.birth_year_consent_at = timezone.now()
+        2.  Consent grant / revoke: translates the boolean checkboxes into *_at
+            timestamp columns on the model instance:
+              checked   (True)  → *_at = timezone.now()  (newly granted)
+              unchecked (False) → *_at = None             (revoked)
+            No-op when the state has not changed since the last save.
 
-        # ── Gender — gate persistence on explicit consent ──
-        if not self.cleaned_data.get('gender_consent'):
-            user.gender = ''
-            user.gender_other = ''
-            user.gender_consent_at = None
-        elif self.cleaned_data.get('gender') and not user.gender_consent_at:
-            user.gender_consent_at = timezone.now()
+        3.  Read-history purge: when read_history_consent is revoked the
+            read_articles M2M is cleared AFTER the row is committed so there is
+            never a window where consent_at is already null but history rows still
+            exist for record_read_article() to race against.
+        """
+        # Apply Meta.fields model values (name, email, gender, etc.) to the instance.
+        # phone_number (non-model) is skipped by construct_instance(); so are the
+        # three consent fields — both are handled manually below.
+        instance = super().save(commit=False)
+        now = timezone.now()
 
-        # ── Read history — gate tracking on explicit consent ──
-        if not self.cleaned_data.get('read_history_consent'):
-            # Consent revoked: clear the consent timestamp AND the existing M2M rows.
-            # Clearing now (before save) ensures the M2M clear uses the correct PK.
-            if user.pk and user.read_history_consent_at:
-                user.read_articles.clear()
-            user.read_history_consent_at = None
-        elif not user.read_history_consent_at:
-            # First time giving consent — stamp the timestamp.
-            user.read_history_consent_at = timezone.now()
+        # ── 1. Phone ────────────────────────────────────────────────────────────
+        phone_val = self.cleaned_data.get('phone_number')
+        if phone_val:
+            # set_phone() updates both phone_number_hash and phone_number_encrypted
+            # atomically; never assign to those fields individually.
+            instance.set_phone(str(phone_val))
+
+        # ── 1b. Email null safety ────────────────────────────────────────────────
+        # validate_unique() already fixed this once, but AbstractUser.clean() can
+        # re-run between there and here (e.g., when super().save() triggers it again).
+        # Force '' → None a final time so the ORM writes NULL, never empty string.
+        if not instance.email:
+            instance.email = None
+
+        # ── 2. Consent timestamps ────────────────────────────────────────────────
+        # `had_*` reads the DB value from BEFORE this form submission.
+        # The *_at fields are NOT in Meta.fields so super().save(commit=False)
+        # leaves them untouched on the instance — their value here is the original
+        # DB value, which is exactly what we need for the before/after comparison.
+
+        # ── Read History ──
+        had_read_history = bool(instance.read_history_consent_at)
+        wants_read_history = self.cleaned_data.get('read_history_consent', False)
+
+        if wants_read_history and not had_read_history:
+            # Newly granted: stamp the timestamp.
+            instance.read_history_consent_at = now
+        elif not wants_read_history and had_read_history:
+            # Revoked: clear the timestamp.
+            # The M2M purge happens after commit below to avoid a partial-save race.
+            instance.read_history_consent_at = None
+
+        # ── Gender ──
+        had_gender = bool(instance.gender_consent_at)
+        wants_gender = self.cleaned_data.get('gender_consent', False)
+
+        if wants_gender and not had_gender:
+            instance.gender_consent_at = now
+        elif not wants_gender and had_gender:
+            instance.gender_consent_at = None
+
+        # ── Birth Year ──
+        had_birth_year = bool(instance.birth_year_consent_at)
+        wants_birth_year = self.cleaned_data.get('birth_year_consent', False)
+
+        if wants_birth_year and not had_birth_year:
+            instance.birth_year_consent_at = now
+        elif not wants_birth_year and had_birth_year:
+            instance.birth_year_consent_at = None
 
         if commit:
-            user.save()
-        return user
+            instance.save()
+            # Save any M2M fields declared in Meta.fields (none currently, but
+            # future-safe and required to satisfy super().save(commit=False)'s contract).
+            self._save_m2m()
+            # ── 3. Read-history purge ────────────────────────────────────────────
+            # Must run AFTER instance.save() so the consent_at column is already
+            # null in the DB before we remove the history rows.
+            if not wants_read_history and had_read_history:
+                instance.read_articles.clear()
+
+        return instance
 
 
 class UpdateInterestsForm(forms.ModelForm):
-    interested_topics = forms.ModelMultipleChoiceField(
+    """
+    Form handling the customization of reader topics and interest classifications.
+    """
+    # Field name must match the model's M2M field name exactly so ModelForm maps it correctly.
+    interested_topics = forms.ModelMultipleChoiceField(  # was ModelMultipleChoiceForm (typo) + wrong name 'interests'
         queryset=Topic.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
         required=False,
-        widget=forms.CheckboxSelectMultiple(attrs={
-            'class': 'topic-checkbox',
-        }),
-        label='Topics You\'re Interested In',
+        label=_("Select your topics of interest")
     )
 
     class Meta:
         model = ReaderUser
-        fields = ('interested_topics',)
+        fields = ['interested_topics']  # was ['interests'] — FieldError at form init
 
 
-class CustomUserCreationForm(UserCreationForm):
+class CustomWagtailUserCreationForm(UserCreationForm):
     """
-    Overridden UserCreationForm for Wagtail admin.
+    Custom implementation of Wagtail's User Creation form matching structural custom user needs.
     """
-    name = forms.CharField(required=True, label=_("Full Name"))
+    name = forms.CharField(max_length=255, required=True, label=_("Full Name"))
 
-    class Meta(UserCreationForm.Meta):
+    class Meta:
         model = User
-        fields = UserCreationForm.Meta.fields | {
-            'name', 'gender', 'gender_other', 'birth_year',
-            'address_line_1', 'address_line_2', 'city', 'post_office', 
-            'pincode', 'district', 'state', 'is_print_subscriber', 
-            'print_delivery_status', 'subscription_plan'
-        }
+        fields = {'phone_number_hash', 'name', 'email', 'is_active'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # 1. Make email optional
-        if 'email' in self.fields:
-            self.fields['email'].required = False
-
-        # 2. Safely pop 'username' to prevent write errors on your read-only @property
-        if 'username' in self.fields:
-            self.fields.pop('username')
+        if 'phone_number_hash' in self.fields:
+            self.fields['phone_number_hash'].widget = forms.HiddenInput()
+            self.fields['phone_number_hash'].required = False
             
-        # 3. Make first_name and last_name optional and set to HiddenInput
-        for field_name in ('first_name', 'last_name'):
-            if field_name in self.fields:
-                self.fields[field_name].required = False
-                self.fields[field_name].widget = forms.HiddenInput()
+        if 'email' in self.fields:
+            self.fields['email'].required = False
+            self.fields['email'].empty_value = None
 
-    def clean(self):
-        cleaned_data = super().clean()
-        
-        # 4. Auto-populate first_name and last_name from Full Name (name)
-        full_name = cleaned_data.get('name', '').strip()
-        if full_name:
-            parts = full_name.split(maxsplit=1)
-            if len(parts) == 1:
-                cleaned_data['first_name'] = parts[0]
-                cleaned_data['last_name'] = ""
-            else:
-                cleaned_data['first_name'] = parts[0]
-                cleaned_data['last_name'] = parts[1]
-        else:
-            cleaned_data['first_name'] = ""
-            cleaned_data['last_name'] = ""
-        
-        return cleaned_data
+    def validate_unique(self):
+        """
+        Catch the email before uniqueness validation.
+        """
+        if self.instance.email == "":
+            self.instance.email = None
+        super().validate_unique()
 
 
-class CustomUserEditForm(UserEditForm):
+class CustomWagtailUserEditForm(UserEditForm):
     """
-    Overridden UserEditForm for Wagtail admin.
+    Custom implementation of Wagtail's User Editing form to safely bridge 
+    properties, optional values, and dynamic multi-part names.
     """
-    name = forms.CharField(required=True, label=_("Full Name"))
+    name = forms.CharField(max_length=255, required=True, label=_("Full Name"))
 
-    class Meta(UserEditForm.Meta):
+    class Meta:
         model = User
-        fields = UserEditForm.Meta.fields | {
-            'name', 'gender', 'gender_other', 'birth_year',
-            'address_line_1', 'address_line_2', 'city', 'post_office', 
-            'pincode', 'district', 'state', 'is_print_subscriber', 
-            'print_delivery_status', 'subscription_plan'
+        fields = {
+            'phone_number_hash', 
+            'name', 'email', 'is_active', 'gender', 'birth_year',
+            'subscription_plan', 'subscription_end',
+            'print_delivery_status',
+            'pincode'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # 1. Make email optional
+        if 'phone_number_hash' in self.fields:
+            self.fields['phone_number_hash'].widget = forms.HiddenInput()
+            self.fields['phone_number_hash'].disabled = True
+            self.fields['phone_number_hash'].required = False
+            
         if 'email' in self.fields:
             self.fields['email'].required = False
+            self.fields['email'].empty_value = None  # Force empty to None early
 
-        # 2. Safely pop 'username' to prevent write errors on your read-only @property
-        if 'username' in self.fields:
-            self.fields.pop('username')
-
-        # 3. Make first_name and last_name optional and set to HiddenInput
         for field_name in ('first_name', 'last_name'):
             if field_name in self.fields:
                 self.fields[field_name].required = False
@@ -317,8 +337,6 @@ class CustomUserEditForm(UserEditForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        
-        # 4. Auto-populate first_name and last_name from Full Name (name)
         full_name = cleaned_data.get('name', '').strip()
         if full_name:
             parts = full_name.split(maxsplit=1)
@@ -331,9 +349,15 @@ class CustomUserEditForm(UserEditForm):
         else:
             cleaned_data['first_name'] = ""
             cleaned_data['last_name'] = ""
-        
         return cleaned_data
 
-
-# Custom allauth forms have been moved to reader/auth_forms.py 
-# to avoid circular imports during startup.
+    def validate_unique(self):
+        """
+        Crucial fix for Django's AbstractUser:
+        AbstractUser.clean() normalizes email addresses and automatically mutates 
+        `None` back into `""` (empty string). This triggers a unique constraint 
+        violation. We force it back to `None` right before the uniqueness check runs.
+        """
+        if self.instance.email == "":
+            self.instance.email = None
+        super().validate_unique()

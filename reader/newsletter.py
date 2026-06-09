@@ -75,7 +75,7 @@ def send_new_issue_newsletter(issue):
 <div style="font-family:sans-serif;max-width:560px;margin:0 auto;
             padding:24px;color:#1a1a1a;background:#fff;">
 
-  <h2 style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+  <h2 style="font-size:13px;
              color:#c0392b;margin:0 0 4px;">ഇക്കാരസ്</h2>
 
   <p style="margin:0 0 20px;">Hello {reader.name},</p>

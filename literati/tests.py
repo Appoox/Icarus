@@ -322,7 +322,7 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
 
         user = lit.reader_user
         # phone_number_encrypted is the decrypted display value (Fernet decrypts on access)
-        self.assertEqual(user.phone_number_encrypted_encrypted, phone)
+        self.assertEqual(user.phone_number_encrypted, phone)
         self.assertEqual(user.name, "Jane Doe")
         self.assertEqual(user.email, "jane@example.com")
         self.assertEqual(user.address_line_1, "123 Baker Street")
@@ -420,7 +420,7 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         user.refresh_from_db()
         self.assertEqual(user.name,              "Updated Name")
         # phone_number_encrypted is the decrypted display value (Fernet decrypts on access)
-        self.assertEqual(user.phone_number_encrypted_encrypted, "+919999999990")
+        self.assertEqual(user.phone_number_encrypted, "+919999999990")
         self.assertEqual(user.email,             "updated@example.com")
         self.assertEqual(user.address_line_1,    "Updated Address 1")
         self.assertEqual(user.address_line_2,    "Updated Address 2")

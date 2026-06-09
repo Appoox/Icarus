@@ -85,10 +85,9 @@
 
 /* ── Section heading — spans the full width of all sub-columns ── */
 .site-footer__section-heading {
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  text-align: center;
   color: var(--footer-heading);
   margin: 0 0 1.25rem 0;
   padding-bottom: 0.6rem;
@@ -114,6 +113,7 @@
 /* ── Link list ──────────────────────────────────────────────────── */
 .site-footer__col-links {
   list-style: none;
+  text-align: center;
   margin: 0;
   padding: 0;
   display: flex;
@@ -146,11 +146,11 @@
 
 /* ── About paragraph ────────────────────────────────────────────── */
 .site-footer__about {
-  font-size: 0.875rem;
+  font-size: 1.7rem;
+  display: flex;
+  justify-content: center;
   line-height: 1.7;
   color: var(--footer-muted);
-  max-width: 860px;
-  margin: 0 0 2rem 0;
 }
 
 .site-footer__about a {
@@ -310,16 +310,15 @@
 .editorial-board-btn-wrapper {
   display: flex;
   justify-content: center;
-  padding: 1.5rem 0 0;
+  padding: 1.5rem
 }
 
 .site-footer__board-btn {
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--footer-muted);
+  
+    color: var(--footer-muted);
   background: transparent;
   border: 1px solid var(--footer-border);
   border-radius: 2px;
@@ -387,25 +386,60 @@
 
 /* ── Accordion mechanism ──────────────────────────────────────── */
 /*
+   PRESERVED COMMENT (From old accordion logic):
    grid-template-rows 0fr → 1fr gives a smooth height animation
    without JavaScript measuring.  The HTML `hidden` attribute hides
    the content before JS runs (progressive enhancement).
    JS removes `hidden`, then toggles `is-expanded`.
 */
+
+/* MODIFIED: Converted from a grid transition trick into native <dialog> modal styling */
 .editorial-board-content {
-  display: grid;
-  grid-template-rows: 0fr;           /* collapsed by default */
-  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  width: 100%;
+  /* Setup native dialog appearance */
+  padding: 2.5rem 3rem 1.5rem;
+  background-color: var(--footer-bg);
+  border: 1px solid var(--footer-border);
+  border-radius: 12px;
+  color: var(--footer-text);
+  
+  /* Sizing and scrolling */
+  max-width: 900px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  
+  /* Reset default dialog margins to ensure proper centering */
+  margin: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-.editorial-board-content.is-expanded {
-  grid-template-rows: 1fr;
+/* NEW: Dim the page content behind the modal */
+.editorial-board-content::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* NEW: Styles for the absolute positioned close button inside the modal */
+.editorial-board-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: var(--footer-muted);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 0;
+}
+
+.editorial-board-close-btn:hover {
+  color: var(--footer-heading);
 }
 
 .editorial-board-inner {
-  min-height: 0;                     /* required for the 0fr trick to work */
+  min-height: 0;                     /* required for the 0fr trick to work - PRESERVED COMMENT */
 }
 
 /* ── Role section headings ────────────────────────────────────── */
@@ -416,11 +450,10 @@
 
 .editorial-board-role-heading {
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
-  font-size: 0.72rem;
+  font-size: 1rem;
   font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--footer-heading);
+  
+    color: var(--footer-heading);
   border-bottom: 1px solid var(--footer-border);
   padding-bottom: 0.5rem;
   margin: 1.5rem 0 0.5rem;
@@ -498,6 +531,9 @@
 @media (max-width: 600px) {
   .editorial-board-members-grid { gap: 1rem; }
 
+  /* MODIFIED: Tighten padding on mobile dialog */
+  .editorial-board-content { padding: 1.5rem; }
+  
   .board-member {
     width: 100%;
     max-width: 320px;

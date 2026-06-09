@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load i18n %}
+{% load wagtailsettings_tags %}  
+
+
+{# ─────────────────────────────────────────────────────────────────────────────
+   Template : account/account_inactive.html
+   Allauth  : Rendered automatically when a user whose is_active=False attempts
+              to log in.  The URL is /accounts/inactive/ (allauth built-in).
+              No view context variables are required beyond the standard base.
+
+   This page is purely informational — the account is already deactivated,
+   so the tone is calm and instructional rather than alarming.
+   ───────────────────────────────────────────────────────────────────────────── #}
+
+{% block title %}{% trans "Account Deactivated" %} — Icarus{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+{% get_settings use_default_site=True %}
+
+
+<div class="auth-page inactive-page">
+
+    <div class="auth-card inactive-card">
+
+        {# ── Icon ────────────────────────────────────────────────────── #}
+        <div class="inactive-icon" aria-hidden="true">
+            {# Lock icon — conveys "access closed" without the aggression of a red ✕ #}
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 width="36" height="36" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor"
+                 stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+        </div>
+
+        {# ── Heading ─────────────────────────────────────────────────── #}
+        <h1>{% trans "Account Deactivated" %}</h1>
+        <p class="subtitle">
+            {% trans "This account has been deactivated and is no longer accessible." %}
+        </p>
+
+        {# ── Body copy ───────────────────────────────────────────────── #}
+        <div class="inactive-body-wrap">
+            <p class="inactive-body">
+                {% blocktrans trimmed %}
+                If you requested this deactivation, your personal data is being held
+                in accordance with our data retention policy. All personal information
+                will be permanently and irreversibly purged after the statutory period.
+                {% endblocktrans %}
+            </p>
+            <p class="inactive-body">
+                {% blocktrans trimmed %}
+                If you believe this deactivation was made in error, or if you would
+                like to reactivate your account before the retention window closes,
+                please contact our support team as soon as possible.
+                {% endblocktrans %}
+            </p>
+        </div>
+
+        {# ── Action buttons ──────────────────────────────────────────────── #}
+<div class="inactive-actions">
+
+    {# Guard against a blank email while the setting is still undecided #}
+    {% with email=settings.home.SiteContactSettings.contact_email %}
+    {% if email %}
+    <a href="mailto:{{ email }}"
+       class="inactive-btn inactive-btn--primary">
+        {% trans "Contact Support" %}
+    </a>
+    {% endif %}
+    {% endwith %}
+
+    <a href="/" class="inactive-btn inactive-btn--ghost">
+        {% trans "Return to Homepage" %}
+    </a>
+</div>
+
+        {# ── Retention-window footnote ────────────────────────────────── #}
+        <p class="inactive-meta">
+            {% blocktrans trimmed %}
+            Reactivation requests are only possible within the retention period.
+            After this window, all personal data is permanently deleted and
+            the account cannot be recovered under any circumstances.
+            {% endblocktrans %}
+        </p>
+
+    </div>{# /.inactive-card #}
+
+</div>{# /.auth-page #}
+{% endblock %}

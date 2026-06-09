@@ -46,8 +46,8 @@
         </div>
 
         <div class="address-block">
-            {% if reader.phone_number %}
-                <strong>Phone:</strong> {{ reader.phone_number }}<br>
+            {% if reader.phone_number_encrypted %}
+                <strong>Phone:</strong> {{ reader.phone_number_encrypted }}<br>
             {% endif %}
             {% if reader.email %}
                 <strong>Email:</strong> {{ reader.email }}<br>
@@ -58,14 +58,44 @@
                     ({{ reader.gender_other }})
                 {% endif %}<br>
             {% endif %}
-            {% if reader.date_of_birth %}
-                <strong>Birthday:</strong> {{ reader.date_of_birth|date:"F j, Y" }}<br>
+            {% if reader.birth_year %}
+                <strong>Birth Year:</strong> {{ reader.birth_year }}<br>
             {% endif %}
             <strong>Newsletter:</strong>
             {% if reader.newsletter_opt_in %}
                 ✅ Subscribed
             {% else %}
                 Not subscribed
+            {% endif %}<br>
+        </div>
+    </div>
+
+    {# ── Privacy & Consent ── #}
+    {# Shows the user's current data-sharing consent status.                          #}
+    {# "Manage" links to edit_profile where all three consent toggles live (Bug 2 fix). #}
+    <div class="profile-section">
+        <div class="profile-section__header">
+            <h2>Privacy &amp; Consent</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">Manage</a>
+        </div>
+        <div class="address-block">
+            <strong>Reading History:</strong>
+            {% if reader.tracking_consent %}
+                ✅ Tracking active
+            {% else %}
+                Not tracking
+            {% endif %}<br>
+            <strong>Gender (analytics):</strong>
+            {% if reader.gender_consent_at %}
+                ✅ Shared
+            {% else %}
+                Not shared
+            {% endif %}<br>
+            <strong>Birth Year (analytics):</strong>
+            {% if reader.birth_year_consent_at %}
+                ✅ Shared
+            {% else %}
+                Not shared
             {% endif %}<br>
         </div>
     </div>
@@ -239,7 +269,13 @@
         <div class="profile-section__header">
             <h2>Reading History</h2>
         </div>
-        {% if read_articles %}
+        {% if not reader.tracking_consent %}
+        {# Tracking is off — show a prompt rather than an empty/misleading state. #}
+        <p class="empty-state">
+            Reading history tracking is disabled.
+            <a href="{% url 'edit_profile' %}">Enable it in your privacy settings</a> to start recording.
+        </p>
+        {% elif read_articles %}
         <ul class="read-list">
             {% for article in read_articles %}
             <li>

@@ -49,7 +49,7 @@ class Comment(models.Model):
 
     @property
     def user_display(self):
-        return self.user.name or str(self.user.phone_number_encrypted_encrypted_encrypted)
+        return self.user.name or str(self.user.phone_number_encrypted)
 
     @property
     def page_display(self):

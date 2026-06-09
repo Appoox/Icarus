@@ -16,9 +16,8 @@
     font-family: var(--label);
     font-size: .7rem;
     font-weight: 800;
-    letter-spacing: .2em;
-    text-transform: uppercase;
-    color: var(--red);
+    
+        color: var(--red);
     display: inline-flex;
     align-items: center;
     gap: .5rem;
@@ -59,9 +58,8 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .25em;
-    text-transform: uppercase;
-    color: var(--navy);
+    
+        color: var(--navy);
     padding-bottom: .75rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.5rem;
@@ -101,7 +99,7 @@
     font-size: clamp(2rem, 3.5vw, 2.5rem);
     font-weight: 900;
     line-height: 1.1;
-    letter-spacing: -.03em;
+    
     margin-bottom: .5rem;
 }
 
@@ -120,9 +118,8 @@
     font-family: var(--label);
     font-size: .75rem;
     font-weight: 600;
-    letter-spacing: .12em;
+    
     color: var(--caption);
-    text-transform: uppercase;
 }
 
 .sg-issue-cover__topic {
@@ -130,9 +127,8 @@
     font-family: var(--label);
     font-size: .9rem;
     font-weight: 800;
-    letter-spacing: .15em;
-    text-transform: uppercase;
-    color: #fff;
+    
+        color: #fff;
     padding: 4px 14px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -151,9 +147,8 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 700;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    padding: .85rem 2rem;
+    
+        padding: .85rem 2rem;
     border-radius: 2px;
     transition: background .2s, transform .2s;
 }
@@ -168,8 +163,8 @@
 .sg-issue-articles {
     display: flex;
     flex-direction: column;
-    max-height: 700px;
-    padding-top: 1.65rem; /* Aligned with updated 1.5rem card padding */
+    max-height: 700px; /* Restored — prevents the column from inflating the grid row */
+    padding-top: 1.5rem; /* CHANGED from 1.65rem: aligns heading with left card label (Fix 1) */
     padding-right: 0;
     /* border-right: 1px solid var(--rule); */
 }
@@ -178,24 +173,23 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--navy);
+    
+        color: var(--navy);
     padding-bottom: .6rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
-    margin-bottom: 1.25rem;
+    margin-bottom: 3rem; /* INCREASED from 1.25rem: pushes carousel down toward vertical centre (Fix 4) */
     background: var(--paper); /* Keep heading above scrolling content */
     z-index: 2;
 }
 
 .sg-issue-articles__scroll-wrapper {
-    flex: 1;
-    overflow: auto; /* Allow scrolling in both directions, logic handled by JS */
+    flex: 1; /* Restored — fills remaining height reliably */
+    overflow: auto; /* Scrolling direction handled by JS */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
     position: relative;
     padding: 2rem 1.25rem;
-    margin: 0 -1.25rem;
+    margin: 0 -1.25rem; /* Restored — negative sides keep full-bleed width */
 }
 
 .sg-issue-articles__scroll-wrapper::-webkit-scrollbar {
@@ -255,10 +249,8 @@
 .sg-issue-card__category {
     display: inline-block;
     font-family: var(--label);
-    font-size: .80rem;
+    font-size: 0.9rem;
     font-weight: 800;
-    letter-spacing: .15em;
-    text-transform: uppercase;
     color: #fff;
     background: var(--red);
     padding: 3px 10px;
@@ -281,8 +273,7 @@
 
 .sg-issue-card__date {
     font-family: var(--label);
-    font-size: .6rem;
-    letter-spacing: .08em;
+    font-size: 0.75rem;
     color: var(--caption);
     margin-top: .2rem;
 }
@@ -295,8 +286,7 @@
     color: var(--muted);
     margin-bottom: .2rem;
     display: block;
-    text-transform: uppercase;
-    letter-spacing: .05em;
+        
 }
 
 
@@ -304,16 +294,22 @@
 .sg-issue-other-topics {
     display: flex;
     flex-direction: column;
+    /* max-height here is a CSS fallback for before JS runs (or if JS fails).
+       JS in home.js sets this dynamically to exactly match the left cover card's
+       height (including its image), so the column bottoms always align (Fix 3).
+       overflow:hidden works in tandem: once JS applies the correct max-height the
+       outer is clipped cleanly and the inner scroll-wrapper handles scrolling (Fix 2). */
     max-height: 700px;
-    overflow-y: auto;
-    padding-top: 1.65rem; /* Aligned with updated 1.5rem card padding */
+    overflow: hidden;
+    padding-top: 1.5rem; /* Match left card's padding so headings align (Fix 1) */
     padding-right: .5rem;
 }
 
-.sg-issue-other-topics::-webkit-scrollbar {
+/* Scrollbar styling moved to inner scroll-wrapper (overflow-y now lives there) */
+.sg-issue-other-topics__scroll-wrapper::-webkit-scrollbar {
     width: 6px;
 }
-.sg-issue-other-topics::-webkit-scrollbar-thumb {
+.sg-issue-other-topics__scroll-wrapper::-webkit-scrollbar-thumb {
     background-color: var(--rule);
     border-radius: 4px;
 }
@@ -322,16 +318,23 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--navy);
+    
+        color: var(--navy);
     padding-bottom: .6rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.25rem;
+    /* Heading sits outside the inner scroll-wrapper, so it never scrolls away.
+       background + z-index give a clean visual cut above the card list (Fix 2) */
+    background: var(--paper);
+    z-index: 2;
 }
 
 .sg-issue-other-topics__scroll-wrapper {
     width: 100%;
+    flex: 1;              /* Fill all remaining height below the heading (Fix 3) */
+    overflow-y: auto;     /* Scroll here, not on the outer column (Fix 2) */
+    min-height: 0;        /* Critical: lets a flex child shrink below its content size */
+    scrollbar-width: thin; /* Firefox — matches the custom thumb defined above */
 }
 
 .sg-issue-other-topics__grid {
@@ -431,10 +434,8 @@
 
 .sg-issue-small-card__category {
     font-family: var(--label);
-    font-size: .80rem;
+    font-size: .90rem;
     font-weight: 800;
-    letter-spacing: .15em;
-    text-transform: uppercase;
     color: #fff;
     background: var(--muted);
     padding: 2px 8px;
@@ -457,8 +458,7 @@
 
 .sg-issue-small-card__date {
     font-family: var(--label);
-    font-size: .55rem;
-    letter-spacing: .08em;
+    font-size: 0.75rem;
     color: var(--caption);
     margin-top: .15rem;
 }
@@ -499,9 +499,8 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--red);
+    
+        color: var(--red);
     margin-bottom: .5rem;
     display: flex;
     align-items: center;
@@ -540,9 +539,8 @@
     font-family: var(--label);
     font-weight: 700;
     font-size: 1.5rem;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    padding: .7rem 2rem;
+    
+        padding: .7rem 2rem;
     border-radius: 2px;
     transition: background .15s, transform .15s;
     position: relative;
@@ -567,9 +565,8 @@
     font-family: var(--label);
     font-size: 1.05rem;
     font-weight: 800;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    color: var(--navy);
+    
+        color: var(--navy);
     white-space: nowrap;
 }
 
@@ -629,10 +626,8 @@
 .sg-article-card__category {
     display: inline-block;
     font-family: var(--label);
-    font-size: .8rem;
+    font-size: 0.9rem;
     font-weight: 800;
-    letter-spacing: .15em;
-    text-transform: uppercase;
     color: #fff;
     background: var(--red);
     padding: 3px 10px;
@@ -655,8 +650,7 @@
 
 .sg-article-card__date {
     font-family: var(--label);
-    font-size: .63rem;
-    letter-spacing: .08em;
+    font-size: .75rem;
     color: var(--caption);
     margin-top: auto;
 }
@@ -703,6 +697,7 @@
     }
 
     .sg-issue-articles__scroll-wrapper {
+        flex: none;              /* Override desktop flex:1 — mobile uses natural horizontal width */
         width: 100%;
         overflow-x: auto;
         overflow-y: hidden;
@@ -743,9 +738,10 @@
     }
 
     .sg-issue-other-topics__scroll-wrapper {
+      flex: none;              /* Override desktop flex:1 — mobile stacks horizontally */
       width: 100%;
       overflow-x: auto;
-      overflow-y: hidden;
+      overflow-y: hidden;      /* Override desktop overflow-y:auto */
       scroll-snap-type: x mandatory;
       -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
       scrollbar-width: none; /* Hide scrollbar for Firefox */
@@ -828,8 +824,6 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
     padding: 1rem 2.5rem;
     border-radius: 2px;
     transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -889,10 +883,8 @@
 
 .sg-issue-card-simple__category {
     font-family: var(--label);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     color: #fff;
     padding: 2px 8px;
     border-radius: 4px;
@@ -914,10 +906,9 @@
 
 .sg-issue-card-simple__date {
     font-family: var(--label);
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     color: var(--caption);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    
 }
 
 .sg-more-issues {
@@ -934,10 +925,8 @@
     border: 2px solid var(--navy);
     color: var(--navy);
     font-family: var(--label);
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
     padding: 0.8rem 2rem;
     border-radius: 2px;
     transition: all 0.3s ease;

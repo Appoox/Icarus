@@ -36,10 +36,16 @@
                 <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
 
                 <div class="meta-author">
-                    By {% for item in post.article_authors.all %}
+                    {% for item in post.article_authors.all %}
                     {{ item.author.title }}{% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 </div>
+                
+                {% if post.topic %}
+                <div class="related-card__tag" style="--category-color: {{ post.topic.color|default:'#c0392b' }};"
+                    data-topic-url="{% url 'topic_detail' slug=post.topic.slug %}">
+                    {{ post.topic.name }}</div>
+                {% endif %}
 
                 <p class="excerpt">
                     {{ post.excerpt|striptags|truncatewords:25 }}

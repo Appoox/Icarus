@@ -16,8 +16,9 @@
             {% endif %}
 
             <div class="profile-text">
-                <span class="role-label">{{ page.role }}</span>
+                
                 <h1>{{ page.title }}</h1>
+                <span class="role-label">{{ page.role }}</span>
                 <div class="author-bio">
                     {{ page.bio|richtext }}
                 </div>
@@ -93,7 +94,7 @@
                 {% endif %}
 
                 <div class="card-body">
-                    <span class="card-date">{{ article.date|date:"M d, Y" }}</span>
+                    <span class="card-date">{{ article.date|date:"F j, Y" }}</span>
                     <h3><a href="{{ article.url }}">{{ article.title }}</a></h3>
                     <p class="excerpt">
                         {{ article.excerpt|striptags|truncatewords:25 }}

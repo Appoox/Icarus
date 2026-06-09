@@ -76,8 +76,7 @@ img {
     font-family: var(--label);
     font-size: 0.75rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+        
     color: var(--muted);
     background: var(--paper);
     padding: 0.4rem 1.1rem;
