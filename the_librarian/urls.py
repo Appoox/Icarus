@@ -12,7 +12,7 @@ urlpatterns = [
 
     # ── ArchiveIssue: viewer / inline PDF / force-download ─────────────
     path("archive/<int:issue_id>/", views.magazine_viewer, name="magazine_viewer",),
-    path("archive/<int:issue_id>/pdf/", views.serve_magazine_pdf, name="serve_magazine_pdf",),
+    path("archive/<int:issue_id>/Sasthragathi.pdf", views.serve_magazine_pdf, name="serve_magazine_pdf",),
     path("archive/<int:issue_id>/download/", views.download_magazine_pdf, name="download_magazine_pdf",),
 
     # ── ArchiveDocument ViewerJS display (search results → viewer) ───────
