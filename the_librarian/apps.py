@@ -8,6 +8,13 @@ class TheLibrarianConfig(AppConfig):
 
     def ready(self):
         from auditlog.registry import auditlog
-        from .models import ArchiveDocument, DocumentChunk
-        auditlog.register(ArchiveDocument)
-        auditlog.register(DocumentChunk)
+        # Import all three models that need audit logging
+        from the_librarian.models import ArchiveDocument, DocumentChunk, ArchiveIssue
+
+        # Guard against double-registration (e.g. during test runs with --reuse-db)
+        if not auditlog.contains(ArchiveDocument):
+            auditlog.register(ArchiveDocument)
+        if not auditlog.contains(DocumentChunk):
+            auditlog.register(DocumentChunk)
+        if not auditlog.contains(ArchiveIssue):
+            auditlog.register(ArchiveIssue)
