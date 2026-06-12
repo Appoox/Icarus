@@ -1,29 +1,27 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title_suffix %}| {{ document.filename }}{% endblock %}
+{% block title %}ശാസ്ത്രഗതി | {{ document.filename }}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/Icarus.css' %}">
 <link rel="stylesheet" href="{% static 'css/librarian.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="librarian-viewer">
-    <div class="librarian-viewer__toolbar">
-        <h2>📄 {{ document.filename }}</h2>
-        <div class="meta" style="margin-left: auto; display: flex; gap: 1rem; align-items: center;">
-            <span>Page {{ page }} of {{ document.total_pages }}</span>
-        </div>
+<div class="viewer-wrapper">
+  <div class="viewer-bar">
+    <h2>📄 {{ document.filename }}</h2>
+    <div class="meta">
+      <span>Page {{ page }} of {{ document.total_pages }}</span>
+      <a href="{% url 'the_librarian:search' %}">← Back to search</a>
     </div>
+  </div>
+  <iframe
+      class="viewer-frame"
+      src="{% static 'the_librarian/ViewerJS/index.html' %}?startpage={{ page }}#{{ pdf_url }}"
+      allowfullscreen>
+  </iframe>
 
-    <!--
-        ViewerJS viewer: loads the PDF via the ViewerJS index.html.
-        The ?startpage=N parameter tells ViewerJS to open at the specified page.
-    -->
-    <iframe
-        class="librarian-viewer__iframe"
-        src="{% static 'the_librarian/ViewerJS/index.html' %}?startpage={{ page }}#{{ pdf_url }}"
-        allowfullscreen>
-    </iframe>
 </div>
 {% endblock %}
