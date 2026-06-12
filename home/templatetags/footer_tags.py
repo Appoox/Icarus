@@ -90,6 +90,11 @@ def get_site_footer():
         if sections:
             editorial_board = {'sections': sections, 'issue': current_issue}
 
+    try:
+        archive_list_url = reverse('the_librarian:archive_list')
+    except NoReverseMatch:
+        archive_list_url = '/the_librarian/archive/'
+        
     # ── Build the dynamic URL map ─────────────────────────────────────────
     # Keys must exactly match the choice values in DYNAMIC_URL_CHOICES
     # (models.py).  A None value means the destination is unavailable right
@@ -104,7 +109,8 @@ def get_site_footer():
         'latest_article_url':    latest_article_page.url if latest_article_page else '/articles/',
         'most_read_article_url': most_read_article_page.url if most_read_article_page else None,
         'most_read_topics_url':   most_read_topics_url,
-        'most_read_authors_url':  most_read_authors_url,  # Added: Maps authors destination key to resolved URL string
+        'most_read_authors_url':  most_read_authors_url, 
+        'archive_list_url':       archive_list_url,
     }
 
     # ── Inject resolved URLs into prefetched link instances ───────────────
