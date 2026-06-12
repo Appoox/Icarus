@@ -1,249 +1,791 @@
-/* ─────────────────────────────────────────────
-   The Librarian — Archive Search Styles
- ───────────────────────────────────────────── */
+/* =============================================================
+   The Librarian — Styles
+   All design values use Icarus.css tokens.
+   Global body/reset rules are intentionally absent here;
+   base.html already handles those.
+   ============================================================= */
 
-/* Design tokens now inherited from global Icarus.css */
-:root {
-    --bg: var(--paper);
-    --text: var(--ink);
-    --text-muted: var(--muted);
-    --primary: var(--navy);
-    --primary-hover: var(--red);
-    --border: var(--rule);
-    --card-bg: var(--white);
-    --success: #2e7d32;
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-}
-
+/* ── Scoped layout wrapper (search + old archive list) ───────── */
 .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
 }
 
-h1 {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-}
-
+/* ── Page subtitle ───────────────────────────────────────────── */
 .subtitle {
-    color: var(--text-muted);
-    margin-bottom: 2rem;
+  font-family: var(--body-serif);
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 2rem;
 }
 
-/* Search form */
+
+/* ══════════════════════════════════════════════════════════════
+   SEARCH PAGE
+   Classes used by search.html — do not rename.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Search form row */
 .search-form {
-    display: flex;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
+  display: flex;
+  gap: .75rem;
+  margin-bottom: 1.5rem;
 }
 
 .search-input {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    outline: none;
-    transition: border-color 0.2s;
+  flex: 1;
+  padding: .7rem 1rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--rule);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color .15s;
 }
 
 .search-input:focus {
-    border-color: var(--primary);
+  border-color: var(--navy);
 }
 
 .search-btn {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--primary);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.2s;
+  padding: .7rem 1.6rem;
+  font-family: var(--label);
+  font-size: .8rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--navy);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .15s;
 }
 
 .search-btn:hover {
-    background: var(--primary-hover);
+  background: var(--red);
 }
 
-/* Results */
-.results-count {
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-}
-
-.result-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    transition: box-shadow 0.2s;
-}
-
-.result-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.result-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.result-doc {
-    font-weight: 600;
-    color: var(--primary);
-}
-
-.result-page {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    background: #f1f5f9;
-    padding: 2px 8px;
-    border-radius: 4px;
-}
-
-.result-score {
-    font-size: 0.85rem;
-    color: var(--success);
-    font-weight: 600;
-}
-
-.result-text {
-    color: var(--text);
-    font-size: 0.95rem;
-    margin: 0.75rem 0;
-    max-height: 6em;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.result-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9rem;
-}
-
-.result-link:hover {
-    text-decoration: underline;
-}
-
-.no-results {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 3rem;
-}
-
-/* Top-K and Mode selectors */
+/* Mode / top-k controls */
 .search-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 .control-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
 }
 
 .control-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-muted);
-        
+  font-family: var(--label);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .select-input {
-    padding: 0.6rem 0.75rem;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    outline: none;
-    background: #fff;
-    cursor: pointer;
+  padding: .5rem .8rem;
+  font-family: var(--font-ui);
+  font-size: .88rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--rule);
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s;
 }
 
 .select-input:focus {
-    border-color: var(--primary);
+  border-color: var(--navy);
 }
 
-/* Badge for search type */
+/* Results header */
+.results-count {
+  font-family: var(--label);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+/* Result cards */
+.result-card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 1.2rem 1.35rem;
+  margin-bottom: .9rem;
+  transition: box-shadow .2s;
+}
+
+.result-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  flex-wrap: wrap;
+  margin-bottom: .4rem;
+}
+
+.result-doc {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+/* Page-number pill */
+.result-page {
+  font-family: var(--label);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--muted);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+/* Relevance score */
+.result-score {
+  font-family: var(--label);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--success);
+  margin-bottom: .4rem;
+}
+
+/* Chunk text excerpt */
+.result-text {
+  font-family: var(--body-serif);
+  font-size: .92rem;
+  color: var(--ink);
+  line-height: 1.65;
+  margin: .5rem 0 .75rem;
+  max-height: 6em;
+  overflow: hidden;
+}
+
+/* "Open PDF" link */
+.result-link {
+  font-family: var(--label);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--red);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color .15s;
+}
+
+.result-link:hover {
+  border-bottom-color: var(--red);
+}
+
+/* Search-type badges */
 .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    }
-.badge-hybrid { background: #e0e7ff; color: #4338ca; }
-.badge-similarity { background: #fef3c7; color: #92400e; }
-.badge-keyword { background: #d1fae5; color: #065f46; }
-
-/* Viewer Specific Styles */
-.viewer-body {
-    background: #1e293b;
-    color: #f8fafc;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+  font-family: var(--label);
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
 }
 
+.badge-hybrid {
+  background: color-mix(in srgb, var(--navy) 12%, transparent);
+  color: var(--navy);
+}
+
+.badge-similarity {
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+  color: var(--red-dark, var(--red));
+}
+
+.badge-keyword {
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  color: var(--success);
+}
+
+/* Empty / no-results */
+.no-results {
+  text-align: center;
+  color: var(--muted);
+  font-family: var(--body-serif);
+  font-style: italic;
+  padding: 3rem;
+  background: var(--paper);
+  border-radius: 8px;
+  border: 1px dashed var(--rule);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   PDF VIEWER  (viewer.html)
+   viewer.html extends base.html and puts content inside a real
+   <div class="viewer-wrapper">.  The old pattern used
+   <body class="viewer-body"> which browsers silently drop as a
+   duplicate body tag, so the flex container never existed and
+   the iframe collapsed to near-zero height.
+   ══════════════════════════════════════════════════════════════ */
+
+/*
+  .viewer-wrapper fills the viewport below the site navbar.
+  --nav-h can be set on :root in base.html (e.g. 64px); the
+  fallback of 64px covers the Icarus default header height.
+*/
+.viewer-wrapper {
+  display: flex;
+  flex-direction: column;
+  /* full viewport minus navbar — adjust --nav-h in base if needed */
+  height: calc(100vh - var(--nav-h, 64px));
+  overflow: hidden;
+  background: #1e293b;
+}
+
+/* ── Viewer toolbar ───────────────────────────────────────────── */
 .viewer-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem 1rem;
-    background: #0f172a;
-    border-bottom: 1px solid #334155;
-    flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .5rem 1.25rem;
+  background: var(--navy);
+  border-bottom: 2px solid var(--red);
+  flex-shrink: 0;       /* never squash the bar */
 }
 
 .viewer-bar h2 {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #e2e8f0;
+  font-family: var(--label);
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
 }
 
 .viewer-bar .meta {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    font-size: 0.85rem;
-    color: #94a3b8;
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  font-family: var(--label);
+  font-size: .75rem;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.5);
+  flex-shrink: 0;
 }
 
 .viewer-bar a {
-    color: #818cf8;
-    text-decoration: none;
+  color: rgba(255,255,255,.75);
+  text-decoration: none;
+  font-weight: 700;
+  transition: color .15s;
 }
 
-.viewer-bar a:hover {
-    text-decoration: underline;
-}
+.viewer-bar a:hover { color: #fff; }
 
+/* ── The PDF iframe — fills whatever height .viewer-wrapper has left ── */
 .viewer-frame {
-    flex: 1;
-    width: 100%;
-    border: none;
+  flex: 1;         /* grow into remaining height */
+  min-height: 0;   /* critical: flex children need this to actually shrink/grow */
+  width: 100%;
+  border: none;
+  display: block;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   MAGAZINE ARCHIVE GRID  (archive_list.html)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Archive hero banner ─────────────────────────────────────── */
+.archive-hero {
+  background: var(--navy);
+  color: #fff;
+  padding: 4rem 2rem 3.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.archive-hero::before {
+  /* Subtle diagonal hatching */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 40px,
+    rgba(255,255,255,.025) 40px,
+    rgba(255,255,255,.025) 41px
+  );
+  pointer-events: none;
+}
+
+.archive-hero__inner { position: relative; z-index: 1; }
+
+.archive-hero__kicker {
+  font-family: var(--label);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--red);
+  display: block;
+  margin-bottom: .5rem;
+}
+
+.archive-hero__title {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  margin: 0 0 .65rem;
+}
+
+.archive-hero__sub {
+  font-family: var(--body-serif);
+  font-size: 1rem;
+  color: rgba(255,255,255,.6);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Filter bar ──────────────────────────────────────────────── */
+.archive-filter-bar {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.archive-filter-bar__form {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: .75rem 1rem;
+  flex: 1;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.filter-label {
+  font-family: var(--label);
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.filter-select {
+  padding: .45rem .85rem;
+  padding-right: 2rem;
+  font-family: var(--font-ui);
+  font-size: .88rem;
+  color: var(--ink);
+  background: #fff
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b6659' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")
+    no-repeat right .6rem center;
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  appearance: none;
+  cursor: pointer;
+  min-width: 110px;
+  transition: border-color .15s;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--navy);
+}
+
+.filter-clear {
+  font-family: var(--label);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--red);
+  text-decoration: none;
+  padding: .4rem .85rem;
+  border: 1.5px solid var(--red);
+  border-radius: 20px;
+  white-space: nowrap;
+  align-self: flex-end;
+  transition: background .15s, color .15s;
+}
+
+.filter-clear:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+.archive-results-count {
+  font-family: var(--label);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* ── Magazine issue grid ─────────────────────────────────────── */
+.magazine-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2.25rem 1.75rem;
+}
+
+/* ── Individual issue card ───────────────────────────────────── */
+.issue-card {
+  display: flex;
+  flex-direction: column;
+  transition: transform .25s cubic-bezier(.165,.84,.44,1);
+}
+
+.issue-card:hover {
+  transform: translateY(-5px);
+}
+
+/* 3:4 portrait aspect ratio — magazine cover proportions */
+.issue-cover-wrapper {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.14);
+  background: var(--navy);
+  margin-bottom: .85rem;
+}
+
+.issue-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .4s ease;
+}
+
+.issue-card:hover .issue-cover-img {
+  transform: scale(1.04);
+}
+
+/* Placeholder when no thumbnail is uploaded */
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(155deg, var(--navy) 0%, var(--navy-mid, #0d2d56) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
+.cover-placeholder__pub {
+  font-family: var(--label);
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.6);
+  border-bottom: 1px solid rgba(255,255,255,.2);
+  padding-bottom: .4rem;
+  width: 85%;
+}
+
+.cover-placeholder__vol {
+  font-family: var(--label);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  color: rgba(255,255,255,.45);
+  margin-top: .2rem;
+}
+
+.cover-placeholder__date {
+  font-family: var(--serif);
+  font-size: clamp(1rem, 4cqw, 1.4rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.cover-placeholder__num {
+  font-family: var(--label);
+  font-size: .62rem;
+  letter-spacing: .1em;
+  color: rgba(255,255,255,.4);
+}
+
+/* Hover overlay — "View PDF" */
+.cover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11,31,58,.72);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  opacity: 0;
+  transition: opacity .22s ease;
+  text-decoration: none;
+  color: #fff;
+}
+
+.issue-card:hover .cover-overlay {
+  opacity: 1;
+}
+
+.cover-overlay__icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: #fff;
+}
+
+.cover-overlay__label {
+  font-family: var(--label);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+/* ── Card metadata ───────────────────────────────────────────── */
+.issue-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .18rem;
+  padding: 0 .1rem;
+}
+
+.issue-info__date {
+  font-family: var(--label);
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+
+.issue-info__title {
+  font-family: var(--serif);
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  margin: 0 0 .1rem;
+}
+
+.issue-info__meta {
+  font-family: var(--label);
+  font-size: .62rem;
+  color: var(--muted);
+  letter-spacing: .05em;
+  margin: 0;
+}
+
+/* ── Card action buttons ─────────────────────────────────────── */
+.issue-actions {
+  display: flex;
+  gap: .5rem;
+  margin-top: .7rem;
+}
+
+.issue-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  font-family: var(--label);
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .4rem .9rem;
+  border-radius: 3px;
+  text-decoration: none;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  transition: background .15s, color .15s, transform .1s;
+}
+
+.issue-btn svg { flex-shrink: 0; }
+
+.issue-btn--view {
+  background: var(--navy);
+  color: #fff;
+  flex: 1;
+}
+
+.issue-btn--view:hover {
+  background: var(--red);
+  transform: translateY(-1px);
+}
+
+.issue-btn--download {
+  background: transparent;
+  color: var(--navy);
+  border: 1.5px solid var(--navy);
+}
+
+.issue-btn--download:hover {
+  background: var(--navy);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.issue-btn--unavailable {
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px solid var(--rule);
+  cursor: default;
+  width: 100%;
+  font-size: .62rem;
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.archive-empty {
+  max-width: 480px;
+  margin: 5rem auto 6rem;
+  padding: 0 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.archive-empty__icon {
+  width: 56px;
+  height: 56px;
+  color: var(--rule);
+}
+
+.archive-empty__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.archive-empty__title {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.archive-empty__text {
+  font-family: var(--body-serif);
+  font-size: .95rem;
+  color: var(--muted);
+  line-height: 1.65;
+  font-style: italic;
+  margin: 0;
+}
+
+.archive-empty__link {
+  display: inline-block;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--label);
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: .7rem 2rem;
+  border-radius: 3px;
+  text-decoration: none;
+  transition: background .15s, transform .15s;
+}
+
+.archive-empty__link:hover {
+  background: var(--red);
+  transform: translateY(-2px);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════ */
+
+/* Tablet */
+@media (max-width: 900px) {
+  .magazine-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.75rem 1.25rem;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  .archive-filter-bar {
+    padding: 1rem 1.25rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .archive-results-count { margin-left: 0; }
+}
+
+/* Mobile — 2-column grid */
+@media (max-width: 540px) {
+  .magazine-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem .85rem;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .archive-hero { padding: 2.5rem 1.25rem 2rem; }
+
+  .archive-filter-bar__form { gap: .6rem .75rem; }
+
+  .filter-select { font-size: .82rem; min-width: 90px; }
+
+  .issue-info__title { font-size: .85rem; }
+
+  .issue-btn {
+    font-size: .6rem;
+    padding: .35rem .65rem;
+  }
+}
