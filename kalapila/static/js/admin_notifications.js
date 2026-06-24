@@ -7,6 +7,7 @@
             document.body.appendChild(container);
         }
 
+        // Retrieves the CSRF token from cookies or the DOM
         function getCsrfToken() {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -28,6 +29,7 @@
 
         const activeToastIds = new Set();
 
+        // Marks the notification as read on the server and dismisses the toast
         function markAsRead(notificationId, toastElement) {
             fetch(`/kalapila/admin/notifications/${notificationId}/read/`, {
                 method: "POST",
@@ -37,12 +39,14 @@
             .catch(err => console.error("Error marking notification read:", err));
         }
 
+        // Handles the removal of the toast element from the DOM
         function dismissToast(toastElement, notificationId) {
             toastElement.classList.add("admin-toast--removing");
             activeToastIds.delete(notificationId);
             setTimeout(() => toastElement.remove(), 350);
         }
 
+        // Constructs and displays the notification toast
         function showToast(notification) {
             if (activeToastIds.has(notification.id)) return;
             activeToastIds.add(notification.id);
@@ -79,41 +83,68 @@
             toast.querySelector(".admin-toast__action-link").addEventListener("click", () => markAsRead(notification.id, toast));
         }
 
-        let pollInterval = setInterval(pollNotifications, 30000);
-        let isStopped = false;   // permanent stop on 401/403
+        let socket = null;
+        let reconnectTimeout = null;
 
-        function pollNotifications() {
-            // Skip the network call entirely if the tab is hidden
-            if (document.hidden) return;
+        function connectWebSocket() {
+            // Determine the WebSocket protocol
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/kalapila/admin/notifications/`;
 
-            fetch("/kalapila/admin/notifications/")
-                .then(res => {
-                    if (res.status === 403 || res.status === 401) {
-                        // Not staff or logged out — stop polling for this session
-                        isStopped = true;
-                        clearInterval(pollInterval);
-                        return null;
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = function(e) {
+                console.log('Connected to admin notifications WebSocket.');
+                if (reconnectTimeout) {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = null;
+                }
+                
+                // Fetch initially to catch any missed notifications
+                fetch("/kalapila/admin/notifications/")
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.count > 0) {
+                            data.notifications.forEach(showToast);
+                        }
+                    })
+                    .catch(err => console.error("Error fetching initial dashboard notifications:", err));
+            };
+
+            socket.onmessage = function(e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    
+                    // CORRECTION: Added a console log to help verify the exact structure of the WebSocket payload.
+                    console.log("Admin WebSocket received:", data);
+
+                    // CORRECTION: Broadened the validation condition. 
+                    // Django Channels passes the event dictionary emitted by group_send.
+                    // This allows the logic to trigger regardless of whether the developer 
+                    // altered the type key to 'notification' or left it as 'send_notification', 
+                    // or simply checking if the nested 'notification' object exists.
+                    if (data.type === 'notification' || data.type === 'send_notification' || data.notification) {
+                        showToast(data.notification);
                     }
-                    return res.json();
-                })
-                .then(data => {
-                    // count === 0 means nothing to show; skip iteration entirely
-                    if (data && data.count > 0) {
-                        data.notifications.forEach(showToast);
-                    }
-                })
-                .catch(err => console.error("Error polling dashboard notifications:", err));
+                } catch (err) {
+                    console.error('Error parsing WebSocket message:', err);
+                }
+            };
+
+            socket.onclose = function(e) {
+                console.warn('Admin notifications WebSocket closed. Reconnecting in 5s...');
+                if (!reconnectTimeout) {
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                }
+            };
+
+            socket.onerror = function(err) {
+                console.error('WebSocket error:', err);
+                socket.close();
+            };
         }
 
-        // Resume polling when the tab becomes visible again
-        document.addEventListener("visibilitychange", function () {
-            if (!isStopped && !document.hidden) {
-                // Immediate check on tab focus so staff don't wait 20s after switching back
-                pollNotifications();
-            }
-        });
-
-        pollNotifications();
-        pollInterval = setInterval(pollNotifications, 20000);
+        // Initialize WebSocket connection
+        connectWebSocket();
     });
 })();

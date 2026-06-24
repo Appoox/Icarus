@@ -7,6 +7,8 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
 from wagtail.models import Page, Site
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from .models import Comment, CommentReport, CommentSettings, DashboardNotification, CommentNotificationPreference, UserNotification
 
 User = get_user_model()
@@ -81,11 +83,29 @@ def post_comment(request):
 
     # 1. Create Dashboard Notifications
     commenter_name = request.user.name or str(request.user.phone_number_encrypted)
+    
+    channel_layer = get_channel_layer()
+
     for staff in notified_staff:
-        DashboardNotification.objects.create(
+        notification = DashboardNotification.objects.create(
             user=staff,
             comment=comment,
             message=f"New comment by {commenter_name} on '{page.title}'"
+        )
+        
+        page_url = f"{page.url}#comment-{comment.pk}" if page else "#"
+
+        async_to_sync(channel_layer.group_send)(
+            "admin_notifications",
+            {
+                "type": "send_notification",
+                "notification": {
+                    "id": notification.id,
+                    "message": notification.message,
+                    "url": f"/admin/comments/edit/{comment.pk}/",
+                    "page_url": page_url
+                }
+            }
         )
 
     # 2. Send Emails
@@ -94,7 +114,7 @@ def post_comment(request):
         subject = f"New Comment on {page.title}"
         
         # Build direct moderation link (Snippet ViewSet admin path)
-        admin_url = f"{request.scheme}://{request.get_host()}/admin/snippets/kalapila/comment/edit/{comment.pk}/"
+        admin_url = f"{request.scheme}://{request.get_host()}/admin/comments/edit/{comment.pk}/"
         
         email_body = (
             f"A new comment has been posted by {commenter_name} on the page '{page.title}'.\n\n"
@@ -113,11 +133,26 @@ def post_comment(request):
             pass
 
     if is_approved:
+        # CORRECTION: Added request=request as a keyword argument.
+        # This forces Django to run context processors so variables like {{ user }}
+        # are injected into the template, making the delete and report buttons visible.
+        
         # Render the newly created comment using the partial template
         html = render_to_string('kalapila/comment_single.html', {
             'comment': comment,
-            'request': request
-        })
+        }, request=request) 
+        
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'page_comments_{page.id}',
+            {
+                'type': 'send_comment',
+                'html': html,
+                'parent_id': parent_id,
+                'comment_id': comment.id
+            }
+        )
+
         return JsonResponse({
             "status": "success",
             "html": html,
@@ -149,6 +184,15 @@ def delete_comment(request, pk):
 
     comment.is_removed = True
     comment.save()
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f'page_comments_{comment.page_id}',
+        {
+            'type': 'delete_comment',
+            'comment_id': comment.id
+        }
+    )
     
     return JsonResponse({
         "status": "success",
@@ -179,18 +223,32 @@ def report_comment(request, pk):
     comment_author = comment.user.name or str(comment.user.phone_number_encrypted)
 
     # 1. Create Dashboard Notification
+    channel_layer = get_channel_layer()
     for staff in notified_staff:
-        DashboardNotification.objects.create(
+        notification = DashboardNotification.objects.create(
             user=staff,
             comment=comment,
             message=f"Comment by {comment_author} on '{comment.page.title}' was flagged by {reporter_name}!"
+        )
+        page_url = f"{comment.page.url}#comment-{comment.pk}" if comment.page else "#"
+        async_to_sync(channel_layer.group_send)(
+            "admin_notifications",
+            {
+                "type": "send_notification",
+                "notification": {
+                    "id": notification.id,
+                    "message": notification.message,
+                    "url": f"/admin/comments/edit/{comment.pk}/",
+                    "page_url": page_url
+                }
+            }
         )
 
     # 2. Send email notification
     recipient_emails = [staff.email for staff in notified_staff if staff.email]
     if recipient_emails:
         subject = f"Comment Flagged on {comment.page.title}"
-        admin_url = f"{request.scheme}://{request.get_host()}/admin/snippets/kalapila/comment/edit/{comment.pk}/"
+        admin_url = f"{request.scheme}://{request.get_host()}/admin/comments/edit/{comment.pk}/"
         email_body = (
             f"The following comment has been flagged as inappropriate by {reporter_name}.\n\n"
             f"Comment Content:\n\"{comment.body}\"\n\n"

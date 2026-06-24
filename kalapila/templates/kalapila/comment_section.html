@@ -1,6 +1,10 @@
 {% load static %}
 
-<section class="comment-section" id="comments-wrapper" data-page-id="{{ page.id }}">
+<section class="comment-section" id="comments-wrapper" 
+         data-page-id="{{ page.id }}"
+         data-current-user-id="{{ user.id|default:'' }}"
+         data-is-staff="{{ user.is_staff|yesno:'true,false' }}"
+         data-is-superuser="{{ user.is_superuser|yesno:'true,false' }}">
     <div class="comment-section__header">
         <h3 class="comment-section__title">
             <i class="far fa-comments"></i> 

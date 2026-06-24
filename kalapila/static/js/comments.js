@@ -21,6 +21,65 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // Client-Side Permission Corrector: Adjusts button states for WebSocket-injected comments
+    function adjustCommentButtons(commentCard) {
+        if (!commentCard) return;
+        
+        // Extract credentials from global wrapper and card attributes
+        const currentUserId = commentsWrapper.getAttribute("data-current-user-id");
+        const isStaff = commentsWrapper.getAttribute("data-is-staff") === "true";
+        const isSuperuser = commentsWrapper.getAttribute("data-is-superuser") === "true";
+        const authorId = commentCard.getAttribute("data-author-id");
+        const commentId = commentCard.getAttribute("data-comment-id");
+        
+        const actionsContainer = commentCard.querySelector(".comment-card__actions");
+        if (!actionsContainer) return;
+        
+        let deleteBtn = actionsContainer.querySelector(".delete-comment-btn");
+        let reportBtn = actionsContainer.querySelector(".report-comment-btn");
+        
+        // If the viewing user is anonymous/not authenticated, remove operational buttons
+        if (!currentUserId) {
+            if (deleteBtn) deleteBtn.remove();
+            if (reportBtn) reportBtn.remove();
+            return;
+        }
+        
+        const isAuthor = (currentUserId === authorId);
+        const canDelete = isAuthor || isStaff || isSuperuser;
+        
+        // Correct Delete button presence matching actual permissions
+        if (canDelete) {
+            if (!deleteBtn) {
+                deleteBtn = document.createElement("button");
+                deleteBtn.className = "comment-action-btn delete-comment-btn";
+                deleteBtn.setAttribute("data-url", `/kalapila/comment/${commentId}/delete/`);
+                deleteBtn.innerHTML = `<i class="far fa-trash-alt"></i> ഒഴിവാക്കുക`;
+                
+                if (reportBtn) {
+                    actionsContainer.insertBefore(deleteBtn, reportBtn);
+                } else {
+                    actionsContainer.appendChild(deleteBtn);
+                }
+            }
+        } else {
+            if (deleteBtn) deleteBtn.remove();
+        }
+        
+        // Correct Report button presence matching actual permissions
+        if (!isAuthor) {
+            if (!reportBtn) {
+                reportBtn = document.createElement("button");
+                reportBtn.className = "comment-action-btn report-comment-btn";
+                reportBtn.setAttribute("data-url", `/kalapila/comment/${commentId}/report/`);
+                reportBtn.innerHTML = `<i class="far fa-flag"></i> റിപ്പോർട്ട് ചെയ്യുക`;
+                actionsContainer.appendChild(reportBtn);
+            }
+        } else {
+            if (reportBtn) reportBtn.remove();
+        }
+    }
+
     // Character Counter Logic
     function initCharCounter(textarea, counterSpan, submitBtn) {
         textarea.addEventListener("input", function () {
@@ -51,6 +110,88 @@ document.addEventListener("DOMContentLoaded", function () {
         initCharCounter(mainTextarea, mainCounter, mainSubmit);
     }
 
+    // WebSocket for Real-time Comments
+    let commentSocket = null;
+    let commentReconnectTimeout = null;
+
+    function connectCommentWebSocket() {
+        if (!pageId) return;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/kalapila/page/${pageId}/comments/`;
+
+        commentSocket = new WebSocket(wsUrl);
+
+        commentSocket.onopen = function(e) {
+            console.log('Connected to comments WebSocket.');
+            if (commentReconnectTimeout) {
+                clearTimeout(commentReconnectTimeout);
+                commentReconnectTimeout = null;
+            }
+        };
+
+        commentSocket.onmessage = function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'new_comment') {
+                    // Prevent duplicate if this client submitted it via AJAX and already rendered it
+                    // NOTE: This acts as a fallback failsafe, but the race condition is resolved
+                    // since the AJAX handler no longer injects HTML directly.
+                    if (document.getElementById(`comment-${data.comment_id}`)) return;
+
+                    if (emptyState) {
+                        emptyState.style.display = "none";
+                    }
+
+                    if (data.parent_id) {
+                        const parentCard = document.getElementById(`comment-${data.parent_id}`);
+                        if (parentCard) {
+                            const parentRepliesList = parentCard.querySelector(".replies-list");
+                            parentRepliesList.insertAdjacentHTML("beforeend", data.html);
+                            // Run the button visibility corrector on the appended child node
+                            adjustCommentButtons(parentRepliesList.lastElementChild);
+                        }
+                    } else {
+                        commentsList.insertAdjacentHTML("beforeend", data.html);
+                        // Run the button visibility corrector on the appended child node
+                        adjustCommentButtons(commentsList.lastElementChild);
+                    }
+                    // Update comment count is handled strictly by the WebSocket now to avoid double counting
+                    updateCommentCount(1);
+                } else if (data.type === 'delete_comment') {
+                    const commentCard = document.getElementById(`comment-${data.comment_id}`);
+                    if (commentCard) {
+                        commentCard.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+                        commentCard.style.opacity = "0";
+                        commentCard.style.transform = "translateY(5px)";
+                        setTimeout(() => {
+                            commentCard.remove();
+                            if (commentsList.children.length === 0 && emptyState) {
+                                emptyState.style.display = "block";
+                            }
+                        }, 300);
+                        updateCommentCount(-1);
+                    }
+                }
+            } catch (err) {
+                console.error('Error parsing WebSocket message:', err);
+            }
+        };
+
+        commentSocket.onclose = function(e) {
+            console.warn('Comments WebSocket closed. Reconnecting in 5s...');
+            if (!commentReconnectTimeout) {
+                commentReconnectTimeout = setTimeout(connectCommentWebSocket, 5000);
+            }
+        };
+
+        commentSocket.onerror = function(err) {
+            console.error('WebSocket error:', err);
+            commentSocket.close();
+        };
+    }
+
+    connectCommentWebSocket();
+
     // Post comment / reply handler
     async function submitComment(form, isReply = false) {
         const formData = new FormData(form);
@@ -68,28 +209,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const data = await response.json();
             if (response.ok && data.status === "success") {
+                // UI CLEANUP ONLY: The WebSocket onmessage listener will handle the actual
+                // DOM insertion and comment count increment to prevent race conditions.
+                
                 // If comment list has an empty state, remove it
                 if (emptyState) {
                     emptyState.style.display = "none";
                 }
 
-                // If reply, insert under parent comment's replies-list
-                if (isReply && data.parent_id) {
-                    const parentCard = document.getElementById(`comment-${data.parent_id}`);
-                    if (parentCard) {
-                        const parentRepliesList = parentCard.querySelector(".replies-list");
-                        parentRepliesList.insertAdjacentHTML("beforeend", data.html);
-                    }
-                    // Remove the reply form
+                if (isReply) {
+                    // Just remove the inline reply form. The WS will inject the comment.
                     form.remove();
                 } else {
-                    // Prepend/append top-level comment (oldest first, so we append at the bottom)
-                    commentsList.insertAdjacentHTML("beforeend", data.html);
+                    // Reset the main form for the next comment
                     form.reset();
-                    form.querySelector(".char-count-current").textContent = "0";
+                    if (form.querySelector(".char-count-current")) {
+                        form.querySelector(".char-count-current").textContent = "0";
+                    }
                 }
-
-                updateCommentCount(1);
             } else if (data.status === "pending_approval") {
                 alert(data.message);
                 form.reset();

@@ -1,6 +1,6 @@
 {% load static wagtailimages_tags %}
 
-<div class="comment-card" id="comment-{{ comment.id }}" data-comment-id="{{ comment.id }}">
+<div class="comment-card" id="comment-{{ comment.id }}" data-comment-id="{{ comment.id }}" data-author-id="{{ comment.user.id }}">
     <div class="comment-card__main">
         <!-- Avatar Section -->
         <div class="comment-card__avatar">
