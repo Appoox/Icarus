@@ -28,6 +28,8 @@ PLANS = {
     '3_months': {'name': '3 Months',  'price': 799,  'has_print': False, 'duration_days': 90},
     '6_months': {'name': '6 Months',  'price': 1499, 'has_print': True,  'duration_days': 180},
     '1_year':   {'name': '1 Year',    'price': 2499, 'has_print': True,  'duration_days': 365},
+    '3_years':   {'name': '3 Years',   'price': 5999, 'has_print': True,  'duration_days': 1095},
+    '5_years':   {'name': '5 Years',   'price': 7999, 'has_print': True,  'duration_days': 1825},
 }
 
 class ReaderUserManager(BaseUserManager):
@@ -349,6 +351,8 @@ class ReaderUser(AbstractUser, index.Indexed):
         ('3_months', '3 Months'),
         ('6_months', '6 Months'),
         ('1_year', '1 Year'),
+        ('3_years', '3 Years'),
+        ('5_years', '5 Years'),
     ]
 
     PLAN_DURATIONS = {
@@ -357,6 +361,8 @@ class ReaderUser(AbstractUser, index.Indexed):
         '3_months': timedelta(days=90),
         '6_months': timedelta(days=180),
         '1_year':   timedelta(days=365),
+        '3_years':   timedelta(days=1095),
+        '5_years':   timedelta(days=1825),
     }
 
     subscription_plan = models.CharField(

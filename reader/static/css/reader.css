@@ -234,6 +234,52 @@ select.form-input {
     display: none;
 }
 
+/* ─────────────────────────────────────────────
+   Order Summary Prominence Overrides 
+   (Added to make the summary details stand out)
+ ───────────────────────────────────────────── */
+.summary-box {
+    background: var(--white);
+    border: 2px solid var(--navy); /* Thicker, bolder border to draw attention */
+    box-shadow: 0 8px 24px rgba(11, 31, 58, 0.08); /* Lift effect */
+    transform: translateY(-2px);
+}
+
+.summary-box h2 {
+    font-size: 14px; /* Increased font size */
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--ink);
+}
+
+.summary-row span:first-child {
+    color: var(--muted);
+    font-weight: 600; /* Bolder labels */
+}
+
+.summary-row.total {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 2px dashed var(--rule); /* Distinct separation for total */
+    font-size: 20px;
+    font-family: var(--font-display);
+    font-weight: 900;
+    color: var(--red); /* Highlight the total cost */
+}
+
+
 /* Profile Sections */
 .read-list {
     list-style: none;
@@ -467,7 +513,8 @@ select.form-input {
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    /* Design tokens now inherited from global Icarus.css */    color: var(--muted);
+    /* Design tokens now inherited from global Icarus.css */    
+    color: var(--muted);
     flex-shrink: 0;
 }
 
@@ -663,9 +710,13 @@ select.form-input {
 /* ── Care-of collapsible — shared styles for profile.html & edit_profile.html ── */
 
 /* ── <details> wrapper replaces the old .form-fieldset border box ── */
+
+/* Corrected syntax logic below, maintaining all existing comments */
 .care-of-details {
     border: 1px solid var(--border-color, #ddd);
-  * ── Care-of collapsible section ───────────────────────────────────────── */
+}
+
+/* ── Care-of collapsible section ───────────────────────────────────────── */
 
 /* Remove default <details> marker across browsers */
 .care-of-details {
@@ -704,11 +755,16 @@ select.form-input {
 /* Slight top padding so content doesn't press against the summary */
 .care-of-body {
     padding-top: 12px;
-}  border-radius: 6px;
+}  
+
+/* Formatted missing CSS block to be structurally valid */
+.care-of-details {
+    border-radius: 6px;
     margin-bottom: 20px;
     /* Remove native disclosure triangle across all browsers */
     list-style: none;
 }
+
 .care-of-details > summary { list-style: none; }
 .care-of-details > summary::-webkit-details-marker { display: none; }
 
