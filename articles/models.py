@@ -593,6 +593,7 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
                     show_paywall = False
                     free_reads.append(self.pk)
                     request.session['free_reads'] = free_reads
+                    request.session.modified = True
                 else:
                     show_paywall = True
 

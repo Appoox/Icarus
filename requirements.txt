@@ -2,6 +2,7 @@
 Django==5.2.14
 wagtail==7.4
 environs==14.5.0
+phonenumbers==9.0.32
 django-phonenumber-field==8.4.0
 psycopg[binary]==3.2.5
 dj-database-url==2.3.0
