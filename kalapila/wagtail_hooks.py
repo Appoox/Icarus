@@ -166,7 +166,7 @@ class CommentSnippetViewSet(SnippetViewSet):
     #     Column("created_at", label="Created At", sort_key="created_at"),
     # ]
 
-    list_display = ["user", "page", "is_approved", "is_removed", "created_at"]
+    list_display = ["user", "page", "issue", "body_truncated", "is_approved", "is_removed", "created_at", "report_count"]
     
     # Attach our custom FilterSet for layout and empty label fallback parameters
     filterset_class = CommentFilterSet
