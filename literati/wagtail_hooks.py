@@ -1,7 +1,40 @@
 from wagtail import hooks
 from wagtail.admin.viewsets.pages import PageListingViewSet
 from articles.wagtail_hooks import HitCountColumn, AnalyticsColumn
+from .models import AuthorIndexPage
+from wagtail.models import Page 
 
+@hooks.register('construct_page_chooser_queryset')
+def order_literati_in_chooser(pages, request):
+    """
+    Order literati pages newest-first inside the page chooser modal
+    (e.g. when selecting an author from an article or any other page reference).
+    """
+    page_type = request.GET.get('page_type')
+    is_target_chooser = False
+
+    if page_type and 'literati' in page_type.lower():
+        is_target_chooser = True
+    else:
+        parent_id = None
+        if request.resolver_match and 'parent_page_id' in request.resolver_match.kwargs:
+            parent_id = request.resolver_match.kwargs.get('parent_page_id')
+        else:
+            parent_id = request.GET.get('child_of') or request.GET.get('parent')
+        
+        if parent_id:
+            try:
+                parent = Page.objects.get(pk=parent_id)
+                if parent.specific_class and issubclass(parent.specific_class, AuthorIndexPage):
+                    is_target_chooser = True
+                    
+            except Page.DoesNotExist:
+                pass
+
+    if is_target_chooser:
+        pages = pages.order_by('-latest_revision_created_at')
+    return pages
+    
 class LiteratiPageListingViewSet(PageListingViewSet):
     icon = 'user'
     menu_label = 'Authors'
