@@ -72,6 +72,9 @@ CSRF_TRUSTED_ORIGINS = [
 
 INSTALLED_APPS = [
     "auditlog",
+    "channels",
+    "channels_postgres",
+    "django_q",
     "home",
     "search",
     "articles",
@@ -168,6 +171,9 @@ DATABASES = {
         conn_max_age=600,
     )
 }
+
+# channels_postgres requires a database connection named 'channels_postgres'
+DATABASES['channels_postgres'] = DATABASES['default']
 
 
 # Password validation
@@ -299,3 +305,33 @@ WAGTAILEMBEDS_RESPONSIVE_HTML = True
 TAGGIT_CASE_INSENSITIVE = True
 
 DAYS_BEFORE_PURGE = env.int("DAYS_BEFORE_PURGE", default=30)
+
+# Q2 cluster configuration
+# 'name' can be 'default', 'redis', or 'dq' (for database)
+# Adjust 'workers', 'timeout', and 'queue_limit' based on your server resources
+Q_CLUSTER = {
+    'name': 'DjangORM',
+    'workers': 4,
+    'timeout': 90,
+    'retry': 120,
+    'queue_limit': 50,
+    'bulk': 10,
+    'orm': 'default'
+}
+
+#Channel layer settings
+CHANNEL_LAYER_CONFIG = dj_database_url.config(
+    default=f"sqlite:////{BASE_DIR / 'db.sqlite3'}"
+)
+CHANNEL_LAYER_CONFIG.setdefault('TIME_ZONE', TIME_ZONE)
+CHANNEL_LAYER_CONFIG.setdefault('OPTIONS', {})
+CHANNEL_LAYER_CONFIG.setdefault('AUTOCOMMIT', True)
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_postgres.core.PostgresChannelLayer',
+        'CONFIG': CHANNEL_LAYER_CONFIG,
+    }
+}
+
+ASGI_APPLICATION = "Icarus.asgi.application"

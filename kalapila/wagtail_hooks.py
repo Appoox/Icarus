@@ -151,21 +151,23 @@ class CommentSnippetViewSet(SnippetViewSet):
     icon = 'comment'
     menu_order = 310
     add_to_admin_menu = True
-
+    # list_display_links = ['user_display']
     # ── Sortable Table Columns Configuration ───────────────────────────────
     # By mapping strings to Column objects containing database lookup paths in sort_key,
     # custom properties or model methods become fully sortable in the Wagtail dashboard.
-    list_display = [
-        Column("user_display", label="User", sort_key="user__name"),
-        Column("page_display", label="Article", sort_key="page__title"),
-        Column("issue_display", label="Issue", sort_key="issue__title"),
-        Column("body_truncated", label="Comment", sort_key="body"),
-        BooleanColumn("is_approved", label="Approved", sort_key="is_approved"),
-        BooleanColumn("is_removed", label="Removed", sort_key="is_removed"),
-        Column("report_count", label="Reports"),  # Unsortable property calculation
-        Column("created_at", label="Created At", sort_key="created_at"),
-    ]
+    # list_display = [
+    #     Column("user_display", label="User", sort_key="user__name"),
+    #     Column("page_display", label="Article", sort_key="page__title"),
+    #     Column("issue_display", label="Issue", sort_key="issue__title"),
+    #     Column("body_truncated", label="Comment", sort_key="body"),
+    #     BooleanColumn("is_approved", label="Approved", sort_key="is_approved"),
+    #     BooleanColumn("is_removed", label="Removed", sort_key="is_removed"),
+    #     Column("report_count", label="Reports"),  # Unsortable property calculation
+    #     Column("created_at", label="Created At", sort_key="created_at"),
+    # ]
 
+    list_display = ["user", "page", "issue", "body_truncated", "is_approved", "is_removed", "created_at", "report_count"]
+    
     # Attach our custom FilterSet for layout and empty label fallback parameters
     filterset_class = CommentFilterSet
 

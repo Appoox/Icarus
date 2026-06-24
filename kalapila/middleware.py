@@ -16,14 +16,15 @@ class UserNotificationMiddleware(MiddlewareMixin):
 
         # ── Check 2: Administrative Dashboard & Asset Protection ───────────
         # Halts frontend reader alerts from executing on admin backend paths,
-        # static assets, media paths, or background AJAX requests.
+        # static assets, media paths, or background AJAX/Websocket requests.
         path = request.path
         if (
             path.startswith('/admin/') or 
             path.startswith('/django-admin/') or
             path.startswith('/static/') or 
             path.startswith('/media/') or
-            request.headers.get('x-requested-with') == 'XMLHttpRequest'
+            request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+            request.headers.get('upgrade', '').lower() == 'websocket'
         ):
             return
 
