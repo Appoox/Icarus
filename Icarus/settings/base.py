@@ -335,3 +335,6 @@ CHANNEL_LAYERS = {
 }
 
 ASGI_APPLICATION = "Icarus.asgi.application"
+
+# GOOGLE_TTS_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'secrets', 'google_credentials.json')
+GOOGLE_CREDENTIALS_JSON = env.str("GOOGLE_CREDENTIALS_JSON", "")

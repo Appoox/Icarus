@@ -18,6 +18,7 @@ django-axes==8.3.1
 django-fernet-encrypted-fields==0.4.0
 pymupdf==1.27.2.3
 
+#Pdf generation
 torch>=2.1.0
 scipy>=1.10.0
 opencv-python-headless>=4.11.0.86
@@ -46,3 +47,6 @@ channels==4.3.2
 channels-postgres==1.1.4
 msgpack==1.2.1
 psycopg-pool==3.3.1
+
+#Audio Generation
+google-cloud-texttospeech==2.37.0
