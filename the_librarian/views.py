@@ -1,3 +1,4 @@
+
 from functools import wraps
 from pathlib import Path
 
@@ -88,10 +89,7 @@ def search_api(request):
 # ── ArchiveDocument ViewerJS display ─────────────────────────────────────
 
 def viewer_view(request, document_id):
-    """
-    Display an ingested ArchiveDocument PDF via ViewerJS.
-    URL: /librarian/viewer/<document_id>/?page=3
-    """
+    """Display an ingested ArchiveDocument PDF via ViewerJS."""
     try:
         doc = ArchiveDocument.objects.get(pk=document_id)
     except ArchiveDocument.DoesNotExist:
@@ -110,13 +108,25 @@ def viewer_view(request, document_id):
 
 
 def serve_pdf(request, document_id):
-    """Serve an ingested ArchiveDocument PDF from ARCHIVE_DIR."""
+    """
+    Serve an ingested ArchiveDocument PDF.
+
+    Resolution order:
+    1. ARCHIVE_DIR / doc.file_path   — filesystem-ingested PDFs
+    2. MEDIA_ROOT  / doc.file_path   — ArchiveIssue-uploaded PDFs
+                                       (file_path stored as MEDIA_ROOT-relative)
+    """
     try:
         doc = ArchiveDocument.objects.get(pk=document_id)
     except ArchiveDocument.DoesNotExist:
         raise Http404("Document not found")
 
+    # Try ARCHIVE_DIR first (legacy filesystem-ingested PDFs)
     pdf_path = Path(settings.ARCHIVE_DIR) / doc.file_path
+    if not pdf_path.exists():
+        # Fallback: MEDIA_ROOT-relative path (ArchiveIssue uploads)
+        pdf_path = Path(settings.MEDIA_ROOT) / doc.file_path
+
     if not pdf_path.exists():
         raise Http404("PDF file not found on disk")
 
@@ -127,20 +137,11 @@ def serve_pdf(request, document_id):
     )
 
 
-# ── Archive Issue views ──────────────────────────────────────────────────
+# ── ArchiveIssue viewer ──────────────────────────────────────────────────
 
 @require_GET
 def archive_list(request):
-    """
-    Public archive grid: filterable, sortable Archive Issue cards.
-
-    GET params:
-        year    - filter by year (int)
-        month   - filter by month (int 1-12)
-        volume  - filter by volume number (int)
-        sort    - 'newest' (default) | 'oldest' | 'volume'
-    """
-    # ── Parse filters ──
+    """Public archive grid: filterable, sortable Archive Issue cards."""
     def _int_or_none(key):
         try:
             return int(request.GET[key])
@@ -152,7 +153,6 @@ def archive_list(request):
     selected_volume = _int_or_none('volume')
     sort            = request.GET.get('sort', 'newest')
 
-    # ── Base queryset ──
     issues = ArchiveIssue.objects.all()
 
     if selected_year is not None:
@@ -166,23 +166,12 @@ def archive_list(request):
         issues = issues.order_by('year', 'month', 'issue_number')
     elif sort == 'volume':
         issues = issues.order_by('volume', 'issue_number')
-    else:  # newest (default)
+    else:
         issues = issues.order_by('-year', '-month', '-issue_number')
 
-    # ── Filter option lists (always from full set, not filtered) ──
     all_issues  = ArchiveIssue.objects.all()
-    all_years   = (
-        all_issues
-        .values_list('year', flat=True)
-        .distinct()
-        .order_by('-year')
-    )
-    all_volumes = (
-        all_issues
-        .values_list('volume', flat=True)
-        .distinct()
-        .order_by('volume')
-    )
+    all_years   = all_issues.values_list('year', flat=True).distinct().order_by('-year')
+    all_volumes = all_issues.values_list('volume', flat=True).distinct().order_by('volume')
 
     has_filter = any([selected_year, selected_month, selected_volume])
 
@@ -202,10 +191,7 @@ def archive_list(request):
 
 @require_GET
 def magazine_viewer(request, issue_id):
-    """
-    Display a ArchiveIssue PDF via ViewerJS.
-    URL: /librarian/magazine/<issue_id>/?page=N
-    """
+    """Display a ArchiveIssue PDF via ViewerJS."""
     issue = get_object_or_404(ArchiveIssue, pk=issue_id)
 
     from django.urls import reverse
@@ -241,7 +227,7 @@ def serve_magazine_pdf(request, issue_id):
 
 @require_GET
 def download_magazine_pdf(request, issue_id):
-    """Force-download the PDF for a ArchiveIssue (Content-Disposition: attachment)."""
+    """Force-download the PDF for a ArchiveIssue."""
     issue = get_object_or_404(ArchiveIssue, pk=issue_id)
 
     if not issue.pdf_file:
@@ -258,14 +244,11 @@ def download_magazine_pdf(request, issue_id):
         raise Http404("PDF file not found on disk.")
 
 
-# ── Direct archive filesystem access (kept for ingestion dashboard) ──────
+# ── Direct archive filesystem access ─────────────────────────────────────
 
 @require_GET
 def archive_viewer(request, filename):
-    """
-    View a raw filesystem PDF from ARCHIVE_DIR via ViewerJS.
-    Used by the ingestion dashboard; not shown on the public archive page.
-    """
+    """View a raw filesystem PDF from ARCHIVE_DIR via ViewerJS."""
     from django.urls import reverse
     pdf_url = reverse("the_librarian:archive_download", args=[filename])
 
@@ -298,33 +281,71 @@ def archive_download(request, filename):
 @superuser_required
 @require_POST
 def trigger_ingestion(request):
-    """Admin-only: trigger archive ingestion (one file at a time or all)."""
-    from the_librarian.services.ingestion import ingest_archive, clear_stop_signal
+    """
+    Admin-only: queue an async Django-Q2 ingestion task for one ArchiveIssue.
 
-    if not request.POST.get("filename"):
-        clear_stop_signal()
+    POST params:
+        archive_issue_pk  — PK of the ArchiveIssue to ingest (required)
+        force             — 'true' to re-ingest even if already processed
 
-    force    = request.POST.get("force", "false").lower() == "true"
-    filename = request.POST.get("filename")
+    Returns:
+        JSON with task_id on success so the frontend can poll task_status_view.
+    """
+    from the_librarian.services.ingestion import clear_stop_signal
+
+    archive_issue_pk = request.POST.get("archive_issue_pk", "").strip()
+    force = request.POST.get("force", "false").lower() == "true"
+
+    # Clear any previous stop signal at the start of a fresh batch
+    clear_stop_signal()
+
+    if not archive_issue_pk:
+        return JsonResponse(
+            {"error": "Missing archive_issue_pk parameter"}, status=400
+        )
 
     try:
-        results = ingest_archive(force=force, filename=filename)
-        return JsonResponse({
-            "success":   True,
-            "processed": len(results["processed"]),
-            "skipped":   len(results["skipped"]),
-            "errors":    len(results["errors"]),
-            "details":   results,
-        })
+        pk = int(archive_issue_pk)
+    except ValueError:
+        return JsonResponse({"error": "archive_issue_pk must be an integer"}, status=400)
+
+    try:
+        from django_q.tasks import async_task
+        task_id = async_task(
+            'the_librarian.tasks.async_ingest_archive_issue',
+            pk,
+            force,
+        )
+        logger.info(
+            "Queued ingestion task %s for ArchiveIssue pk=%s (force=%s)",
+            task_id, pk, force,
+        )
+        return JsonResponse({"success": True, "task_id": task_id})
+    except ImportError:
+        # django_q not installed — fall back to synchronous ingestion
+        logger.warning(
+            "django_q not available; running ingestion synchronously for pk=%s", pk
+        )
+        from the_librarian.services.ingestion import ingest_archive_issue
+        try:
+            result = ingest_archive_issue(pk, force=force)
+            return JsonResponse({
+                "success": True,
+                "task_id": None,
+                "sync_result": result,
+            })
+        except Exception as e:
+            logger.exception("Synchronous ingestion failed for ArchiveIssue pk=%s", pk)
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
     except Exception as e:
-        logger.exception("Ingestion failed")
+        logger.exception("Failed to queue ingestion task for ArchiveIssue pk=%s", pk)
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
 @superuser_required
 @require_POST
 def stop_ingestion(request):
-    """Admin-only: signal a running ingestion to stop after the current file."""
+    """Admin-only: signal a running ingestion to stop after the current page."""
     from the_librarian.services.ingestion import request_stop
     request_stop()
     return JsonResponse({"success": True, "message": "Stop requested"})
@@ -333,8 +354,55 @@ def stop_ingestion(request):
 @superuser_required
 @require_GET
 def get_pending_pdfs_view(request):
-    """Admin-only: return the list of PDFs not yet ingested."""
-    from the_librarian.services.ingestion import get_pending_pdfs
-    force   = request.GET.get("force", "false").lower() == "true"
-    pending = get_pending_pdfs(force=force)
+    """
+    Admin-only: return ArchiveIssue objects not yet ingested.
+
+    Query params:
+        force — 'true' to return all ArchiveIssues (including already-ingested ones)
+
+    Returns:
+        JSON: { success: true, pending: [{ pk, title }, ...] }
+    """
+    force = request.GET.get("force", "false").lower() == "true"
+
+    if force:
+        issues_qs = ArchiveIssue.objects.all()
+    else:
+        # Only issues that have no linked ArchiveDocument (not yet ingested)
+        issues_qs = ArchiveIssue.objects.filter(archive_document__isnull=True)
+
+    pending = [
+        {"pk": i.pk, "title": str(i)}
+        for i in issues_qs.order_by('-year', '-month')
+    ]
     return JsonResponse({"success": True, "pending": pending})
+
+
+@require_GET
+def task_status_view(request, task_id):
+    """
+    Check the completion status of a Django-Q2 async task by its ID.
+
+    Django-Q2 stores completed tasks (successful and failed alike) in the
+    django_q_task table via the Task model.  If the task is not yet in that
+    table it is still queued or being processed — return 'pending'.
+
+    Returns JSON:
+        { status: 'pending' | 'success' | 'failed', result: str }
+    """
+    try:
+        from django_q.models import Task
+        try:
+            task = Task.objects.get(id=task_id)
+            return JsonResponse({
+                "status": "success" if task.success else "failed",
+                "result": str(task.result)[:300] if task.result else "",
+            })
+        except Task.DoesNotExist:
+            # Task hasn't completed yet (still queued or being processed)
+            return JsonResponse({"status": "pending"})
+    except ImportError:
+        return JsonResponse({
+            "status": "unavailable",
+            "message": "django_q is not installed",
+        })

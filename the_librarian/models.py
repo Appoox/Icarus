@@ -36,7 +36,7 @@ class ArchiveDocument(models.Model):
     filename = models.CharField(max_length=500, unique=True)
     file_path = models.CharField(
         max_length=1000,
-        help_text="Relative path from ARCHIVE_DIR"
+        help_text="Relative path from ARCHIVE_DIR (or MEDIA_ROOT for ArchiveIssue uploads)"
     )
     total_pages = models.IntegerField(default=0)
     ingested_at = models.DateTimeField(auto_now_add=True)
@@ -51,7 +51,7 @@ class ArchiveDocument(models.Model):
 
 
 class DocumentChunk(models.Model):
-    """Stores semantically chunked + embedded text from archive PDFs."""
+    """Stores semantically chunked + embedded text from archive PDFs, articles, authors, and issue editorials."""
     document = models.ForeignKey(
         ArchiveDocument,
         on_delete=models.CASCADE,
@@ -68,6 +68,14 @@ class DocumentChunk(models.Model):
     )
     author = models.ForeignKey(
         'literati.Literati',
+        on_delete=models.CASCADE,
+        related_name='chunks',
+        null=True,
+        blank=True
+    )
+    # ── NEW: Issue editorial chunks ────────────────────────────────────────
+    issue = models.ForeignKey(
+        'issue.Issue',
         on_delete=models.CASCADE,
         related_name='chunks',
         null=True,
@@ -98,7 +106,7 @@ class DocumentChunk(models.Model):
     )
     chunk_index = models.IntegerField(
         default=0,
-        help_text="Order of this chunk within the document/article/author"
+        help_text="Order of this chunk within the document/article/author/issue"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -118,6 +126,8 @@ class DocumentChunk(models.Model):
             return f"Article: {self.article.title} — chunk#{self.chunk_index}"
         elif self.author_id:
             return f"Author: {self.author.title} — chunk#{self.chunk_index}"
+        elif self.issue_id:
+            return f"Editorial: {self.issue.title} — chunk#{self.chunk_index}"
         return f"Unknown Source — chunk#{self.chunk_index}"
 
 
@@ -132,7 +142,8 @@ class ArchiveIssue(models.Model):
     ingestion pipeline, set ARCHIVE_DIR = os.path.join(MEDIA_ROOT, 'archive')
     in your Django settings.
 
-    Thumbnails are auto-generated from the PDF's first page. Admins can also upload a thumbnail manually.
+    On save, if the PDF is new or replaced, an async Django-Q2 task is queued
+    to OCR/chunk/embed the PDF into DocumentChunk records.
     """
 
     title = models.CharField(
@@ -172,7 +183,7 @@ class ArchiveIssue(models.Model):
         related_name='Archive_Issue',
         help_text=(
             "Link to the ingested ArchiveDocument for full-text search.  "
-            "Set automatically if you ingest the PDF after uploading."
+            "Set automatically when ingestion completes after uploading."
         )
     )
 
@@ -199,7 +210,7 @@ class ArchiveIssue(models.Model):
         """Malayalam month name."""
         return MALAYALAM_MONTHS.get(self.month, '')
 
-    # ── Save / thumbnail generation ──
+    # ── Save / thumbnail generation / async ingestion queuing ──
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -212,13 +223,46 @@ class ArchiveIssue(models.Model):
 
         super().save(*args, **kwargs)
 
+        # Determine whether the PDF is new or has been replaced
+        pdf_changed = is_new or (
+            old_pdf_name is not None
+            and self.pdf_file
+            and old_pdf_name != self.pdf_file.name
+        )
+
         # Auto-generate thumbnail when PDF is first uploaded or replaced
-        if self.pdf_file and not self.thumbnail:
-            pdf_changed = is_new or (
-                old_pdf_name is not None and old_pdf_name != self.pdf_file.name
+        if self.pdf_file and not self.thumbnail and pdf_changed:
+            self._auto_generate_thumbnail()
+
+        # Queue async OCR/ingestion task when PDF is new or replaced
+        if self.pdf_file and pdf_changed:
+            self._queue_ingestion_task()
+
+    def _queue_ingestion_task(self):
+        """
+        Queue a Django-Q2 async task to ingest this issue's PDF.
+        Uses transaction.on_commit so the task is queued only after the DB
+        transaction commits — preventing the worker from starting before the
+        new PDF record is visible to other connections.
+        Silently skips if django_q is not installed.
+        """
+        try:
+            from django.db import transaction
+            from django_q.tasks import async_task
+            _pk = self.pk
+            transaction.on_commit(lambda: async_task(
+                'the_librarian.tasks.async_ingest_archive_issue', _pk
+            ))
+            logger.info(
+                "Queued async ingestion for ArchiveIssue pk=%s ('%s')",
+                self.pk, self.title,
             )
-            if pdf_changed:
-                self._auto_generate_thumbnail()
+        except ImportError:
+            logger.warning(
+                "django_q not installed — skipping async PDF ingestion for "
+                "ArchiveIssue pk=%s. Run the ingest manually from the dashboard.",
+                self.pk,
+            )
 
     def _auto_generate_thumbnail(self):
         """

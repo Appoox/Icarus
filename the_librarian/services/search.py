@@ -4,14 +4,14 @@ Similarity search service for The Librarian.
 Uses pgvector's cosine distance operator (<=>) to find the most
 similar document chunks to a query.
 
+Supports chunks from four sources: ArchiveDocument PDFs, Articles,
+Literati authors, and Issue editorials (issue FK, added in migration 0004).
+
 Improvements applied
 --------------------
-#7  Both search functions now accept an optional ``min_score`` parameter
-    (default 0.0, i.e. no filtering).  Results whose similarity score falls
-    below the threshold are excluded from the returned list, preventing the
-    caller from receiving chunks that are effectively unrelated to the query.
-    A sensible starting value for Malayalam OCR content is around 0.35–0.45;
-    tune it against your corpus.
+#7  Both search functions accept an optional ``min_score`` parameter
+    (default 0.0).  Results whose similarity score falls below the threshold
+    are excluded from the returned list.
 """
 import logging
 
@@ -27,7 +27,8 @@ logger = logging.getLogger(__name__)
 
 def _format_chunk_result(chunk, score=None, search_type=None):
     """
-    Unified formatter for search results across PDFs, Articles, and Authors.
+    Unified formatter for search results across PDFs, Articles, Authors,
+    and Issue editorials.
     """
     res = {
         "chunk_id": chunk.id,
@@ -59,6 +60,14 @@ def _format_chunk_result(chunk, score=None, search_type=None):
             "url": chunk.author.url,
             "author_id": chunk.author.id,
         })
+    elif chunk.issue_id:
+        # Editorial content from an Issue page
+        res.update({
+            "type": "editorial",
+            "title": f"{chunk.issue.title} — Editorial",
+            "url": chunk.issue.url,
+            "issue_id": chunk.issue.id,
+        })
     else:
         res.update({
             "type": "unknown",
@@ -80,17 +89,16 @@ def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
 
     Returns:
         list of dicts with chunk metadata and similarity score.
-        The list may be shorter than top_k if min_score filters some out.
     """
     query_embedding = embed_query(query_text)
 
     results = (
         DocumentChunk.objects
-        .defer("embedding")                              # Avoid fetching large vectors into memory
+        .defer("embedding")
         .annotate(distance=CosineDistance("embedding", query_embedding))
-        .filter(distance__lte=1.0 - min_score)          # DB-level filtering
+        .filter(distance__lte=1.0 - min_score)
         .order_by("distance")
-        .select_related("document", "article", "author")[:top_k]
+        .select_related("document", "article", "author", "issue")[:top_k]
     )
 
     output = []
@@ -108,17 +116,16 @@ def search_keyword(query_text: str, top_k: int = 5, min_score: float = 0.0001):
     Returns:
         list of dicts (same format as search_similar).
     """
-    # 'simple' config matches the generated search_vector field; important for Malayalam text
     query = SearchQuery(query_text, config="simple")
 
     results = (
         DocumentChunk.objects
-        .defer("embedding")                    # Stop fetching massive vectors into memory
-        .filter(search_vector=query)           # Uses the GIN index
+        .defer("embedding")
+        .filter(search_vector=query)
         .annotate(rank=SearchRank(F("search_vector"), query))
         .filter(rank__gte=min_score)
         .order_by("-rank")
-        .select_related("document", "article", "author")[:top_k]
+        .select_related("document", "article", "author", "issue")[:top_k]
     )
 
     output = []
@@ -140,16 +147,14 @@ def search_hybrid(query_text: str, top_k: int = 5, k: int = 60):
 
     Formula: score = Σ 1 / (k + rank)
     """
-    # 1. Fetch more results than requested to allow for meaningful fusion
     fetch_k = top_k * 4
 
     sim_results = search_similar(query_text, top_k=fetch_k)
     kw_results = search_keyword(query_text, top_k=fetch_k)
 
-    # 2. Apply RRF — track search_type separately to avoid mutating shared dicts
-    rrf_scores = {}   # chunk_id -> combined RRF score
-    chunk_map = {}    # chunk_id -> result dict
-    search_types = {} # chunk_id -> search_type label
+    rrf_scores = {}
+    chunk_map = {}
+    search_types = {}
 
     for rank, res in enumerate(sim_results, 1):
         cid = res["chunk_id"]
@@ -163,12 +168,11 @@ def search_hybrid(query_text: str, top_k: int = 5, k: int = 60):
         chunk_map.setdefault(cid, res)
         search_types[cid] = "hybrid" if cid in search_types else "keyword"
 
-    # 3. Sort by RRF score and build output
     sorted_ids = sorted(rrf_scores.keys(), key=lambda x: rrf_scores[x], reverse=True)[:top_k]
 
     final_output = []
     for cid in sorted_ids:
-        res = chunk_map[cid].copy()  # copy to avoid mutating the cached result dict
+        res = chunk_map[cid].copy()
         res["score"] = round(rrf_scores[cid], 6)
         res["search_type"] = search_types[cid]
         final_output.append(res)
@@ -184,26 +188,17 @@ def search_by_document(
 ):
     """
     Search within a specific document only.
-
-    Args:
-        document_name: str — filename of the target document.
-        query_text: str — the natural-language query.
-        top_k: int — maximum number of results to return.
-        min_score: float — discard results with similarity below this value.
-
-    Returns:
-        list of dicts (same format as search_similar).
     """
     query_embedding = embed_query(query_text)
 
     results = (
         DocumentChunk.objects
-        .defer("embedding")                              # Avoid fetching large vectors into memory
+        .defer("embedding")
         .filter(document__filename=document_name)
         .annotate(distance=CosineDistance("embedding", query_embedding))
-        .filter(distance__lte=1.0 - min_score)          # DB-level filtering, mirrors search_similar
+        .filter(distance__lte=1.0 - min_score)
         .order_by("distance")
-        .select_related("document", "article", "author")[:top_k]
+        .select_related("document", "article", "author", "issue")[:top_k]
     )
 
     output = []
