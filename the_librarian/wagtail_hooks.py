@@ -1,8 +1,22 @@
 """
 Wagtail hooks for The Librarian.
 
-Adds an "Ingest Archive" button to the Wagtail admin dashboard
-and a sidebar menu item for archive documents.
+Changes in this revision
+------------------------
+* auto_index_content  — now dispatches async Django-Q2 tasks for Articles,
+  Literati authors, and Issue editorials.  Falls back to synchronous
+  transaction.on_commit() execution when django_q is not installed so the
+  dev environment still works without running qcluster.
+
+* LibrarianIngestPanel — enhanced dashboard with 4 stat cards:
+    Archive PDFs ingested | Text chunks stored |
+    Articles indexed      | Editorials indexed
+
+  The JS now:
+    1. Calls GET /librarian/api/pending/ → returns ArchiveIssue objects.
+    2. POSTs to /librarian/api/ingest/ once per issue → gets back a task_id.
+    3. Polls GET /librarian/api/task-status/<id>/ until every task resolves.
+    4. Reloads the dashboard on completion.
 """
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -25,45 +39,85 @@ def register_librarian_menu():
     )
 
 
-# ── Dashboard "Ingest Archive" panel ─────────────────────────────────────
+# ── Dashboard ingestion panel ─────────────────────────────────────────────
 
 class LibrarianIngestPanel(Component):
-    """A proper Wagtail Component for the ingestion dashboard panel."""
+    """
+    Wagtail dashboard panel for The Librarian.
+
+    Shows 4 stat cards and provides one-click async ingestion of all
+    pending ArchiveIssue PDFs via Django-Q2.
+    """
     order = 200
 
     def render_html(self, parent_context=None):
-        from the_librarian.models import ArchiveDocument, DocumentChunk
+        from the_librarian.models import ArchiveDocument, DocumentChunk, ArchiveIssue
 
-        doc_count = ArchiveDocument.objects.count()
-        chunk_count = DocumentChunk.objects.count()
-        ingest_url = reverse("the_librarian:trigger_ingestion")
+        doc_count    = ArchiveDocument.objects.count()
+        chunk_count  = DocumentChunk.objects.count()
+        article_count = (
+            DocumentChunk.objects
+            .filter(article__isnull=False)
+            .values('article')
+            .distinct()
+            .count()
+        )
+        editorial_count = (
+            DocumentChunk.objects
+            .filter(issue__isnull=False)
+            .values('issue')
+            .distinct()
+            .count()
+        )
+
+        ingest_url      = reverse("the_librarian:trigger_ingestion")
+        stop_url        = reverse("the_librarian:stop_ingestion")
+        pending_url     = reverse("the_librarian:get_pending_pdfs")
+        task_status_base = reverse("the_librarian:task_status", args=["PLACEHOLDER"]).replace("PLACEHOLDER", "")
 
         return mark_safe(f"""
         <section class="panel" id="librarian-ingest-panel">
 
             <header class="panel__header">
                 <div class="panel__header__title">
-                <h2 class="panel__heading" style="display:flex;align-items:center;gap:8px;">
-                    <svg class="icon icon-doc-full" aria-hidden="true" style="width:1em;height:1em;">
-                        <use href="#icon-doc-full"></use>
-                    </svg>
-                    Archive Processing
-                </h2>
+                    <h2 class="panel__heading" style="display:flex;align-items:center;gap:8px;">
+                        <svg class="icon icon-doc-full" aria-hidden="true" style="width:1em;height:1em;">
+                            <use href="#icon-doc-full"></use>
+                        </svg>
+                        Archive Processing
+                    </h2>
                 </div>
             </header>
+
             <div class="panel__content" style="padding:1.5em;">
-                <div style="display:flex;gap:2em;margin-bottom:1.2em;">
-                    <div>
-                        <strong style="font-size:1.8em;">{doc_count}</strong>
-                        <div style="color:var(--w-color-text-meta);">Documents ingested</div>
+
+                <!-- ── 4 stat cards ── -->
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1em;margin-bottom:1.4em;">
+
+                    <div style="background:var(--w-color-surface-field);border-radius:6px;padding:1em;text-align:center;">
+                        <div style="font-size:1.8em;font-weight:700;" id="stat-docs">{doc_count}</div>
+                        <div style="color:var(--w-color-text-meta);font-size:.8em;margin-top:.25em;">Archive PDFs ingested</div>
                     </div>
-                    <div>
-                        <strong style="font-size:1.8em;">{chunk_count}</strong>
-                        <div style="color:var(--w-color-text-meta);">Text chunks stored</div>
+
+                    <div style="background:var(--w-color-surface-field);border-radius:6px;padding:1em;text-align:center;">
+                        <div style="font-size:1.8em;font-weight:700;" id="stat-chunks">{chunk_count}</div>
+                        <div style="color:var(--w-color-text-meta);font-size:.8em;margin-top:.25em;">Text chunks stored</div>
                     </div>
+
+                    <div style="background:var(--w-color-surface-field);border-radius:6px;padding:1em;text-align:center;">
+                        <div style="font-size:1.8em;font-weight:700;" id="stat-articles">{article_count}</div>
+                        <div style="color:var(--w-color-text-meta);font-size:.8em;margin-top:.25em;">Articles indexed</div>
+                    </div>
+
+                    <div style="background:var(--w-color-surface-field);border-radius:6px;padding:1em;text-align:center;">
+                        <div style="font-size:1.8em;font-weight:700;" id="stat-editorials">{editorial_count}</div>
+                        <div style="color:var(--w-color-text-meta);font-size:.8em;margin-top:.25em;">Editorials indexed</div>
+                    </div>
+
                 </div>
 
-                <div style="display:flex;gap:0.8em;flex-wrap:wrap;">
+                <!-- ── Action buttons ── -->
+                <div style="display:flex;justify-content:center;gap:.8em;flex-wrap:wrap;">
                     <button type="button" id="btn-ingest-archive"
                             class="button button-small button--primary"
                             onclick="librarianIngest(false)"
@@ -71,7 +125,7 @@ class LibrarianIngestPanel(Component):
                         <svg class="icon" aria-hidden="true" style="width:1em;height:1em;">
                             <use href="#icon-download"></use>
                         </svg>
-                        Ingest New PDFs
+                        Ingest New Issues
                     </button>
                     <button type="button" id="btn-reingest-archive"
                             class="button button-small button--secondary"
@@ -93,140 +147,210 @@ class LibrarianIngestPanel(Component):
                     </button>
                 </div>
 
+                <!-- ── Progress / status area ── -->
                 <div id="ingest-status" style="margin-top:1em;display:none;">
-                    <div id="ingest-spinner" style="display:none;">
-                        ⏳ Ingesting… this may take a while for large PDFs.
-                    </div>
-                    <div id="ingest-result" style="display:none;"></div>
+                    <div id="ingest-spinner" style="display:none;color:var(--w-color-text-meta);"></div>
+                    <div id="ingest-result"  style="display:none;"></div>
                 </div>
+
             </div>
         </section>
 
         <script>
-        function getCookie(name) {{
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {{
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {{
-                    var cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {{
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }}
-                }}
-            }}
-            return cookieValue;
-        }}
+        (function () {{
+            'use strict';
 
-        var stopRequested = false;
-
-        function librarianStopIngest() {{
-            stopRequested = true;
-            var btnStop = document.getElementById('btn-stop-ingest');
-            btnStop.disabled = true;
-            btnStop.innerText = 'Stopping...';
-
-            fetch('{reverse("the_librarian:stop_ingestion")}', {{
-                method: 'POST',
-                headers: {{ 'X-CSRFToken': getCookie('csrftoken') }}
-            }});
-        }}
-
-        async function librarianIngest(force) {{
-            var statusDiv = document.getElementById('ingest-status');
-            var spinner = document.getElementById('ingest-spinner');
-            var resultDiv = document.getElementById('ingest-result');
-            var btn = document.getElementById('btn-ingest-archive');
-            var btnRe = document.getElementById('btn-reingest-archive');
-            var btnStop = document.getElementById('btn-stop-ingest');
-
-            statusDiv.style.display = 'block';
-            spinner.style.display = 'block';
-            resultDiv.style.display = 'none';
-            btn.disabled = true;
-            btnRe.disabled = true;
-            btnStop.style.display = 'inline-flex';
-            btnStop.disabled = false;
-            btnStop.innerHTML = 'Stop Ingestion';
-            stopRequested = false;
-
-            try {{
-                // 1. Get pending list
-                spinner.innerText = '🔍 Checking for new PDFs...';
-                const listResp = await fetch('{reverse("the_librarian:get_pending_pdfs")}?force=' + force);
-                const listData = await listResp.json();
-                const queue = listData.pending || [];
-
-                if (queue.length === 0) {{
-                    spinner.style.display = 'none';
-                    resultDiv.style.display = 'block';
-                    resultDiv.innerHTML = '<div>No new PDFs to ingest.</div>';
-                    btn.disabled = false;
-                    btnRe.disabled = false;
-                    btnStop.style.display = 'none';
-                    return;
-                }}
-
-                let processedCount = 0;
-                let errorCount = 0;
-                let skippedCount = 0;
-
-                // 2. Process one by one
-                for (let i = 0; i < queue.length; i++) {{
-                    if (stopRequested) break;
-
-                    const filename = queue[i];
-                    spinner.innerText = '⏳ Processing ' + (i + 1) + ' of ' + queue.length + ': ' + filename + '...';
-
-                    var formData = new FormData();
-                    formData.append('force', force ? 'true' : 'false');
-                    formData.append('filename', filename);
-
-                    try {{
-                        const ingestResp = await fetch('{ingest_url}', {{
-                            method: 'POST',
-                            headers: {{ 'X-CSRFToken': getCookie('csrftoken') }},
-                            body: formData,
-                        }});
-                        const data = await ingestResp.json();
-
-                        if (data.success) {{
-                            processedCount += data.processed;
-                            skippedCount += data.skipped;
-                            errorCount += data.errors;
-                        }} else {{
-                            errorCount++;
+            /* ── CSRF helper ─────────────────────────────────────────────── */
+            function getCookie(name) {{
+                var val = null;
+                if (document.cookie) {{
+                    document.cookie.split(';').forEach(function(c) {{
+                        c = c.trim();
+                        if (c.startsWith(name + '=')) {{
+                            val = decodeURIComponent(c.slice(name.length + 1));
                         }}
-                    }} catch (e) {{
-                        errorCount++;
-                    }}
+                    }});
                 }}
-
-                // 3. Final result
-                spinner.style.display = 'none';
-                resultDiv.style.display = 'block';
-                btnStop.style.display = 'none';
-
-                let msg = stopRequested ? '⚠ Ingestion stopped by user.' : '✓ Ingestion complete.';
-                resultDiv.innerHTML =
-                    '<div style="color:var(--w-color-positive);font-weight:600;">' + msg + '</div>' +
-                    '<div>Processed: ' + processedCount +
-                    ' · Skipped: ' + skippedCount +
-                    ' · Errors: ' + errorCount + '</div>';
-
-                if (!stopRequested) {{
-                    setTimeout(function() {{ location.reload(); }}, 3000);
-                }}
-            }} catch (err) {{
-                spinner.style.display = 'none';
-                resultDiv.style.display = 'block';
-                btnStop.style.display = 'none';
-                resultDiv.innerHTML = '<div style="color:var(--w-color-critical);">✗ Error: ' + err.message + '</div>';
-            }} finally {{
-                btn.disabled = false;
-                btnRe.disabled = false;
+                return val;
             }}
-        }}
+
+            /* ── UI helpers ──────────────────────────────────────────────── */
+            var statusDiv  = document.getElementById('ingest-status');
+            var spinner    = document.getElementById('ingest-spinner');
+            var resultDiv  = document.getElementById('ingest-result');
+            var btnIngest  = document.getElementById('btn-ingest-archive');
+            var btnRe      = document.getElementById('btn-reingest-archive');
+            var btnStop    = document.getElementById('btn-stop-ingest');
+
+            var stopRequested = false;
+
+            function setButtons(busy) {{
+                btnIngest.disabled = busy;
+                btnRe.disabled     = busy;
+                btnStop.style.display = busy ? 'inline-flex' : 'none';
+                if (busy) {{ btnStop.disabled = false; btnStop.innerHTML = 'Stop Ingestion'; }}
+                statusDiv.style.display = busy ? 'block' : 'none';
+                spinner.style.display   = busy ? 'block' : 'none';
+                resultDiv.style.display = 'none';
+            }}
+
+            function showResult(html) {{
+                spinner.style.display  = 'none';
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML    = html;
+            }}
+
+            /* ── Stop ────────────────────────────────────────────────────── */
+            window.librarianStopIngest = function () {{
+                stopRequested = true;
+                btnStop.disabled    = true;
+                btnStop.textContent = 'Stopping…';
+                fetch('{stop_url}', {{
+                    method: 'POST',
+                    headers: {{ 'X-CSRFToken': getCookie('csrftoken') }}
+                }});
+            }};
+
+            /* ── Poll a single task ──────────────────────────────────────── */
+            function pollTask(taskId, intervalMs, timeoutMs) {{
+                return new Promise(function (resolve) {{
+                    var elapsed = 0;
+                    var timer = setInterval(function () {{
+                        elapsed += intervalMs;
+                        fetch('{task_status_base}' + taskId)
+                            .then(function(r) {{ return r.json(); }})
+                            .then(function(data) {{
+                                if (data.status === 'success') {{
+                                    clearInterval(timer);
+                                    resolve('success');
+                                }} else if (data.status === 'failed') {{
+                                    clearInterval(timer);
+                                    resolve('failed');
+                                }} else if (elapsed >= timeoutMs) {{
+                                    clearInterval(timer);
+                                    resolve('timeout');
+                                }}
+                                // 'pending' — keep polling
+                            }})
+                            .catch(function() {{
+                                // network hiccup — keep polling
+                            }});
+                    }}, intervalMs);
+                }});
+            }}
+
+            /* ── Main ingest flow ────────────────────────────────────────── */
+            window.librarianIngest = async function (force) {{
+                stopRequested = false;
+                setButtons(true);
+                spinner.textContent = '🔍 Checking for pending issues…';
+
+                try {{
+                    /* 1. Get pending ArchiveIssue list */
+                    var listResp = await fetch('{pending_url}?force=' + force);
+                    var listData = await listResp.json();
+                    var queue    = listData.pending || [];
+
+                    if (queue.length === 0) {{
+                        setButtons(false);
+                        statusDiv.style.display = 'block';
+                        showResult('<div>✓ No new Archive Issues to ingest.</div>');
+                        return;
+                    }}
+
+                    spinner.textContent = '⏳ Queuing ' + queue.length + ' issue(s)…';
+
+                    /* 2. Queue a Q2 task for each pending issue */
+                    var tasks = [];
+                    for (var i = 0; i < queue.length; i++) {{
+                        if (stopRequested) break;
+
+                        var item = queue[i];
+                        spinner.textContent = (
+                            '⏳ Queuing ' + (i + 1) + '/' + queue.length + ': ' + item.title
+                        );
+
+                        try {{
+                            var fd = new FormData();
+                            fd.append('archive_issue_pk', item.pk);
+                            fd.append('force', force ? 'true' : 'false');
+
+                            var resp = await fetch('{ingest_url}', {{
+                                method: 'POST',
+                                headers: {{ 'X-CSRFToken': getCookie('csrftoken') }},
+                                body: fd,
+                            }});
+                            var data = await resp.json();
+
+                            if (data.task_id) {{
+                                tasks.push({{ taskId: data.task_id, title: item.title }});
+                            }} else if (data.sync_result) {{
+                                /* django_q not installed — already completed synchronously */
+                                tasks.push({{ taskId: null, title: item.title, done: true,
+                                             success: data.sync_result.status !== 'error' }});
+                            }}
+                        }} catch (e) {{
+                            tasks.push({{ taskId: null, title: item.title, done: true, success: false }});
+                        }}
+                    }}
+
+                    if (tasks.length === 0) {{
+                        setButtons(false);
+                        statusDiv.style.display = 'block';
+                        showResult('<div>⚠ Stopped before any tasks were queued.</div>');
+                        return;
+                    }}
+
+                    /* 3. Poll each async task until resolved (max 10 min each) */
+                    var completed = 0, failed = 0;
+                    var asyncTasks = tasks.filter(function(t) {{ return t.taskId && !t.done; }});
+                    var syncDone   = tasks.filter(function(t) {{ return t.done; }});
+
+                    /* Sync tasks already finished */
+                    syncDone.forEach(function(t) {{
+                        if (t.success) completed++; else failed++;
+                    }});
+
+                    spinner.textContent = (
+                        '⏳ Processing ' + asyncTasks.length + ' queued task(s)…'
+                    );
+
+                    var pollPromises = asyncTasks.map(function(t) {{
+                        return pollTask(t.taskId, 3000, 600000).then(function(outcome) {{
+                            if (outcome === 'success') completed++;
+                            else failed++;
+                            spinner.textContent = (
+                                '⏳ ' + (completed + failed) + '/' + tasks.length + ' done…'
+                            );
+                        }});
+                    }});
+
+                    await Promise.all(pollPromises);
+
+                    /* 4. Final result */
+                    setButtons(false);
+                    statusDiv.style.display = 'block';
+                    var icon = stopRequested ? '⚠' : (failed === 0 ? '✓' : '⚠');
+                    var msg  = stopRequested ? 'Stopped by user. ' : '';
+                    showResult(
+                        '<div style="font-weight:600;">' + icon + ' ' + msg +
+                        'Completed: ' + completed + ' · Failed: ' + failed + '</div>'
+                    );
+
+                    if (!stopRequested) {{
+                        setTimeout(function() {{ location.reload(); }}, 2500);
+                    }}
+
+                }} catch (err) {{
+                    setButtons(false);
+                    statusDiv.style.display = 'block';
+                    showResult(
+                        '<div style="color:var(--w-color-critical);">✗ Error: ' + err.message + '</div>'
+                    );
+                }}
+            }};
+
+        }})();
         </script>
         """)
 
@@ -247,29 +371,62 @@ def add_ingest_panel(request, panels):
 @hooks.register("after_publish_page")
 def auto_index_content(request, page):
     """
-    Automatically (re)index Articles and Literati profiles when published.
+    Automatically (re)index Articles, Literati authors, and Issue editorials
+    when a page is published.
+
+    Uses Django-Q2 async tasks when available; falls back to synchronous
+    transaction.on_commit() execution so the dev environment works without
+    a running qcluster.
     """
     from django.db import transaction
+
+    try:
+        from django_q.tasks import async_task
+        use_async = True
+    except ImportError:
+        use_async = False
+
     from articles.models import Article
     from literati.models import Literati
-    from the_librarian.services.indexing import index_article, index_author
+    from issue.models import Issue
 
-    # Check for Article (or a more specific subclass if needed)
-    if isinstance(page.specific, Article):
-        transaction.on_commit(lambda: index_article(page.specific))
-        
-    # Check for Literati (Author Profile)
-    elif isinstance(page.specific, Literati):
-        transaction.on_commit(lambda: index_author(page.specific))
+    specific = page.specific
+
+    if isinstance(specific, Article):
+        _pk = specific.pk
+        if use_async:
+            transaction.on_commit(lambda: async_task(
+                'the_librarian.tasks.async_ingest_article', _pk
+            ))
+        else:
+            from the_librarian.services.indexing import index_article
+            transaction.on_commit(lambda: index_article(_pk))
+
+    elif isinstance(specific, Literati):
+        _pk = specific.pk
+        if use_async:
+            transaction.on_commit(lambda: async_task(
+                'the_librarian.tasks.async_ingest_author', _pk
+            ))
+        else:
+            from the_librarian.services.indexing import index_author
+            transaction.on_commit(lambda: index_author(_pk))
+
+    elif isinstance(specific, Issue):
+        _pk = specific.pk
+        if use_async:
+            transaction.on_commit(lambda: async_task(
+                'the_librarian.tasks.async_index_editorial', _pk
+            ))
+        else:
+            from the_librarian.services.indexing import index_editorial
+            transaction.on_commit(lambda: index_editorial(_pk))
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ArchiveIssue — Wagtail Snippet admin
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ── ArchiveIssue Wagtail snippet viewset ─────────────────────────────────
 
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
-
 from the_librarian.models import ArchiveIssue
 
 
@@ -279,42 +436,25 @@ class ArchiveIssueViewSet(SnippetViewSet):
     icon        = "doc-full"
     menu_order  = 300
 
-    # Only reference fields / Django auto-methods that actually exist on the model.
-    # get_month_display is generated by Django for IntegerField(choices=MONTH_CHOICES).
     list_display  = ["title", "year", "get_month_display", "volume", "issue_number"]
     list_filter   = ["year", "volume"]
     search_fields = ["title", "description"]
-
-    # Default ordering in the list view.
-    # Using the class attribute is the correct Wagtail idiom — get_queryset
-    # lives on the *view* classes, not the viewset, so overriding it here
-    # would call super() on ViewSet which has no such method and returns None.
-    ordering = ["-year", "-month", "-issue_number"]
-
-    # ── Upload/write gating: Wagtail admin staff only ─────────────────────
-    # ArchiveIssue is NOT registered in Django admin (see admin.py).
-    # These methods enforce that even within Wagtail, only staff users can
-    # create, edit, or delete issues (i.e. upload archive PDFs).
-    # Non-staff Wagtail users (e.g. editors with limited access) are blocked.
+    ordering      = ["-year", "-month", "-issue_number"]
 
     def user_can_create(self, user):
-        """Only Wagtail staff may upload a new issue."""
         return user.is_active and user.is_staff
 
     def user_can_edit_obj(self, user, obj):
-        """Only Wagtail staff may edit an existing issue."""
         return user.is_active and user.is_staff
 
     def user_can_delete_obj(self, user, obj):
-        """Only Wagtail staff may delete an issue."""
         return user.is_active and user.is_staff
 
 
-# Register using the module-level call (Wagtail 5.0+)
 register_snippet(ArchiveIssueViewSet)
 
 
-# ── Auto-link ArchiveIssue ↔ ArchiveDocument after Wagtail snippet save ──
+# ── Auto-link ArchiveIssue ↔ ArchiveDocument after snippet save ──────────
 
 @hooks.register("after_create_snippet")
 @hooks.register("after_edit_snippet")
@@ -329,18 +469,17 @@ def auto_link_archive_document(request, instance):
     from the_librarian.models import ArchiveDocument
 
     if not isinstance(instance, ArchiveIssue):
-        return  # hook fires for all snippets; ignore non-ArchiveIssue ones
+        return
 
     if instance.archive_document_id:
-        return  # already linked; don't clobber an intentional manual link
+        return
 
     if not instance.pdf_file:
-        return  # nothing to match against
+        return
 
     basename = os.path.basename(instance.pdf_file.name)
     try:
-        doc = ArchiveDocument.objects.get(file_path=basename)
-        # Use .update() to avoid triggering ArchiveIssue.save() again
+        doc = ArchiveDocument.objects.get(filename=basename)
         ArchiveIssue.objects.filter(pk=instance.pk).update(archive_document=doc)
     except ArchiveDocument.DoesNotExist:
-        pass  # PDF not yet ingested; user can ingest later via the dashboard
+        pass  # PDF not yet ingested; will be linked when Q2 task completes
