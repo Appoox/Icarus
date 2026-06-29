@@ -306,6 +306,8 @@ TAGGIT_CASE_INSENSITIVE = True
 
 DAYS_BEFORE_PURGE = env.int("DAYS_BEFORE_PURGE", default=30)
 
+PAGE_LOCK_DAYS = env.int("PAGE_LOCK_DAYS", default=10)
+
 # Q2 cluster configuration
 # 'name' can be 'default', 'redis', or 'dq' (for database)
 # Adjust 'workers', 'timeout', and 'queue_limit' based on your server resources

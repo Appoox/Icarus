@@ -34,7 +34,7 @@ COPY requirements.txt /
 RUN uv pip install -r /requirements.txt
 
 # Use /app folder as a directory where the source code is stored.
-WORKDIR /app
+WORKDIR /Icarus
 
 # Set this directory to be owned by the "wagtail" user. This Wagtail project
 # uses SQLite, the folder needs to be owned by the user that
@@ -46,6 +46,13 @@ COPY --chown=wagtail:wagtail . .
 
 # Use user "wagtail" to run the build commands below and the server itself.
 USER wagtail
+
+# Set up the audio storage directory on the host volume.
+RUN mkdir -p /Icarus/media/audio
+RUN chown wagtail:wagtail /Icarus/media/audio
+
+# Cron Job for article locking
+RUN python manage.py setup_page_lock_schedule
 
 # Collect static files.
 RUN python manage.py collectstatic --noinput --clear

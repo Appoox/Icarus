@@ -11,6 +11,7 @@ from Icarus.settings.base import GOOGLE_CREDENTIALS_JSON
 
 logger = logging.getLogger(__name__)
 
+
 def generate_article_audio_task(article_id):
     from .models import Article
     from .signals import on_article_published  # Import the signal receiver to temporarily disconnect
@@ -33,7 +34,7 @@ def generate_article_audio_task(article_id):
                         block_text += f" - {attrib}"
                 else:
                     block_text = str(block.value)
-                
+
                 cleaned = strip_tags(block_text).strip()
                 if cleaned:
                     text_parts.append(cleaned)
@@ -54,7 +55,7 @@ def generate_article_audio_task(article_id):
 
     try:
         credentials_path = GOOGLE_CREDENTIALS_JSON
-        
+
         if credentials_path and os.path.exists(credentials_path):
             client = texttospeech.TextToSpeechClient.from_service_account_json(credentials_path)
         else:
@@ -65,14 +66,14 @@ def generate_article_audio_task(article_id):
         words = full_text.split()
         current_chunk = []
         current_byte_len = 0
-        
+
         for word in words:
             # Measure byte-length of word in UTF-8
             word_byte_len = len(word.encode('utf-8'))
-            
+
             # Plus 1 byte for the space used when joining words
             space_byte_len = 1 if current_chunk else 0
-            
+
             if current_byte_len + word_byte_len + space_byte_len > 4500:
                 # Store the full chunk and start a new one
                 chunks.append(" ".join(current_chunk))
@@ -81,7 +82,7 @@ def generate_article_audio_task(article_id):
             else:
                 current_chunk.append(word)
                 current_byte_len += word_byte_len + space_byte_len
-                
+
         if current_chunk:
             chunks.append(" ".join(current_chunk))
 
@@ -97,7 +98,7 @@ def generate_article_audio_task(article_id):
             audio_config = texttospeech.AudioConfig(
                 audio_encoding=texttospeech.AudioEncoding.MP3
             )
-            
+
             response = client.synthesize_speech(
                 input=synthesis_input,
                 voice=voice_params,
@@ -111,7 +112,7 @@ def generate_article_audio_task(article_id):
 
         # 5. Save the generated audio as a Wagtail Document
         Document = get_document_model()
-        
+
         if article.audio_file:
             old_doc = article.audio_file
             if old_doc.title.startswith("TTS Audio - "):
@@ -139,3 +140,104 @@ def generate_article_audio_task(article_id):
 
     except Exception as e:
         logger.error(f"Failed to generate TTS audio for Article {article.id}: {str(e)}")
+
+
+def lock_old_pages_task(days=None):
+    """
+    Lock Article and Issue pages whose first_published_at is older than
+    `days` days ago.  Locked pages require an explicit unlock in the Wagtail
+    admin before they can be edited — this guards published archive content
+    against accidental modification.
+
+    Designed to run on a nightly Django-Q2 schedule.  Set up the schedule
+    once with:
+        python manage.py setup_page_lock_schedule
+
+    Or trigger ad-hoc:
+        python manage.py lock_old_pages
+        python manage.py lock_old_pages --days 30 --async
+
+    Args:
+        days (int | None):
+            Lock pages published this many days ago or earlier.
+            Defaults to settings.PAGE_LOCK_DAYS (10).
+
+    Returns:
+        dict:
+            articles_locked  — number of Article pages locked this run
+            issues_locked    — number of Issue pages locked this run
+            cutoff_date      — ISO date string (YYYY-MM-DD) of the cutoff
+            threshold_days   — the effective `days` value used
+    """
+    from datetime import timedelta
+    from django.utils import timezone
+    from wagtail.models import Page
+
+    if days is None:
+        days = getattr(settings, 'PAGE_LOCK_DAYS', 10)
+
+    cutoff = timezone.now() - timedelta(days=days)
+    now = timezone.now()
+
+    # Deferred to avoid circular imports at module load time.
+    from articles.models import Article
+    from issue.models import Issue
+
+    # ── Gather PKs ──────────────────────────────────────────────────────
+    # Filter only live, unlocked pages that have a confirmed publish timestamp.
+    # Collecting PKs first (values_list) keeps this cheap — no ORM instance
+    # construction until the bulk update.
+
+    article_pks = list(
+        Article.objects.live()
+        .filter(
+            locked=False,
+            first_published_at__isnull=False,
+            first_published_at__lte=cutoff,
+        )
+        .values_list('pk', flat=True)
+    )
+
+    issue_pks = list(
+        Issue.objects.live()
+        .filter(
+            locked=False,
+            first_published_at__isnull=False,
+            first_published_at__lte=cutoff,
+        )
+        .values_list('pk', flat=True)
+    )
+
+    # ── Bulk update via the base Page table ─────────────────────────────
+    # Updating through Page.objects (not Article/Issue managers) writes only
+    # to wagtailcore_page — no MTI child-table writes, one query per type.
+    # locked_by_id=None marks these as system locks (no individual user
+    # responsible), which Wagtail renders as "Locked" without a username.
+
+    article_count = Page.objects.filter(pk__in=article_pks).update(
+        locked=True,
+        locked_at=now,
+        locked_by_id=None,
+    )
+
+    issue_count = Page.objects.filter(pk__in=issue_pks).update(
+        locked=True,
+        locked_at=now,
+        locked_by_id=None,
+    )
+
+    logger.info(
+        "lock_old_pages_task: locked %d article(s) and %d issue(s) "
+        "(cutoff: %s, threshold: %d day(s)).",
+        article_count,
+        issue_count,
+        cutoff.date(),
+        days,
+    )
+
+    return {
+        "articles_locked": article_count,
+        "issues_locked": issue_count,
+        "cutoff_date": str(cutoff.date()),
+        "threshold_days": days,
+    }
