@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     "reader",
     "axes",
     "kalapila",
+    "postbox",
     "hitcount",
     "the_librarian",
     "wagtail.contrib.forms",

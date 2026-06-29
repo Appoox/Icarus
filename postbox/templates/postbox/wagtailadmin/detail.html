@@ -1,0 +1,237 @@
+{% extends "wagtailadmin/base.html" %}
+
+{% block titletag %}Postbox #{{ obj.pk }}{% endblock %}
+
+{% block content %}
+<div class="nice-padding">
+
+    {# ── Back link ────────────────────────────────────────────────── #}
+    <a href="{{ index_url }}"
+       class="button button-secondary button-small"
+       style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to list
+    </a>
+
+    {# ── Page header ──────────────────────────────────────────────── #}
+    <header class="w-slim-header" style="margin-bottom:24px;">
+        <h1 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            Postbox #{{ obj.pk }}
+
+            {# Type badge #}
+            {% if obj.feedback_type == 'bug' %}
+            <span style="background:#ef4444;color:#fff;border-radius:20px;
+                         padding:3px 12px;font-size:.68em;font-weight:700;">
+                🐛 Bug Report
+            </span>
+            {% elif obj.feedback_type == 'suggestion' %}
+            <span style="background:#3b82f6;color:#fff;border-radius:20px;
+                         padding:3px 12px;font-size:.68em;font-weight:700;">
+                💡 Suggestion
+            </span>
+            {% elif obj.feedback_type == 'content' %}
+            <span style="background:#f59e0b;color:#fff;border-radius:20px;
+                         padding:3px 12px;font-size:.68em;font-weight:700;">
+                📝 Content Issue
+            </span>
+            {% else %}
+            <span style="background:#6b7280;color:#fff;border-radius:20px;
+                         padding:3px 12px;font-size:.68em;font-weight:700;">
+                💬 General
+            </span>
+            {% endif %}
+
+            {# Review status badge #}
+            {% if obj.is_reviewed %}
+            <span style="background:#d1fae5;color:#065f46;border-radius:20px;
+                         padding:3px 12px;font-size:.68em;font-weight:700;">
+                ✓ Reviewed
+            </span>
+            {% else %}
+            <span style="background:#fee2e2;color:#991b1b;border-radius:20px;
+                         padding:3px 12px;font-size:.68em;font-weight:700;">
+                Pending review
+            </span>
+            {% endif %}
+        </h1>
+    </header>
+
+    {# ── Two-column layout: content left, admin panel right ───────── #}
+    <div style="display:grid;
+                grid-template-columns:1fr 340px;
+                gap:2rem;align-items:start;">
+
+        <div>
+
+            {# Metadata strip #}
+            <div style="display:flex;gap:2rem;flex-wrap:wrap;
+                        padding:12px 16px;
+                        background:var(--w-color-surface-menus);
+                        border-radius:6px;margin-bottom:1.5rem;
+                        font-size:.88em;">
+
+                <div>
+                    <span style="display:block;font-size:.68em;font-weight:600;
+                                 text-transform:uppercase;
+                                 color:var(--w-color-text-meta);margin-bottom:3px;">
+                        Submitted by
+                    </span>
+                    <strong>{{ obj.user.name|default:obj.user }}</strong>
+                </div>
+
+                <div>
+                    <span style="display:block;font-size:.68em;font-weight:600;
+                                 text-transform:uppercase;
+                                 color:var(--w-color-text-meta);margin-bottom:3px;">
+                        Date
+                    </span>
+                    {{ obj.submitted_at|date:"d F Y, H:i" }}
+                </div>
+
+                {% if obj.rating %}
+                <div>
+                    <span style="display:block;font-size:.68em;font-weight:600;
+                                 text-transform:uppercase;
+                                 color:var(--w-color-text-meta);margin-bottom:3px;">
+                        Rating
+                    </span>
+                    <span style="color:#f59e0b;letter-spacing:1px;">
+                        {% for i in "12345" %}{% if forloop.counter <= obj.rating %}★{% else %}☆{% endif %}{% endfor %}
+                    </span>
+                    <span style="color:var(--w-color-text-meta);
+                                 font-size:.85em;margin-left:4px;">
+                        ({{ obj.rating }}/5)
+                    </span>
+                </div>
+                {% endif %}
+
+            </div>
+
+            {# Full message #}
+            <section style="margin-bottom:1.5rem;">
+                <h2 style="font-size:.68em;font-weight:600;text-transform:uppercase;
+                           color:var(--w-color-text-meta);margin:0 0 8px;">
+                    Feedback
+                </h2>
+                <div style="background:#fff;
+                            border:1px solid var(--w-color-border-furniture);
+                            border-radius:6px;padding:1.25rem;
+                            font-size:.95em;line-height:1.7;
+                            white-space:pre-wrap;
+                            color:var(--w-color-text-label);">{{ obj.feedback }}</div>
+            </section>
+
+            {# Page context #}
+            {% if obj.page_context %}
+            <section style="margin-bottom:1.5rem;">
+                <h2 style="font-size:.68em;font-weight:600;text-transform:uppercase;
+                           color:var(--w-color-text-meta);margin:0 0 6px;">
+                    Submitted from
+                </h2>
+                <div style="display:flex;align-items:center;gap:8px;
+                            background:var(--w-color-surface-menus);
+                            border-radius:4px;padding:8px 12px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" aria-hidden="true"
+                         style="flex-shrink:0;color:var(--w-color-text-meta);">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10
+                                 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <code style="font-size:.82em;word-break:break-all;
+                                 color:var(--w-color-text-label);">
+                        {{ obj.page_context }}
+                    </code>
+                </div>
+            </section>
+            {% endif %}
+
+        </div>
+
+
+        <div>
+            <div style="background:#fff;
+                        border:1px solid var(--w-color-border-furniture);
+                        border-radius:8px;padding:1.5rem;
+                        position:sticky;top:1rem;">
+
+                <h2 style="font-size:.68em;font-weight:600;text-transform:uppercase;
+                           color:var(--w-color-text-meta);margin:0 0 1.25rem;">
+                    Admin actions
+                </h2>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {# Reviewed toggle #}
+                    <div style="display:flex;align-items:center;gap:10px;
+                                padding:10px 12px;
+                                background:var(--w-color-surface-menus);
+                                border-radius:6px;margin-bottom:1.25rem;">
+                        <input type="checkbox"
+                               id="is_reviewed"
+                               name="is_reviewed"
+                               value="1"
+                               {% if obj.is_reviewed %}checked{% endif %}
+                               style="width:16px;height:16px;cursor:pointer;
+                                      flex-shrink:0;">
+                        <label for="is_reviewed"
+                               style="font-size:.88em;font-weight:600;
+                                      cursor:pointer;user-select:none;">
+                            Mark as reviewed
+                        </label>
+                    </div>
+
+                    {# Admin notes #}
+                    <div style="margin-bottom:1.25rem;">
+                        <label for="admin_notes"
+                               style="display:block;font-size:.68em;font-weight:600;
+                                      text-transform:uppercase;
+                                      color:var(--w-color-text-meta);
+                                      margin-bottom:6px;">
+                            Internal notes
+                        </label>
+                        <textarea id="admin_notes"
+                                  name="admin_notes"
+                                  rows="5"
+                                  placeholder="Not visible to the user…"
+                                  style="width:100%;padding:8px 10px;
+                                         font-family:inherit;font-size:.88em;
+                                         border:1px solid var(--w-color-border-furniture);
+                                         border-radius:4px;resize:vertical;
+                                         background:var(--w-color-surface-field);
+                                         color:var(--w-color-text-label);
+                                         box-sizing:border-box;
+                                         line-height:1.55;">{{ obj.admin_notes }}</textarea>
+                    </div>
+
+                    <button type="submit"
+                            class="button button-primary"
+                            style="width:100%;">
+                        Save
+                    </button>
+                </form>
+
+                {# Previous / next navigation if helpful #}
+                <div style="margin-top:1.25rem;padding-top:1rem;
+                            border-top:1px solid var(--w-color-border-furniture);
+                            text-align:center;">
+                    <a href="{{ index_url }}"
+                       style="font-size:.82em;color:var(--w-color-text-meta);
+                              text-decoration:none;">
+                        ← Back to feedback list
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

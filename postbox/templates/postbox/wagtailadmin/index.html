@@ -1,0 +1,358 @@
+{% extends "wagtailadmin/base.html" %}
+
+{% block titletag %}Postbox{% endblock %}
+
+{% block content %}
+{# Added a custom style block to handle the row hover effect #}
+<style>
+    .postbox-row {
+        transition: background-color 0.15s ease;
+    }
+    .postbox-row:hover {
+        /* Uses Wagtail's native hover color variables, falling back to a light grey */
+        background-color: var(--w-color-surface-menu-item-active, rgba(0,0,0,0.04)) !important;
+    }
+</style>
+
+<div class="nice-padding">
+
+    {# ── Page header ─────────────────────────────────────────────── #}
+    <header class="w-slim-header" style="margin-bottom:24px;">
+        <div style="display:flex;align-items:baseline;
+                    justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <h1 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" aria-hidden="true"
+                     style="flex-shrink:0;">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Postbox
+                {% if unreviewed_total %}
+                <span style="background:#ef4444;color:#fff;border-radius:20px;
+                             padding:1px 10px;font-size:.7em;font-weight:700;
+                             vertical-align:middle;">
+                    {{ unreviewed_total }} unreviewed
+                </span>
+                {% endif %}
+            </h1>
+            <span style="color:var(--w-color-text-meta);font-size:.88em;">
+                {{ total }} submission{{ total|pluralize }} total
+            </span>
+        </div>
+    </header>
+
+    {# ── Filter bar ───────────────────────────────────────────────── #}
+    <form method="get"
+          style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;
+                 margin-bottom:24px;padding:14px 18px;
+                 background:var(--w-color-surface-menus);border-radius:6px;">
+
+        {# Preserve sort when filters change #}
+        <input type="hidden" name="ordering" value="{{ ordering }}">
+
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.7em;font-weight:600;text-transform:uppercase;
+                          color:var(--w-color-text-meta);">Type</label>
+            <select name="type" onchange="this.form.submit()"
+                    style="padding:6px 10px;border-radius:4px;min-width:150px;
+                           border:1px solid var(--w-color-border-furniture);
+                           background:var(--w-color-surface-field);
+                           color:var(--w-color-text-label);">
+                <option value="">All types</option>
+                {% for val, label in feedback_types %}
+                <option value="{{ val }}"
+                        {% if filters.type == val %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.7em;font-weight:600;text-transform:uppercase;
+                          color:var(--w-color-text-meta);">Status</label>
+            <select name="reviewed" onchange="this.form.submit()"
+                    style="padding:6px 10px;border-radius:4px;min-width:140px;
+                           border:1px solid var(--w-color-border-furniture);
+                           background:var(--w-color-surface-field);
+                           color:var(--w-color-text-label);">
+                <option value="">All statuses</option>
+                <option value="0"
+                        {% if filters.reviewed == '0' %}selected{% endif %}>
+                    Unreviewed
+                </option>
+                <option value="1"
+                        {% if filters.reviewed == '1' %}selected{% endif %}>
+                    Reviewed
+                </option>
+            </select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.7em;font-weight:600;text-transform:uppercase;
+                          color:var(--w-color-text-meta);">Rating</label>
+            <select name="rating" onchange="this.form.submit()"
+                    style="padding:6px 10px;border-radius:4px;min-width:120px;
+                           border:1px solid var(--w-color-border-furniture);
+                           background:var(--w-color-surface-field);
+                           color:var(--w-color-text-label);">
+                <option value="">Any rating</option>
+                <option value="1" {% if filters.rating == '1' %}selected{% endif %}>1 ★</option>
+                <option value="2" {% if filters.rating == '2' %}selected{% endif %}>2 ★★</option>
+                <option value="3" {% if filters.rating == '3' %}selected{% endif %}>3 ★★★</option>
+                <option value="4" {% if filters.rating == '4' %}selected{% endif %}>4 ★★★★</option>
+                <option value="5" {% if filters.rating == '5' %}selected{% endif %}>5 ★★★★★</option>
+            </select>
+        </div>
+
+        {% if has_filters %}
+        <a href="{{ clear_url }}"
+           class="button button-secondary button-small"
+           style="align-self:flex-end;">
+            ✕ Clear filters
+        </a>
+        {% endif %}
+    </form>
+
+    {# ── Sortable table ───────────────────────────────────────────── #}
+    <div style="overflow-x:auto;">
+    <table class="listing"
+           style="width:100%;border-collapse:collapse;min-width:680px;">
+        <thead>
+            <tr>
+
+                {# Helper macro — inline since Django templates have no macros #}
+                {# Type #}
+                <th style="width:120px;padding:.5rem .75rem;">
+                    <a href="{{ sort_info.feedback_type.url }}"
+                       style="display:inline-flex;align-items:center;gap:5px;
+                              text-decoration:none;color:inherit;
+                              {% if sort_info.feedback_type.active %}font-weight:700;{% endif %}">
+                        Type
+                        <span style="font-size:.75em;
+                                     opacity:{% if sort_info.feedback_type.icon %}1{% else %}.3{% endif %};">
+                            {{ sort_info.feedback_type.icon|default:"↕" }}
+                        </span>
+                    </a>
+                </th>
+
+                {# Message — not sortable (free text) #}
+                <th style="padding:.5rem .75rem;">Feedback</th>
+
+                {# Rating #}
+                <th style="width:90px;padding:.5rem .75rem;">
+                    <a href="{{ sort_info.rating.url }}"
+                       style="display:inline-flex;align-items:center;gap:5px;
+                              text-decoration:none;color:inherit;
+                              {% if sort_info.rating.active %}font-weight:700;{% endif %}">
+                        Rating
+                        <span style="font-size:.75em;
+                                     opacity:{% if sort_info.rating.icon %}1{% else %}.3{% endif %};">
+                            {{ sort_info.rating.icon|default:"↕" }}
+                        </span>
+                    </a>
+                </th>
+
+                {# User #}
+                <th style="width:150px;padding:.5rem .75rem;">
+                    <a href="{{ sort_info.user__name.url }}"
+                       style="display:inline-flex;align-items:center;gap:5px;
+                              text-decoration:none;color:inherit;
+                              {% if sort_info.user__name.active %}font-weight:700;{% endif %}">
+                        User
+                        <span style="font-size:.75em;
+                                     opacity:{% if sort_info.user__name.icon %}1{% else %}.3{% endif %};">
+                            {{ sort_info.user__name.icon|default:"↕" }}
+                        </span>
+                    </a>
+                </th>
+
+                {# Submitted #}
+                <th style="width:120px;padding:.5rem .75rem;">
+                    <a href="{{ sort_info.submitted_at.url }}"
+                       style="display:inline-flex;align-items:center;gap:5px;
+                              text-decoration:none;color:inherit;
+                              {% if sort_info.submitted_at.active %}font-weight:700;{% endif %}">
+                        Submitted
+                        <span style="font-size:.75em;
+                                     opacity:{% if sort_info.submitted_at.icon %}1{% else %}.3{% endif %};">
+                            {{ sort_info.submitted_at.icon|default:"↕" }}
+                        </span>
+                    </a>
+                </th>
+
+                {# Status #}
+                <th style="width:120px;padding:.5rem .75rem;">
+                    <a href="{{ sort_info.is_reviewed.url }}"
+                       style="display:inline-flex;align-items:center;gap:5px;
+                              text-decoration:none;color:inherit;
+                              {% if sort_info.is_reviewed.active %}font-weight:700;{% endif %}">
+                        Status
+                        <span style="font-size:.75em;
+                                     opacity:{% if sort_info.is_reviewed.icon %}1{% else %}.3{% endif %};">
+                            {{ sort_info.is_reviewed.icon|default:"↕" }}
+                        </span>
+                    </a>
+                </th>
+
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for fb in page_obj %}
+            {# FIXED: Added postbox-row class, onclick handler, and cursor:pointer to make the whole row clickable #}
+            <tr class="postbox-row"
+                onclick="window.location='{% url 'icarus_postbox_detail' fb.pk %}';"
+                style="border-bottom:1px solid var(--w-color-grey-100);
+                       vertical-align:top; cursor:pointer;
+                       {% if not fb.is_reviewed %}
+                       background:rgba(239,68,68,.025);
+                       {% endif %}">
+
+                {# Type badge #}
+                <td style="padding:12px 10px;">
+                    {% if fb.feedback_type == 'bug' %}
+                    <span style="background:#ef4444;color:#fff;border-radius:20px;
+                                 padding:2px 9px;font-size:.72em;font-weight:700;
+                                 white-space:nowrap;">
+                        🐛 Bug
+                    </span>
+                    {% elif fb.feedback_type == 'suggestion' %}
+                    <span style="background:#3b82f6;color:#fff;border-radius:20px;
+                                 padding:2px 9px;font-size:.72em;font-weight:700;
+                                 white-space:nowrap;">
+                        💡 Suggestion
+                    </span>
+                    {% elif fb.feedback_type == 'content' %}
+                    <span style="background:#f59e0b;color:#fff;border-radius:20px;
+                                 padding:2px 9px;font-size:.72em;font-weight:700;
+                                 white-space:nowrap;">
+                        📝 Content
+                    </span>
+                    {% else %}
+                    <span style="background:#6b7280;color:#fff;border-radius:20px;
+                                 padding:2px 9px;font-size:.72em;font-weight:700;
+                                 white-space:nowrap;">
+                        💬 General
+                    </span>
+                    {% endif %}
+                </td>
+
+                {# Message — links to detail — with page context sub-line #}
+                <td style="padding:12px 10px;max-width:340px;">
+                    {# Note: Kept the anchor tag here so users can still right-click or middle-click the specific text if they prefer #}
+                    <a href="{% url 'icarus_postbox_detail' fb.pk %}"
+                       style="text-decoration:none;
+                              color:var(--w-color-text-label);
+                              font-weight:{% if not fb.is_reviewed %}600{% else %}400{% endif %};">
+                        {{ fb.feedback|truncatechars:110 }}
+                    </a>
+                    {% if fb.page_context %}
+                    <div style="font-size:.75em;color:var(--w-color-text-meta);
+                                margin-top:3px;overflow:hidden;
+                                text-overflow:ellipsis;white-space:nowrap;
+                                max-width:300px;">
+                        {{ fb.page_context|truncatechars:65 }}
+                    </div>
+                    {% endif %}
+                </td>
+
+                {# Rating stars #}
+                <td style="padding:12px 10px;white-space:nowrap;">
+                    {% if fb.rating %}
+                    <span style="color:#f59e0b;letter-spacing:1px;">
+                        {% for i in "12345" %}{% if forloop.counter <= fb.rating %}★{% else %}☆{% endif %}{% endfor %}
+                    </span>
+                    {% else %}
+                    <span style="color:var(--w-color-text-meta);">—</span>
+                    {% endif %}
+                </td>
+
+                {# User #}
+                <td style="padding:12px 10px;font-weight:600;
+                           color:var(--w-color-text-label);
+                           white-space:nowrap;overflow:hidden;
+                           text-overflow:ellipsis;max-width:140px;">
+                    {{ fb.user.name|default:fb.user }}
+                </td>
+
+                {# Submitted date + time #}
+                <td style="padding:12px 10px;
+                           color:var(--w-color-text-meta);
+                           font-size:.84em;white-space:nowrap;">
+                    {{ fb.submitted_at|date:"d M Y" }}<br>
+                    <span style="font-size:.9em;">
+                        {{ fb.submitted_at|time:"H:i" }}
+                    </span>
+                </td>
+
+                {# Status badge #}
+                <td style="padding:12px 10px;">
+                    {% if fb.is_reviewed %}
+                    <span style="background:#d1fae5;color:#065f46;
+                                 border-radius:20px;padding:2px 10px;
+                                 font-size:.72em;font-weight:700;
+                                 white-space:nowrap;">
+                        ✓ Reviewed
+                    </span>
+                    {% else %}
+                    <span style="background:#fee2e2;color:#991b1b;
+                                 border-radius:20px;padding:2px 10px;
+                                 font-size:.72em;font-weight:700;
+                                 white-space:nowrap;">
+                        Pending
+                    </span>
+                    {% endif %}
+                </td>
+
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6"
+                    style="padding:2.5rem;text-align:center;
+                           color:var(--w-color-text-meta);font-style:italic;">
+                    No feedback submissions found.
+                    {% if has_filters %}
+                    <a href="{{ clear_url }}" style="margin-left:8px;">
+                        Clear filters
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+    {# ── Pagination ───────────────────────────────────────────────── #}
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav style="display:flex;align-items:center;justify-content:center;
+                gap:14px;padding:22px 0;">
+
+        {% if prev_url %}
+        <a href="{{ prev_url }}"
+           class="button button-secondary button-small">← Previous</a>
+        {% else %}
+        <button class="button button-secondary button-small"
+                disabled>← Previous</button>
+        {% endif %}
+
+        <span style="color:var(--w-color-text-meta);font-size:.88em;">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            &nbsp;·&nbsp;
+            {{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}
+        </span>
+
+        {% if next_url %}
+        <a href="{{ next_url }}"
+           class="button button-secondary button-small">Next →</a>
+        {% else %}
+        <button class="button button-secondary button-small"
+                disabled>Next →</button>
+        {% endif %}
+
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}

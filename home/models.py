@@ -203,7 +203,8 @@ DYNAMIC_URL_CHOICES = [
     # ── Topic / analytics destinations ─────────────────────────────
     ('most_read_topics_url',    'Most Read Topics — rolling 30-day most read'),
     ('most_read_authors_url',   'Most Read Authors — rolling 30-day most read'),
-    ('archive_list_url',       'Archive')
+    ('archive_list_url',       'Archive'),
+    ('postbox_url', 'Postbox')
 ]
 
 
