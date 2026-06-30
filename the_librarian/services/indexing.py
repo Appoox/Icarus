@@ -216,3 +216,40 @@ def index_editorial(issue):
         issue.id, issue.title, len(chunks_to_create),
     )
     return len(chunks_to_create)
+
+
+def index_topic(topic):
+    """
+    Index a Topic snippet page to allow direct topical similarity search.
+    """
+    from issue.models import Topic
+    if isinstance(topic, (int, str)):
+        topic = Topic.objects.get(pk=topic)
+
+    DocumentChunk.objects.filter(topic=topic).delete()
+
+    full_text = f"{topic.name}".strip()
+
+    if not full_text:
+        return 0
+
+    embeddings = embed_texts([full_text])
+
+    chunks_to_create = [
+        DocumentChunk(
+            topic=topic,
+            chunk_text=full_text,
+            embedding=embeddings[0],
+            language='ml', 
+            chunk_index=0,
+        )
+    ]
+
+    with transaction.atomic():
+        DocumentChunk.objects.bulk_create(chunks_to_create)
+
+    logger.info(
+        "Indexed topic %s ('%s'): 1 chunk created.",
+        topic.id, topic.name,
+    )
+    return 1

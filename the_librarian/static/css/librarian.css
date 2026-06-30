@@ -128,11 +128,24 @@
   border-radius: 8px;
   padding: 1.2rem 1.35rem;
   margin-bottom: .9rem;
-  transition: box-shadow .2s;
+  /* transition: box-shadow .2s; */
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .result-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.stretched-link::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    content: "";
 }
 
 .result-header {

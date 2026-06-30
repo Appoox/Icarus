@@ -423,6 +423,36 @@ def auto_index_content(request, page):
             transaction.on_commit(lambda: index_editorial(_pk))
 
 
+@hooks.register("after_create_snippet")
+@hooks.register("after_edit_snippet")
+def index_topic_snippet(request, instance):
+    """
+    Automatically index Topic snippets when created or edited.
+    No .specific() check is required for Snippets.
+    """
+    from django.db import transaction
+    from issue.models import Topic
+    
+    # Ensure we only process Topic instances
+    if not isinstance(instance, Topic):
+        return
+
+    try:
+        from django_q.tasks import async_task
+        use_async = True
+    except ImportError:
+        use_async = False
+
+    _pk = instance.pk
+    
+    if use_async:
+        transaction.on_commit(lambda: async_task(
+            'the_librarian.tasks.async_index_topic', _pk
+        ))
+    else:
+        from the_librarian.services.indexing import index_topic
+        transaction.on_commit(lambda: index_topic(_pk))
+
 # ── ArchiveIssue Wagtail snippet viewset ─────────────────────────────────
 
 from wagtail.snippets.models import register_snippet

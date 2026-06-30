@@ -47,11 +47,21 @@ class ArchiveDocument(models.Model):
         verbose_name_plural = "Archive Documents"
 
     def __str__(self):
+        return self.display_title
+
+    @property
+    def display_title(self):
+        """
+        Returns the human-readable title of the associated ArchiveIssue if it exists,
+        otherwise falls back to the raw filename.
+        """
+        if hasattr(self, 'Archive_Issue') and self.Archive_Issue:
+            return self.Archive_Issue.title
         return self.filename
 
 
 class DocumentChunk(models.Model):
-    """Stores semantically chunked + embedded text from archive PDFs, articles, authors, and issue editorials."""
+    """Stores semantically chunked + embedded text from archive PDFs, articles, authors, issues, and topics."""
     document = models.ForeignKey(
         ArchiveDocument,
         on_delete=models.CASCADE,
@@ -73,9 +83,17 @@ class DocumentChunk(models.Model):
         null=True,
         blank=True
     )
-    # ── NEW: Issue editorial chunks ────────────────────────────────────────
+    # ── Issue editorial chunks ─────────────────────────────────────────────
     issue = models.ForeignKey(
         'issue.Issue',
+        on_delete=models.CASCADE,
+        related_name='chunks',
+        null=True,
+        blank=True
+    )
+    # ── NEW: Related Topic chunks ──────────────────────────────────────────
+    topic = models.ForeignKey(
+        'issue.Topic',
         on_delete=models.CASCADE,
         related_name='chunks',
         null=True,
@@ -121,13 +139,15 @@ class DocumentChunk(models.Model):
 
     def __str__(self):
         if self.document_id:
-            return f"{self.document.filename} — p.{self.page_number} chunk#{self.chunk_index}"
+            return f"{self.document.display_title} — p.{self.page_number} chunk#{self.chunk_index}"
         elif self.article_id:
             return f"Article: {self.article.title} — chunk#{self.chunk_index}"
         elif self.author_id:
             return f"Author: {self.author.title} — chunk#{self.chunk_index}"
         elif self.issue_id:
             return f"Editorial: {self.issue.title} — chunk#{self.chunk_index}"
+        elif self.topic_id:
+            return f"Topic: {self.topic.name} — chunk#{self.chunk_index}"
         return f"Unknown Source — chunk#{self.chunk_index}"
 
 

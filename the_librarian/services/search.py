@@ -4,8 +4,8 @@ Similarity search service for The Librarian.
 Uses pgvector's cosine distance operator (<=>) to find the most
 similar document chunks to a query.
 
-Supports chunks from four sources: ArchiveDocument PDFs, Articles,
-Literati authors, and Issue editorials (issue FK, added in migration 0004).
+Supports chunks from five sources: ArchiveDocument PDFs, Articles,
+Literati authors, Issue editorials, and Related Topics.
 
 Improvements applied
 --------------------
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 def _format_chunk_result(chunk, score=None, search_type=None):
     """
     Unified formatter for search results across PDFs, Articles, Authors,
-    and Issue editorials.
+    Issue editorials, and Topics.
     """
     res = {
         "chunk_id": chunk.id,
@@ -68,6 +68,14 @@ def _format_chunk_result(chunk, score=None, search_type=None):
             "url": chunk.issue.url,
             "issue_id": chunk.issue.id,
         })
+    elif chunk.topic_id:
+        # Added handling for the new Topic chunk format
+        res.update({
+            "type": "topic",
+            "title": chunk.topic.name,
+            "topic_id": chunk.topic.id,
+            "color": getattr(chunk.topic, 'color', '#000000'),
+        })
     else:
         res.update({
             "type": "unknown",
@@ -98,7 +106,7 @@ def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
         .annotate(distance=CosineDistance("embedding", query_embedding))
         .filter(distance__lte=1.0 - min_score)
         .order_by("distance")
-        .select_related("document", "article", "author", "issue")[:top_k]
+        .select_related("document", "article", "author", "issue", "topic")[:top_k]
     )
 
     output = []
@@ -125,7 +133,7 @@ def search_keyword(query_text: str, top_k: int = 5, min_score: float = 0.0001):
         .annotate(rank=SearchRank(F("search_vector"), query))
         .filter(rank__gte=min_score)
         .order_by("-rank")
-        .select_related("document", "article", "author", "issue")[:top_k]
+        .select_related("document", "article", "author", "issue", "topic")[:top_k]
     )
 
     output = []
@@ -198,7 +206,7 @@ def search_by_document(
         .annotate(distance=CosineDistance("embedding", query_embedding))
         .filter(distance__lte=1.0 - min_score)
         .order_by("distance")
-        .select_related("document", "article", "author", "issue")[:top_k]
+        .select_related("document", "article", "author", "issue", "topic")[:top_k]
     )
 
     output = []

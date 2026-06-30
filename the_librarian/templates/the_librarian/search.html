@@ -11,8 +11,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Search The Archive</h1>
-        <p class="subtitle">Semantic & Keyword search across PDFs, Articles, and Author profiles</p>
+        <h1>അര്‍ക്കൈവില്‍ തിരയൂ</h1>
+        <p class="subtitle">പദാര്‍ത്ഥപരമോ വാക്കുകളോ ഉപയോഗിച്ച് ശാസ്ത്രഗതിയല്‍ മുഴുവന്‍ തിരയൂ</p>
 
         <form method="get" class="search-form">
             <input type="text"
@@ -44,7 +44,6 @@
             </div>
         </div>
 
-        <!-- Hidden form inputs for auto-submit on select change -->
         <form id="search-form-proxy" method="get" style="display:none">
             <input type="hidden" name="q" value="{{ query }}">
         </form>
@@ -63,8 +62,12 @@
                                 📰 {{ result.title }}
                             {% elif result.type == 'author' %}
                                 👤 {{ result.title }}
+                            {% elif result.type == 'editorial' %}
+                                ✍️ {{ result.title }}
+                            {% elif result.type == 'topic' %}
+                                🏷️ {{ result.title }}
                             {% else %}
-                                {{ result.title|default:result.document_name }}
+                                {% if result.title %}{{ result.title }}{% else %}{{ result.document_name }}{% endif %}
                             {% endif %}
                         </span>
                         <span class="badge badge-{{ result.search_type|default:'similarity' }}">
@@ -76,22 +79,38 @@
                             <span class="result-page">Article</span>
                         {% elif result.type == 'author' %}
                             <span class="result-page">Author Profile</span>
+                        {% elif result.type == 'editorial' %}
+                            <span class="result-page">Editorial</span>
+                        {% elif result.type == 'topic' %}
+                            <span class="result-page">Topic</span>
                         {% endif %}
                     </div>
                     <div class="result-score">Relevance: {{ result.score }}</div>
                     <p class="result-text">{{ result.chunk_text }}</p>
                     
-                    {% if result.type == 'pdf' or result.document_id %}
+                    {% if result.type == 'pdf' %}
                         <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}"
-                           class="result-link"
+                           class="result-link stretched-link"
                            target="_blank">
                             📖 Open PDF at page {{ result.page_number|default:1 }} →
                         </a>
+                    {% elif result.type == 'topic' %}
+                        {% if result.url %}
+                            <a href="{{ result.url }}" class="result-link stretched-link">🔗 Explore Topic →</a>
+                        {% else %}
+                            <a href="?q={{ result.title|urlencode }}&mode={{ mode }}" class="result-link stretched-link">🔗 Explore Topic →</a>
+                        {% endif %}
                     {% elif result.url %}
                         <a href="{{ result.url }}"
-                           class="result-link"
+                           class="result-link stretched-link"
                            target="_blank">
                             🔗 View Full Page →
+                        </a>
+                    {% elif result.document_id %}
+                        <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}"
+                           class="result-link stretched-link"
+                           target="_blank">
+                            📖 Open Document →
                         </a>
                     {% endif %}
                 </div>
