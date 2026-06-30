@@ -88,17 +88,29 @@
                     <div class="result-score">Relevance: {{ result.score }}</div>
                     <p class="result-text">{{ result.chunk_text }}</p>
                     
-                    {% if result.type == 'pdf' or result.document_id %}
+                    {% if result.type == 'pdf' %}
                         <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}"
-                           class="result-link"
+                           class="result-link stretched-link"
                            target="_blank">
                             📖 Open PDF at page {{ result.page_number|default:1 }} →
                         </a>
+                    {% elif result.type == 'topic' %}
+                        {% if result.url %}
+                            <a href="{{ result.url }}" class="result-link stretched-link">🔗 Explore Topic →</a>
+                        {% else %}
+                            <a href="?q={{ result.title|urlencode }}&mode={{ mode }}" class="result-link stretched-link">🔗 Explore Topic →</a>
+                        {% endif %}
                     {% elif result.url %}
                         <a href="{{ result.url }}"
-                           class="result-link"
+                           class="result-link stretched-link"
                            target="_blank">
                             🔗 View Full Page →
+                        </a>
+                    {% elif result.document_id %}
+                        <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}"
+                           class="result-link stretched-link"
+                           target="_blank">
+                            📖 Open Document →
                         </a>
                     {% endif %}
                 </div>

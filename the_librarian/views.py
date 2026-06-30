@@ -4,6 +4,8 @@ from pathlib import Path
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, Http404, FileResponse
 from django.conf import settings
+from django.urls import reverse
+from django.apps import apps
 from django.views.decorators.http import require_GET, require_POST
 
 import logging
@@ -28,7 +30,9 @@ def _resolve_pdf_display_titles(results):
     """
     Collects document IDs from results, queries titles efficiently,
     and maps issue save titles onto PDF result blocks.
+    Also dynamically resolves authentic URLs for Topics.
     """
+    # 1. Resolve PDFs
     pdf_doc_ids = [r["document_id"] for r in results if r.get("type") == "pdf" and "document_id" in r]
     if pdf_doc_ids:
         docs = ArchiveDocument.objects.filter(id__in=pdf_doc_ids).select_related('Archive_Issue')
@@ -36,6 +40,26 @@ def _resolve_pdf_display_titles(results):
         for r in results:
             if r.get("type") == "pdf" and r.get("document_id") in title_map:
                 r["title"] = title_map[r["document_id"]]
+
+    # 2. Resolve Topic URLs cleanly (prevents empty slugs for Malayalam titles)
+    topic_ids = [r.get("topic_id") or r.get("document_id") for r in results if r.get("type") == "topic"]
+    topic_ids = [tid for tid in topic_ids if tid]
+    
+    if topic_ids:
+        try:
+            Topic = apps.get_model('issue', 'Topic')
+            topics = Topic.objects.filter(id__in=topic_ids)
+            topic_map = {t.id: t for t in topics}
+            for r in results:
+                if r.get("type") == "topic":
+                    tid = r.get("topic_id") or r.get("document_id")
+                    if tid in topic_map:
+                        r["title"] = topic_map[tid].name
+                        # Dynamically fetches the proper URL path (e.g. /issues/topics/<slug>/)
+                        r["url"] = reverse('topic_detail', args=[topic_map[tid].slug])
+        except Exception as e:
+            logger.warning(f"Could not resolve topic URLs: {e}")
+
     return results
 
 
@@ -71,7 +95,6 @@ def search_view(request):
         else:
             results = search_hybrid(query, top_k=top_k)
         
-        # Override raw file titles with the explicit ArchiveIssue save title
         results = _resolve_pdf_display_titles(results)
 
     return render(request, "the_librarian/search.html", {
@@ -102,7 +125,6 @@ def search_api(request):
         else:
             results = search_hybrid(query, top_k=top_k)
 
-    # Override raw file titles with the explicit ArchiveIssue save title for API callers
     results = _resolve_pdf_display_titles(results)
 
     return JsonResponse({"query": query, "results": results})
