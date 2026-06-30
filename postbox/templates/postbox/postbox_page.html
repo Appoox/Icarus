@@ -44,7 +44,7 @@
         {# Star rating — JS updates the hidden input #}
         <div class="fb-group">
             <p class="fb-label">
-                Rate your experience
+                റേറ്റുചെയ്യൂ
                 <span class="fb-optional">(optional)</span>
             </p>
             <div class="fb-stars" role="group" aria-label="Star rating, 1 to 5">
@@ -67,7 +67,7 @@
 
             <div class="fb-group">
                 <label class="fb-label" for="{{ form.feedback.id_for_label }}">
-                    Your message
+                    നിങ്ങള്‍ക്ക് പറയുവാനുള്ളത്
                     <span class="fb-required" aria-hidden="true">*</span>
                 </label>
 
@@ -87,11 +87,18 @@
             {# Added image upload field group within the form #}
             <div class="fb-group" style="margin-top: 1rem;">
                 <label class="fb-label" for="{{ form.image.id_for_label }}">
-                    Attach a screenshot / image
+                    ചിത്രം അറ്റാച്ച് ചെയ്യാം
                     <span class="fb-optional">(optional)</span>
                 </label>
                 
                 {{ form.image }}
+
+                <div class="custom-file-upload">
+                    <label for="image-upload" class="custom-browse-btn">
+                        <span>📷 ചിത്രം നിങ്ങളുടെ ഉപകരണത്തില്‍ നിന്ന് തിരഞ്ഞെടുക്കൂ</span>
+                    </label>
+                    {{ form.image }}
+                </div>
                 
                 {% if form.image.errors %}
                 <div class="fb-error" role="alert">
@@ -106,7 +113,7 @@
             </div>
             {% endif %}
 
-            <button type="submit" class="fb-submit">Send Feedback</button>
+            <button type="submit" class="fb-submit">ഫീഡ്‌ബാക്ക് അയക്കൂ</button>
         </form>
 
         {# Show which page this feedback was triggered from #}

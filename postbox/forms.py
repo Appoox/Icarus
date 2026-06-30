@@ -27,6 +27,8 @@ class PostboxForm(forms.ModelForm):
             'image': forms.FileInput(attrs={
                 'class': 'fb-file-input',
                 'accept': 'image/*',
+                'id': 'image-upload',
+                'title': 'ചിത്രം അറ്റാച്ച് ചെയ്യാം',
             }),
         }
 
@@ -37,3 +39,4 @@ class PostboxForm(forms.ModelForm):
         self.fields['page_context'].required = False
         # Ensure the image upload is purely optional for the user
         self.fields['image'].required = False
+        self.fields['image'].label = 'ചിത്രം അറ്റാച്ച് ചെയ്യാം'
