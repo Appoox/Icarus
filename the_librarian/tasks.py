@@ -64,3 +64,11 @@ def async_index_editorial(issue_pk):
 
     logger.info("Q2 task: index_editorial pk=%s", issue_pk)
     return index_editorial(issue_pk)
+
+def async_index_topic(topic_pk):
+    """Queue-compatible wrapper: (re)index a single Topic snippet."""
+    from the_librarian.services.indexing import index_topic
+    
+    logger.info("Q2 task: async_index_topic pk=%s", topic_pk)
+    return index_topic(topic_pk)
+

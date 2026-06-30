@@ -63,10 +63,10 @@
                             {% elif result.type == 'author' %}
                                 👤 {{ result.title }}
                             {% elif result.type == 'editorial' %}
-                                {# Handle the newly introduced editorial result type explicitly #}
                                 ✍️ {{ result.title }}
+                            {% elif result.type == 'topic' %}
+                                🏷️ {{ result.title }}
                             {% else %}
-                                {# Use an explicit if/else block instead of a default filter to prevent strict VariableDoesNotExist lookups on missing keys #}
                                 {% if result.title %}{{ result.title }}{% else %}{{ result.document_name }}{% endif %}
                             {% endif %}
                         </span>
@@ -80,8 +80,9 @@
                         {% elif result.type == 'author' %}
                             <span class="result-page">Author Profile</span>
                         {% elif result.type == 'editorial' %}
-                            {# Added badge description for the editorial type results #}
                             <span class="result-page">Editorial</span>
+                        {% elif result.type == 'topic' %}
+                            <span class="result-page">Topic</span>
                         {% endif %}
                     </div>
                     <div class="result-score">Relevance: {{ result.score }}</div>

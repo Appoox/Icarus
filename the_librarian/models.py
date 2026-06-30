@@ -61,7 +61,7 @@ class ArchiveDocument(models.Model):
 
 
 class DocumentChunk(models.Model):
-    """Stores semantically chunked + embedded text from archive PDFs, articles, authors, and issue editorials."""
+    """Stores semantically chunked + embedded text from archive PDFs, articles, authors, issues, and topics."""
     document = models.ForeignKey(
         ArchiveDocument,
         on_delete=models.CASCADE,
@@ -83,9 +83,17 @@ class DocumentChunk(models.Model):
         null=True,
         blank=True
     )
-    # ── NEW: Issue editorial chunks ────────────────────────────────────────
+    # ── Issue editorial chunks ─────────────────────────────────────────────
     issue = models.ForeignKey(
         'issue.Issue',
+        on_delete=models.CASCADE,
+        related_name='chunks',
+        null=True,
+        blank=True
+    )
+    # ── NEW: Related Topic chunks ──────────────────────────────────────────
+    topic = models.ForeignKey(
+        'issue.Topic',
         on_delete=models.CASCADE,
         related_name='chunks',
         null=True,
@@ -138,6 +146,8 @@ class DocumentChunk(models.Model):
             return f"Author: {self.author.title} — chunk#{self.chunk_index}"
         elif self.issue_id:
             return f"Editorial: {self.issue.title} — chunk#{self.chunk_index}"
+        elif self.topic_id:
+            return f"Topic: {self.topic.name} — chunk#{self.chunk_index}"
         return f"Unknown Source — chunk#{self.chunk_index}"
 
 
