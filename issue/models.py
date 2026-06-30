@@ -410,6 +410,11 @@ class Issue(RoutablePageMixin, Page):
             return response
         except Exception as e:
             raise Http404(f"Error reading PDF file: {str(e)}")
+    @property
+    def is_current_issue(self):
+        """Checks if this issue instance is the most recently published live issue."""
+        latest = Issue.objects.live().order_by('-date_of_publishing').first()
+        return latest and self.id == latest.id
 
 class IssueArticleReprint(Orderable):
     issue = ParentalKey('Issue', related_name='reprinted_articles', on_delete=models.CASCADE)
