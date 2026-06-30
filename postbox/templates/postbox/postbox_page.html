@@ -57,7 +57,8 @@
             </div>
         </div>
 
-        <form method="post" id="fb-form">
+        {# Added enctype="multipart/form-data" to allow browser-side file uploads to transmit correctly #}
+        <form method="post" id="fb-form" enctype="multipart/form-data">
             {% csrf_token %}
             {# Hidden fields managed by JS #}
             {{ form.feedback_type }}
@@ -81,6 +82,22 @@
                 <div class="fb-char-count">
                     <span id="fb-char-count">0</span> / 2000
                 </div>
+            </div>
+
+            {# Added image upload field group within the form #}
+            <div class="fb-group" style="margin-top: 1rem;">
+                <label class="fb-label" for="{{ form.image.id_for_label }}">
+                    Attach a screenshot / image
+                    <span class="fb-optional">(optional)</span>
+                </label>
+                
+                {{ form.image }}
+                
+                {% if form.image.errors %}
+                <div class="fb-error" role="alert">
+                    {% for error in form.image.errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
             </div>
 
             {% if form.non_field_errors %}
@@ -125,6 +142,18 @@
                 {% endif %}
             </div>
             <p class="fb-history-item__message">{{ fb.feedback }}</p>
+            
+            {# Optional: Display miniature icon if they uploaded an attachment previously #}
+            {% if fb.image %}
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--muted);">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span style="font-family: var(--label); font-size: 0.65rem; color: var(--muted);">Image Attached</span>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </section>

@@ -19,7 +19,8 @@ User = get_user_model()
 @login_required
 def postbox_page(request):
     if request.method == 'POST':
-        form = PostboxForm(request.POST)
+        # Added request.FILES to ensure uploaded image data is passed to the form processor
+        form = PostboxForm(request.POST, request.FILES)
         if form.is_valid():
             postbox = form.save(commit=False)
             postbox.user = request.user

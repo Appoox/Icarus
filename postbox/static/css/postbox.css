@@ -192,6 +192,36 @@
     box-shadow: 0 0 0 2px rgba(11,31,58,.08);
 }
 
+/* ── File Input ─────────────────────────────────────────────── */
+/* Added styling for the file input wrapper and selector button to match layout */
+.fb-file-input {
+    font-family: var(--body-serif);
+    font-size: .85rem;
+    color: var(--ink);
+    width: 100%;
+    margin-top: 0.3rem;
+}
+
+.fb-file-input::file-selector-button {
+    font-family: var(--label);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    padding: .5rem .9rem;
+    margin-right: 1rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.5px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+.fb-file-input::file-selector-button:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
 /* ── Character counter ──────────────────────────────────────── */
 .fb-char-count {
     text-align: right;
