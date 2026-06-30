@@ -44,7 +44,7 @@
         {# Star rating — JS updates the hidden input #}
         <div class="fb-group">
             <p class="fb-label">
-                Rate your experience
+                റേറ്റുചെയ്യൂ
                 <span class="fb-optional">(optional)</span>
             </p>
             <div class="fb-stars" role="group" aria-label="Star rating, 1 to 5">
@@ -57,7 +57,8 @@
             </div>
         </div>
 
-        <form method="post" id="fb-form">
+        {# Added enctype="multipart/form-data" to allow browser-side file uploads to transmit correctly #}
+        <form method="post" id="fb-form" enctype="multipart/form-data">
             {% csrf_token %}
             {# Hidden fields managed by JS #}
             {{ form.feedback_type }}
@@ -66,7 +67,7 @@
 
             <div class="fb-group">
                 <label class="fb-label" for="{{ form.feedback.id_for_label }}">
-                    Your message
+                    നിങ്ങള്‍ക്ക് പറയുവാനുള്ളത്
                     <span class="fb-required" aria-hidden="true">*</span>
                 </label>
 
@@ -83,13 +84,36 @@
                 </div>
             </div>
 
+            {# Added image upload field group within the form #}
+            <div class="fb-group" style="margin-top: 1rem;">
+                <label class="fb-label" for="{{ form.image.id_for_label }}">
+                    ചിത്രം അറ്റാച്ച് ചെയ്യാം
+                    <span class="fb-optional">(optional)</span>
+                </label>
+                
+                {{ form.image }}
+
+                <div class="custom-file-upload">
+                    <label for="image-upload" class="custom-browse-btn">
+                        <span>📷 ചിത്രം നിങ്ങളുടെ ഉപകരണത്തില്‍ നിന്ന് തിരഞ്ഞെടുക്കൂ</span>
+                    </label>
+                    {{ form.image }}
+                </div>
+                
+                {% if form.image.errors %}
+                <div class="fb-error" role="alert">
+                    {% for error in form.image.errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
             {% if form.non_field_errors %}
             <div class="fb-error" role="alert">
                 {% for error in form.non_field_errors %}{{ error }}{% endfor %}
             </div>
             {% endif %}
 
-            <button type="submit" class="fb-submit">Send Feedback</button>
+            <button type="submit" class="fb-submit">ഫീഡ്‌ബാക്ക് അയക്കൂ</button>
         </form>
 
         {# Show which page this feedback was triggered from #}
@@ -125,6 +149,18 @@
                 {% endif %}
             </div>
             <p class="fb-history-item__message">{{ fb.feedback }}</p>
+            
+            {# Optional: Display miniature icon if they uploaded an attachment previously #}
+            {% if fb.image %}
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--muted);">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span style="font-family: var(--label); font-size: 0.65rem; color: var(--muted);">Image Attached</span>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </section>

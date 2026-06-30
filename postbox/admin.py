@@ -13,13 +13,17 @@ class PostboxAdmin(admin.ModelAdmin):
     search_fields  = ['feedback', 'user__name']
     date_hierarchy = 'submitted_at'
     ordering       = ['-submitted_at']
+    
+    # Appended image and image_preview to readonly_fields to prevent editing but allow viewing
     readonly_fields = [
         'feedback_type', 'feedback', 'page_context',
-        'rating', 'user', 'submitted_at',
+        'rating', 'user', 'submitted_at', 'image', 'image_preview'
     ]
+    
+    # Appended image and image_preview to control their rendering location in Django Admin
     fields = [
         'feedback_type', 'feedback', 'page_context', 'rating',
-        'user', 'submitted_at', 'is_reviewed', 'admin_notes',
+        'user', 'submitted_at', 'image', 'image_preview', 'is_reviewed', 'admin_notes',
     ]
     actions = ['mark_reviewed']
 

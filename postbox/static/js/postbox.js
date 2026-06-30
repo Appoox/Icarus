@@ -8,6 +8,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var charCount   = document.getElementById('fb-char-count');
     var starLabel   = document.getElementById('fb-star-label');
 
+    document.getElementById('image-upload').addEventListener('change', function() {
+    var fileName = this.files[0] ? this.files[0].name : 'Choose File';
+    document.querySelector('.custom-browse-btn span').textContent = fileName;
+    });
+
     /* ── Type selector ───────────────────────────────── */
     document.querySelectorAll('.fb-type-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {

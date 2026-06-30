@@ -33,7 +33,6 @@
     font-family: var(--label);
     font-size: .7rem;
     font-weight: 800;
-    letter-spacing: .3em;
     text-transform: uppercase;
     color: var(--red);
     background: rgba(200,16,46,.15);
@@ -88,7 +87,6 @@
     font-family: var(--label);
     font-size: .68rem;
     font-weight: 700;
-    letter-spacing: .12em;
     text-transform: uppercase;
     color: var(--muted);
     margin: 0 0 .6rem;
@@ -101,7 +99,6 @@
 .fb-required { color: var(--red); margin-left: 2px; }
 .fb-optional  {
     font-weight: 400;
-    letter-spacing: 0;
     text-transform: none;
     opacity: .8;
 }
@@ -122,7 +119,6 @@
     font-family: var(--label);
     font-size: .72rem;
     font-weight: 700;
-    letter-spacing: .06em;
     background: var(--paper);
     border: 1.5px solid var(--rule);
     border-radius: 6px;
@@ -192,6 +188,55 @@
     box-shadow: 0 0 0 2px rgba(11,31,58,.08);
 }
 
+/* ── File Input ─────────────────────────────────────────────── */
+/* Added styling for the file input wrapper and selector button to match layout */
+.fb-file-input {
+    display: none;
+}
+/* Style your custom button */
+.custom-browse-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0f8ec9;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background 0.2s;
+    margin-bottom: 1.3rem;
+    font-size: small;
+
+    width: 100%;           /* Set a fixed width */
+    text-align: center;      /* Center the text within the fixed width */
+    overflow: hidden;        /* Clip any text that is too long */
+    white-space: nowrap;     /* Keep text on one line */
+    text-overflow: ellipsis; /* Add "..." if the filename is too long */
+    box-sizing: border-box;
+}
+
+.custom-browse-btn:hover {
+    background-color: #090ccc;
+}
+
+.fb-file-input::file-selector-button {
+    font-family: var(--label);
+    font-size: .72rem;
+    font-weight: 700;
+    padding: .5rem .9rem;
+    margin-right: 1rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.5px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+.fb-file-input::file-selector-button:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
 /* ── Character counter ──────────────────────────────────────── */
 .fb-char-count {
     text-align: right;
@@ -222,7 +267,6 @@
     font-family: var(--label);
     font-size: .82rem;
     font-weight: 800;
-    letter-spacing: .14em;
     text-transform: uppercase;
     color: #fff;
     background: var(--red);
@@ -233,7 +277,7 @@
 }
 
 .fb-submit:hover {
-    background: var(--red-hover, #a00d24);
+    background: var(#009c1a);
     transform: translateY(-1px);
 }
 
@@ -271,7 +315,6 @@
     font-family: var(--label);
     font-size: .72rem;
     font-weight: 800;
-    letter-spacing: .14em;
     text-transform: uppercase;
     color: var(--muted);
     margin: 0 0 .25rem;
@@ -310,7 +353,6 @@
     font-family: var(--label);
     font-size: .65rem;
     font-weight: 700;
-    letter-spacing: .06em;
     color: var(--muted);
     background: var(--paper);
     border: 1px solid var(--rule);

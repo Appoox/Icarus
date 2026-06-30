@@ -1,6 +1,27 @@
 from django.db import models
 from django.conf import settings
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel
+from django.utils.html import format_html # Added format_html for image preview rendering
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel, Panel
+
+
+# ── Custom Wagtail Panel for Image Preview ─────────────────────────
+class ImagePreviewPanel(Panel):
+    """Custom Wagtail panel to visually display an uploaded image inside the admin snippet view."""
+    class BoundPanel(Panel.BoundPanel):
+        def render_html(self, parent_context=None):
+            # Safely check if the instance exists and actually has a file attached
+            if getattr(self.instance, 'image', None) and self.instance.image:
+                return format_html(
+                    '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">'
+                    '<p style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.85rem; color: #333;">Visual Preview:</p>'
+                    '<a href="{}" target="_blank" style="display: inline-block;">'
+                    '<img src="{}" style="max-height: 400px; max-width: 100%; border: 1px solid #ccc; border-radius: 4px;" alt="User Feedback Attachment" />'
+                    '</a>'
+                    '</div>',
+                    self.instance.image.url,
+                    self.instance.image.url
+                )
+            return '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 0.85rem;">No visual preview available.</div>'
 
 
 class Postbox(models.Model):
@@ -25,6 +46,13 @@ class Postbox(models.Model):
         max_length=500, blank=True,
         verbose_name='Page context',
     )
+    # Added ImageField to allow users to attach a screenshot or image to their feedback
+    image = models.ImageField(
+        upload_to='postbox_images/', 
+        null=True, 
+        blank=True, 
+        verbose_name='Attached Image'
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -44,6 +72,11 @@ class Postbox(models.Model):
         FieldPanel('page_context', read_only=True),
         FieldPanel('user',         read_only=True),
         FieldPanel('submitted_at', read_only=True),
+        # Added a panel group to show the image link and injected our custom ImagePreviewPanel for visual rendering
+        MultiFieldPanel([
+            FieldPanel('image', read_only=True),
+            ImagePreviewPanel(),
+        ], heading='User Attachment'),
         MultiFieldPanel([
             FieldPanel('is_reviewed'),
             FieldPanel('admin_notes'),
@@ -69,6 +102,16 @@ class Postbox(models.Model):
     def stars(self):
         return ('★' * self.rating) if self.rating else '—'
     stars.short_description = 'Rating'
+
+    # Custom property method to visually render the uploaded image inside standard Django admin dashboard
+    def image_preview(self):
+        if self.image:
+            return format_html(
+                '<img src="{}" style="max-height: 300px; max-width: 100%; border-radius: 4px; border: 1px solid #ccc;" />',
+                self.image.url
+            )
+        return "No image provided"
+    image_preview.short_description = 'Image Preview'
 
 
 class PostboxNotification(models.Model):
