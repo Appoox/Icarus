@@ -90,10 +90,17 @@ def get_site_footer():
         if sections:
             editorial_board = {'sections': sections, 'issue': current_issue}
 
+    # Added: Dynamically resolve the archive list view route name
     try:
         archive_list_url = reverse('the_librarian:archive_list')
     except NoReverseMatch:
         archive_list_url = '/the_librarian/archive/'
+
+    # Added: Dynamically resolve the postbox view route name
+    try:
+        postbox_url = reverse('postbox:postbox_page')
+    except NoReverseMatch:
+        postbox_url = '/postbox/'
         
     # ── Build the dynamic URL map ─────────────────────────────────────────
     # Keys must exactly match the choice values in DYNAMIC_URL_CHOICES
@@ -111,6 +118,7 @@ def get_site_footer():
         'most_read_topics_url':   most_read_topics_url,
         'most_read_authors_url':  most_read_authors_url, 
         'archive_list_url':       archive_list_url,
+        'postbox_url':            postbox_url,
     }
 
     # ── Inject resolved URLs into prefetched link instances ───────────────

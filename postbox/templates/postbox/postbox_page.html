@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Feedback{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/postbox.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<header class="fb-header">
+    <div class="fb-header__inner">
+        <span class="fb-header__kicker">Testing Phase</span>
+        <h1 class="fb-header__title">ഫീഡ്‌ബാക്ക് അറിയിക്കൂ</h1>
+        <p class="fb-header__sub">വെബ്സൈറ്റ് മെച്ചപ്പെടുത്താൻ നിങ്ങളുടെ നിർദ്ദേശങ്ങളും അഭിപ്രായങ്ങളും അറിയിക്കുക</p>
+    </div>
+</header>
+
+<div class="fb-page">
+
+    {# ── Submission form ── #}
+    <div class="fb-card">
+
+        {# Type selector — JS updates the hidden input #}
+        <fieldset class="fb-group">
+            <legend class="fb-label">ഫീഡ്‌ബാക്കിൻ്റെ തരം</legend>
+            <div class="fb-type-grid">
+                <button type="button" class="fb-type-btn active"  data-type="general">
+                    <span class="fb-type-btn__icon" aria-hidden="true">💬</span> General
+                </button>
+                <button type="button" class="fb-type-btn" data-type="bug">
+                    <span class="fb-type-btn__icon" aria-hidden="true">🐛</span> Bug Report
+                </button>
+                <button type="button" class="fb-type-btn" data-type="suggestion">
+                    <span class="fb-type-btn__icon" aria-hidden="true">💡</span> Suggestion
+                </button>
+                <button type="button" class="fb-type-btn" data-type="content">
+                    <span class="fb-type-btn__icon" aria-hidden="true">📝</span> Content Issue
+                </button>
+            </div>
+        </fieldset>
+
+        {# Star rating — JS updates the hidden input #}
+        <div class="fb-group">
+            <p class="fb-label">
+                Rate your experience
+                <span class="fb-optional">(optional)</span>
+            </p>
+            <div class="fb-stars" role="group" aria-label="Star rating, 1 to 5">
+                {% for i in "12345" %}
+                <button type="button" class="fb-star"
+                        data-value="{{ i }}"
+                        aria-label="{{ i }} star{% if i != '1' %}s{% endif %}">★</button>
+                {% endfor %}
+                <span class="fb-stars__label" id="fb-star-label" aria-live="polite"></span>
+            </div>
+        </div>
+
+        <form method="post" id="fb-form">
+            {% csrf_token %}
+            {# Hidden fields managed by JS #}
+            {{ form.feedback_type }}
+            {{ form.rating }}
+            {{ form.page_context }}
+
+            <div class="fb-group">
+                <label class="fb-label" for="{{ form.feedback.id_for_label }}">
+                    Your message
+                    <span class="fb-required" aria-hidden="true">*</span>
+                </label>
+
+                {% if form.feedback.errors %}
+                <div class="fb-error" role="alert">
+                    {% for error in form.feedback.errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+
+                {{ form.feedback }}
+
+                <div class="fb-char-count">
+                    <span id="fb-char-count">0</span> / 2000
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="fb-error" role="alert">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="fb-submit">Send Feedback</button>
+        </form>
+
+        {# Show which page this feedback was triggered from #}
+        {% with ctx=form.page_context.value %}{% if ctx %}
+        <p class="fb-context-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            Feedback context: <span class="fb-context-url">{{ ctx }}</span>
+        </p>
+        {% endif %}{% endwith %}
+
+    </div>
+
+    {# ── Previous submissions ── #}
+    {% if previous %}
+    <section class="fb-history">
+        <h2 class="fb-history__heading">Your previous submissions</h2>
+        {% for fb in previous %}
+        <div class="fb-history-item fb-history-item--{{ fb.feedback_type }}
+                    {% if fb.is_reviewed %}fb-history-item--reviewed{% endif %}">
+            <div class="fb-history-item__meta">
+                <span class="fb-history-item__badge">{{ fb.get_feedback_type_display }}</span>
+                {% if fb.rating %}
+                <span class="fb-history-item__rating">{{ fb.rating }}★</span>
+                {% endif %}
+                <time class="fb-history-item__time">{{ fb.submitted_at|date:"F j, Y" }}</time>
+                {% if fb.is_reviewed %}
+                <span class="fb-history-item__reviewed">✓ Reviewed</span>
+                {% endif %}
+            </div>
+            <p class="fb-history-item__message">{{ fb.feedback }}</p>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/postbox.js' %}"></script>
+{% endblock %}
