@@ -47,6 +47,16 @@ class ArchiveDocument(models.Model):
         verbose_name_plural = "Archive Documents"
 
     def __str__(self):
+        return self.display_title
+
+    @property
+    def display_title(self):
+        """
+        Returns the human-readable title of the associated ArchiveIssue if it exists,
+        otherwise falls back to the raw filename.
+        """
+        if hasattr(self, 'Archive_Issue') and self.Archive_Issue:
+            return self.Archive_Issue.title
         return self.filename
 
 
@@ -121,7 +131,7 @@ class DocumentChunk(models.Model):
 
     def __str__(self):
         if self.document_id:
-            return f"{self.document.filename} — p.{self.page_number} chunk#{self.chunk_index}"
+            return f"{self.document.display_title} — p.{self.page_number} chunk#{self.chunk_index}"
         elif self.article_id:
             return f"Article: {self.article.title} — chunk#{self.chunk_index}"
         elif self.author_id:

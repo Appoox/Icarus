@@ -1,4 +1,3 @@
-
 from functools import wraps
 from pathlib import Path
 
@@ -21,6 +20,23 @@ from the_librarian.services.search import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# ── Helper function for search title replacement ─────────────────────────
+
+def _resolve_pdf_display_titles(results):
+    """
+    Collects document IDs from results, queries titles efficiently,
+    and maps issue save titles onto PDF result blocks.
+    """
+    pdf_doc_ids = [r["document_id"] for r in results if r.get("type") == "pdf" and "document_id" in r]
+    if pdf_doc_ids:
+        docs = ArchiveDocument.objects.filter(id__in=pdf_doc_ids).select_related('Archive_Issue')
+        title_map = {d.id: d.display_title for d in docs}
+        for r in results:
+            if r.get("type") == "pdf" and r.get("document_id") in title_map:
+                r["title"] = title_map[r["document_id"]]
+    return results
 
 
 # ── Access-control decorator ──────────────────────────────────────────────
@@ -54,6 +70,9 @@ def search_view(request):
             results = search_similar(query, top_k=top_k)
         else:
             results = search_hybrid(query, top_k=top_k)
+        
+        # Override raw file titles with the explicit ArchiveIssue save title
+        results = _resolve_pdf_display_titles(results)
 
     return render(request, "the_librarian/search.html", {
         "query": query,
@@ -82,6 +101,9 @@ def search_api(request):
             results = search_similar(query, top_k=top_k)
         else:
             results = search_hybrid(query, top_k=top_k)
+
+    # Override raw file titles with the explicit ArchiveIssue save title for API callers
+    results = _resolve_pdf_display_titles(results)
 
     return JsonResponse({"query": query, "results": results})
 

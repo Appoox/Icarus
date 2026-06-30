@@ -11,8 +11,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Search The Archive</h1>
-        <p class="subtitle">Semantic & Keyword search across PDFs, Articles, and Author profiles</p>
+        <h1>അര്‍ക്കൈവില്‍ തിരയൂ</h1>
+        <p class="subtitle">പദാര്‍ത്ഥപരമോ വാക്കുകളോ ഉപയോഗിച്ച് ശാസ്ത്രഗതിയല്‍ മുഴുവന്‍ തിരയൂ</p>
 
         <form method="get" class="search-form">
             <input type="text"
@@ -44,7 +44,6 @@
             </div>
         </div>
 
-        <!-- Hidden form inputs for auto-submit on select change -->
         <form id="search-form-proxy" method="get" style="display:none">
             <input type="hidden" name="q" value="{{ query }}">
         </form>
@@ -63,8 +62,12 @@
                                 📰 {{ result.title }}
                             {% elif result.type == 'author' %}
                                 👤 {{ result.title }}
+                            {% elif result.type == 'editorial' %}
+                                {# Handle the newly introduced editorial result type explicitly #}
+                                ✍️ {{ result.title }}
                             {% else %}
-                                {{ result.title|default:result.document_name }}
+                                {# Use an explicit if/else block instead of a default filter to prevent strict VariableDoesNotExist lookups on missing keys #}
+                                {% if result.title %}{{ result.title }}{% else %}{{ result.document_name }}{% endif %}
                             {% endif %}
                         </span>
                         <span class="badge badge-{{ result.search_type|default:'similarity' }}">
@@ -76,6 +79,9 @@
                             <span class="result-page">Article</span>
                         {% elif result.type == 'author' %}
                             <span class="result-page">Author Profile</span>
+                        {% elif result.type == 'editorial' %}
+                            {# Added badge description for the editorial type results #}
+                            <span class="result-page">Editorial</span>
                         {% endif %}
                     </div>
                     <div class="result-score">Relevance: {{ result.score }}</div>
