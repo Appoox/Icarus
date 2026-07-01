@@ -12,6 +12,9 @@ from django.db.models import OuterRef, Subquery
 from wagtail.models import PageLogEntry
 from django.apps import apps
 
+from django.utils.html import format_html
+from django.urls import reverse
+
 # ── Rich-text colour features ──────────────────────────────────────────────
 
 @hooks.register('register_rich_text_features')
@@ -169,16 +172,26 @@ class AnalyticsColumn(Column):
 class MainIssueColumn(Column):
     def get_value(self, instance):
         specific_instance = instance.specific
-        if getattr(specific_instance, 'main_issue', None):
-            return str(specific_instance.main_issue)
+        issue = getattr(specific_instance, 'main_issue', None)
+        if issue:
+            url = reverse('wagtailadmin_pages:edit', args=[issue.pk])
+            return format_html('<a href="{}" style="text-decoration: underline;">{}</a>', url, str(issue))
         return "-"
 
 class LastEditedByColumn(Column):
     def get_value(self, instance):
         specific_instance = instance.specific
         revision = specific_instance.latest_revision
+        
         if revision and revision.user:
-            return getattr(revision.user, 'name', '') or getattr(revision.user, 'email', '') or "Unknown User"
+            user = revision.user
+            name = getattr(user, 'name', '') or getattr(user, 'email', '') or "Unknown User"
+            try:
+                url = reverse('wagtailusers_users:edit', args=[user.pk])
+                return format_html('<a href="{}" style="text-decoration: underline;">{}</a>', url, name)
+            except Exception:
+                return name
+                
         return "-"
 
 class DraftArticlePageListingViewSet(PageListingViewSet):
