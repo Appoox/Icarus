@@ -94,6 +94,14 @@
         // Skip inline field validation errors inside panel forms
         if (li.closest('.field') || li.closest('.form-row')) return;
 
+        // Check if this is a persistent confirm warning modal
+        const modal = li.querySelector('.last-edited-warning-modal');
+        if (modal) {
+            document.body.appendChild(modal);
+            li.remove();
+            return;
+        }
+
         const html = extractHtml(li);
         if (!html) return;
 

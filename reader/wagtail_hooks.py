@@ -214,7 +214,7 @@ def global_admin_js():
     MutationObserver so it is watching before Wagtail's own Stimulus
     controllers initialise.  The external file contains the full logic.
     """
-    js_url = static('js/admin_toasts.js')
+    js_url = static('js/admin_toasts.js') + '?v=' + str(int(timezone.now().timestamp()))
     return format_html(
         # Inline bootstrap: confirm hook is alive, then load the full script
         '<script>'

@@ -642,4 +642,29 @@ def notify_last_edited_by(request, page):
                     date_str = f" on {localize(page.latest_revision_created_at)}"
             
             if name:
-                messages.info(request, f"This page was last edited by {name}{date_str}.")
+                from django.utils.safestring import mark_safe
+                
+                modal_html = f"""
+                <div class="last-edited-warning-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(11, 31, 58, 0.4); z-index: 999999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeInModal 0.3s ease-out; box-sizing: border-box; margin: 0; padding: 20px;">
+                    <div style="background: #ffffff; padding: 40px; border-radius: 16px; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(11, 31, 58, 0.25); text-align: center; border-top: 6px solid #e65100; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; margin: auto;">
+                        <div style="width: 64px; height: 64px; background: #fff3e0; color: #e65100; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h3 style="margin-bottom: 12px; font-size: 22px; font-weight: 700; color: #0b1f3a; margin-top: 0;">Edit Warning</h3>
+                        <p style="margin-bottom: 30px; color: #4a5568; font-size: 15px; line-height: 1.6; margin-top: 0;">
+                            This page was last edited by <strong style="color: #0b1f3a;">{name}</strong>{date_str}.<br>
+                            Please confirm before editing to prevent accidental conflicts.
+                        </p>
+                        <button onclick="this.closest('.last-edited-warning-modal').remove()" style="background: #e65100; color: #ffffff; border: none; padding: 12px 32px; border-radius: 30px; font-weight: 700; cursor: pointer; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3);">
+                            I Confirm
+                        </button>
+                    </div>
+                </div>
+                <style>
+                @keyframes fadeInModal {{
+                    from {{ opacity: 0; }}
+                    to {{ opacity: 1; }}
+                }}
+                </style>
+                """
+                messages.warning(request, mark_safe(modal_html))
