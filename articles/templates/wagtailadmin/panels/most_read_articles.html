@@ -1,12 +1,36 @@
-{# Custom panel template designed to fit inside the standard Wagtail dashboard ecosystem #}
-<section class="panel summary html-panel" aria-label="Most Read Articles Analytics Grid">
-    {# Header panel title element #}
-    <header class="panel-content">
-        <h2 class="panel-title"> ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട ലേഖനങ്ങൾ </h2>
-    </header>
+<style>
+    .icarus-panel summary {
+        list-style: none; /* Hide default hidden markers */
+        display: flex;
+        align-items: center;
+    }
+    .icarus-panel summary::-webkit-details-marker {
+        display: none;
+    }
+    /* Create custom animated arrow */
+    .icarus-panel summary::before {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 14px;
+        border-right: 2.5px solid currentColor;
+        border-bottom: 2.5px solid currentColor;
+        transform: translateY(-2px) rotate(-45deg);
+        transition: transform 0.2s ease-in-out;
+    }
+    /* Rotate arrow downwards when opened */
+    .icarus-panel[open] summary::before {
+        transform: translateY(-4px) rotate(45deg);
+    }
+</style>
+
+<details class="icarus-panel" style="margin-bottom: 2rem; border: 1px solid var(--w-color-border-furniture); border-radius: 6px; background-color: var(--w-color-surface-page); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <summary style="cursor: pointer; padding: 1.25rem; font-size: 1.2rem; font-weight: 600; color: var(--w-color-text-default); line-height: 1.6;">
+        ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട ലേഖനങ്ങൾ
+    </summary>
     
-    {# Core data table rendering section #}
-    <div class="panel-content" style="padding: 1.5rem;">
+    <div style="border-top: 1px solid var(--w-color-border-furniture); padding: 1.5rem;">
         <table class="listing" style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr>
@@ -16,28 +40,23 @@
                 </tr>
             </thead>
             <tbody>
-                {# Loop directly through our pre-queried popular articles list context #}
                 {% for article in articles %}
                     <tr style="border-bottom: 1px solid var(--w-color-grey-100);">
                         <td style="padding: 0.75rem 0.5rem;">
-                            {# Direct editing link routing to make content workflow accessible #}
                             <a href="{% url 'wagtailadmin_pages:edit' article.id %}" style="text-decoration: none;">
                                 <strong>{{ article.title }}</strong>
                             </a>
                         </td>
-                        {# FIX: Updated color code parameter variables to seamlessly adopt system theme rules #}
                         <td style="padding: 0.75rem 0.5rem; color: var(--w-color-text-label);">
                             {{ article.date }}
                         </td>
-                        {# FIX: Removed raw color styling tags so metric alignment inherits default panel row colors natively #}
-                        <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: normal; color: var(--w-color-text-context);">
+                        <td style="padding: 0.75rem 0.5rem; text-align: right; color: var(--w-color-text-context);">
                             {{ article.total_views }}
                         </td>
                     </tr>
                 {% empty %}
-                    {# Fallback rendering context block when zero analytics hits are captured #}
                     <tr>
-                        <td colspan="3" style="padding: 1rem; text-align: center; color: var(--w-color-grey-400);">
+                        <td colspan="3" style="padding: 1rem; text-align: center; color: var(--w-color-text-context);">
                             No view tracking analytics recorded yet.
                         </td>
                     </tr>
@@ -45,4 +64,4 @@
             </tbody>
         </table>
     </div>
-</section>
+</details>
