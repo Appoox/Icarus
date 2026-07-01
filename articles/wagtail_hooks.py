@@ -7,6 +7,7 @@ from wagtail.admin.rich_text.converters.html_to_contentstate import InlineStyleE
 from wagtail.admin.ui.tables import Column
 from django.template.loader import render_to_string
 from wagtail.admin.ui.components import Component
+from wagtail.admin.views.pages.listing import IndexView
 from wagtail.admin.viewsets.pages import PageListingViewSet
 from django.db.models import OuterRef, Subquery
 from wagtail.models import PageLogEntry
@@ -194,14 +195,21 @@ class LastEditedByColumn(Column):
                 
         return "-"
 
+class DraftArticlePageListingView(IndexView):
+    def get_queryset(self):
+        return super().get_queryset().filter(live=False)
+
+class PublishedArticlePageListingView(IndexView):
+    def get_queryset(self):
+        return super().get_queryset().filter(live=True)
+
 class DraftArticlePageListingViewSet(PageListingViewSet):
     icon = 'draft'
     menu_label = 'Draft Articles'
     menu_order = 150
     add_to_admin_menu = True
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(live=False)
+    index_view_class = DraftArticlePageListingView
 
     @property
     def columns(self):
@@ -219,8 +227,7 @@ class PublishedArticlePageListingViewSet(PageListingViewSet):
     menu_order = 151
     add_to_admin_menu = True
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(live=True)
+    index_view_class = PublishedArticlePageListingView
 
     @property
     def columns(self):
