@@ -85,7 +85,7 @@ class ReaderSnippetViewSet(SnippetViewSet):
     index_view_class = ReaderIndexView
     url_prefix = 'readers'
     menu_label = 'Readers'
-    icon = 'user'
+    icon = 'group'
     menu_order = 300
     add_to_admin_menu = True
     
@@ -100,7 +100,7 @@ class PaymentDetailsSnippetViewSet(SnippetViewSet):
     model = PaymentDetails
     url_prefix = 'payments'
     menu_label = 'Payments'
-    icon = 'credit-card'
+    icon = 'tag'
     menu_order = 301
     add_to_admin_menu = True
     list_display = ("gateway_name", "amount", "status", "created_at")
