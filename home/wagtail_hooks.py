@@ -340,16 +340,30 @@ class AuditLogDashboardPanel(Component):
             items_html_list.append(item_html)
 
         if not items_html_list:
-            items_html = mark_safe('<p style="color: var(--w-color-text-meta);">No activity recorded yet.</p>')
+            items_html = mark_safe('<p style="color: var(--w-color-text-meta); padding: 15px;">No activity recorded yet.</p>')
         else:
             items_html = mark_safe('\n'.join(items_html_list))
 
         audit_url = reverse('icarus_audit_log')
         return format_html(
             """
-            <section class="panel summary-panel">
-                <div class="panel-content">
-                    <h2 class="panel-title">Recent Activity</h2>
+            <style>
+                .icarus-panel summary {{ list-style: none; display: flex; align-items: center; }}
+                .icarus-panel summary::-webkit-details-marker {{ display: none; }}
+                .icarus-panel summary::before {{
+                    content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 14px;
+                    border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor;
+                    transform: translateY(-2px) rotate(-45deg); transition: transform 0.2s ease-in-out;
+                }}
+                .icarus-panel[open] summary::before {{ transform: translateY(-4px) rotate(45deg); }}
+            </style>
+            
+            <details class="icarus-panel" style="margin-bottom: 2rem; border: 1px solid var(--w-color-border-furniture); border-radius: 6px; background-color: var(--w-color-surface-page); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <summary style="cursor: pointer; padding: 1.25rem; font-size: 1.2rem; font-weight: 600; color: var(--w-color-text-default); line-height: 1.6;">
+                    Recent Activity
+                </summary>
+                
+                <div style="border-top: 1px solid var(--w-color-border-furniture); padding: 0 1.5rem 1.5rem 1.5rem;">
                     <ul style="list-style: none; padding: 0; margin: 0;">
                         {}
                     </ul>
@@ -357,7 +371,7 @@ class AuditLogDashboardPanel(Component):
                         <a href="{}" class="button button-secondary button-small">View Full Audit Log</a>
                     </div>
                 </div>
-            </section>
+            </details>
             """,
             items_html,
             audit_url,
