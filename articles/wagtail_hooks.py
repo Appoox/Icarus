@@ -613,3 +613,33 @@ def add_most_read_articles_panel(request, panels):
     panels.append(MostReadArticlesDashboardPanel())
     panels.append(MostReadIssuesDashboardPanel())
     panels.append(MostReadTopicsDashboardPanel())
+
+
+@hooks.register('before_edit_page')
+def notify_last_edited_by(request, page):
+    if request.method == 'GET':
+        from articles.models import Article
+        from issue.models import Issue
+        from literati.models import Literati
+        from django.contrib import messages
+        from django.utils.formats import localize
+        
+        specific_page = page.specific
+        if isinstance(specific_page, (Article, Issue, Literati)):
+            revision = specific_page.latest_revision
+            name = None
+            date_str = ""
+            
+            if revision and revision.user:
+                user = revision.user
+                name = getattr(user, 'name', '') or getattr(user, 'email', '') or getattr(user, 'username', '') or str(user)
+                if revision.created_at:
+                    date_str = f" on {localize(revision.created_at)}"
+            elif page.owner:
+                user = page.owner
+                name = getattr(user, 'name', '') or getattr(user, 'email', '') or getattr(user, 'username', '') or str(user)
+                if page.latest_revision_created_at:
+                    date_str = f" on {localize(page.latest_revision_created_at)}"
+            
+            if name:
+                messages.info(request, f"This page was last edited by {name}{date_str}.")
