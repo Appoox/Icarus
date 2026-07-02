@@ -1,0 +1,76 @@
+{% load wagtailadmin_tags i18n %}
+<!-- Wagtail user bar embed code -->
+<template id="wagtail-userbar-template">
+    {# In preview panels, we still render the userbar UI, but hidden by default. #}
+    <aside {% if request.in_preview_panel %}hidden{% endif %} aria-labelledby="wagtail-userbar-trigger">
+        <div class="w-userbar w-userbar--{{ position|default:'bottom-right' }} {% admin_theme_classname %}" data-wagtail-userbar data-wagtail-userbar-origin="{{ origin|default:"" }}" part="userbar">
+            {# Styles and icons for all userbar components. #}
+            <div data-userbar-assets>
+                {% block css %}
+                    {% versioned_static 'wagtailadmin/css/core.css' as core_css_url %}
+                    <link rel="stylesheet" href="{% build_absolute_url core_css_url %}">
+                    {# For headless userbar: the contents of the hook also need absolute URLs #}
+                    {% hook_output 'insert_global_admin_css' %}
+                    {{ media.css }}
+                {% endblock %}
+                <svg class="w-hidden">
+                    <defs>
+                        {% block icons %}
+                            {% include "wagtailadmin/icons/wagtail.svg" %}
+                            {% include "wagtailadmin/icons/cogs.svg" %}
+                            {% include "wagtailadmin/icons/key.svg" %}
+                            {% include "wagtailadmin/icons/folder-open-inverse.svg" %}
+                            {% include "wagtailadmin/icons/edit.svg" %}
+                            {% include "wagtailadmin/icons/plus.svg" %}
+                            {% include "wagtailadmin/icons/check.svg" %}
+                            {% include "wagtailadmin/icons/cross.svg" %}
+                            {% include "wagtailadmin/icons/crosshairs.svg" %}
+                            {% include "wagtailadmin/icons/warning.svg" %}
+                        {% endblock %}
+                    </defs>
+                </svg>
+            </div>
+            <div class="w-userbar-nav">
+
+                <button aria-controls="wagtail-userbar-items" aria-haspopup="true" class="w-userbar-trigger" id="wagtail-userbar-trigger" data-wagtail-userbar-trigger>
+                    {% block branding_logo %}
+                        <svg class="w-userbar-icon" viewBox="0 0 24 24" fill="#1e293b" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.05.3-.09.62-.09.94s.02.64.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                        </svg>
+                    {% endblock %}
+                    <span class="w-sr-only">{% trans 'View Wagtail quick actions' %}</span>
+                </button>
+                <ul aria-labelledby="wagtail-userbar-trigger" class="w-userbar-items" id="wagtail-userbar-items" role="menu">
+                    {% block items %}
+                        {% for item in items %}
+                            {{ item|safe }}
+                        {% endfor %}
+                    {% endblock %}
+                </ul>
+            </div>
+        </div>
+        <div data-content-checker-outline-container></div>
+        {# Generic inline userbar wrapper for inline content annotations. #}
+        {# Initialized by the main userbar. #}
+        <template id="w-inline-userbar-template">
+            {# Unique landmark label set in JS. #}
+            <aside class="{% admin_theme_classname %}">
+                <div class="w-inline-userbar" part="userbar">
+                    <button type="button" class="w-inline-userbar__toggle" data-inline-userbar-toggle aria-label="{% trans 'Show issue' %}">
+                        {% icon name="warning" classname="w-inline-userbar__icon" %}
+                    </button>
+                    <div class="w-inline-userbar__content" data-inline-userbar-content hidden></div>
+                </div>
+            </aside>
+        </template>
+    </aside>
+</template>
+<wagtail-userbar></wagtail-userbar>
+{% block js %}
+    {% versioned_static 'wagtailadmin/js/vendor.js' as vendor_js_url %}
+    {% versioned_static 'wagtailadmin/js/userbar.js' as userbar_js_url %}
+    <script src="{% build_absolute_url vendor_js_url %}"></script>
+    <script src="{% build_absolute_url userbar_js_url %}"></script>
+    {{ media.js }}
+{% endblock %}
+<!-- end Wagtail user bar embed code -->
