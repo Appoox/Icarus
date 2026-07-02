@@ -13,8 +13,8 @@ from issue.models import IssueIndexPage
 from django.utils.html import format_html, mark_safe
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from wagtail.admin.userbar import AddPageItem, AdminItem, ExplorePageItem
 
-# Dynamically import the active LogEntry model (handles default or custom model configurations out of the box)
 from auditlog import get_logentry_model
 LogEntry = get_logentry_model()
 
@@ -389,6 +389,35 @@ def register_log_actions(actions):
 def add_create_page_panel(request, panels):
     panels.insert(0, CreatePagePanel())
     panels.append(AuditLogDashboardPanel())
+
+class CustomAdminItem(AdminItem):
+    template_name = "home/userbar/custom.html"
+
+@hooks.register('construct_wagtail_userbar')
+def customize_wagtail_userbar(request, items, page):
+    modified_items = []
+    
+    for item in items:
+        # Check if the current item is the "Add child page" option.
+        # If it is, we skip appending it to our new list, effectively removing it.
+        if isinstance(item, AddPageItem):
+            continue
+            
+        # Check if the current item is the default "Go to Wagtail admin" option.
+        # If it is, we replace it with an instance of our CustomAdminItem.
+        if isinstance(item, AdminItem):
+            modified_items.append(CustomAdminItem())
+            continue
+
+        if isinstance(item, ExplorePageItem):
+            continue
+            
+        # For all other items (like Edit Page, Accessibility, etc.), keep them as they are.
+        modified_items.append(item)
+        
+    # Always comment your code: We must update the original list in-place 
+    # using Python's slice assignment so Wagtail recognizes the changes.
+    items[:] = modified_items
 
 
 # ── Analytics Page ─────────────────────────────────────────────────────────
