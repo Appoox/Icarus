@@ -74,7 +74,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
 
-<!-- ═══ Header ═══════════════════════════════════════════════════════ -->
 <header class="an-header">
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--an-accent)" stroke-width="2">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -85,7 +84,6 @@
   </div>
 </header>
 
-<!-- ═══ Section 1 — Platform Summary ════════════════════════════════ -->
 <div class="an-section">
   <div class="an-section-title">📊 Platform Summary</div>
   <div class="an-cards">
@@ -132,7 +130,29 @@
   </div>
 </div>
 
-<!-- ═══ Section 2 — Subscription Health ════════════════════════════ -->
+<div class="an-section">
+  <div class="an-section-title">📈 Homepage Traffic Trends</div>
+  <div class="an-charts">
+    <div class="an-chart-box">
+      <h3>Hits Per Day (Last 7 Days)</h3>
+      <canvas id="hpDailyChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>Hits Per Week (Last 4 Weeks)</h3>
+      <canvas id="hpWeeklyChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>Hits Per Month (Last 12 Months)</h3>
+      <canvas id="hpMonthlyChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>Hits Per Year (Last 5 Years)</h3>
+      <canvas id="hpYearlyChart"></canvas>
+    </div>
+  </div>
+</div>
+
+
 <div class="an-section">
   <div class="an-section-title">💳 Subscription Health</div>
   <div class="an-charts">
@@ -175,7 +195,6 @@
   </div>
 </div>
 
-<!-- ═══ Section 3 — Content Engagement ══════════════════════════════ -->
 <div class="an-section">
   <div class="an-section-title">📖 Content Engagement</div>
   <div class="an-charts">
@@ -207,7 +226,6 @@
   </div>
 </div>
 
-<!-- ═══ Section 4 — Demographics ════════════════════════════════════ -->
 <div class="an-section">
   <div class="an-section-title">👥 Demographics (Consented Users Only)</div>
   <div class="an-charts">
@@ -222,7 +240,6 @@
   </div>
 </div>
 
-<!-- ═══ Section 5 — Print Subscribers ══════════════════════════════ -->
 <div class="an-section">
   <div class="an-section-title">🗺️ Print Subscribers by Geography</div>
   <div class="an-two-col">
@@ -237,7 +254,6 @@
   </div>
 </div>
 
-<!-- ═══ Section 6 — Compliance & Consent ════════════════════════════ -->
 <div class="an-section">
   <div class="an-section-title">🔏 Compliance &amp; Consent</div>
   <div class="an-charts">
@@ -252,7 +268,6 @@
   </div>
 </div>
 
-<!-- ═══ Section 7 — Payments ════════════════════════════════════════ -->
 <div class="an-section">
   <div class="an-section-title">💰 Payment Gateway Performance</div>
   {% if gateway_names_json != '[]' %}
@@ -265,7 +280,6 @@
   {% endif %}
 </div>
 
-<!-- ═══ Section 8 — Moderation ══════════════════════════════════════ -->
 <div class="an-section">
   <div class="an-section-title">💬 Community Moderation</div>
   <div class="an-cards" style="max-width:600px;">
@@ -287,7 +301,6 @@
   </div>
 </div>
 
-<!-- ═══ Section 9 — Security ════════════════════════════════════════ -->
 <div class="an-section">
   <div class="an-section-title">🛡️ Security Signals</div>
   <div class="an-two-col">
@@ -343,7 +356,6 @@
 
 </div>{# end nice-padding #}
 
-<!-- ═══ Chart.js initialization ══════════════════════════════════════ -->
 <script>
 (function () {
   'use strict';
@@ -526,6 +538,38 @@
     ]);
   })();
 
+  // ── 16. Homepage Traffic Charts ─────────────────────────────────────────
+  // Changed: Initialize Bar charts for the new Homepage Hits datasets with default empty checks
+  (function() {
+      const daily = {{ hp_hits_daily_json|safe|default:"[]" }};
+      if (daily && daily.length > 0) {
+          mkBar('hpDailyChart', daily.map(d=>d.label), [{ label: 'Hits', data: daily.map(d=>d.count), backgroundColor: ACCENT, borderRadius: 4 }]);
+      } else {
+          document.getElementById('hpDailyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No daily data yet.</p>');
+      }
+
+      const weekly = {{ hp_hits_weekly_json|safe|default:"[]" }};
+      if (weekly && weekly.length > 0) {
+          mkBar('hpWeeklyChart', weekly.map(d=>d.label), [{ label: 'Hits', data: weekly.map(d=>d.count), backgroundColor: SUCCESS, borderRadius: 4 }]);
+      } else {
+          document.getElementById('hpWeeklyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No weekly data yet.</p>');
+      }
+
+      const monthly = {{ hp_hits_monthly_json|safe|default:"[]" }};
+      if (monthly && monthly.length > 0) {
+          mkBar('hpMonthlyChart', monthly.map(d=>d.label), [{ label: 'Hits', data: monthly.map(d=>d.count), backgroundColor: WARN, borderRadius: 4 }]);
+      } else {
+          document.getElementById('hpMonthlyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No monthly data yet.</p>');
+      }
+
+      const yearly = {{ hp_hits_yearly_json|safe|default:"[]" }};
+      if (yearly && yearly.length > 0) {
+          mkBar('hpYearlyChart', yearly.map(d=>d.label), [{ label: 'Hits', data: yearly.map(d=>d.count), backgroundColor: DANGER, borderRadius: 4 }]);
+      } else {
+          document.getElementById('hpYearlyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No yearly data yet.</p>');
+      }
+  })();
+  
 })();
 </script>
 {% endblock %}
