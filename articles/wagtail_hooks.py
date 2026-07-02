@@ -6,8 +6,15 @@ import wagtail.admin.rich_text.editors.draftail.features as draftail_features
 from wagtail.admin.rich_text.converters.html_to_contentstate import InlineStyleElementHandler
 from wagtail.admin.ui.tables import Column
 from django.template.loader import render_to_string
-# from .models import Article
 from wagtail.admin.ui.components import Component
+from wagtail.admin.views.pages.listing import IndexView
+from wagtail.admin.viewsets.pages import PageListingViewSet
+from django.db.models import OuterRef, Subquery
+from wagtail.models import PageLogEntry
+from django.apps import apps
+
+from django.utils.html import format_html
+from django.urls import reverse
 
 # ── Rich-text colour features ──────────────────────────────────────────────
 
@@ -69,18 +76,12 @@ def register_alignment_features(features):
 # ── Cover image preview panel ──────────────────────────────────────────────
 
 class CoverImagePreviewPanel(Panel):
-    """
-    A read-only panel that shows a live cropped preview of the cover image.
-    Place it inside the Cover Image MultiFieldPanel, after the chooser fields.
-    """
-
     class BoundPanel(Panel.BoundPanel):
         template_name = "wagtailadmin/panels/cover_image_preview_panel.html"
 
         def get_context_data(self, parent_context=None):
             ctx = super().get_context_data(parent_context)
             instance = self.instance
-
             image_url = None
             if instance and instance.pk and instance.cover_image_id:
                 try:
@@ -91,64 +92,38 @@ class CoverImagePreviewPanel(Panel):
                     image_url = rendition.url
                 except Exception:
                     pass
-
             ctx['image_url'] = image_url
             ctx['aspect'] = getattr(instance, 'cover_image_aspect', '2x1') if instance else '2x1'
             return ctx
-
 
 @hooks.register('insert_editor_js')
 def cover_image_preview_js():
     return mark_safe("""
 <script>
 (function () {
-    var RATIOS = {
-        '3x1':  '3 / 1',
-        '2x1':  '2 / 1',
-        '16x9': '16 / 9',
-        '4x3':  '4 / 3',
-        '1x1':  '1 / 1'
-    };
-
-    var LABELS = {
-        '3x1':  'Thin strip',
-        '2x1':  'Wide banner',
-        '16x9': 'Widescreen',
-        '4x3':  'Classic photo',
-        '1x1':  'Square'
-    };
-
+    var RATIOS = { '3x1': '3 / 1', '2x1': '2 / 1', '16x9': '16 / 9', '4x3': '4 / 3', '1x1': '1 / 1' };
+    var LABELS = { '3x1': 'Thin strip', '2x1': 'Wide banner', '16x9': 'Widescreen', '4x3': 'Classic photo', '1x1': 'Square' };
     function getThumbUrl(chooser) {
         var img = chooser.querySelector('.chosen img, .w-image-chooser__preview img, .preview-image img');
         return img ? img.src : null;
     }
-
     function update(chooser, select) {
-        var wrap     = document.querySelector('.cover-preview-wrap');
+        var wrap = document.querySelector('.cover-preview-wrap');
         var viewport = document.getElementById('cover-preview-viewport');
         var previewImg = document.getElementById('cover-preview-img');
-        var badge    = document.getElementById('cover-preview-badge');
-
+        var badge = document.getElementById('cover-preview-badge');
         if (!wrap || !viewport || !previewImg) return;
-
-        var url   = getThumbUrl(chooser);
+        var url = getThumbUrl(chooser);
         var ratio = select ? select.value : (viewport.dataset.aspect || '2x1');
-
-        if (!url) {
-            wrap.style.display = 'none';
-            return;
-        }
-
+        if (!url) { wrap.style.display = 'none'; return; }
         wrap.style.display = '';
         previewImg.src = url;
         viewport.style.aspectRatio = RATIOS[ratio] || '2 / 1';
         if (badge) badge.textContent = LABELS[ratio] || '';
     }
-
     function init() {
-        var select  = document.querySelector('[name="cover_image_aspect"]');
+        var select = document.querySelector('[name="cover_image_aspect"]');
         var chooser = null;
-
         if (select) {
             var panel = select.closest('.w-panel, [data-panel], section, fieldset');
             if (!panel) panel = select.parentElement.parentElement.parentElement;
@@ -159,32 +134,17 @@ def cover_image_preview_js():
             if (hidden) chooser = hidden.closest('.image-chooser, .chooser, [data-chooser]');
         }
         if (!chooser) return;
-
         var viewport = document.getElementById('cover-preview-viewport');
         if (viewport && viewport.dataset.aspect) {
             viewport.style.aspectRatio = RATIOS[viewport.dataset.aspect] || '2 / 1';
         }
-
         setTimeout(function () { update(chooser, select); }, 400);
-
-        if (select) {
-            select.addEventListener('change', function () { update(chooser, select); });
-        }
-
-        chooser.addEventListener('wagtail:chooser-chosen', function () {
-            setTimeout(function () { update(chooser, select); }, 150);
-        });
-
-        new MutationObserver(function () {
-            setTimeout(function () { update(chooser, select); }, 100);
-        }).observe(chooser, { childList: true, subtree: true, attributes: true });
+        if (select) select.addEventListener('change', function () { update(chooser, select); });
+        chooser.addEventListener('wagtail:chooser-chosen', function () { setTimeout(function () { update(chooser, select); }, 150); });
+        new MutationObserver(function () { setTimeout(function () { update(chooser, select); }, 100); }).observe(chooser, { childList: true, subtree: true, attributes: true });
     }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        setTimeout(init, 500);
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else setTimeout(init, 500);
 })();
 </script>
 """)
@@ -199,7 +159,6 @@ class HitCountColumn(Column):
             return specific_instance.hit_count.hits
         return "-"
 
-
 class AnalyticsColumn(Column):
     def __init__(self, name, field_name, **kwargs):
         super().__init__(name, **kwargs)
@@ -211,30 +170,86 @@ class AnalyticsColumn(Column):
             return getattr(specific_instance, self.field_name)
         return "-"
 
+class MainIssueColumn(Column):
+    def get_value(self, instance):
+        specific_instance = instance.specific
+        issue = getattr(specific_instance, 'main_issue', None)
+        if issue:
+            url = reverse('wagtailadmin_pages:edit', args=[issue.pk])
+            return format_html('<a href="{}" style="text-decoration: underline;">{}</a>', url, str(issue))
+        return "-"
 
-from wagtail.admin.viewsets.pages import PageListingViewSet
+class LastEditedByColumn(Column):
+    def get_value(self, instance):
+        specific_instance = instance.specific
+        revision = specific_instance.latest_revision
+        
+        if revision and revision.user:
+            user = revision.user
+            name = getattr(user, 'name', '') or getattr(user, 'email', '') or "Unknown User"
+            try:
+                url = reverse('wagtailusers_users:edit', args=[user.pk])
+                return format_html('<a href="{}" style="text-decoration: underline;">{}</a>', url, name)
+            except Exception:
+                return name
+                
+        return "-"
 
+class DraftArticlePageListingView(IndexView):
+    def get_queryset(self):
+        return super().get_queryset().filter(live=False)
 
-class ArticlePageListingViewSet(PageListingViewSet):
-    icon = 'doc-full'
-    menu_label = 'Articles'
-    menu_order = 200
+class PublishedArticlePageListingView(IndexView):
+    def get_queryset(self):
+        return super().get_queryset().filter(live=True)
+
+class DraftArticlePageListingViewSet(PageListingViewSet):
+    icon = 'draft'
+    menu_label = 'Draft Articles'
+    menu_order = 150
     add_to_admin_menu = True
+
+    index_view_class = DraftArticlePageListingView
 
     @property
     def columns(self):
-        return super().columns + [
-            HitCountColumn("hit_count", label="Views", sort_key="hit_count_generic__hits"),
+        base_columns = [col for col in super().columns if col.name != 'parent']
+        return base_columns + [
+            MainIssueColumn("main_issue__title", label="Issue", sort_key="main_issue__title"),
+            LastEditedByColumn("latest_revision__user__name", label="Last Edited By", sort_key="latest_revision__user__name"),
+            HitCountColumn("hit_count_generic__hits", label="Views", sort_key="hit_count_generic__hits"),
             AnalyticsColumn("read_fully_count", "read_fully_count", label="Read Fully", sort_key="read_fully_count")
         ]
 
+class PublishedArticlePageListingViewSet(PageListingViewSet):
+    icon = 'doc-full'
+    menu_label = 'Published Articles'
+    menu_order = 151
+    add_to_admin_menu = True
+
+    index_view_class = PublishedArticlePageListingView
+
+    @property
+    def columns(self):
+        base_columns = [col for col in super().columns if col.name != 'parent']
+        return base_columns + [
+            MainIssueColumn("main_issue__title", label="Issue", sort_key="main_issue__title"),
+            LastEditedByColumn("latest_revision__user__name", label="Last Edited By", sort_key="latest_revision__user__name"),
+            HitCountColumn("hit_count_generic__hits", label="Views", sort_key="hit_count_generic__hits"),
+            AnalyticsColumn("read_fully_count", "read_fully_count", label="Read Fully", sort_key="read_fully_count")
+        ]
 
 @hooks.register('register_admin_viewset')
-def register_article_viewset():
-    from .models import Article
-    ArticlePageListingViewSet.model = Article
-    return ArticlePageListingViewSet('articles')
+def register_draft_article_viewset():
+    Article = apps.get_model('articles', 'Article')
+    DraftArticlePageListingViewSet.model = Article
+    return DraftArticlePageListingViewSet('draft_articles')
 
+@hooks.register('register_admin_viewset')
+def register_published_article_viewset():
+    Article = apps.get_model('articles', 'Article')
+    PublishedArticlePageListingViewSet.model = Article
+    return PublishedArticlePageListingViewSet('published_articles')
 
 # ── Tag autocomplete ───────────────────────────────────────────────────────
 
@@ -247,32 +262,25 @@ def register_tag_autocomplete_js():
             if (event.key === 'Enter') {
                 const activeElement = document.activeElement;
                 if (!activeElement) return;
-
                 const tagWrapper = activeElement.closest('[data-controller="w-tag"], .tagit, .w-tag-input');
                 if (!tagWrapper) return;
-
                 const value = activeElement.value.trim();
-
                 if (value.length >= 2) {
                     const menus = document.querySelectorAll('.ui-autocomplete, [role="listbox"]');
                     let visibleMenu = null;
-
                     for (const menu of menus) {
                         if (menu.offsetParent !== null && window.getComputedStyle(menu).display !== 'none') {
                             visibleMenu = menu;
                             break;
                         }
                     }
-
                     if (visibleMenu) {
                         const highlighted = visibleMenu.querySelector('.ui-state-active, .active, [aria-selected="true"]');
                         if (highlighted) return;
-
                         const firstItem = visibleMenu.querySelector('.ui-menu-item, [role="option"]');
                         if (firstItem) {
                             event.preventDefault();
                             event.stopPropagation();
-
                             const target = firstItem.querySelector('.ui-menu-item-wrapper, a, span') || firstItem;
                             target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
                             target.click();
@@ -295,11 +303,7 @@ def richtext_import_block_js():
 <script>
 (function () {
     'use strict';
-
-    function wordCount(text) {
-        return (text || '').trim() ? (text.trim().split(/\\s+/).length) : 0;
-    }
-
+    function wordCount(text) { return (text || '').trim() ? (text.trim().split(/\\s+/).length) : 0; }
     function closestContaining(el, needle, maxDepth) {
         var node = el.parentElement;
         for (var i = 0; i < (maxDepth || 12); i++) {
@@ -309,95 +313,51 @@ def richtext_import_block_js():
         }
         return null;
     }
-
     function findSaveDraftButton() {
-        var selectors = [
-            'button[value="action-save-draft"]',
-            'button[name="action-save-draft"]',
-            'input[name="action-save-draft"]',
-            'button.action-save-draft',
-            'button.button--draft',
-            '[data-action-trigger="save-draft"]',
-        ];
+        var selectors = ['button[value="action-save-draft"]', 'button[name="action-save-draft"]', 'input[name="action-save-draft"]', 'button.action-save-draft', 'button.button--draft', '[data-action-trigger="save-draft"]'];
         for (var i = 0; i < selectors.length; i++) {
             var el = document.querySelector(selectors[i]);
             if (el) return el;
         }
         var btns = document.querySelectorAll('button[type="submit"], input[type="submit"]');
         for (var j = 0; j < btns.length; j++) {
-            if ((btns[j].textContent || btns[j].value || '').toLowerCase().indexOf('draft') !== -1)
-                return btns[j];
+            if ((btns[j].textContent || btns[j].value || '').toLowerCase().indexOf('draft') !== -1) return btns[j];
         }
         return null;
     }
-
     function instrumentTextarea(ta) {
         if (ta.dataset.rtiDone) return;
-
         var blockEl = closestContaining(ta, 'Paste & Import', 14);
         if (!blockEl) return;
-
         ta.dataset.rtiDone = '1';
-
         if (!blockEl.querySelector('.rti-banner')) {
             var banner = document.createElement('div');
             banner.className = 'rti-banner';
-            banner.style.cssText = [
-                'background:#fffbeb',
-                'border:1px solid #fde68a',
-                'color:#78350f',
-                'font-size:12px',
-                'padding:6px 14px',
-                'margin:0 0 4px',
-                'font-family:sans-serif',
-                'border-radius:4px',
-            ].join(';');
-            banner.innerHTML =
-                '<strong>Paste &amp; Import</strong> — paste HTML or plain text ' +
-                'below, then click <em>Convert to Blocks</em>. ' +
-                'The page saves as a draft and reloads with the expanded blocks.';
+            banner.style.cssText = 'background:#fffbeb;border:1px solid #fde68a;color:#78350f;font-size:12px;padding:6px 14px;margin:0 0 4px;font-family:sans-serif;border-radius:4px;';
+            banner.innerHTML = '<strong>Paste &amp; Import</strong> — paste HTML or plain text below, then click <em>Convert to Blocks</em>. The page saves as a draft and reloads with the expanded blocks.';
             ta.parentNode.insertBefore(banner, ta);
         }
-
         if (!blockEl.querySelector('.rti-toolbar')) {
             var toolbar = document.createElement('div');
             toolbar.className = 'rti-toolbar';
-            toolbar.style.cssText = [
-                'display:flex', 'align-items:center', 'gap:10px',
-                'padding:6px 0 8px', 'font-family:sans-serif',
-            ].join(';');
-
+            toolbar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 0 8px;font-family:sans-serif;';
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'rti-convert-btn button button-small';
-            btn.style.cssText = [
-                'background:#1a7f5a', 'color:#fff', 'border:none',
-                'padding:5px 14px', 'border-radius:4px',
-                'font-size:13px', 'font-weight:600', 'cursor:pointer',
-            ].join(';');
+            btn.style.cssText = 'background:#1a7f5a;color:#fff;border:none;padding:5px 14px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;';
             btn.textContent = '\\u26a1 Convert to Blocks';
-
             var meta = document.createElement('span');
             meta.className = 'rti-meta';
             meta.style.cssText = 'color:#6b7280;font-size:12px;';
-
             toolbar.appendChild(btn);
             toolbar.appendChild(meta);
             ta.parentNode.insertBefore(toolbar, ta);
-
-            var update = function () {
-                var n = wordCount(ta.value);
-                meta.textContent = n > 0 ? n.toLocaleString() + ' words' : '';
-            };
+            var update = function () { var n = wordCount(ta.value); meta.textContent = n > 0 ? n.toLocaleString() + ' words' : ''; };
             ta.addEventListener('input', update);
             setTimeout(update, 400);
-
-            btn.addEventListener('click', function () {
-                handleConvert(ta, blockEl, btn, meta);
-            });
+            btn.addEventListener('click', function () { handleConvert(ta, blockEl, btn, meta); });
         }
     }
-
     function handleConvert(ta, blockEl, btn, meta) {
         if (!ta.value.trim()) {
             meta.style.color = '#dc2626';
@@ -405,32 +365,16 @@ def richtext_import_block_js():
             setTimeout(function () { meta.textContent = ''; }, 4000);
             return;
         }
-
-        var form =
-            document.getElementById('page-edit-form') ||
-            ta.closest('form') ||
-            document.querySelector('form[method="post"]');
-
-        if (!form) {
-            meta.style.color = '#dc2626';
-            meta.textContent = 'Cannot find the edit form.';
-            return;
-        }
-
+        var form = document.getElementById('page-edit-form') || ta.closest('form') || document.querySelector('form[method="post"]');
+        if (!form) { meta.style.color = '#dc2626'; meta.textContent = 'Cannot find the edit form.'; return; }
         var blockId = '__all__';
-
         var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         var allEls = [blockEl].concat(Array.from(blockEl.querySelectorAll('*')));
         outer: for (var i = 0; i < allEls.length; i++) {
             var ds = allEls[i].dataset;
-            for (var key in ds) {
-                if (uuidRe.test(ds[key])) { blockId = ds[key]; break outer; }
-            }
-            if (allEls[i].tagName === 'INPUT' && allEls[i].type === 'hidden') {
-                if (uuidRe.test(allEls[i].value)) { blockId = allEls[i].value; break; }
-            }
+            for (var key in ds) { if (uuidRe.test(ds[key])) { blockId = ds[key]; break outer; } }
+            if (allEls[i].tagName === 'INPUT' && allEls[i].type === 'hidden') { if (uuidRe.test(allEls[i].value)) { blockId = allEls[i].value; break; } }
         }
-
         var hiddenField = form.querySelector('input[name="convert_block_id"]');
         if (!hiddenField) {
             hiddenField = document.createElement('input');
@@ -439,7 +383,6 @@ def richtext_import_block_js():
             form.appendChild(hiddenField);
         }
         hiddenField.value = blockId;
-
         var saveDraftBtn = findSaveDraftButton();
         if (saveDraftBtn) {
             btn.disabled = true;
@@ -455,27 +398,13 @@ def richtext_import_block_js():
             meta.textContent = 'Ready. Click the Save Draft button to apply conversion.';
         }
     }
-
-    function scan() {
-        document.querySelectorAll('textarea').forEach(instrumentTextarea);
-    }
-
+    function scan() { document.querySelectorAll('textarea').forEach(instrumentTextarea); }
     new MutationObserver(function (mutations) {
         var needsScan = false;
-        mutations.forEach(function (m) {
-            m.addedNodes.forEach(function (n) {
-                if (n.nodeType === 1) needsScan = true;
-            });
-        });
+        mutations.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) needsScan = true; }); });
         if (needsScan) scan();
     }).observe(document.body, { childList: true, subtree: true });
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { setTimeout(scan, 800); });
-    } else {
-        setTimeout(scan, 800);
-    }
-
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', function () { setTimeout(scan, 800); }); } else { setTimeout(scan, 800); }
 })();
 </script>
 """)
@@ -484,18 +413,12 @@ def richtext_import_block_js():
 # ── Custom Homepage Panel Definition: Articles ─────────────────────────────
 
 class MostReadArticlesDashboardPanel(Component):
-    """
-    A custom dashboard component panel that gathers metrics from django-hitcount
-    and renders a leaderboard component directly on the Wagtail home view.
-    """
-    # FIX: Shifted from 150 to 500 to render below 'Most Recent Edits' panel
     order = 500  
     template_name = 'wagtailadmin/panels/most_read_articles.html'
 
     def get_context_data(self, parent_context):
         context = super().get_context_data(parent_context)
-        
-        from .models import Article 
+        Article = apps.get_model('articles', 'Article')
         from django.utils import timezone
         from datetime import timedelta
         from django.db.models import Count
@@ -504,7 +427,6 @@ class MostReadArticlesDashboardPanel(Component):
         from wagtail.models import Page
 
         one_month_ago = timezone.now() - timedelta(days=30)
-        
         article_content_type = ContentType.objects.get_for_model(Article)
         page_content_type = ContentType.objects.get_for_model(Page)
 
@@ -525,20 +447,17 @@ class MostReadArticlesDashboardPanel(Component):
         hit_maps = {}
         for hit in top_hits:
             try:
-                pk_int = int(hit['hitcount__object_pk'])
-                hit_maps[pk_int] = hit['total_views']
+                hit_maps[int(hit['hitcount__object_pk'])] = hit['total_views']
             except (ValueError, TypeError):
                 continue
 
         articles_queryset = Article.objects.live().filter(id__in=hit_maps.keys())
-
         articles_list = []
         for article in articles_queryset:
             article.total_views = hit_maps.get(article.id, 0)
             articles_list.append(article)
 
         articles_list.sort(key=lambda x: x.total_views, reverse=True)
-        
         if len(articles_list) < 5:
             already_included = [a.id for a in articles_list]
             extra_articles = Article.objects.live().exclude(id__in=already_included)[:5 - len(articles_list)]
@@ -553,18 +472,11 @@ class MostReadArticlesDashboardPanel(Component):
 # ── Custom Homepage Panel Definition: Issues ───────────────────────────────
 
 class MostReadIssuesDashboardPanel(Component):
-    """
-    A custom dashboard component panel that gathers rolling 30-day metrics 
-    from django-hitcount specifically for the Issue page model.
-    """
-    # FIX: Shifted from 160 to 510 to render below 'Most Recent Edits' panel
     order = 510  
     template_name = 'wagtailadmin/panels/most_read_issues.html'
 
     def get_context_data(self, parent_context):
         context = super().get_context_data(parent_context)
-        
-        from django.apps import apps
         from django.utils import timezone
         from datetime import timedelta
         from django.db.models import Count
@@ -573,7 +485,6 @@ class MostReadIssuesDashboardPanel(Component):
         from wagtail.models import Page
 
         one_month_ago = timezone.now() - timedelta(days=30)
-
         Issue = apps.get_model('issue', 'Issue')
         issue_content_type = ContentType.objects.get_for_model(Issue)
         page_content_type = ContentType.objects.get_for_model(Page)
@@ -595,20 +506,17 @@ class MostReadIssuesDashboardPanel(Component):
         hit_maps = {}
         for hit in top_hits:
             try:
-                pk_int = int(hit['hitcount__object_pk'])
-                hit_maps[pk_int] = hit['total_views']
+                hit_maps[int(hit['hitcount__object_pk'])] = hit['total_views']
             except (ValueError, TypeError):
                 continue
 
         issues_queryset = Issue.objects.live().filter(id__in=hit_maps.keys())
-
         issues_list = []
         for issue in issues_queryset:
             issue.total_views = hit_maps.get(issue.id, 0)
             issues_list.append(issue)
 
         issues_list.sort(key=lambda x: x.total_views, reverse=True)
-
         if len(issues_list) < 5:
             already_included = [i.id for i in issues_list]
             extra_issues = Issue.objects.live().exclude(id__in=already_included)[:5 - len(issues_list)]
@@ -623,24 +531,11 @@ class MostReadIssuesDashboardPanel(Component):
 # ── Custom Homepage Panel Definition: Topics ───────────────────────────────
 
 class MostReadTopicsDashboardPanel(Component):
-    """
-    A custom dashboard component panel that gathers rolling 30-day metrics 
-    from django-hitcount by aggregating the view counts of all Articles 
-    and Issues belonging to each specific Topic.
-    """
-    # Determines the visual ordering sequence layout position on the dashboard screen
     order = 520  
-    # Path referencing the target rendering template directly
     template_name = 'wagtailadmin/panels/most_read_topics.html'
 
     def get_context_data(self, parent_context):
-        """
-        Extends the standard parent template context dictionary, calculating 
-        the sum of all article and issue views for each topic.
-        """
         context = super().get_context_data(parent_context)
-        
-        from django.apps import apps
         from django.utils import timezone
         from datetime import timedelta
         from django.db.models import Count
@@ -649,7 +544,6 @@ class MostReadTopicsDashboardPanel(Component):
         from wagtail.models import Page
 
         one_month_ago = timezone.now() - timedelta(days=30)
-
         Topic = apps.get_model('issue', 'Topic')
         Issue = apps.get_model('issue', 'Issue')
         Article = apps.get_model('articles', 'Article')
@@ -676,8 +570,6 @@ class MostReadTopicsDashboardPanel(Component):
                 continue
 
         topic_views = {}
-
-        # OPTIMIZATION: Only load and map issues that actually logged hits in the 30-day window
         live_issues = Issue.objects.live().filter(id__in=hits_map.keys()).select_related('topic')
         issue_paths = {}  
         
@@ -686,9 +578,7 @@ class MostReadTopicsDashboardPanel(Component):
                 issue_paths[issue.path] = issue.topic_id
                 topic_views[issue.topic_id] = topic_views.get(issue.topic_id, 0) + hits_map.get(issue.id, 0)
 
-        # OPTIMIZATION: Only evaluate active articles to prevent memory footprint bloat
         live_articles = Article.objects.live().filter(id__in=hits_map.keys())
-        
         has_direct_topic = False
         try:
             Article._meta.get_field('topic')
@@ -703,9 +593,6 @@ class MostReadTopicsDashboardPanel(Component):
             else:
                 parent_path = article.path[:-4]
                 t_id = issue_paths.get(parent_path)
-
-                # EDGE CASE FALLBACK: If the parent issue had 0 hits, it won't be in issue_paths.
-                # Look up the parent issue directly if it isn't mapped yet.
                 if not t_id and parent_path:
                     parent_issue = Issue.objects.live().filter(path=parent_path).first()
                     if parent_issue and parent_issue.topic_id:
@@ -723,7 +610,6 @@ class MostReadTopicsDashboardPanel(Component):
 
         topics_list.sort(key=lambda x: x.total_views, reverse=True)
         context['topics'] = topics_list[:5]
-        
         return context
 
 
@@ -731,10 +617,61 @@ class MostReadTopicsDashboardPanel(Component):
 
 @hooks.register('construct_homepage_panels')
 def add_most_read_articles_panel(request, panels):
-    """
-    Intercepts the homepage panel collection sequence and appends our 
-    custom analytics insight panel instances directly to the interface layout.
-    """
     panels.append(MostReadArticlesDashboardPanel())
     panels.append(MostReadIssuesDashboardPanel())
     panels.append(MostReadTopicsDashboardPanel())
+
+
+@hooks.register('before_edit_page')
+def notify_last_edited_by(request, page):
+    if request.method == 'GET':
+        from articles.models import Article
+        from issue.models import Issue
+        from literati.models import Literati
+        from django.contrib import messages
+        from django.utils.formats import localize
+        
+        specific_page = page.specific
+        if isinstance(specific_page, (Article, Issue, Literati)):
+            revision = specific_page.latest_revision
+            name = None
+            date_str = ""
+            
+            if revision and revision.user:
+                user = revision.user
+                name = getattr(user, 'name', '') or getattr(user, 'email', '') or getattr(user, 'username', '') or str(user)
+                if revision.created_at:
+                    date_str = f" on {localize(revision.created_at)}"
+            elif page.owner:
+                user = page.owner
+                name = getattr(user, 'name', '') or getattr(user, 'email', '') or getattr(user, 'username', '') or str(user)
+                if page.latest_revision_created_at:
+                    date_str = f" on {localize(page.latest_revision_created_at)}"
+            
+            if name:
+                from django.utils.safestring import mark_safe
+                
+                modal_html = f"""
+                <div class="last-edited-warning-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(11, 31, 58, 0.4); z-index: 999999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeInModal 0.3s ease-out; box-sizing: border-box; margin: 0; padding: 20px;">
+                    <div style="background: #ffffff; padding: 40px; border-radius: 16px; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(11, 31, 58, 0.25); text-align: center; border-top: 6px solid #e65100; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; margin: auto;">
+                        <div style="width: 64px; height: 64px; background: #fff3e0; color: #e65100; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h3 style="margin-bottom: 12px; font-size: 22px; font-weight: 700; color: #0b1f3a; margin-top: 0;">Edit Warning</h3>
+                        <p style="margin-bottom: 30px; color: #4a5568; font-size: 15px; line-height: 1.6; margin-top: 0;">
+                            This page was last edited by <strong style="color: #0b1f3a;">{name}</strong>{date_str}.<br>
+                            Please confirm before editing to prevent accidental conflicts.
+                        </p>
+                        <button onclick="this.closest('.last-edited-warning-modal').remove()" style="background: #e65100; color: #ffffff; border: none; padding: 12px 32px; border-radius: 30px; font-weight: 700; cursor: pointer; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3);">
+                            I Confirm
+                        </button>
+                    </div>
+                </div>
+                <style>
+                @keyframes fadeInModal {{
+                    from {{ opacity: 0; }}
+                    to {{ opacity: 1; }}
+                }}
+                </style>
+                """
+                messages.warning(request, mark_safe(modal_html))

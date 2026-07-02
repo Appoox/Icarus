@@ -1,0 +1,575 @@
+{% extends "wagtailadmin/base.html" %}
+
+{% block titletag %}Analytics{% endblock %}
+
+{% block content %}
+<div class="nice-padding">
+
+<style>
+  :root {
+    --an-accent: #5b6ef5;
+    --an-success: #22c55e;
+    --an-warn: #f59e0b;
+    --an-danger: #ef4444;
+    --an-muted: var(--w-color-text-meta);
+  }
+  .an-header { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+  .an-header h1 { font-size:1.6rem; font-weight:700; margin:0; }
+  .an-header p { margin:4px 0 0; color:var(--an-muted); font-size:0.9rem; }
+
+  /* Section titles */
+  .an-section { margin-bottom:36px; }
+  .an-section-title {
+    font-size:0.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--an-muted);
+    border-bottom:1px solid var(--w-color-border-furniture);
+    padding-bottom:8px; margin-bottom:18px;
+  }
+
+  /* Stat cards */
+  .an-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:28px; }
+  .an-card {
+    background:var(--w-color-surface-page);
+    border:1px solid var(--w-color-border-furniture);
+    border-radius:10px; padding:18px 20px;
+    display:flex; flex-direction:column; gap:6px;
+    box-shadow:0 1px 4px rgba(0,0,0,.06);
+  }
+  .an-card-label { font-size:0.75rem; color:var(--an-muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+  .an-card-value { font-size:1.9rem; font-weight:800; line-height:1; }
+  .an-card-sub { font-size:0.78rem; color:var(--an-muted); }
+  .an-card.warn .an-card-value { color:var(--an-warn); }
+  .an-card.danger .an-card-value { color:var(--an-danger); }
+  .an-card.success .an-card-value { color:var(--an-success); }
+  .an-card.accent .an-card-value { color:var(--an-accent); }
+
+  /* Chart grid */
+  .an-charts { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:20px; }
+  .an-chart-box {
+    background:var(--w-color-surface-page);
+    border:1px solid var(--w-color-border-furniture);
+    border-radius:10px; padding:20px;
+    box-shadow:0 1px 4px rgba(0,0,0,.06);
+  }
+  .an-chart-box h3 { font-size:0.85rem; font-weight:700; margin:0 0 16px; color:var(--w-color-text-default); }
+  .an-chart-box canvas { max-height:240px; }
+
+  /* Tables */
+  .an-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  .an-table th { text-align:left; padding:8px 10px; color:var(--an-muted); font-weight:700; font-size:0.72rem; text-transform:uppercase; border-bottom:2px solid var(--w-color-border-furniture); }
+  .an-table td { padding:10px; border-bottom:1px solid var(--w-color-border-furniture); }
+  .an-table tr:last-child td { border-bottom:none; }
+  .an-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.78rem; font-weight:700; }
+  .an-pill-danger { background:#fee2e2; color:#b91c1c; }
+  .an-pill-warn   { background:#fef3c7; color:#92400e; }
+  .an-pill-ok     { background:#d1fae5; color:#065f46; }
+  .an-two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media(max-width:760px){ .an-two-col { grid-template-columns:1fr; } }
+
+  /* Bar inside table cells */
+  .an-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .an-bar-bg { flex:1; height:8px; background:var(--w-color-surface-field); border-radius:4px; overflow:hidden; }
+  .an-bar-fill { height:100%; border-radius:4px; background:var(--an-accent); }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
+
+<header class="an-header">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--an-accent)" stroke-width="2">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
+  <div>
+    <h1>Analytics Overview</h1>
+    <p>Platform-wide metrics across content, readers, subscriptions &amp; moderation.</p>
+  </div>
+</header>
+
+<div class="an-section">
+  <div class="an-section-title">📊 Platform Summary</div>
+  <div class="an-cards">
+    <div class="an-card accent">
+      <div class="an-card-label">Total Readers</div>
+      <div class="an-card-value">{{ total_users }}</div>
+      <div class="an-card-sub">Active, non-anonymized</div>
+    </div>
+    <div class="an-card success">
+      <div class="an-card-label">Active Subscribers</div>
+      <div class="an-card-value">{{ active_subscribers }}</div>
+      <div class="an-card-sub">Subscription not expired</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">Total Articles</div>
+      <div class="an-card-value">{{ total_articles }}</div>
+      <div class="an-card-sub">Live published</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">Homepage Hits (All)</div>
+      <div class="an-card-value">{{ homepage_hits_total }}</div>
+      <div class="an-card-sub">{{ homepage_hits_30d }} in last 30 days</div>
+    </div>
+    <div class="an-card warn">
+      <div class="an-card-label">Print Subscribers</div>
+      <div class="an-card-value">{{ total_print_subscribers }}</div>
+      <div class="an-card-sub">Active delivery</div>
+    </div>
+    <div class="an-card danger">
+      <div class="an-card-label">Mod Backlog</div>
+      <div class="an-card-value">{{ moderation_backlog }}</div>
+      <div class="an-card-sub">Pending approval</div>
+    </div>
+    <div class="an-card warn">
+      <div class="an-card-label">Soft Deactivated</div>
+      <div class="an-card-value">{{ soft_deactivated }}</div>
+      <div class="an-card-sub">{{ pending_purge }} awaiting purge</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">Anonymized</div>
+      <div class="an-card-value">{{ anonymized_total }}</div>
+      <div class="an-card-sub">GDPR erasure complete</div>
+    </div>
+  </div>
+</div>
+
+<div class="an-section">
+  <div class="an-section-title">📈 Homepage Traffic Trends</div>
+  <div class="an-charts">
+    <div class="an-chart-box">
+      <h3>Hits Per Day (Last 7 Days)</h3>
+      <canvas id="hpDailyChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>Hits Per Week (Last 4 Weeks)</h3>
+      <canvas id="hpWeeklyChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>Hits Per Month (Last 12 Months)</h3>
+      <canvas id="hpMonthlyChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>Hits Per Year (Last 5 Years)</h3>
+      <canvas id="hpYearlyChart"></canvas>
+    </div>
+  </div>
+</div>
+
+
+<div class="an-section">
+  <div class="an-section-title">💳 Subscription Health</div>
+  <div class="an-charts">
+
+    <div class="an-chart-box">
+      <h3>Active Churn Rate — Cancelled vs Auto-Renewing</h3>
+      <canvas id="churnChart"></canvas>
+      <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
+        Churn rate: <strong style="color:var(--an-danger)">{{ churn_rate_pct }}%</strong> of active subscribers have cancelled but are still in access period.
+      </p>
+    </div>
+
+    <div class="an-chart-box">
+      <h3>Grace Period Recovery (Last 33 Days)</h3>
+      <canvas id="graceChart"></canvas>
+      <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
+        Recovery rate: <strong style="color:var(--an-success)">{{ grace_recovery_pct }}%</strong>
+        — {{ recently_renewed }} renewed out of ~{{ users_in_grace }} who entered grace.
+      </p>
+    </div>
+
+    <div class="an-chart-box">
+      <h3>Paywall Conversion (Last 30 Days)</h3>
+      <canvas id="paywallChart"></canvas>
+      <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
+        {{ new_subscribers_30d }} of {{ new_registrations_30d }} new registrations converted to subscribers
+        (<strong>{{ paywall_conversion_pct }}%</strong>).
+      </p>
+    </div>
+
+    <div class="an-chart-box">
+      <h3>Retention: Bookmarkers vs Non-Bookmarkers</h3>
+      <canvas id="retentionChart"></canvas>
+      <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
+        Users who bookmark: <strong style="color:var(--an-success)">{{ retention_with_bm }}%</strong> active |
+        Non-bookmarkers: <strong style="color:var(--an-warn)">{{ retention_without_bm }}%</strong> active.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<div class="an-section">
+  <div class="an-section-title">📖 Content Engagement</div>
+  <div class="an-charts">
+
+    <div class="an-chart-box">
+      <h3>Attention Score — Top Articles (Read Fully %)</h3>
+      <canvas id="attentionChart"></canvas>
+    </div>
+
+    <div class="an-chart-box">
+      <h3>Language Availability (Translation Coverage)</h3>
+      <canvas id="langChart"></canvas>
+    </div>
+
+    <div class="an-chart-box">
+      <h3>Passive vs Active Reading</h3>
+      <canvas id="passiveChart"></canvas>
+      <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
+        Passive (reads): <strong>{{ passive_total }}</strong> &nbsp;|&nbsp;
+        Active (bookmarks): <strong>{{ active_total }}</strong>
+      </p>
+    </div>
+
+    <div class="an-chart-box">
+      <h3>Most Favorited Articles</h3>
+      <canvas id="favChart"></canvas>
+    </div>
+
+  </div>
+</div>
+
+<div class="an-section">
+  <div class="an-section-title">👥 Demographics (Consented Users Only)</div>
+  <div class="an-charts">
+    <div class="an-chart-box">
+      <h3>Gender — Articles Hit vs Read Fully</h3>
+      <canvas id="genderChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>Age Bracket — Articles Hit vs Read Fully</h3>
+      <canvas id="ageChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="an-section">
+  <div class="an-section-title">🗺️ Print Subscribers by Geography</div>
+  <div class="an-two-col">
+    <div class="an-chart-box">
+      <h3>By State (Top 15)</h3>
+      <canvas id="printStateChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>By District (Top 10)</h3>
+      <canvas id="printDistrictChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="an-section">
+  <div class="an-section-title">🔏 Compliance &amp; Consent</div>
+  <div class="an-charts">
+    <div class="an-chart-box">
+      <h3>Data Opt-In Rates</h3>
+      <canvas id="optinChart"></canvas>
+    </div>
+    <div class="an-chart-box">
+      <h3>Onboarding Friction — Blank Field Rates</h3>
+      <canvas id="frictionChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="an-section">
+  <div class="an-section-title">💰 Payment Gateway Performance</div>
+  {% if gateway_names_json != '[]' %}
+  <div class="an-chart-box" style="max-width:680px;">
+    <h3>Transaction Failure Rate by Gateway</h3>
+    <canvas id="gatewayChart"></canvas>
+  </div>
+  {% else %}
+  <p style="color:var(--an-muted);">No gateway payment data recorded yet.</p>
+  {% endif %}
+</div>
+
+<div class="an-section">
+  <div class="an-section-title">💬 Community Moderation</div>
+  <div class="an-cards" style="max-width:600px;">
+    <div class="an-card {% if community_health_pct > 10 %}danger{% else %}success{% endif %}">
+      <div class="an-card-label">Community Health Index</div>
+      <div class="an-card-value">{{ community_health_pct }}%</div>
+      <div class="an-card-sub">{{ removed_comments }} removed of {{ total_comments }} total</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">Approved Comments</div>
+      <div class="an-card-value">{{ approved_comments }}</div>
+      <div class="an-card-sub">Visible to readers</div>
+    </div>
+    <div class="an-card {% if moderation_backlog > 0 %}warn{% else %}success{% endif %}">
+      <div class="an-card-label">Moderation Backlog</div>
+      <div class="an-card-value">{{ moderation_backlog }}</div>
+      <div class="an-card-sub">Awaiting is_approved</div>
+    </div>
+  </div>
+</div>
+
+<div class="an-section">
+  <div class="an-section-title">🛡️ Security Signals</div>
+  <div class="an-two-col">
+
+    <div class="an-chart-box">
+      <h3>Potential Account Sharing — Shared Login IPs (/24 subnets)</h3>
+      {% if ip_sharing_suspects %}
+      <table class="an-table">
+        <thead><tr><th>Subnet</th><th>Accounts</th></tr></thead>
+        <tbody>
+        {% for s in ip_sharing_suspects %}
+          <tr>
+            <td><code>{{ s.subnet }}</code></td>
+            <td>
+              <span class="an-pill {% if s.count > 5 %}an-pill-danger{% elif s.count > 2 %}an-pill-warn{% else %}an-pill-ok{% endif %}">
+                {{ s.count }}
+              </span>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color:var(--an-muted);font-size:0.85rem;">No shared login IPs detected.</p>
+      {% endif %}
+    </div>
+
+    <div class="an-chart-box">
+      <h3>Credential Stuffing — Multi-Account Registration IPs (/24)</h3>
+      {% if stuffing_suspects %}
+      <table class="an-table">
+        <thead><tr><th>Subnet</th><th>Registrations</th></tr></thead>
+        <tbody>
+        {% for s in stuffing_suspects %}
+          <tr>
+            <td><code>{{ s.subnet }}</code></td>
+            <td>
+              <span class="an-pill {% if s.count > 10 %}an-pill-danger{% elif s.count > 5 %}an-pill-warn{% else %}an-pill-ok{% endif %}">
+                {{ s.count }}
+              </span>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color:var(--an-muted);font-size:0.85rem;">No suspicious registration clusters detected.</p>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+</div>{# end nice-padding #}
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Shared palette ───────────────────────────────────────────────────
+  const ACCENT  = '#5b6ef5';
+  const SUCCESS = '#22c55e';
+  const WARN    = '#f59e0b';
+  const DANGER  = '#ef4444';
+  const MUTED   = 'rgba(100,116,139,0.18)';
+  const PALETTE = ['#5b6ef5','#22c55e','#f59e0b','#ef4444','#a78bfa','#38bdf8','#fb923c','#34d399'];
+
+  const isDark = document.documentElement.classList.contains('w-theme-system') &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches ||
+    document.documentElement.dataset.wColorScheme === 'dark';
+
+  const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#cbd5e1' : '#475569';
+
+  Chart.defaults.color = textColor;
+  Chart.defaults.font.family = 'system-ui, -apple-system, sans-serif';
+  Chart.defaults.font.size = 12;
+
+  function mkDoughnut(id, labels, data, colors) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: colors || PALETTE, borderWidth: 2, borderColor: isDark ? '#1e293b' : '#fff' }] },
+      options: { plugins: { legend: { position: 'bottom' } }, cutout: '62%' }
+    });
+  }
+
+  function mkBar(id, labels, datasets, opts) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: Object.assign({
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          x: { grid: { color: gridColor } },
+          y: { grid: { color: gridColor }, beginAtZero: true }
+        }
+      }, opts || {})
+    });
+  }
+
+  function mkHBar(id, labels, data, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data, backgroundColor: color || ACCENT, borderRadius: 4 }] },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: gridColor }, beginAtZero: true },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // ── 1. Churn ────────────────────────────────────────────────────────
+  mkDoughnut('churnChart',
+    ['Auto-Renewing', 'Cancelled (Active)'],
+    [{{ auto_renewing }}, {{ cancelled_but_active }}],
+    [SUCCESS, DANGER]
+  );
+
+  // ── 2. Grace Recovery ───────────────────────────────────────────────
+  mkDoughnut('graceChart',
+    ['Renewed', 'Did Not Renew'],
+    [{{ recently_renewed }}, Math.max(0, {{ users_in_grace }} - {{ recently_renewed }})],
+    [SUCCESS, MUTED]
+  );
+
+  // ── 3. Paywall Conversion ───────────────────────────────────────────
+  mkDoughnut('paywallChart',
+    ['Converted to Subscriber', 'Registered Only'],
+    [{{ new_subscribers_30d }}, Math.max(0, {{ new_registrations_30d }} - {{ new_subscribers_30d }})],
+    [ACCENT, MUTED]
+  );
+
+  // ── 4. Retention Correlation ────────────────────────────────────────
+  mkBar('retentionChart',
+    ['With Bookmarks ({{ with_bm_total }})', 'Without Bookmarks ({{ without_bm_total }})'],
+    [{ label: 'Active Subscription %', data: [{{ retention_with_bm }}, {{ retention_without_bm }}], backgroundColor: [SUCCESS, WARN], borderRadius: 6 }]
+  );
+
+  // ── 5. Attention Score ──────────────────────────────────────────────
+  (function() {
+    const raw = {{ attention_data_json|safe }};
+    if (!raw.length) return;
+    const labels = raw.map(d => d.title);
+    const scores = raw.map(d => d.score);
+    mkHBar('attentionChart', labels, scores, ACCENT);
+  })();
+
+  // ── 6. Language Coverage ────────────────────────────────────────────
+  mkDoughnut('langChart', {{ lang_labels_json|safe }}, {{ lang_counts_json|safe }}, PALETTE);
+
+  // ── 7. Passive vs Active ────────────────────────────────────────────
+  mkDoughnut('passiveChart',
+    ['Passive Reads', 'Active Bookmarks'],
+    [{{ passive_total }}, {{ active_total }}],
+    [ACCENT, SUCCESS]
+  );
+
+  // ── 8. Most Favorited ───────────────────────────────────────────────
+  (function() {
+    const raw = {{ most_favorited_articles_json|safe }};
+    if (!raw.length) return;
+    mkHBar('favChart', raw.map(d => d.title), raw.map(d => d.count), SUCCESS);
+  })();
+
+  // ── 9. Gender ───────────────────────────────────────────────────────
+  (function() {
+    const labels = {{ gender_labels_json|safe }};
+    if (!labels.length) { document.getElementById('genderChart').closest('.an-chart-box').querySelector('canvas').insertAdjacentHTML('afterend','<p style="color:var(--w-color-text-meta);font-size:.85rem;">No consented gender data yet.</p>'); return; }
+    mkBar('genderChart', labels,
+      [
+        { label: 'Articles Hit', data: {{ gender_hits_json|safe }}, backgroundColor: ACCENT, borderRadius: 4 },
+        { label: 'Read Fully',   data: {{ gender_reads_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 }
+      ]
+    );
+  })();
+
+  // ── 10. Age Brackets ────────────────────────────────────────────────
+  (function() {
+    const labels = {{ age_labels_json|safe }};
+    if (!labels.length) { return; }
+    mkBar('ageChart', labels,
+      [
+        { label: 'Articles Hit', data: {{ age_hits_json|safe }}, backgroundColor: ACCENT, borderRadius: 4 },
+        { label: 'Read Fully',   data: {{ age_reads_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 }
+      ]
+    );
+  })();
+
+  // ── 11. Print by State ──────────────────────────────────────────────
+  (function() {
+    const raw = {{ print_by_state_json|safe }};
+    if (!raw.length) return;
+    mkHBar('printStateChart', raw.map(d => d.state), raw.map(d => d.count), WARN);
+  })();
+
+  // ── 12. Print by District ───────────────────────────────────────────
+  (function() {
+    const raw = {{ print_by_district_json|safe }};
+    if (!raw.length) return;
+    mkHBar('printDistrictChart', raw.map(d => d.district), raw.map(d => d.count), '#fb923c');
+  })();
+
+  // ── 13. Opt-In Rates ────────────────────────────────────────────────
+  mkBar('optinChart',
+    {{ optin_labels_json|safe }},
+    [{ label: 'Opt-In %', data: {{ optin_pcts_json|safe }}, backgroundColor: PALETTE, borderRadius: 4 }]
+  );
+
+  // ── 14. Onboarding Friction ─────────────────────────────────────────
+  mkBar('frictionChart',
+    {{ friction_labels_json|safe }},
+    [{ label: 'Blank Field %', data: {{ friction_pcts_json|safe }}, backgroundColor: DANGER, borderRadius: 4 }]
+  );
+
+  // ── 15. Gateway Payments ────────────────────────────────────────────
+  (function() {
+    const names = {{ gateway_names_json|safe }};
+    if (!names.length) return;
+    mkBar('gatewayChart', names, [
+      { label: 'Completed', data: {{ gateway_completed_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 },
+      { label: 'Failed',    data: {{ gateway_failed_json|safe }},    backgroundColor: DANGER,  borderRadius: 4 },
+      { label: 'Pending',   data: {{ gateway_pending_json|safe }},   backgroundColor: WARN,    borderRadius: 4 },
+    ]);
+  })();
+
+  // ── 16. Homepage Traffic Charts ─────────────────────────────────────────
+  // Changed: Initialize Bar charts for the new Homepage Hits datasets with default empty checks
+  (function() {
+      const daily = {{ hp_hits_daily_json|safe|default:"[]" }};
+      if (daily && daily.length > 0) {
+          mkBar('hpDailyChart', daily.map(d=>d.label), [{ label: 'Hits', data: daily.map(d=>d.count), backgroundColor: ACCENT, borderRadius: 4 }]);
+      } else {
+          document.getElementById('hpDailyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No daily data yet.</p>');
+      }
+
+      const weekly = {{ hp_hits_weekly_json|safe|default:"[]" }};
+      if (weekly && weekly.length > 0) {
+          mkBar('hpWeeklyChart', weekly.map(d=>d.label), [{ label: 'Hits', data: weekly.map(d=>d.count), backgroundColor: SUCCESS, borderRadius: 4 }]);
+      } else {
+          document.getElementById('hpWeeklyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No weekly data yet.</p>');
+      }
+
+      const monthly = {{ hp_hits_monthly_json|safe|default:"[]" }};
+      if (monthly && monthly.length > 0) {
+          mkBar('hpMonthlyChart', monthly.map(d=>d.label), [{ label: 'Hits', data: monthly.map(d=>d.count), backgroundColor: WARN, borderRadius: 4 }]);
+      } else {
+          document.getElementById('hpMonthlyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No monthly data yet.</p>');
+      }
+
+      const yearly = {{ hp_hits_yearly_json|safe|default:"[]" }};
+      if (yearly && yearly.length > 0) {
+          mkBar('hpYearlyChart', yearly.map(d=>d.label), [{ label: 'Hits', data: yearly.map(d=>d.count), backgroundColor: DANGER, borderRadius: 4 }]);
+      } else {
+          document.getElementById('hpYearlyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No yearly data yet.</p>');
+      }
+  })();
+  
+})();
+</script>
+{% endblock %}

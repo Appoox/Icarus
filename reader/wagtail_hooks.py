@@ -85,7 +85,7 @@ class ReaderSnippetViewSet(SnippetViewSet):
     index_view_class = ReaderIndexView
     url_prefix = 'readers'
     menu_label = 'Readers'
-    icon = 'user'
+    icon = 'group'
     menu_order = 300
     add_to_admin_menu = True
     
@@ -100,7 +100,7 @@ class PaymentDetailsSnippetViewSet(SnippetViewSet):
     model = PaymentDetails
     url_prefix = 'payments'
     menu_label = 'Payments'
-    icon = 'credit-card'
+    icon = 'tag'
     menu_order = 301
     add_to_admin_menu = True
     list_display = ("gateway_name", "amount", "status", "created_at")
@@ -214,7 +214,7 @@ def global_admin_js():
     MutationObserver so it is watching before Wagtail's own Stimulus
     controllers initialise.  The external file contains the full logic.
     """
-    js_url = static('js/admin_toasts.js')
+    js_url = static('js/admin_toasts.js') + '?v=' + str(int(timezone.now().timestamp()))
     return format_html(
         # Inline bootstrap: confirm hook is alive, then load the full script
         '<script>'
