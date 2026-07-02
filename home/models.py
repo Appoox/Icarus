@@ -11,6 +11,11 @@ from wagtail.admin.panels import PageChooserPanel
 
 from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
 
+from hitcount.models import HitCountMixin, HitCount
+from django.contrib.contenttypes.fields import GenericRelation
+from hitcount.views import HitCountMixin as HitCountViewMixin
+
+
 @register_setting
 class SiteContactSettings(BaseGenericSetting):
     contact_email = models.EmailField(blank=True)
@@ -426,12 +431,21 @@ class SiteFooter(ClusterableModel):
         return "Site Footer"
 
 
-class HomePage(Page):
+class HomePage(Page, HitCountMixin):
+
+    hit_count_generic = GenericRelation(
+        HitCount, object_id_field='object_pk',
+        related_query_name='hit_count_generic_relation'
+    )
 
     max_count = 1
 
     def get_context(self, request):
         context = super().get_context(request)
+
+        if not (request.user.is_superuser or request.user.is_staff):
+            hit_count = HitCount.objects.get_for_object(self)
+            HitCountViewMixin().hit_count(request, hit_count)
 
         from articles.models import Article, ArticleIndexPage
         from issue.models import Issue, Topic, IssueIndexPage

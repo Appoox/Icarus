@@ -422,7 +422,6 @@ def analytics_view(request):
     homepage_hits_total = 0
     homepage_hits_30d = 0
     
-    # Changed: Added dedicated list accumulators for day, week, month, and year aggregation graph metrics
     hp_hits_daily = []
     hp_hits_weekly = []
     hp_hits_monthly = []
@@ -432,7 +431,6 @@ def analytics_view(request):
         from hitcount.models import HitCount, Hit
         from django.contrib.contenttypes.models import ContentType
         from home.models import HomePage
-        # Changed: Required to aggregate records properly for the charts
         from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
         
         home_page = HomePage.objects.first()
@@ -447,35 +445,31 @@ def analytics_view(request):
                     hitcount=hp_hc, created__gte=thirty_days_ago
                 ).count()
                 
-                # Changed: Fetch & format Hits per day for the last 7 days
                 seven_days_ago = now - timedelta(days=7)
                 daily_qs = Hit.objects.filter(hitcount=hp_hc, created__gte=seven_days_ago) \
                     .annotate(period=TruncDay('created')) \
                     .values('period').annotate(count=Count('id')).order_by('period')
                 hp_hits_daily = [{'label': entry['period'].strftime('%b %d') if entry['period'] else '', 'count': entry['count']} for entry in daily_qs]
 
-                # Changed: Fetch & format Hits per week for the last 4 weeks
                 four_weeks_ago = now - timedelta(weeks=4)
                 weekly_qs = Hit.objects.filter(hitcount=hp_hc, created__gte=four_weeks_ago) \
                     .annotate(period=TruncWeek('created')) \
                     .values('period').annotate(count=Count('id')).order_by('period')
                 hp_hits_weekly = [{'label': entry['period'].strftime('W%W, %Y') if entry['period'] else '', 'count': entry['count']} for entry in weekly_qs]
 
-                # Changed: Fetch & format Hits per month for the last 12 months
                 twelve_months_ago = now - timedelta(days=365)
                 monthly_qs = Hit.objects.filter(hitcount=hp_hc, created__gte=twelve_months_ago) \
                     .annotate(period=TruncMonth('created')) \
                     .values('period').annotate(count=Count('id')).order_by('period')
                 hp_hits_monthly = [{'label': entry['period'].strftime('%b %Y') if entry['period'] else '', 'count': entry['count']} for entry in monthly_qs]
 
-                # Changed: Fetch & format Hits per year for the last 5 years
                 five_years_ago = now - timedelta(days=365*5)
                 yearly_qs = Hit.objects.filter(hitcount=hp_hc, created__gte=five_years_ago) \
                     .annotate(period=TruncYear('created')) \
                     .values('period').annotate(count=Count('id')).order_by('period')
                 hp_hits_yearly = [{'label': entry['period'].strftime('%Y') if entry['period'] else '', 'count': entry['count']} for entry in yearly_qs]
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"DEBUG: Error fetching hits: {e}")
 
     # ── 2 & 3. Gender & Age-Bracket Hits / Read Fully ─────────────────────
     # We join HitCount data with users who have given consent
@@ -751,10 +745,9 @@ def analytics_view(request):
     # ── 15. Language Slider Usage ──────────────────────────────────────────
     # Articles with translations available
     
-    # Changed: Updated the 'filled' verification logic to properly enforce that rich-text / streamfields are not saving as `[]` or `"null"` string footprints which bypassed standard checks before.
-    has_en = Article.objects.live().exclude(Q(body_en__isnull=True) | Q(body_en__exact='') | Q(body_en__exact='[]') | Q(body_en__exact='null')).count()
-    has_hi = Article.objects.live().exclude(Q(body_hi__isnull=True) | Q(body_hi__exact='') | Q(body_hi__exact='[]') | Q(body_hi__exact='null')).count()
-    has_ta = Article.objects.live().exclude(Q(body_ta__isnull=True) | Q(body_ta__exact='') | Q(body_ta__exact='[]') | Q(body_ta__exact='null')).count()
+    has_en = Article.objects.live().exclude(title_en__exact='').exclude(title_en__isnull=True).count()
+    has_hi = Article.objects.live().exclude(title_hi__exact='').exclude(title_hi__isnull=True).count()
+    has_ta = Article.objects.live().exclude(title_ta__exact='').exclude(title_ta__isnull=True).count()
     
     total_articles = Article.objects.live().count()
     lang_labels = ['Malayalam (Default)', 'English', 'Hindi', 'Tamil']
@@ -839,7 +832,6 @@ def analytics_view(request):
         'homepage_hits_total': homepage_hits_total,
         'homepage_hits_30d': homepage_hits_30d,
         
-        # Changed: Pass Homepage Hits timeframe aggregates down to analytics.html views
         'hp_hits_daily_json': json.dumps(hp_hits_daily),
         'hp_hits_weekly_json': json.dumps(hp_hits_weekly),
         'hp_hits_monthly_json': json.dumps(hp_hits_monthly),
