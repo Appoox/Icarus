@@ -14,8 +14,9 @@
     <h2>📄 {{ document.filename }}</h2>
     <div class="meta">
       <span id="flipbook-page-indicator">Page {{ page }}</span>
-      <a href="{{ pdf_url }}" download>⭳ Download</a>
-      <a href="{% url 'the_librarian:search' %}">← Back to search</a>
+      {# <a href="{{ pdf_url }}" download>⭳ Download</a> #}
+      {# <a href="{% url 'the_librarian:search' %}">← Back to search</a> #}
+      <a href="javascript:void(0);" onclick="history.back();">← Back to previous page</a>
     </div>
   </div>
 
@@ -50,4 +51,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="{% static 'js/page-flip.browser.js' %}"></script>
 <script src="{% static 'js/flipbook_viewer.js' %}"></script>
-{% endblock %}s
+{% endblock %}
