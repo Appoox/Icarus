@@ -13,15 +13,41 @@
   <div class="viewer-bar">
     <h2>📄 {{ document.filename }}</h2>
     <div class="meta">
-      <span>Page {{ page }} of {{ document.total_pages }}</span>
+      <span id="flipbook-page-indicator">Page {{ page }}</span>
+      <a href="{{ pdf_url }}" download>⭳ Download</a>
       <a href="{% url 'the_librarian:search' %}">← Back to search</a>
     </div>
   </div>
-  <iframe
-      class="viewer-frame"
-      src="{% static 'the_librarian/ViewerJS/index.html' %}?startpage={{ page }}#{{ pdf_url }}"
-      allowfullscreen>
-  </iframe>
 
+  <div class="flipbook-stage">
+
+    {# StPageFlip mounts directly onto this element via new St.PageFlip(root, …) #}
+    <div id="flipbook-root"
+         data-pdf-url="{{ pdf_url }}"
+         data-start-page="{{ page|add:'-1' }}"></div>
+
+    <div id="flipbook-loading" class="flipbook-loading">
+      <div class="flipbook-loading__spinner" aria-hidden="true"></div>
+      <p id="flipbook-loading__text" class="flipbook-loading__text">Loading document…</p>
+      <div class="flipbook-loading__bar">
+        <div id="flipbook-loading__bar-fill" class="flipbook-loading__bar-fill"></div>
+      </div>
+    </div>
+
+    <button type="button" id="flipbook-prev"
+            class="flipbook-nav-btn flipbook-nav-btn--prev"
+            aria-label="Previous page" disabled>‹</button>
+    <button type="button" id="flipbook-next"
+            class="flipbook-nav-btn flipbook-nav-btn--next"
+            aria-label="Next page" disabled>›</button>
+
+  </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+{# pdf.js rasterises PDF pages to canvas; page-flip.browser.js (StPageFlip, exposed as `St.PageFlip`) renders the flip-book UI. #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="{% static 'js/page-flip.browser.js' %}"></script>
+<script src="{% static 'js/flipbook_viewer.js' %}"></script>
+{% endblock %}s
