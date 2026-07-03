@@ -1,4 +1,5 @@
 import json
+import django_filters
 from django.utils.safestring import mark_safe
 from wagtail import hooks
 from wagtail.admin.panels import Panel
@@ -203,6 +204,35 @@ class PublishedArticlePageListingView(IndexView):
     def get_queryset(self):
         return super().get_queryset().filter(live=True)
 
+
+# ── Custom FilterSet for Articles ──────────────────────────────────────────
+
+def get_issue_queryset(request=None):
+    # Lazily evaluate the Issue model to avoid AppRegistryNotReady 
+    # when loading the filter dropdown choices.
+    Issue = apps.get_model('issue', 'Issue')
+    return Issue.objects.all()
+
+# Inheriting from PageListingViewSet.filterset_class preserves Wagtail's default filters 
+# (like title, live, etc.) while allowing us to append our custom main_issue filter.
+class ArticleFilterSet(PageListingViewSet.filterset_class):
+    main_issue = django_filters.ModelChoiceFilter(
+        field_name="main_issue",
+        queryset=get_issue_queryset,
+        label="Associated Issue"
+    )
+
+    def __init__(self, data=None, queryset=None, *, request=None, prefix=None):
+        # We intercept __init__ before super() because django_filters evaluates
+        # missing querysets against self._meta.model._default_manager.
+        # By pre-supplying the Article queryset, we prevent the 'NoneType' AttributeError.
+        if queryset is None:
+            Article = apps.get_model('articles', 'Article')
+            queryset = Article.objects.all()
+            
+        super().__init__(data=data, queryset=queryset, request=request, prefix=prefix)
+
+
 class DraftArticlePageListingViewSet(PageListingViewSet):
     icon = 'draft'
     menu_label = 'Draft Articles'
@@ -210,6 +240,9 @@ class DraftArticlePageListingViewSet(PageListingViewSet):
     add_to_admin_menu = True
 
     index_view_class = DraftArticlePageListingView
+    
+    # Attach the filterset logic
+    filterset_class = ArticleFilterSet
 
     @property
     def columns(self):
@@ -228,6 +261,9 @@ class PublishedArticlePageListingViewSet(PageListingViewSet):
     add_to_admin_menu = True
 
     index_view_class = PublishedArticlePageListingView
+    
+    # Attach the filterset logic
+    filterset_class = ArticleFilterSet
 
     @property
     def columns(self):
