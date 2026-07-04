@@ -17,6 +17,16 @@ Improvements applied
     to prevent OOM errors and keep inference latency predictable when thousands
     of chunks are embedded at once.
 
+#11 embed_query now has its own bounded LRU cache (a separate dict from the
+    document cache, since "query: " and "passage: " prefixes mean the same
+    raw text embeds to a different vector depending on which path it went
+    through). Repeated searches — including the header search-as-you-type box
+    re-hitting a term someone already searched, or two readers searching the
+    same trending term — skip the model call entirely. Bounded to
+    _QUERY_CACHE_MAX_SIZE entries with LRU eviction, since query text is
+    arbitrary user input (much higher cardinality than the fixed document
+    corpus) and would otherwise grow unbounded for the life of the worker
+    process.
 """
 
 import os
@@ -24,14 +34,19 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 os.environ["ACCELERATE_USE_CPU"] = "true"
 
+from collections import OrderedDict
+
 from django.conf import settings
 
 batch_size = settings.LIBRARIAN_EMBED_BATCH_SIZE
 _embedder_instance = None
 
+# Max distinct queries kept in the query-embedding LRU cache per worker process.
+_QUERY_CACHE_MAX_SIZE = 2048
+
 
 # ---------------------------------------------------------------------------
-# #3 + #10: Caching + batching wrapper
+# #3 + #10 + #11: Caching + batching wrapper
 # ---------------------------------------------------------------------------
 
 class CachingEmbeddings:
@@ -42,15 +57,20 @@ class CachingEmbeddings:
       are never sent to the model twice within the same process lifetime.
     - Processes texts in batches of EMBED_BATCH_SIZE to avoid OOM errors on
       large documents (#10).
+    - Caches embed_query results in a separate, bounded LRU dict, since query
+      text is high-cardinality user input rather than the fixed chunk corpus (#11).
 
-    The cache is intentionally unbounded and process-scoped.  For very large
-    archives this trades memory for speed; adjust EMBED_BATCH_SIZE or add an
-    LRU eviction policy if memory becomes a concern.
+    The document cache is intentionally unbounded and process-scoped. For very
+    large archives this trades memory for speed; adjust EMBED_BATCH_SIZE or add
+    an LRU eviction policy if memory becomes a concern. The query cache is
+    bounded from the start for exactly that reason.
     """
 
     def __init__(self, base_embedder):
         self._base = base_embedder
         self._cache: dict[str, list[float]] = {}
+        # OrderedDict gives us cheap "move to end on access" for LRU behaviour.
+        self._query_cache: "OrderedDict[str, list[float]]" = OrderedDict()
 
     # LangChain's SemanticChunker calls embed_documents internally.
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
@@ -68,9 +88,22 @@ class CachingEmbeddings:
 
         return [self._cache[t] for t in texts]
 
-    # embed_query uses a separate asymmetric path — no batching needed.
+    # embed_query uses a separate asymmetric path — now cached (#11), bounded
+    # and keyed independently from the document cache above so a chunk of
+    # text that also happens to be searched-for never collides on a key.
     def embed_query(self, text: str) -> list[float]:
-        return self._base.embed_query("query: " + text)
+        cached = self._query_cache.get(text)
+        if cached is not None:
+            self._query_cache.move_to_end(text)
+            return cached
+
+        embedding = self._base.embed_query("query: " + text)
+
+        self._query_cache[text] = embedding
+        if len(self._query_cache) > _QUERY_CACHE_MAX_SIZE:
+            self._query_cache.popitem(last=False)  # evict least-recently-used
+
+        return embedding
 
 
 # ---------------------------------------------------------------------------
@@ -118,6 +151,6 @@ def embed_query(query_text: str) -> list[float]:
     """
     Embed a single query string for similarity search.
 
-    Uses the asymmetric query path of the underlying model.
+    Uses the asymmetric query path of the underlying model, cached (#11).
     """
     return get_embedder().embed_query(query_text)

@@ -1,10 +1,11 @@
+import hashlib
 from functools import wraps
 from pathlib import Path
-import os
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, Http404, FileResponse
 from django.conf import settings
+from django.core.cache import cache
 from django.urls import reverse
 from django.apps import apps
 from django.views.decorators.http import require_GET, require_POST
@@ -158,7 +159,11 @@ def search_api(request):
         return JsonResponse({"error": "Missing 'q' parameter"}, status=400)
 
     if document:
+        # Per-document search is a narrow, low-traffic path — skip the shared
+        # cache (keyed only on query/mode/top_k) rather than adding a fourth
+        # dimension to the cache key for a rarely-hit case.
         results = search_by_document(document, query, top_k=top_k)
+        results = _resolve_pdf_display_titles(results)
     else:
         mode = request.GET.get("mode", "hybrid").lower()
         if mode == "keyword":
@@ -436,6 +441,7 @@ def archive_viewer(request, filename):
 @require_GET
 def archive_download(request, filename):
     """Serve a raw PDF from ARCHIVE_DIR by filename."""
+    import os
     safe_filename = os.path.basename(filename)
     pdf_path = _resolve_archive_filename_path(filename)
 
