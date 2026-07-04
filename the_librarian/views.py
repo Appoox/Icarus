@@ -1,5 +1,6 @@
 from functools import wraps
 from pathlib import Path
+import os
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, Http404, FileResponse
@@ -20,6 +21,7 @@ from the_librarian.services.search import (
     search_hybrid,
     search_by_document,
 )
+from the_librarian import page_cache
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +63,47 @@ def _resolve_pdf_display_titles(results):
             logger.warning(f"Could not resolve topic URLs: {e}")
 
     return results
+
+
+# ── Pre-rendered page images (server-side cache; see page_cache.py) ──────
+#
+# All three viewer flows (ArchiveDocument, ArchiveIssue, raw filesystem)
+# resolve "which PDF" differently, but once resolved to a filesystem
+# path they all serve page images/metadata identically — these two
+# helpers are that shared logic.
+
+def _serve_page_meta(pdf_path):
+    """JSON {"page_count": N} for a PDF, via the on-disk page cache."""
+    return JsonResponse({"page_count": page_cache.get_page_count(pdf_path)})
+
+
+def _serve_page_image(pdf_path, page_number):
+    """A single page's pre-rendered (and disk-cached) image."""
+    try:
+        image_path = page_cache.get_page_image_path(pdf_path, page_number)
+    except Exception:
+        logger.exception("Failed to render page %s of %s", page_number, pdf_path)
+        raise Http404("Could not render that page")
+
+    response = FileResponse(open(image_path, "rb"), content_type="image/webp")
+    # Safe to cache aggressively — the cache key already changes if the
+    # underlying PDF is ever replaced (see page_cache.source_key).
+    response["Cache-Control"] = "public, max-age=86400, immutable"
+    return response
+
+
+def _page_image_url_template(url_name, *args):
+    """
+    Build a page-image URL containing a `{page}` placeholder the client
+    can substitute per page, from a URL pattern whose last positional
+    argument is page_number.
+
+        _page_image_url_template("document_page_image", document_id)
+        -> "/librarian/viewer/42/pages/{page}.webp"
+    """
+    placeholder = 999999999
+    url = reverse(f"the_librarian:{url_name}", args=[*args, placeholder])
+    return url.replace(str(placeholder), "{page}")
 
 
 # ── Access-control decorator ──────────────────────────────────────────────
@@ -132,6 +175,33 @@ def search_api(request):
 
 # ── ArchiveDocument ViewerJS display ─────────────────────────────────────
 
+def _resolve_document_pdf_path(document_id):
+    """
+    Resolve an ArchiveDocument's PDF to an absolute filesystem path.
+
+    Resolution order:
+    1. ARCHIVE_DIR / doc.file_path   — filesystem-ingested PDFs
+    2. MEDIA_ROOT  / doc.file_path   — ArchiveIssue-uploaded PDFs
+                                       (file_path stored as MEDIA_ROOT-relative)
+
+    Shared by serve_pdf (raw PDF) and the page-image views below, so the
+    two can't silently drift out of sync.
+    """
+    try:
+        doc = ArchiveDocument.objects.get(pk=document_id)
+    except ArchiveDocument.DoesNotExist:
+        raise Http404("Document not found")
+
+    pdf_path = Path(settings.ARCHIVE_DIR) / doc.file_path
+    if not pdf_path.exists():
+        pdf_path = Path(settings.MEDIA_ROOT) / doc.file_path
+
+    if not pdf_path.exists():
+        raise Http404("PDF file not found on disk")
+
+    return pdf_path
+
+
 def viewer_view(request, document_id):
     """Display an ingested ArchiveDocument PDF via ViewerJS."""
     try:
@@ -148,6 +218,8 @@ def viewer_view(request, document_id):
         "document": doc,
         "page": page,
         "pdf_url": pdf_url,
+        "page_meta_url": reverse("the_librarian:document_page_meta", args=[document_id]),
+        "page_image_url_template": _page_image_url_template("document_page_image", document_id),
     })
 
 
@@ -165,20 +237,26 @@ def serve_pdf(request, document_id):
     except ArchiveDocument.DoesNotExist:
         raise Http404("Document not found")
 
-    # Try ARCHIVE_DIR first (legacy filesystem-ingested PDFs)
-    pdf_path = Path(settings.ARCHIVE_DIR) / doc.file_path
-    if not pdf_path.exists():
-        # Fallback: MEDIA_ROOT-relative path (ArchiveIssue uploads)
-        pdf_path = Path(settings.MEDIA_ROOT) / doc.file_path
-
-    if not pdf_path.exists():
-        raise Http404("PDF file not found on disk")
+    pdf_path = _resolve_document_pdf_path(document_id)
 
     return FileResponse(
         open(pdf_path, "rb"),
         content_type="application/pdf",
         filename=doc.filename,
     )
+
+
+@require_GET
+def document_page_meta(request, document_id):
+    """Page count for an ArchiveDocument's PDF, as pre-rendered page images."""
+    return _serve_page_meta(_resolve_document_pdf_path(document_id))
+
+
+@require_GET
+def document_page_image(request, document_id, page_number):
+    """A single pre-rendered (and disk-cached) page image for an ArchiveDocument."""
+    return _serve_page_image(_resolve_document_pdf_path(document_id), page_number)
+
 
 
 # ── ArchiveIssue viewer ──────────────────────────────────────────────────
@@ -233,6 +311,27 @@ def archive_list(request):
     })
 
 
+def _resolve_issue_pdf_path(issue_id):
+    """
+    Resolve an ArchiveIssue's PDF to an absolute filesystem path, for the
+    page-image views below (issue.pdf_file.open("rb") — used by
+    serve_magazine_pdf — is fine for streaming the raw PDF, but PyMuPDF
+    needs an actual path).
+
+    Raises Http404 if there's no file attached, and lets NotImplementedError
+    (raised by FieldFile.path when the storage backend has no local path,
+    e.g. S3) surface as a 404 too — page rendering isn't supported for
+    remote-stored PDFs without downloading them locally first.
+    """
+    issue = get_object_or_404(ArchiveIssue, pk=issue_id)
+    if not issue.pdf_file:
+        raise Http404("No PDF file attached to this issue.")
+    try:
+        return Path(issue.pdf_file.path)
+    except NotImplementedError:
+        raise Http404("Page rendering isn't supported for this issue's storage backend.")
+
+
 @require_GET
 def magazine_viewer(request, issue_id):
     """Display a ArchiveIssue PDF via ViewerJS."""
@@ -248,7 +347,21 @@ def magazine_viewer(request, issue_id):
         },
         "page":    int(request.GET.get("page", 1)),
         "pdf_url": pdf_url,
+        "page_meta_url": reverse("the_librarian:magazine_page_meta", args=[issue_id]),
+        "page_image_url_template": _page_image_url_template("magazine_page_image", issue_id),
     })
+
+
+@require_GET
+def magazine_page_meta(request, issue_id):
+    """Page count for an ArchiveIssue's PDF, as pre-rendered page images."""
+    return _serve_page_meta(_resolve_issue_pdf_path(issue_id))
+
+
+@require_GET
+def magazine_page_image(request, issue_id, page_number):
+    """A single pre-rendered (and disk-cached) page image for an ArchiveIssue."""
+    return _serve_page_image(_resolve_issue_pdf_path(issue_id), page_number)
 
 
 @require_GET
@@ -290,6 +403,21 @@ def download_magazine_pdf(request, issue_id):
 
 # ── Direct archive filesystem access ─────────────────────────────────────
 
+def _resolve_archive_filename_path(filename):
+    """
+    Resolve a raw filesystem PDF's absolute path from its filename,
+    validating it the same way archive_download does. Shared so the two
+    can't drift out of sync.
+    """
+    safe_filename = os.path.basename(filename)
+    pdf_path = Path(settings.ARCHIVE_DIR) / safe_filename
+
+    if not pdf_path.exists() or not pdf_path.is_file() or pdf_path.suffix.lower() != ".pdf":
+        raise Http404("PDF file not found on disk")
+
+    return pdf_path
+
+
 @require_GET
 def archive_viewer(request, filename):
     """View a raw filesystem PDF from ARCHIVE_DIR via ViewerJS."""
@@ -300,24 +428,34 @@ def archive_viewer(request, filename):
         "document": {"filename": filename, "total_pages": "?"},
         "page": 1,
         "pdf_url": pdf_url,
+        "page_meta_url": reverse("the_librarian:archive_page_meta", args=[filename]),
+        "page_image_url_template": _page_image_url_template("archive_page_image", filename),
     })
 
 
 @require_GET
 def archive_download(request, filename):
     """Serve a raw PDF from ARCHIVE_DIR by filename."""
-    import os
     safe_filename = os.path.basename(filename)
-    pdf_path = Path(settings.ARCHIVE_DIR) / safe_filename
-
-    if not pdf_path.exists() or not pdf_path.is_file() or pdf_path.suffix.lower() != ".pdf":
-        raise Http404("PDF file not found on disk")
+    pdf_path = _resolve_archive_filename_path(filename)
 
     return FileResponse(
         open(pdf_path, "rb"),
         content_type="application/pdf",
         filename=safe_filename,
     )
+
+
+@require_GET
+def archive_page_meta(request, filename):
+    """Page count for a raw filesystem PDF, as pre-rendered page images."""
+    return _serve_page_meta(_resolve_archive_filename_path(filename))
+
+
+@require_GET
+def archive_page_image(request, filename, page_number):
+    """A single pre-rendered (and disk-cached) page image for a raw filesystem PDF."""
+    return _serve_page_image(_resolve_archive_filename_path(filename), page_number)
 
 
 # ── Admin ingestion triggers ──────────────────────────────────────────────

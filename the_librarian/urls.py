@@ -13,14 +13,20 @@ urlpatterns = [
     path("archive/<int:issue_id>/",                     views.magazine_viewer,       name="magazine_viewer"),
     path("archive/<int:issue_id>/Sasthragathi.pdf",     views.serve_magazine_pdf,    name="serve_magazine_pdf"),
     path("archive/<int:issue_id>/download/",            views.download_magazine_pdf, name="download_magazine_pdf"),
+    path("archive/<int:issue_id>/pages/meta.json",              views.magazine_page_meta,  name="magazine_page_meta"),
+    path("archive/<int:issue_id>/pages/<int:page_number>.webp", views.magazine_page_image, name="magazine_page_image"),
 
     # ── ArchiveDocument ViewerJS display (search results → viewer) ───────
     path("viewer/<int:document_id>/", views.viewer_view, name="viewer"),
     path("pdf/<int:document_id>/",    views.serve_pdf,   name="serve_pdf"),
+    path("viewer/<int:document_id>/pages/meta.json",              views.document_page_meta,  name="document_page_meta"),
+    path("viewer/<int:document_id>/pages/<int:page_number>.webp", views.document_page_image, name="document_page_image"),
 
     # ── Raw filesystem PDF access (ingestion dashboard) ──────────────────
     path("archive/view/<str:filename>/",     views.archive_viewer,   name="archive_viewer"),
     path("archive/download/<str:filename>/", views.archive_download, name="archive_download"),
+    path("archive/view/<str:filename>/pages/meta.json",              views.archive_page_meta,  name="archive_page_meta"),
+    path("archive/view/<str:filename>/pages/<int:page_number>.webp", views.archive_page_image, name="archive_page_image"),
 
     # ── Admin ingestion API ───────────────────────────────────────────────
     path("api/ingest/",                        views.trigger_ingestion,    name="trigger_ingestion"),
