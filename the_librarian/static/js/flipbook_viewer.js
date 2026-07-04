@@ -1,8 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────────
    flipbook_viewer.js
    ─────────────────────────────────────────────────────────────────────────
-   Renders a PDF as an interactive page-flip book instead of the old
-   ViewerJS iframe embed. Used by:
+   Renders a page-flip book from server pre-rendered page images. Used by:
 
        the_librarian/templates/the_librarian/viewer.html
 
@@ -12,23 +11,33 @@
        • the_librarian:archive_viewer  (raw filesystem PDFs)
 
    Pipeline:
-       1. PDF.js loads the document and rasterises every page onto an
-          off-screen <canvas>, which is then exported as a JPEG data URL.
-       2. StPageFlip (the `St.PageFlip` global from page-flip.browser.js)
-          takes that array of image URLs and renders the flip-book UI,
-          including its own drag/click-to-turn interactions and shadows.
+       1. Fetch page_meta_url — {"page_count": N} for this document.
+       2. Build one wrapper <div> per page, each containing an <img> whose
+          src is built from page_image_url_template (a URL containing a
+          literal "{page}" placeholder — see views.py's
+          _page_image_url_template) — the page images themselves are
+          rendered and disk-cached server-side (see page_cache.py), so
+          this is just normal image loading, no client-side rasterisation.
+       3. StPageFlip (the `St.PageFlip` global from page-flip.browser.js)
+          takes those elements and renders the flip-book UI, including its
+          own drag/click-to-turn interactions and shadows.
 
-   Pages are rendered with a small worker pool (not fully sequential, not
-   all-at-once) so long issues don't block the main thread for too long in
-   one go. A loading overlay with a progress bar covers the wait.
+   This replaced an earlier version that rasterised every page from the
+   raw PDF via PDF.js + <canvas> in the browser, with its own worker pool
+   and a Cache Storage layer to avoid re-rendering on repeat visits. None
+   of that is needed anymore: the server renders each page once (ever,
+   across all readers) and images are cached like any other static asset
+   via a normal Cache-Control header — so this file is just responsible
+   for building the page elements and handing them to StPageFlip.
 
    Expects a container element:
        <div id="flipbook-root"
-            data-pdf-url="…"
+            data-page-meta-url="…"
+            data-page-image-url-template="…/{page}.webp"
             data-start-page="0-indexed integer"></div>
 
    Optional DOM hooks (all safe to omit):
-       #flipbook-loading            — overlay shown while pages render
+       #flipbook-loading            — overlay shown while the book opens
        #flipbook-loading__text      — status text inside the overlay
        #flipbook-loading__bar-fill  — progress bar fill (0–100% width)
        #flipbook-prev / #flipbook-next — nav buttons
@@ -60,19 +69,15 @@
 (function () {
     'use strict';
 
-    // Pin the pdf.js worker to the same version as the main script tag in
-    // viewer.html. If you swap the CDN version there, update it here too.
-    var PDFJS_WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    // Rendered width (px) per page canvas before JPEG export. StPageFlip
-    // displays pages smaller than this on typical screens, so this is
-    // mostly about keeping text/line-art crisp when the book is enlarged.
-    var RENDER_WIDTH = 900;
-    var JPEG_QUALITY  = 0.85;
-
-    // How many pages to rasterise in parallel. Higher = faster overall
-    // render, but more canvases alive briefly at once.
-    var RENDER_CONCURRENCY = 4;
+    // Comfortable single-page width range used for on-screen layout.
+    // MIN_PAGE_WIDTH is deliberately a fixed number rather than something
+    // derived from the current screen size — StPageFlip compares it
+    // against the container's actual width (is there room for
+    // 2 * MIN_PAGE_WIDTH?) to decide whether to show a two-page spread or
+    // fall back to one page at a time, so it needs to stay constant for
+    // that comparison to mean anything.
+    var MIN_PAGE_WIDTH         = 240;
+    var DESIRED_MAX_PAGE_WIDTH = 640; // cap so pages don't get oversized on huge screens
 
     // ── Responsive sizing constants ──────────────────────────────────────
     var STAGE_BOTTOM_MARGIN  = 24;  // px of breathing room reserved below the stage
@@ -80,39 +85,25 @@
     var PAGE_GAP             = 20;  // px reserved below the book within the stage
     var RESIZE_DEBOUNCE_MS   = 200; // wait for resizing/rotation to settle before rebuilding
 
-    // Comfortable single-page width range. MIN_PAGE_WIDTH is deliberately
-    // a fixed number rather than something derived from the current
-    // screen size — StPageFlip compares it against the container's actual
-    // width (is there room for 2 * MIN_PAGE_WIDTH?) to decide whether to
-    // show a two-page spread or fall back to one page at a time, so it
-    // needs to stay constant for that comparison to mean anything.
-    var MIN_PAGE_WIDTH        = 240;
-    var DESIRED_MAX_PAGE_WIDTH = 640; // cap so pages don't get oversized on huge screens
-
     document.addEventListener('DOMContentLoaded', init);
 
     function init() {
         var root = document.getElementById('flipbook-root');
         if (!root) return;
 
-        var pdfUrl    = root.dataset.pdfUrl;
+        var pageMetaUrl          = root.dataset.pageMetaUrl;
+        var pageImageUrlTemplate = root.dataset.pageImageUrlTemplate;
         var startPage = parseInt(root.dataset.startPage, 10);
         if (isNaN(startPage) || startPage < 0) startPage = 0;
 
-        if (!pdfUrl) {
-            showError(root, 'No PDF URL was provided.');
-            return;
-        }
-        if (typeof pdfjsLib === 'undefined') {
-            showError(root, 'The PDF engine failed to load. Please refresh the page.');
+        if (!pageMetaUrl || !pageImageUrlTemplate) {
+            showError(root, 'No page data was provided.');
             return;
         }
         if (typeof St === 'undefined' || !St.PageFlip) {
             showError(root, 'The page-flip viewer failed to load. Please refresh the page.');
             return;
         }
-
-        pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_SRC;
 
         var loadingEl   = document.getElementById('flipbook-loading');
         var loadingText = document.getElementById('flipbook-loading__text');
@@ -129,15 +120,16 @@
         // resize handler can also reach it.
         var stage = root.parentElement;
 
-        // Populated once the PDF's first page has rendered; kept at this
-        // scope (rather than local to the loading .then()) so a later
-        // window-resize rebuild can reuse the already-rendered page
-        // elements and aspect ratio without re-rasterising anything.
+        // Populated once page_meta_url resolves; kept at this scope
+        // (rather than local to that fetch's .then()) so a later
+        // window-resize rebuild can reuse the already-built page
+        // elements and aspect ratio without touching the network again.
         var pageElements = [];
         var firstAspect  = 1;
 
-        // This function will be defined later to allow dynamic re-sorting of the render queue
-        var resortRenderQueue = null; 
+        function pageImageUrl(pageNumber) {
+            return pageImageUrlTemplate.replace('{page}', String(pageNumber));
+        }
 
         // ── Size the stage from the viewport, not from CSS ───────────────
         // Using window.innerHeight (minus whatever space the toolbar above
@@ -219,7 +211,8 @@
         // phone, resizing the browser window) can still leave the book
         // sized for the *old* viewport. On resize we re-solve the size and
         // rebuild the flip-book from the pageElements we already have —
-        // no PDF re-rendering, so this is cheap.
+        // the images are already loaded (or loading) in the browser's
+        // normal cache, so this is cheap.
         //
         // Note: pageFlip.destroy() removes #flipbook-root from the DOM
         // entirely (it's how the library tears itself down), so we have to
@@ -240,104 +233,14 @@
         window.addEventListener('resize', scheduleResize);
         window.addEventListener('orientationchange', scheduleResize);
 
-        // ── Rasterise a single PDF page to a JPEG data URL ──────────────
-        function renderPageToImage(pdfDoc, pageNumber) {
-            return pdfDoc.getPage(pageNumber).then(function (pdfPage) {
-                var baseViewport = pdfPage.getViewport({ scale: 1 });
-                var scale = RENDER_WIDTH / baseViewport.width;
-                var viewport = pdfPage.getViewport({ scale: scale });
-
-                var canvas = document.createElement('canvas');
-                canvas.width = Math.round(viewport.width);
-                canvas.height = Math.round(viewport.height);
-                var ctx = canvas.getContext('2d');
-
-                return pdfPage.render({ canvasContext: ctx, viewport: viewport }).promise
-                    .then(function () {
-                        var dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
-                        var aspect = viewport.width / viewport.height;
-                        // Release the canvas's backing store promptly —
-                        // matters on long issues (60+ pages).
-                        canvas.width = 0;
-                        canvas.height = 0;
-                        return { dataUrl: dataUrl, aspect: aspect };
-                    });
-            });
-        }
-
-        // ── Background Queue for rendering remaining pages ──────────────────
-        // This replaces the old renderAllPages blocking mechanism.
-        function startBackgroundRendering(pdfDoc, total, startPage, pageElements) {
-            var queue = [];
-            // Target the actual starting page (1-indexed for pdf.js)
-            var initialRenderedPage = Math.max(1, Math.min(startPage + 1, total));
-            
-            // Queue all pages except the one we already rendered upfront
-            for (var i = 1; i <= total; i++) {
-                if (i !== initialRenderedPage) {
-                    queue.push(i);
-                }
-            }
-
-            // Expose a dynamic sorting function to prioritize pages closest to what the user is currently viewing
-            resortRenderQueue = function(targetPage) {
-                queue.sort(function(a, b) {
-                    // targetPage from StPageFlip is 0-indexed, whereas our queue tracks 1-indexed pages.
-                    return Math.abs((a - 1) - targetPage) - Math.abs((b - 1) - targetPage);
-                });
-            };
-
-            // Perform initial sort based on where the flipbook opened
-            resortRenderQueue(startPage);
-
-            var completed = 1; // Start at 1 because we explicitly rendered the initial page
-            setStatus('Rendering pages in background… (' + completed + ' / ' + total + ')');
-            setProgress(completed, total);
-
-            function pullNext() {
-                if (queue.length === 0) return Promise.resolve();
-
-                var pageNumber = queue.shift();
-                return renderPageToImage(pdfDoc, pageNumber).then(function (result) {
-                    var img = document.createElement('img');
-                    img.src = result.dataUrl;
-                    
-                    // Ensure the image scales properly within the dynamically managed HTML containers
-                    img.style.width = '100%';
-                    img.style.height = '100%';
-                    img.style.display = 'block'; // Prevents nasty inline baseline gaps
-
-                    // Inject the rendered JPEG into our placeholder container
-                    pageElements[pageNumber - 1].appendChild(img);
-
-                    completed++;
-                    // Update progress silently in the background
-                    setStatus('Rendering pages in background… (' + completed + ' / ' + total + ')');
-                    setProgress(completed, total);
-
-                    return pullNext();
-                }).catch(function (err) {
-                    console.error('Failed to render page ' + pageNumber, err);
-                    return pullNext(); // Ensure the queue doesn't completely halt on a single page error
-                });
-            }
-
-            var workers = [];
-            for (var j = 0; j < Math.min(RENDER_CONCURRENCY, queue.length); j++) {
-                workers.push(pullNext());
-            }
-
-            return Promise.all(workers);
-        }
-
-        // ── Build the flip-book once every page image is ready ──────────
+        // ── Build the flip-book once the page elements exist ─────────────
         // `startIndexOverride` is used on resize-triggered rebuilds to
         // reopen the book at whatever page the reader was already on,
         // instead of jumping back to the original startPage.
         function buildBook(pageElements, firstAspect, startIndexOverride) {
             // Re-measure the stage against the current viewport before
-            // reading its size below — this is what actually fixes the
-            // "bottom cut off" bug (see header comment for why).
+            // reading its size below — this is what actually prevents the
+            // book from being clipped at the bottom (see header comment).
             sizeStageToViewport();
 
             var stageHeight = stage.clientHeight;
@@ -369,9 +272,8 @@
                 // what lets that switch happen automatically, instantly,
                 // and entirely through the library's own resize handling
                 // (no rebuild needed) as the window is resized down to a
-                // mobile-sized viewport, matching the original StPageFlip
-                // demo's behaviour. maxWidth/maxHeight are pinned to the
-                // height-aware size solved above, so on wide-but-short
+                // mobile-sized viewport. maxWidth/maxHeight are pinned to
+                // the height-aware size solved above, so on wide-but-short
                 // screens the library can never grow the book past the
                 // point where it would spill below the stage.
                 minWidth: MIN_PAGE_WIDTH,
@@ -392,10 +294,6 @@
             pageFlip.on('flip', function (e) {
                 updateIndicator(e.data);
                 updateNavButtons(e.data);
-                // Re-prioritize the background rendering queue dynamically when the user flips pages!
-                if (resortRenderQueue) {
-                    resortRenderQueue(e.data);
-                }
             });
 
             updateIndicator(clampedStart);
@@ -405,58 +303,91 @@
             if (loadingEl) loadingEl.classList.add('is-hidden');
         }
 
+        // ── Wait for an <img> to know its natural size ────────────────────
+        // We need the real page aspect ratio for the layout math above;
+        // resolves even on error (falling back to a square default
+        // elsewhere) so one bad image can't hang the whole book.
+        function waitForImage(img) {
+            if (img.complete && img.naturalWidth) return Promise.resolve();
+            return new Promise(function (resolve) {
+                img.addEventListener('load', resolve, { once: true });
+                img.addEventListener('error', resolve, { once: true });
+            });
+        }
+
         // ── Kick everything off ──────────────────────────────────────────
-        // Size and center the stage immediately, before the PDF even starts
-        // loading, so the loading overlay itself sits in the right spot
+        // Size and center the stage immediately, before we've even fetched
+        // the page count, so the loading overlay sits in the right spot
         // instead of jumping once the book is built.
         sizeStageToViewport();
         centerBookInStage();
         setStatus('Loading document…');
 
-        pdfjsLib.getDocument(pdfUrl).promise.then(function (pdfDoc) {
-            var total = pdfDoc.numPages;
+        fetch(pageMetaUrl).then(function (response) {
+            if (!response.ok) throw new Error('Failed to fetch page metadata (' + response.status + ')');
+            return response.json();
+        }).then(function (meta) {
+            var total = meta.page_count;
+            if (!total || total < 1) throw new Error('Document has no pages');
+
             pageCount = total;
             updateIndicator(startPage);
 
-            var initialPageToRender = Math.max(1, Math.min(startPage + 1, total));
+            var initialPageNumber = Math.max(1, Math.min(startPage + 1, total));
+            var loadedCount = 0;
 
-            // Block the UI only for the first requested page to determine dimensions and unblock reading
-            return renderPageToImage(pdfDoc, initialPageToRender).then(function (result) {
-                // Assign (not re-declare) — these live at init()'s scope so
-                // a later resize rebuild can reuse them.
-                firstAspect = result.aspect;
-                pageElements = [];
+            pageElements = [];
+            for (var i = 0; i < total; i++) {
+                var pageNumber = i + 1;
 
-                // Create placeholder HTML wrappers for all pages
-                for (var i = 0; i < total; i++) {
-                    var pageDiv = document.createElement('div');
-                    pageDiv.className = 'flipbook-page-wrapper';
-                    // Add a white background so unrendered pages look like blank paper instead of being transparent
-                    pageDiv.style.backgroundColor = '#ffffff';
+                var pageDiv = document.createElement('div');
+                pageDiv.className = 'flipbook-page-wrapper';
+                // White background so a page whose image hasn't finished
+                // loading yet looks like blank paper instead of being
+                // transparent.
+                pageDiv.style.backgroundColor = '#ffffff';
 
-                    // If this is the page we just rendered, populate its image immediately
-                    if (i === initialPageToRender - 1) {
-                        var img = document.createElement('img');
-                        img.src = result.dataUrl;
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        img.style.display = 'block';
-                        pageDiv.appendChild(img);
-                    }
+                var img = document.createElement('img');
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.display = 'block'; // prevents nasty inline baseline gaps
+                img.src = pageImageUrl(pageNumber);
+                // Hint the browser to fetch the opening page first; the
+                // rest can wait their turn. Pre-rendered pages are small
+                // (tens of KB), so — unlike the old client-rendering
+                // pipeline — there's no need for a custom concurrency-
+                // limited worker queue here; the browser's own network
+                // scheduling handles this well on its own.
+                img.fetchPriority = (pageNumber === initialPageNumber) ? 'high' : 'low';
+                img.addEventListener('load', onImageSettled);
+                img.addEventListener('error', onImageSettled);
+                pageDiv.appendChild(img);
 
-                    pageElements.push(pageDiv);
-                    root.appendChild(pageDiv);
-                }
+                pageElements.push(pageDiv);
+                root.appendChild(pageDiv);
+            }
 
-                // Build the book instantly with the placeholders
+            function onImageSettled() {
+                loadedCount++;
+                setStatus('Loading pages… (' + loadedCount + ' / ' + total + ')');
+                setProgress(loadedCount, total);
+            }
+
+            // We need the *real* aspect ratio for the layout math in
+            // buildBook() — wait for the opening page's image specifically
+            // (it's already fetchPriority "high" above, so this shouldn't
+            // add a meaningful extra wait), falling back to a sane default
+            // if it errors so a single bad image can't break the book.
+            var initialImg = pageElements[initialPageNumber - 1].querySelector('img');
+            return waitForImage(initialImg).then(function () {
+                firstAspect = (initialImg.naturalWidth && initialImg.naturalHeight)
+                    ? initialImg.naturalWidth / initialImg.naturalHeight
+                    : 0.75; // fallback: a typical portrait page proportion
                 buildBook(pageElements, firstAspect);
-
-                // Defer the remaining page processing to background workers
-                startBackgroundRendering(pdfDoc, total, startPage, pageElements);
             });
         }).catch(function (err) {
             console.error('Flipbook viewer error:', err);
-            showError(root, 'Could not load this PDF. It may be missing, corrupted, or blocked by your network.');
+            showError(root, 'Could not load this document. It may be missing or blocked by your network.');
         });
     }
 

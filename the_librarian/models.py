@@ -257,6 +257,7 @@ class ArchiveIssue(models.Model):
         # Queue async OCR/ingestion task when PDF is new or replaced
         if self.pdf_file and pdf_changed:
             self._queue_ingestion_task()
+            self._queue_page_prerender_task()
 
     def _queue_ingestion_task(self):
         """
@@ -281,6 +282,35 @@ class ArchiveIssue(models.Model):
             logger.warning(
                 "django_q not installed — skipping async PDF ingestion for "
                 "ArchiveIssue pk=%s. Run the ingest manually from the dashboard.",
+                self.pk,
+            )
+
+    def _queue_page_prerender_task(self):
+        """
+        Queue a Django-Q2 async task to pre-render + disk-cache every page
+        image for this issue (see the_librarian/page_cache.py), so the
+        first reader to open the flip-book viewer gets pages served
+        instantly instead of triggering a render for each one as they
+        read. Same transaction.on_commit + django_q pattern as
+        _queue_ingestion_task, and just as optional: if django_q isn't
+        installed, pages simply render lazily on first view instead —
+        slower for that first reader, but not broken.
+        """
+        try:
+            from django.db import transaction
+            from django_q.tasks import async_task
+            _pk = self.pk
+            transaction.on_commit(lambda: async_task(
+                'the_librarian.tasks.async_prerender_issue_pages', _pk
+            ))
+            logger.info(
+                "Queued page pre-render for ArchiveIssue pk=%s ('%s')",
+                self.pk, self.title,
+            )
+        except ImportError:
+            logger.warning(
+                "django_q not installed — skipping page pre-render for "
+                "ArchiveIssue pk=%s. Pages will render lazily on first view.",
                 self.pk,
             )
 

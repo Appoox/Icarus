@@ -24,7 +24,8 @@
 
     {# StPageFlip mounts directly onto this element via new St.PageFlip(root, …) #}
     <div id="flipbook-root"
-         data-pdf-url="{{ pdf_url }}"
+         data-page-meta-url="{{ page_meta_url }}"
+         data-page-image-url-template="{{ page_image_url_template }}"
          data-start-page="{{ page|add:'-1' }}"></div>
 
     <div id="flipbook-loading" class="flipbook-loading">
@@ -47,8 +48,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{# pdf.js rasterises PDF pages to canvas; page-flip.browser.js (StPageFlip, exposed as `St.PageFlip`) renders the flip-book UI. #}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+{# page-flip.browser.js (StPageFlip, exposed as `St.PageFlip`) renders the flip-book UI from server pre-rendered page images — see page_cache.py. #}
 <script src="{% static 'js/page-flip.browser.js' %}"></script>
 <script src="{% static 'js/flipbook_viewer.js' %}"></script>
 {% endblock %}

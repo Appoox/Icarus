@@ -72,3 +72,23 @@ def async_index_topic(topic_pk):
     logger.info("Q2 task: async_index_topic pk=%s", topic_pk)
     return index_topic(topic_pk)
 
+def async_prerender_issue_pages(issue_pk):
+    """
+    Django-Q2 task: eagerly render + disk-cache every page image for an
+    ArchiveIssue. Queued from ArchiveIssue.save() — see
+    _queue_page_prerender_task().
+    """
+    from the_librarian.models import ArchiveIssue
+    from the_librarian import page_cache
+
+    try:
+        issue = ArchiveIssue.objects.get(pk=issue_pk)
+    except ArchiveIssue.DoesNotExist:
+        return
+
+    if not issue.pdf_file:
+        return
+
+    count = page_cache.render_all_pages(issue.pdf_file.path)
+    return {"issue_pk": issue_pk, "pages_rendered": count}
+
