@@ -27,7 +27,7 @@ RUN apt-get update --yes --quiet && apt-get install --yes --quiet --no-install-r
     && rm -rf /var/lib/apt/lists/*
 
 # Install the application server.
-RUN uv pip install "gunicorn==20.0.4"
+# RUN uv pip install "gunicorn==20.0.4"
 
 # Install the project requirements.
 COPY requirements.txt /
@@ -39,7 +39,7 @@ WORKDIR /Icarus
 # Set this directory to be owned by the "wagtail" user. This Wagtail project
 # uses SQLite, the folder needs to be owned by the user that
 # will be writing to the database file.
-RUN chown wagtail:wagtail /app
+RUN chown wagtail:wagtail /Icarus
 
 # Copy the source code of the project into the container.
 COPY --chown=wagtail:wagtail . .
@@ -48,11 +48,15 @@ COPY --chown=wagtail:wagtail . .
 USER wagtail
 
 # Set up the audio storage directory on the host volume.
-RUN mkdir -p /Icarus/media/audio
-RUN chown wagtail:wagtail /Icarus/media/audio
+# RUN mkdir -p /Icarus/media
+# RUN chown wagtail:wagtail /Icarus/media
+
+# COPY Icarus/media /Icarus/media
+
+
 
 # Cron Job for article locking
-RUN python manage.py setup_page_lock_schedule
+# RUN python manage.py setup_page_lock_schedule
 
 # Collect static files.
 RUN python manage.py collectstatic --noinput --clear
@@ -66,4 +70,8 @@ RUN python manage.py collectstatic --noinput --clear
 #   PRACTICE. The database should be migrated manually or using the release
 #   phase facilities of your hosting platform. This is used only so the
 #   Wagtail instance can be started with a simple "docker run" command.
-CMD set -xe; python manage.py migrate --noinput; gunicorn Icarus.wsgi:application
+CMD set -xe; \
+    python manage.py makemigrations --noinput; \
+    python manage.py migrate --noinput; \
+    python manage.py setup_page_lock_schedule; \
+    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn.workers.UvicornWorker -w 3

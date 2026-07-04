@@ -2,6 +2,7 @@
 /media/
 /static/
 *.sqlite3
+/.ocr_cache/
 
 # Python and others
 __pycache__
