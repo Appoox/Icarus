@@ -3,7 +3,7 @@ from django.conf import settings
 from django.db.models import GeneratedField
 from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
-from pgvector.django import VectorField
+from pgvector.django import VectorField, HnswIndex
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 
 import logging
@@ -135,6 +135,15 @@ class DocumentChunk(models.Model):
         indexes = [
             models.Index(fields=['document', 'page_number']),
             GinIndex(fields=["search_vector"]),
+            # Approximate-nearest-neighbor index backing every CosineDistance
+            # query in services/search.py. Must be declared here 
+            HnswIndex(
+                name='chunk_embedding_hnsw',
+                fields=['embedding'],
+                m=16,
+                ef_construction=64,
+                opclasses=['vector_cosine_ops'],
+            ),
         ]
 
     def __str__(self):

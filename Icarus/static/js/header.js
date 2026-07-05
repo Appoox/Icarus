@@ -8,6 +8,10 @@
     const spinner     = document.getElementById('searchSpinner');
 
     let debounceTimer;
+    // Tracks the in-flight request so a newer keystroke can cancel it —
+    // otherwise fast typing stacks up overlapping embed+DB calls that all
+    // run to completion even though only the last one's result matters.
+    let currentSearchController = null;
 
     function openSearch() {
         overlay.classList.add('is-open');
@@ -24,24 +28,38 @@
 
     function performSearch(query) {
         if (!query || query.length < 2) {
+            if (currentSearchController) {
+                currentSearchController.abort();
+                currentSearchController = null;
+            }
             resultsList.innerHTML = '';
             status.textContent = 'Type at least 2 characters...';
             spinner.style.display = 'none';
             return;
         }
 
+        // Cancel any in-flight search before starting a new one — its result
+        // is stale the moment a newer keystroke fires.
+        if (currentSearchController) {
+            currentSearchController.abort();
+        }
+        const controller = new AbortController();
+        currentSearchController = controller;
+
         spinner.style.display = 'block';
         status.textContent = 'Searching across archive, articles, and authors...';
 
         const url = `/librarian/api/search/?q=${encodeURIComponent(query)}&top_k=10&mode=hybrid`;
 
-        fetch(url)
+        fetch(url, { signal: controller.signal })
             .then(res => res.json())
             .then(data => {
+                if (controller.signal.aborted) return;
                 spinner.style.display = 'none';
                 renderResults(data.results, query);
             })
             .catch(err => {
+                if (err.name === 'AbortError') return; // superseded by a newer keystroke
                 spinner.style.display = 'none';
                 status.textContent = 'Error fetching results. Please try again.';
                 console.error('Search error:', err);
