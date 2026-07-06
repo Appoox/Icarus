@@ -17,21 +17,36 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Install system packages required by Wagtail and Django.
 RUN apt-get update --yes --quiet && apt-get install --yes --quiet --no-install-recommends \
+    curl \
+    ca-certificates \
     build-essential \
     libpq-dev \
     libmariadb-dev \
     libjpeg62-turbo-dev \
     zlib1g-dev \
     libwebp-dev \
-    uv \
+    weasyprint \
+    # libgobject-2.0-0 \
+    # uv \
     && rm -rf /var/lib/apt/lists/*
+
+# RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
+
+ENV UV_LINK_MODE=copy
+ENV UV_PYTHON_CACHE_DIR=/root/.cache/uv/python
+RUN --mount=type=cache,target=/root/.cache/uv 
+
+# uv sync
 
 # Install the application server.
 # RUN uv pip install "gunicorn==20.0.4"
 
 # Install the project requirements.
-COPY requirements.txt /
-RUN uv pip install -r /requirements.txt
+COPY requirements.txt .
+RUN uv pip install --system --no-cache-dir -r requirements.txt
 
 # Use /app folder as a directory where the source code is stored.
 WORKDIR /Icarus
@@ -71,7 +86,7 @@ RUN python manage.py collectstatic --noinput --clear
 #   phase facilities of your hosting platform. This is used only so the
 #   Wagtail instance can be started with a simple "docker run" command.
 CMD set -xe; \
-    python manage.py makemigrations --noinput; \
+    # python manage.py makemigrations --noinput; \
     python manage.py migrate --noinput; \
     python manage.py setup_page_lock_schedule; \
     gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn.workers.UvicornWorker -w 3
