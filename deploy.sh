@@ -27,7 +27,7 @@ cd "$PROJECT_DIR"
 # the container's actual runtime environment. No manual `source`/export step -
 # that would only matter for build-time secrets, and collectstatic no
 # longer runs at build time (see Dockerfile), so the build needs none.
-ENV_SOURCE="/root/.env"
+ENV_SOURCE="/opt/icarus/shared/.env"
 if [ ! -f "$ENV_SOURCE" ]; then
     echo "ERROR: $ENV_SOURCE not found. Create it once by hand (see README.md), then re-run." >&2
     exit 1
