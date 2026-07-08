@@ -48,7 +48,7 @@ ln -sf "$ENV_SOURCE" "$PROJECT_DIR/.env"
 # fresh - collectstatic writes into the mounted static_volume on every deploy,
 # so this is now genuinely true (it wasn't when collectstatic ran at build).
 docker compose build web
-docker compose up -d --no-deps web qcluster
+docker compose up -d --no-deps 
 
 # --- 3. Housekeeping ------------------------------------------------------
 # Only removes dangling (untagged) images left over from old builds.
