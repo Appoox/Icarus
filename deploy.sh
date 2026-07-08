@@ -27,7 +27,7 @@ cd "$PROJECT_DIR"
 # the container's actual runtime environment. No manual `source`/export step -
 # that would only matter for build-time secrets, and collectstatic no
 # longer runs at build time (see Dockerfile), so the build needs none.
-ENV_SOURCE="/opt/icarus/shared/.env"
+ENV_SOURCE="/root/.env"
 if [ ! -f "$ENV_SOURCE" ]; then
     echo "ERROR: $ENV_SOURCE not found. Create it once by hand (see README.md), then re-run." >&2
     exit 1
@@ -48,7 +48,7 @@ ln -sf "$ENV_SOURCE" "$PROJECT_DIR/.env"
 # fresh - collectstatic writes into the mounted static_volume on every deploy,
 # so this is now genuinely true (it wasn't when collectstatic ran at build).
 docker compose build web
-# docker compose up -d --no-deps web qcluster
+docker compose up -d --no-deps web qcluster
 
 # --- 3. Housekeeping ------------------------------------------------------
 # Only removes dangling (untagged) images left over from old builds.
