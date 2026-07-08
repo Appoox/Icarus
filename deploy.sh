@@ -5,10 +5,12 @@
 # Two things this script deliberately guarantees:
 #   1. No manual "enter the env" step - the real .env lives outside the git
 #      workspace and gets re-linked automatically every run.
-#   2. No data loss - it only ever rebuilds/restarts the `web` (and `qcluster`)
-#      services. `db`, `bouncer`, and `caddy` (and therefore pgdata /
-#      media_volume) are never stopped, recreated, or passed to any
-#      `-v`-flagged command.
+#   2. No data loss - it NEVER runs `docker compose down` and NEVER passes `-v`
+#      to any command, so the named volumes (pgdata, media, caddy certs) are
+#      never removed. `docker compose up -d` only (re)creates containers whose
+#      image or config actually changed; on a normal deploy that is just `web`
+#      and `qcluster` (their image was rebuilt), leaving db/bouncer/caddy
+#      running untouched.
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -34,21 +36,23 @@ if [ ! -f "$ENV_SOURCE" ]; then
 fi
 ln -sf "$ENV_SOURCE" "$PROJECT_DIR/.env"
 
-# --- 2. Rebuild + restart ONLY the app containers -----------------------
-# Deliberately `build web` / `up -d --no-deps web qcluster`, never a bare
-# `docker compose up -d --build` (which would recreate db/bouncer/caddy too)
-# and never anything with `-v` (which would delete pgdata / media_volume).
+# --- 2. Build the app image, then bring up the whole stack --------------
+# This previously used `up -d --no-deps web qcluster`. That only works when
+# db/bouncer/caddy are ALREADY running: on a FRESH host, --no-deps skips
+# starting those dependencies, so web comes up with no database (crash-loop)
+# and there is no caddy to serve traffic. That is the fresh-start failure.
+#
+# Plain `up -d` fixes it. On a fresh host it honours depends_on + healthchecks
+# (db healthy -> bouncer -> web -> caddy, plus qcluster) and creates everything
+# that is not yet running. On a redeploy it stays surgical: compose only
+# recreates containers whose image/config changed - i.e. web + qcluster, whose
+# image we just rebuilt - and leaves db/bouncer/caddy alone. There is still no
+# `-v` and no `down`, so the data-safety guarantee above holds in both cases.
 #
 # `qcluster` reuses the image built for `web` (image: icarus-web:latest in
-# docker-compose.yml), so a single `build web` produces the image both
-# services run, and `up` recreates both from it.
-#
-# Recreating the `web` container re-runs its CMD from scratch, so
-# collectstatic -> migrate -> setup_page_lock_schedule -> gunicorn all execute
-# fresh - collectstatic writes into the mounted static_volume on every deploy,
-# so this is now genuinely true (it wasn't when collectstatic ran at build).
+# docker-compose.yml), so one `build web` produces the image both services run.
 docker compose build web
-docker compose up -d --no-deps 
+docker compose up -d
 
 # --- 3. Housekeeping ------------------------------------------------------
 # Only removes dangling (untagged) images left over from old builds.
