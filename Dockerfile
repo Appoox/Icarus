@@ -37,6 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg62-turbo \
     libwebp7 \
     weasyprint \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /install
@@ -54,7 +55,7 @@ CMD set -e; \
     python manage.py qcluster; \
     python manage.py migrate --noinput; \
     python manage.py setup_page_lock_schedule; \
-    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_workers.UvicornWorker -w 3
+    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker -w 3
 
 EXPOSE 8000
 

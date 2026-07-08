@@ -59,14 +59,16 @@ SALT_KEY = env.str('SALT_KEY')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'kadannal-koodu.miku-brill.ts.net',  
+    '139.162.178.139'
+    'sasthragathy.org',
+    'www.sasthragathy.org',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://kadannal-koodu.miku-brill.ts.net',
+    'https://sasthragathy.org',
+    'https://www.sasthragathy.org',
 ]
+WAGTAILADMIN_BASE_URL = 'https://sasthragathy.org'
 
 # Application definition
 
