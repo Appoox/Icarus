@@ -4,14 +4,14 @@ services:
 
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-icarus}
-      POSTGRES_USER: ${POSTGRES_USER:-icarus}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./docker/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-icarus} -d ${POSTGRES_DB:-icarus}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,8 +22,8 @@ services:
     image: edoburu/pgbouncer:v1.25.2-p0
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-icarus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-icarus}
-      DB_ADMIN_PASSWORD: ${BOUNCER_ADMIN_PASSWORD:?set BOUNCER_ADMIN_PASSWORD in .env}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_NAME}
+      DB_ADMIN_PASSWORD: ${BOUNCER_ADMIN_PASSWORD}
       # SESSION pooling is deliberate and important here. This project uses
       # channels_postgres, which relies on LISTEN/NOTIFY. Transaction- or
       # statement-mode pooling would return the listening connection to the
@@ -51,7 +51,7 @@ services:
       # App now connects THROUGH the bouncer (bouncer:6432), never straight to
       # db:5432. The environment block wins over anything in .env, so this is
       # the effective DSN.
-      DATABASE_URL: postgres://${POSTGRES_USER:-icarus}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_DB:-icarus}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_NAME}
       DB_HOST: bouncer
       DB_PORT: "6432"
     volumes:
@@ -78,7 +78,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-icarus}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_DB:-icarus}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_NAME}
       DB_HOST: bouncer
       DB_PORT: "6432"
     # Background tasks may write generated files (e.g. TTS audio) into media.
