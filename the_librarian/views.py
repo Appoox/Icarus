@@ -9,6 +9,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.apps import apps
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -65,7 +66,6 @@ def _resolve_pdf_display_titles(results):
                     tid = r.get("topic_id") or r.get("document_id")
                     if tid in topic_map:
                         r["title"] = topic_map[tid].name
-                        # Dynamically fetches the proper URL path (e.g. /issues/topics/<slug>/)
                         r["url"] = reverse('topic_detail', args=[topic_map[tid].slug])
         except Exception as e:
             logger.warning(f"Could not resolve topic URLs: {e}")
@@ -849,3 +849,37 @@ def revoke_api_key(request, key_id):
 
     key.revoke(revoked_by=request.user)
     return JsonResponse({"success": True})
+
+
+# ── Remote worker admin page (moved off the dashboard — see wagtail_hooks.py) ──
+
+@login_required
+def remote_worker_admin(request):
+    """
+    Standalone, Wagtail-admin-styled page for the API-key-gated remote
+    worker: kill-switch toggle, progress since it was last enabled, and
+    API key management. Reached from its own sidebar menu item rather
+    than living on the dashboard homepage, so a rarely-touched control
+    panel doesn't compete for space with the ingestion stats that are
+    actually worth seeing at a glance every time an admin logs in.
+
+    Raises PermissionDenied (Wagtail renders this as a proper 403 admin
+    page) rather than returning a bare JSON error like the API endpoints
+    below it do — this view serves HTML, not JSON, so the failure mode
+    should match.
+    """
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
+    _id_placeholder = 999999999
+    revoke_key_url_template = reverse(
+        "the_librarian:revoke_api_key", args=[_id_placeholder]
+    ).replace(str(_id_placeholder), "{id}")
+
+    return render(request, "the_librarian/remote_worker_admin.html", {
+        "toggle_url": reverse("the_librarian:toggle_remote_ingestion"),
+        "status_url": reverse("the_librarian:remote_ingestion_status"),
+        "list_keys_url": reverse("the_librarian:list_api_keys"),
+        "create_key_url": reverse("the_librarian:create_api_key"),
+        "revoke_key_url_template": revoke_key_url_template,
+    })
