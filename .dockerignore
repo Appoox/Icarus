@@ -2,6 +2,8 @@
 /media/
 /static/
 *.sqlite3
+/.ocr_cache/
+/media_backup/
 
 # Python and others
 __pycache__
@@ -37,3 +39,14 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+#pruning
+.git
+.venv
+venv
+.env
+.pytest_cache
+media/
+static/
+.cache
+*.json

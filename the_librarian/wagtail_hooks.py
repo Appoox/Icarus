@@ -1,22 +1,5 @@
 """
 Wagtail hooks for The Librarian.
-
-Changes in this revision
-------------------------
-* auto_index_content  — now dispatches async Django-Q2 tasks for Articles,
-  Literati authors, and Issue editorials.  Falls back to synchronous
-  transaction.on_commit() execution when django_q is not installed so the
-  dev environment still works without running qcluster.
-
-* LibrarianIngestPanel — enhanced dashboard with 4 stat cards:
-    Archive PDFs ingested | Text chunks stored |
-    Articles indexed      | Editorials indexed
-
-  The JS now:
-    1. Calls GET /librarian/api/pending/ → returns ArchiveIssue objects.
-    2. POSTs to /librarian/api/ingest/ once per issue → gets back a task_id.
-    3. Polls GET /librarian/api/task-status/<id>/ until every task resolves.
-    4. Reloads the dashboard on completion.
 """
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -39,14 +22,30 @@ def register_librarian_menu():
     )
 
 
-# ── Dashboard ingestion panel ─────────────────────────────────────────────
+class _SuperuserOnlyMenuItem(MenuItem):
+    """A MenuItem that only appears for superusers — used here so the
+    sidebar link doesn't lead non-superusers to a dead-end 403 page."""
+    def is_shown(self, request):
+        return request.user.is_superuser
+
+
+@hooks.register("register_admin_menu_item")
+def register_remote_worker_menu():
+    return _SuperuserOnlyMenuItem(
+        "Remote Worker",
+        reverse("the_librarian:remote_worker_admin"),
+        icon_name="cog",
+        order=910,
+    )
+
+
+# ── Dashboard ingestion panel (local, in-process pipeline) ────────────────
 
 class LibrarianIngestPanel(Component):
     """
-    Wagtail dashboard panel for The Librarian.
-
+    Wagtail dashboard panel for The Librarian's LOCAL in-process ingestion.
     Shows 4 stat cards and provides one-click async ingestion of all
-    pending ArchiveIssue PDFs via Django-Q2.
+    pending ArchiveIssue PDFs via Django-Q2, running on this server.
     """
     order = 200
 
@@ -91,7 +90,6 @@ class LibrarianIngestPanel(Component):
 
             <div class="panel__content" style="padding:1.5em;">
 
-                <!-- ── 4 stat cards ── -->
                 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1em;margin-bottom:1.4em;">
 
                     <div style="background:var(--w-color-surface-field);border-radius:6px;padding:1em;text-align:center;">
@@ -116,7 +114,6 @@ class LibrarianIngestPanel(Component):
 
                 </div>
 
-                <!-- ── Action buttons ── -->
                 <div style="display:flex;justify-content:center;gap:.8em;flex-wrap:wrap;">
                     <button type="button" id="btn-ingest-archive"
                             class="button button-small button--primary"
@@ -147,7 +144,6 @@ class LibrarianIngestPanel(Component):
                     </button>
                 </div>
 
-                <!-- ── Progress / status area ── -->
                 <div id="ingest-status" style="margin-top:1em;display:none;">
                     <div id="ingest-spinner" style="display:none;color:var(--w-color-text-meta);"></div>
                     <div id="ingest-result"  style="display:none;"></div>
@@ -160,7 +156,6 @@ class LibrarianIngestPanel(Component):
         (function () {{
             'use strict';
 
-            /* ── CSRF helper ─────────────────────────────────────────────── */
             function getCookie(name) {{
                 var val = null;
                 if (document.cookie) {{
@@ -174,7 +169,6 @@ class LibrarianIngestPanel(Component):
                 return val;
             }}
 
-            /* ── UI helpers ──────────────────────────────────────────────── */
             var statusDiv  = document.getElementById('ingest-status');
             var spinner    = document.getElementById('ingest-spinner');
             var resultDiv  = document.getElementById('ingest-result');
@@ -200,7 +194,6 @@ class LibrarianIngestPanel(Component):
                 resultDiv.innerHTML    = html;
             }}
 
-            /* ── Stop ────────────────────────────────────────────────────── */
             window.librarianStopIngest = function () {{
                 stopRequested = true;
                 btnStop.disabled    = true;
@@ -211,7 +204,6 @@ class LibrarianIngestPanel(Component):
                 }});
             }};
 
-            /* ── Poll a single task ──────────────────────────────────────── */
             function pollTask(taskId, intervalMs, timeoutMs) {{
                 return new Promise(function (resolve) {{
                     var elapsed = 0;
@@ -230,23 +222,18 @@ class LibrarianIngestPanel(Component):
                                     clearInterval(timer);
                                     resolve('timeout');
                                 }}
-                                // 'pending' — keep polling
                             }})
-                            .catch(function() {{
-                                // network hiccup — keep polling
-                            }});
+                            .catch(function() {{}});
                     }}, intervalMs);
                 }});
             }}
 
-            /* ── Main ingest flow ────────────────────────────────────────── */
             window.librarianIngest = async function (force) {{
                 stopRequested = false;
                 setButtons(true);
                 spinner.textContent = '🔍 Checking for pending issues…';
 
                 try {{
-                    /* 1. Get pending ArchiveIssue list */
                     var listResp = await fetch('{pending_url}?force=' + force);
                     var listData = await listResp.json();
                     var queue    = listData.pending || [];
@@ -260,7 +247,6 @@ class LibrarianIngestPanel(Component):
 
                     spinner.textContent = '⏳ Queuing ' + queue.length + ' issue(s)…';
 
-                    /* 2. Queue a Q2 task for each pending issue */
                     var tasks = [];
                     for (var i = 0; i < queue.length; i++) {{
                         if (stopRequested) break;
@@ -285,7 +271,6 @@ class LibrarianIngestPanel(Component):
                             if (data.task_id) {{
                                 tasks.push({{ taskId: data.task_id, title: item.title }});
                             }} else if (data.sync_result) {{
-                                /* django_q not installed — already completed synchronously */
                                 tasks.push({{ taskId: null, title: item.title, done: true,
                                              success: data.sync_result.status !== 'error' }});
                             }}
@@ -301,12 +286,10 @@ class LibrarianIngestPanel(Component):
                         return;
                     }}
 
-                    /* 3. Poll each async task until resolved (max 10 min each) */
                     var completed = 0, failed = 0;
                     var asyncTasks = tasks.filter(function(t) {{ return t.taskId && !t.done; }});
                     var syncDone   = tasks.filter(function(t) {{ return t.done; }});
 
-                    /* Sync tasks already finished */
                     syncDone.forEach(function(t) {{
                         if (t.success) completed++; else failed++;
                     }});
@@ -327,7 +310,6 @@ class LibrarianIngestPanel(Component):
 
                     await Promise.all(pollPromises);
 
-                    /* 4. Final result */
                     setButtons(false);
                     statusDiv.style.display = 'block';
                     var icon = stopRequested ? '⚠' : (failed === 0 ? '✓' : '⚠');
@@ -359,9 +341,15 @@ class LibrarianIngestPanel(Component):
         return Media()
 
 
+# ── Wagtail Dashboard Hook Registration ──────────────────────────────────
+
 @hooks.register("construct_homepage_panels")
 def add_ingest_panel(request, panels):
-    """Add the ingestion control panel to the Wagtail admin dashboard (superusers only)."""
+    """Add the local ingestion control panel to the Wagtail admin dashboard (superusers only).
+    The remote worker's controls used to live here too — moved to their own page,
+    linked from the sidebar (see register_remote_worker_menu below), since that
+    panel is reached rarely (generate a key, flip a switch) compared to the
+    always-relevant ingestion stats this one shows on every visit."""
     if request.user.is_superuser:
         panels.append(LibrarianIngestPanel())
 
@@ -372,11 +360,8 @@ def add_ingest_panel(request, panels):
 def auto_index_content(request, page):
     """
     Automatically (re)index Articles, Literati authors, and Issue editorials
-    when a page is published.
-
-    Uses Django-Q2 async tasks when available; falls back to synchronous
-    transaction.on_commit() execution so the dev environment works without
-    a running qcluster.
+    when a page is published. Uses Django-Q2 async tasks when available;
+    falls back to synchronous transaction.on_commit() execution.
     """
     from django.db import transaction
 
@@ -428,12 +413,10 @@ def auto_index_content(request, page):
 def index_topic_snippet(request, instance):
     """
     Automatically index Topic snippets when created or edited.
-    No .specific() check is required for Snippets.
     """
     from django.db import transaction
     from issue.models import Topic
-    
-    # Ensure we only process Topic instances
+
     if not isinstance(instance, Topic):
         return
 
@@ -444,7 +427,7 @@ def index_topic_snippet(request, instance):
         use_async = False
 
     _pk = instance.pk
-    
+
     if use_async:
         transaction.on_commit(lambda: async_task(
             'the_librarian.tasks.async_index_topic', _pk
@@ -491,9 +474,7 @@ register_snippet(ArchiveIssueViewSet)
 def auto_link_archive_document(request, instance):
     """
     After saving a ArchiveIssue, try to find a matching ArchiveDocument by
-    the uploaded PDF's basename and link them — enabling full-text search on
-    the issue without any extra manual step.
-    Skipped silently if already linked or if no PDF is attached.
+    the uploaded PDF's basename and link them.
     """
     import os
     from the_librarian.models import ArchiveDocument

@@ -5,8 +5,12 @@ from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
 from pgvector.django import VectorField, HnswIndex
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
+from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
 
+import hashlib
+import secrets
 import logging
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +95,7 @@ class DocumentChunk(models.Model):
         null=True,
         blank=True
     )
-    # ── NEW: Related Topic chunks ──────────────────────────────────────────
+    # ── Related Topic chunks ──────────────────────────────────────────
     topic = models.ForeignKey(
         'issue.Topic',
         on_delete=models.CASCADE,
@@ -124,7 +128,7 @@ class DocumentChunk(models.Model):
     )
     chunk_index = models.IntegerField(
         default=0,
-        help_text="Order of this chunk within the document/article/author/issue"
+        help_text="Order of this chunk within the document/author/issue"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -143,6 +147,16 @@ class DocumentChunk(models.Model):
                 m=16,
                 ef_construction=64,
                 opclasses=['vector_cosine_ops'],
+            ),
+        ]
+        constraints = [
+            # Makes a retried/duplicate submission from the remote worker
+            # idempotent: update_or_create on (document, chunk_index) converges
+            # to the same rows instead of ever duplicating them.
+            models.UniqueConstraint(
+                fields=['document', 'chunk_index'],
+                condition=models.Q(document__isnull=False),
+                name='unique_document_chunk_index',
             ),
         ]
 
@@ -173,6 +187,11 @@ class ArchiveIssue(models.Model):
 
     On save, if the PDF is new or replaced, an async Django-Q2 task is queued
     to OCR/chunk/embed the PDF into DocumentChunk records.
+
+    (year, month) is enforced unique at the DB layer — the same issue cannot
+    be uploaded twice under two different filenames. Wagtail surfaces the
+    constraint's violation_error_message directly in the snippet edit form
+    via the model form's automatic validate_unique() call.
     """
 
     title = models.CharField(
@@ -223,6 +242,18 @@ class ArchiveIssue(models.Model):
         ordering = ['-year', '-month']
         verbose_name = "Archive Issue"
         verbose_name_plural = "Archive Issues"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['year', 'month'],
+                name='unique_archive_issue_year_month',
+                violation_error_message=(
+                    "An Archive Issue for this year and month already exists. "
+                    "Each year–month combination can only be uploaded once — "
+                    "edit the existing entry instead of creating a duplicate "
+                    "under a different filename."
+                ),
+            ),
+        ]
 
     def __str__(self):
         return f"{self.title} — Vol.{self.volume} No.{self.issue_number} ({self.year})"
@@ -376,3 +407,169 @@ class ArchiveIssue(models.Model):
         ], heading="Files"),
         FieldPanel('archive_document'),
     ]
+
+
+# ── Remote ingestion worker: API keys, kill-switch, access log ───────────
+
+class LibrarianAPIKey(models.Model):
+    """
+    An API key for the remote OCR/embedding worker (a script running on a
+    personal machine or any other off-box GPU host — see worker/ingest_worker.py).
+
+    Fully managed from the "Remote Ingestion Worker" dashboard panel:
+    created there (plaintext shown exactly once, never stored or retrievable
+    again), listed there, revoked there. Multiple keys can be active at once
+    (e.g. one per worker machine) so revoking one never affects the others.
+
+    Only the SHA-256 hash of the raw key is stored — the key itself has
+    256 bits of entropy from secrets.token_urlsafe(32), so an unsalted,
+    unkeyed hash is the same standard practice used by GitHub/Stripe-style
+    API tokens: the input is already unguessable, so a slow/salted hash adds
+    nothing but lookup cost.
+    """
+    name = models.CharField(
+        max_length=100,
+        help_text="A label to identify this key, e.g. 'Home workstation' or 'Laptop worker'.",
+    )
+    key_hash = models.CharField(
+        max_length=64, unique=True, editable=False,
+        help_text="SHA-256 hash of the API key. The plaintext key is shown once at creation and never stored.",
+    )
+    key_prefix = models.CharField(
+        max_length=16, editable=False,
+        help_text="First few characters of the key, shown in the admin so keys can be told apart without exposing the full value.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+    last_used_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    revoked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Librarian API Key"
+        verbose_name_plural = "Librarian API Keys"
+
+    def __str__(self):
+        status = "active" if self.is_active else "revoked"
+        return f"{self.name} ({self.key_prefix}…, {status})"
+
+    @staticmethod
+    def hash_key(raw_key: str) -> str:
+        return hashlib.sha256(raw_key.encode()).hexdigest()
+
+    @classmethod
+    def generate(cls, name, created_by=None):
+        """
+        Creates a new key and returns (instance, raw_key). raw_key exists
+        only in this return value — it is never persisted anywhere and
+        cannot be recovered after the caller's response is sent.
+        """
+        raw_key = f"icrs_{secrets.token_urlsafe(32)}"
+        instance = cls.objects.create(
+            name=name,
+            key_hash=cls.hash_key(raw_key),
+            key_prefix=raw_key[:12],
+            created_by=created_by,
+        )
+        return instance, raw_key
+
+    @classmethod
+    def authenticate(cls, raw_key: str):
+        """Returns the matching active LibrarianAPIKey, or None."""
+        if not raw_key:
+            return None
+        try:
+            return cls.objects.get(key_hash=cls.hash_key(raw_key), is_active=True)
+        except cls.DoesNotExist:
+            return None
+
+    def revoke(self, revoked_by=None):
+        self.is_active = False
+        self.revoked_at = timezone.now()
+        self.revoked_by = revoked_by
+        self.save(update_fields=['is_active', 'revoked_at', 'revoked_by'])
+
+
+@register_setting
+class LibrarianRemoteIngestSettings(BaseGenericSetting):
+    """
+    Kill-switch for the remote-worker API surface (the_librarian views:
+    list_pending_for_worker, worker_download_pdf, submit_ingested_chunks).
+    Those views 403 unconditionally unless `enabled` is True here — a valid
+    API key is necessary but no longer sufficient on its own.
+
+    Deliberately has NO automatic expiry: once an admin flips this on, it
+    stays on until an admin flips it off again. Toggled exclusively from the
+    "Remote Ingestion Worker" dashboard panel.
+    """
+    enabled = models.BooleanField(default=False)
+    enabled_at = models.DateTimeField(null=True, blank=True)
+    enabled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+    pending_total_at_enable = models.PositiveIntegerField(
+        default=0,
+        help_text="Snapshot of un-ingested ArchiveIssues at the moment this was last enabled — "
+                  "the denominator for the dashboard progress bar.",
+    )
+
+    panels = [
+        FieldPanel('enabled', read_only=True),
+        FieldPanel('enabled_at', read_only=True),
+        FieldPanel('enabled_by', read_only=True),
+        FieldPanel('pending_total_at_enable', read_only=True),
+    ]
+
+    class Meta:
+        verbose_name = "Remote Ingestion Worker Settings"
+
+    @property
+    def is_currently_enabled(self):
+        return self.enabled
+
+
+class LibrarianWorkerAccessLog(models.Model):
+    """
+    Every request to the remote-worker API surface — successful or not —
+    is logged here. This is both the security audit trail (which key/IP did
+    what, and every failed auth attempt) and the data source for the
+    dashboard's progress bars and recent-activity table.
+    """
+    EVENT_CHOICES = [
+        ('auth_failed',      'Authentication Failed'),
+        ('disabled',         'Rejected — Remote Ingestion Disabled'),
+        ('pending_check',    'Listed Pending Issues'),
+        ('download',         'Downloaded PDF'),
+        ('submit_ok',        'Submitted Chunk Batch'),
+        ('submit_rejected',  'Chunk Batch Rejected'),
+    ]
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    remote_addr = models.GenericIPAddressField(null=True, blank=True)
+    event = models.CharField(max_length=20, choices=EVENT_CHOICES)
+    detail = models.CharField(max_length=255, blank=True)
+    api_key = models.ForeignKey(
+        LibrarianAPIKey, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='access_logs',
+    )
+    archive_issue = models.ForeignKey(
+        'ArchiveIssue', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='worker_log_entries',
+    )
+    chunk_count = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Librarian Worker Access Log"
+        verbose_name_plural = "Librarian Worker Access Logs"
+
+    def __str__(self):
+        return f"{self.get_event_display()} @ {self.created_at:%Y-%m-%d %H:%M} ({self.remote_addr or '—'})"

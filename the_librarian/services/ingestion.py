@@ -7,20 +7,28 @@ Pipeline: PDF → images (pdf2image) → YOLO segmentation → Surya OCR
 Each chunk retains its source page number so that ViewerJS can open
 the PDF to the exact page.
 
-Improvements applied
---------------------
+The Malayalam text-cleanup and chunking logic lives in
+the_librarian/services/text_cleanup.py — a Django-free module shared with
+the standalone remote worker (worker/ingest_worker.py) so both sides of
+that split can never silently drift apart.
+
+NEW persist_ingested_batch()
+    DB-write half of remote-worker submissions: takes an ArchiveIssue and a
+    validated batch of VectorRecords (see services/vector_schema.py) and
+    writes them to Postgres, keyed by a server-derived canonical filename
+    rather than anything the worker claims.
+
+Improvements retained from earlier revisions
+---------------------------------------------
 #4  Per-page OCR results are written to a file cache keyed by
     (filename, content-hash).  A crashed or interrupted ingest resumes
     from the last completed page instead of re-OCR-ing the whole document.
-
-#5  image_height is forwarded to custom_sort so its row-grouping tolerance
-    scales with the scan resolution rather than using a fixed 5 px constant.
 
 #8  The stop-signal mechanism combines a threading.Event (fast in-process
     signalling, checked between every page) with the original file-based
     flag (retained for cross-process / management-command use).
 
-NEW ingest_archive_issue()
+ingest_archive_issue()
     Resolves the PDF from an ArchiveIssue model instance, ingests it via
     ingest_single_pdf(), then auto-links the resulting ArchiveDocument back
     to the ArchiveIssue.  Called by the async Q2 task wrapper in tasks.py.
@@ -28,17 +36,21 @@ NEW ingest_archive_issue()
 import os
 import logging
 import threading
+import hashlib
 from pathlib import Path
 
-import numpy as np
-from PIL import Image
 from pdf2image import convert_from_path, pdfinfo_from_path
 
 from django.conf import settings
 from django.db import transaction
 
-from the_librarian.models import ArchiveDocument, DocumentChunk
+from the_librarian.models import ArchiveDocument, DocumentChunk, ArchiveIssue
 from the_librarian.services.embedder import embed_texts
+from the_librarian.services.text_cleanup import (
+    preprocess_malayalam_pdf_text,
+    preprocess_chunks,
+    chunk_pages as _chunk_pages,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,158 +77,6 @@ def request_stop() -> None:
     """Request ingestion to stop as soon as the current page finishes."""
     _STOP_EVENT.set()
     STOP_SIGNAL_FILE.touch()
-
-
-# ---------------------------------------------------------------------------
-# #4: Per-page OCR cache
-# ---------------------------------------------------------------------------
-import re
-import regex
-import hashlib
-
-NOISE_SCRIPT_PATTERN = regex.compile(
-    r'[^\p{Script=Malayalam}\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}\s]+'
-)
-
-AD_SIGNALS = [
-    r'\+91[\s\-]?\d{5}[\s\-]?\d{5}',
-    r'CNRB\s*\d+',
-    r'IFS\s*[Cc]ode',
-    r'sasthragath[y]?@gmail',
-    r'ksspmagazine@gmail',
-    r'Price\s+Rs',
-    r'Registered\.\s*No',
-    r'www\.[a-z]+\.(com|in)',
-    r'വരിസംഖ്യ.*രൂപ',
-    r'ബാങ്കിൽ\s+പണ',
-]
-
-def _is_metadata_chunk(text: str) -> bool:
-    hits = sum(1 for p in AD_SIGNALS if re.search(p, text))
-    return hits >= 2
-
-
-def _remove_noise_chars(text: str) -> str:
-    return NOISE_SCRIPT_PATTERN.sub('', text)
-
-
-def _fix_broken_malayalam_words(text: str) -> str:
-    text = re.sub(r'([ഀ-ൿa-zA-Z])\s*[-—]\s*\n\s*([ഀ-ൿa-zA-Z])', r'\1\2', text)
-    text = re.sub(r'([ഀ-ൿ])\s*\n\s*([ഀ-ൿ])', r'\1 \2', text)
-    text = re.sub(r'([ഀ-ൿ])\s*\n\s*[—\-]\s*\n\s*([ഀ-ൿ])', r'\1 \2', text)
-    text = re.sub(r'([ഀ-ൿ])\u00ad([ഀ-ൿ])', r'\1\2', text)
-    return text
-
-
-def _remove_noise_lines(text: str) -> str:
-    lines = text.split('\n')
-    cleaned = []
-    for line in lines:
-        stripped = line.strip()
-        if not stripped:
-            cleaned.append('')
-            continue
-        has_malayalam = bool(re.search(r'[ഀ-ൿ]', stripped))
-        has_latin_word = bool(re.search(r'[a-zA-Z]{3,}', stripped))
-        if not has_malayalam and not has_latin_word:
-            continue
-        cleaned.append(line)
-    return '\n'.join(cleaned)
-
-
-def _dedupe_repeated_lines(text: str) -> str:
-    lines = text.split('\n')
-    seen = set()
-    unique = []
-    for line in lines:
-        key = re.sub(r'\s+', '', line).lower()
-        if len(key) < 30:
-            unique.append(line)
-            continue
-        if key not in seen:
-            seen.add(key)
-            unique.append(line)
-    return '\n'.join(unique)
-
-
-def _dedupe_repeated_paragraphs(text: str) -> str:
-    paragraphs = re.split(r'\n{2,}', text)
-    seen = set()
-    unique = []
-    for para in paragraphs:
-        key = re.sub(r'\s+', '', para).lower()
-        if len(key) < 20:
-            unique.append(para)
-            continue
-        if key not in seen:
-            seen.add(key)
-            unique.append(para)
-    return '\n\n'.join(unique)
-
-
-def _remove_hallucinated_loops(text: str) -> str:
-    word_pattern = r'(?P<phrase>(?:\S+\s+){0,9}\S+)(?:\s+(?P=phrase)){1,}'
-    prev_text = None
-    for _ in range(5):
-        prev_text = text
-        text = re.sub(word_pattern, r'\g<phrase>', text, flags=re.IGNORECASE)
-        if text == prev_text:
-            break
-    char_pattern = r'(?P<syl>[a-zA-Zഀ-ൿ]{1,15}?)(?P=syl){3,}'
-    text = re.sub(char_pattern, r'\g<syl>', text, flags=re.IGNORECASE)
-    return text
-
-
-def _remove_page_headers_footers(text: str) -> str:
-    text = re.sub(r'\d*\s*ശാസ്ത്രഗതി\s*[\|]?\s*(?:ആഗസ്റ്റ്|ത്രഗസ്റ്റ്)\s*\d{4}', '', text)
-    text = re.sub(r'(?:ആഗസ്റ്റ്|ത്രഗസ്റ്റ്)\s*\d{4}\s*[\|]?\s*ശാസ്ത്രഗതി\s*\d*', '', text)
-    text = re.sub(
-        r'SASTHRAGATHI\s*\n.*?AUGUST\s*\d{4}.*?\n.*?Price.*?\n',
-        '', text, flags=re.DOTALL
-    )
-    return text
-
-
-def preprocess_malayalam_pdf_text(text: str, chunk_id: int = None) -> str | None:
-    if not isinstance(text, str):
-        return None
-    if _is_metadata_chunk(text):
-        return None
-    text = re.sub(r'\n', '', text)
-    text = re.sub(r'<[^>]+>', ' ', text)
-    text = re.sub(r'\\overline\{[^\}]+\}', '', text)
-    text = _remove_page_headers_footers(text)
-    text = _fix_broken_malayalam_words(text)
-    text = _remove_noise_chars(text)
-    text = _remove_hallucinated_loops(text)
-    text = re.sub(r'[-_.=~—]{3,}', ' ', text)
-    text = _remove_noise_lines(text)
-    text = _dedupe_repeated_lines(text)
-    text = re.sub(r'[_—\-]*<[^>]+>[_—\-]*', ' ', text)
-    text = re.sub(r' +', ' ', text)
-    text = re.sub(r'\n{3,}', '\n\n', text)
-    text = text.strip()
-    malayalam_chars = len(re.findall(r'[ഀ-ൿ]', text))
-    if len(text) < 80 or malayalam_chars < 20:
-        return None
-    return text
-
-
-def preprocess_chunks(rows, text_field="text", log_discarded=True):
-    cleaned = []
-    discarded = 0
-    for row in rows:
-        original_text = row.get(text_field, "")
-        result = preprocess_malayalam_pdf_text(original_text, chunk_id=row.get("id"))
-        if result is None:
-            discarded += 1
-            if log_discarded:
-                preview = original_text[:60].replace('\n', ' ')
-                print(f"[DISCARDED] id={row.get('id')} | {preview!r}")
-            continue
-        cleaned.append({**row, text_field: result})
-    print(f"\nDone: {len(cleaned)} kept, {discarded} discarded out of {len(rows)} total")
-    return cleaned
 
 
 # ---------------------------------------------------------------------------
@@ -263,60 +123,7 @@ def _ocr_page(pil_image):
 
 
 # ---------------------------------------------------------------------------
-# Text chunking
-# ---------------------------------------------------------------------------
-
-def _chunk_pages(page_texts):
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
-    from langchain_core.documents import Document
-
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=100,
-        separators=["\n\n", "\n", " ", ""],
-        is_separator_regex=False,
-    )
-
-    all_chunks = []
-    global_index = 0
-
-    for page_number, text in page_texts:
-        if not text or not text.strip():
-            continue
-
-        cleaned_text = preprocess_malayalam_pdf_text(text)
-        if cleaned_text is None:
-            logger.info(f"Skipping page {page_number}: Discarded by preprocessor.")
-            continue
-
-        doc = Document(
-            page_content=cleaned_text,
-            metadata={"page_number": page_number},
-        )
-
-        try:
-            chunks = splitter.split_documents([doc])
-        except Exception as e:
-            logger.warning(f"Chunking failed for page {page_number}: {e}")
-            chunks = [doc]
-
-        for chunk in chunks:
-            chunk_text = chunk.page_content.strip()
-            malayalam_chars = len(re.findall(r'[ഀ-ൿ]', chunk_text))
-            if len(chunk_text) < 40 or malayalam_chars < 30:
-                continue
-            all_chunks.append({
-                "chunk_text": chunk_text,
-                "page_number": page_number,
-                "chunk_index": global_index,
-            })
-            global_index += 1
-
-    return all_chunks
-
-
-# ---------------------------------------------------------------------------
-# Main ingestion — single PDF
+# Main ingestion — single PDF (local, in-process pipeline)
 # ---------------------------------------------------------------------------
 
 def ingest_single_pdf(file_path, force=False, base_path=None):
@@ -407,9 +214,6 @@ def ingest_single_pdf(file_path, force=False, base_path=None):
         try:
             relative_path = str(file_path.relative_to(base))
         except ValueError:
-            # File is not under base (e.g. absolute path in a different tree).
-            # Fall back to storing just the media-relative path if possible,
-            # or the bare filename as a last resort.
             try:
                 relative_path = str(file_path.relative_to(Path(settings.MEDIA_ROOT)))
             except ValueError:
@@ -465,7 +269,7 @@ def ingest_single_pdf(file_path, force=False, base_path=None):
 
 
 # ---------------------------------------------------------------------------
-# New: ingest from ArchiveIssue model
+# Ingest from ArchiveIssue model (local, in-process pipeline)
 # ---------------------------------------------------------------------------
 
 def ingest_archive_issue(archive_issue_pk, force=False):
@@ -486,11 +290,11 @@ def ingest_archive_issue(archive_issue_pk, force=False):
         dict matching the ingest_single_pdf() return format.
     """
     from django.apps import apps
-    ArchiveIssue = apps.get_model('the_librarian', 'ArchiveIssue')
+    ArchiveIssueModel = apps.get_model('the_librarian', 'ArchiveIssue')
 
     try:
-        archive_issue = ArchiveIssue.objects.get(pk=archive_issue_pk)
-    except ArchiveIssue.DoesNotExist:
+        archive_issue = ArchiveIssueModel.objects.get(pk=archive_issue_pk)
+    except ArchiveIssueModel.DoesNotExist:
         msg = f"ArchiveIssue pk={archive_issue_pk} not found"
         logger.warning(msg)
         return {
@@ -510,19 +314,17 @@ def ingest_archive_issue(archive_issue_pk, force=False):
 
     pdf_path = Path(archive_issue.pdf_file.path)
 
-    # Use MEDIA_ROOT as base so relative_path = "archive/filename.pdf"
     result = ingest_single_pdf(
         pdf_path,
         force=force,
         base_path=Path(settings.MEDIA_ROOT),
     )
 
-    # Auto-link on success or skip (skip means already ingested → link if missing)
     if result["status"] in ("processed", "skipped"):
         try:
             doc = ArchiveDocument.objects.get(filename=pdf_path.name)
             if archive_issue.archive_document_id != doc.pk:
-                ArchiveIssue.objects.filter(pk=archive_issue_pk).update(
+                ArchiveIssueModel.objects.filter(pk=archive_issue_pk).update(
                     archive_document=doc
                 )
                 logger.info(
@@ -557,7 +359,6 @@ def ingest_archive(force=False, filename=None):
     """
     Scan settings.ARCHIVE_DIR for PDF files and ingest them synchronously.
     If filename is provided, only ingest that specific file.
-    Kept for backward-compatibility with the ingest_archive management command.
     """
     archive_dir = Path(settings.ARCHIVE_DIR)
     if not archive_dir.exists():
@@ -584,3 +385,59 @@ def ingest_archive(force=False, filename=None):
         results[key].append(result)
 
     return results
+
+
+# ---------------------------------------------------------------------------
+# Remote worker submission — batched, idempotent DB write
+# ---------------------------------------------------------------------------
+
+def persist_ingested_batch(*, archive_issue, batch_index, is_final, total_pages, records):
+    """
+    Persists one batch of VectorRecords (see services/vector_schema.py) for
+    archive_issue's document.
+
+    Identified by archive_issue's own (year, month) via a canonical,
+    server-derived filename — never by anything the worker claims in the
+    payload — so a submission can never overwrite an unrelated document.
+
+    Idempotent per chunk: update_or_create keyed on (document, chunk_index)
+    means a retried batch (e.g. the worker isn't sure a POST landed after a
+    dropped connection) converges to the same end state instead of
+    duplicating rows — backed by DocumentChunk's unique_document_chunk_index
+    constraint.
+
+    batch_index == 0 clears any existing chunks for this document first,
+    so a re-run starts clean; later batches only add/update.
+    """
+    canonical_filename = (
+        f"archive_issue_{archive_issue.pk}_{archive_issue.year}_{archive_issue.month:02d}.pdf"
+    )
+    relative_path = f"archive/{canonical_filename}"
+
+    with transaction.atomic():
+        archive_doc, created = ArchiveDocument.objects.get_or_create(
+            filename=canonical_filename,
+            defaults={"file_path": relative_path, "total_pages": total_pages},
+        )
+        if not created:
+            archive_doc.total_pages = total_pages
+            archive_doc.save(update_fields=["total_pages"])
+
+        if batch_index == 0:
+            DocumentChunk.objects.filter(document=archive_doc).delete()
+
+        for record in records:
+            DocumentChunk.objects.update_or_create(
+                document=archive_doc,
+                chunk_index=record.chunk_index,
+                defaults={
+                    "page_number": record.page_number,
+                    "chunk_text": record.chunk_text,
+                    "embedding": record.embedding,
+                },
+            )
+
+        if is_final:
+            ArchiveIssue.objects.filter(pk=archive_issue.pk).update(archive_document=archive_doc)
+
+    return archive_doc

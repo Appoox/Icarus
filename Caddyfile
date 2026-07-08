@@ -1,0 +1,21 @@
+# Caddyfile
+#
+# Replace the address below with your real domain to get automatic HTTPS
+# (Caddy provisions the Let's Encrypt cert for you, no extra config needed).
+# For local development without a domain, use ":80" instead.
+
+sasthragathy.org {
+    encode gzip
+
+    # Serve Django/Wagtail's collected static files directly from the
+    # shared volume - never touches the web app for these requests.
+    handle_path /static/* {
+        root * /srv/static
+        file_server
+    }
+
+    # Everything else - including websocket upgrade requests for Channels -
+    # goes to gunicorn/uvicorn. reverse_proxy handles the Connection/Upgrade
+    # headers automatically, no special websocket config required.
+    reverse_proxy web:8000
+}

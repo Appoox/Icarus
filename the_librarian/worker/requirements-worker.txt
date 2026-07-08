@@ -1,0 +1,39 @@
+# worker/requirements-worker.txt
+# ────────────────────────────────────────────────────────────────────────
+# Dependencies for the standalone remote OCR/embedding worker
+# (worker/ingest_worker.py). Installed on the worker machine only — this
+# is the mirror image of production's requirements.txt, which drops these
+# same heavy ML packages.
+#
+# NOT required: Django, Wagtail, psycopg2, pgvector-django, gunicorn/daphne,
+# django-q2, channels — the worker never imports Django or touches Postgres
+# directly. It only talks to production over HTTP.
+#
+# GPU note: if this machine has an NVIDIA GPU, install the matching CUDA
+# build of torch FIRST (see https://pytorch.org/get-started/locally/)
+# before running `pip install -r requirements-worker.txt` — otherwise pip
+# will pull the default CPU wheel as a transitive dependency of
+# sentence-transformers/ultralytics/surya-ocr below.
+
+# ── Confirmed by direct imports in ingest_worker.py / text_cleanup.py ──
+requests
+pdf2image
+regex
+langchain-text-splitters
+langchain-core
+sentence-transformers
+
+# ── Needed only by worker_ui.py, the optional browser control panel.
+#    Skip this line if you're only ever running ingest_worker.py from
+#    the command line.
+flask
+
+# ── Needed by the_librarian/services/ocr_processing.py and
+#    yolo_segmentation.py per the pipeline described in ingestion.py's
+#    docstring (PDF → images → YOLO segmentation → Surya OCR). I don't
+#    have those two files' actual contents in this conversation, so this
+#    section is inferred from your own architecture notes rather than
+#    verified imports — check ocr_processing.py/yolo_segmentation.py
+#    yourself and add/adjust anything I've missed.
+surya-ocr
+ultralytics
