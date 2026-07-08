@@ -10,49 +10,86 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./docker/initdb:/docker-entrypoint-initdb.d:ro
-    ports:
-      # Handy for connecting a local DB client during development.
-      # Remove in production if nothing outside the Docker network needs it.
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-icarus} -d ${POSTGRES_DB:-icarus}"]
       interval: 5s
       timeout: 5s
       retries: 10
     networks:
-      - backend
+      - dbnet
+
   bouncer:
     image: edoburu/pgbouncer:v1.25.2-p0
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-icarus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-icarus}
       DB_ADMIN_PASSWORD: ${BOUNCER_ADMIN_PASSWORD:?set BOUNCER_ADMIN_PASSWORD in .env}
-    ports:
-      - "6432:6432"
+      # SESSION pooling is deliberate and important here. This project uses
+      # channels_postgres, which relies on LISTEN/NOTIFY. Transaction- or
+      # statement-mode pooling would return the listening connection to the
+      # pool between statements and silently break realtime notifications.
+      POOL_MODE: session
+      # Bound how many server connections pgbouncer opens against Postgres.
+      MAX_CLIENT_CONN: "100"
+      DEFAULT_POOL_SIZE: "20"
     depends_on:
       db:
         condition: service_healthy
     networks:
-      - backend
+      - dbnet
+      - webnet
+
   web:
     build:
       context: .
       dockerfile: Dockerfile
+    image: icarus-web:latest
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-icarus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-icarus}
-      DB_HOST: db
-      DB_PORT: "5432"
+      # App now connects THROUGH the bouncer (bouncer:6432), never straight to
+      # db:5432. The environment block wins over anything in .env, so this is
+      # the effective DSN.
+      DATABASE_URL: postgres://${POSTGRES_USER:-icarus}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_DB:-icarus}
+      DB_HOST: bouncer
+      DB_PORT: "6432"
     volumes:
       - static_volume:/Icarus/static
       - media_volume:/Icarus/media
     depends_on:
-      db:
-        condition: service_healthy
+      # bouncer starts after db is healthy; web starts after bouncer. If the
+      # pool isn't accepting connections on the very first tick, the container
+      # restart policy retries migrate cleanly.
+      bouncer:
+        condition: service_started
     networks:
-      - backend
+      - webnet
+
+  # # ── django_q worker + scheduler ──────────────────────────────────────────
+  # # setup_page_lock_schedule (run in web's CMD) registers a django_q Schedule,
+  # # but a Schedule only ever FIRES while a `qcluster` process is running. With
+  # # no qcluster service, the page-lock job - and every other django_q task -
+  # # gets created and then never executes. This service reuses web's image and
+  # # just runs a different command. Remove it only if you run qcluster elsewhere.
+  # qcluster:
+  #   image: icarus-web:latest
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DATABASE_URL: postgres://${POSTGRES_USER:-icarus}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_DB:-icarus}
+  #     DB_HOST: bouncer
+  #     DB_PORT: "6432"
+  #   # Background tasks may write generated files (e.g. TTS audio) into media.
+  #   volumes:
+  #     - media_volume:/Icarus/media
+  #   command: python manage.py qcluster
+  #   depends_on:
+  #     bouncer:
+  #       condition: service_started
+  #   networks:
+  #     - appnet
 
   caddy:
     image: caddy:2-alpine
@@ -64,21 +101,24 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - static_volume:/srv/static:ro
-      - media_volume:/srv/media:ro
+      # - media_volume:/srv/media:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
       - web
     networks:
-      - backend
+      - webnet
 
 networks:
-  backend:
+  webnet:
     driver: bridge
+  dbnet:
+    driver: bridge
+    internal: true
 
 volumes:
   pgdata:
   static_volume:
-  media_volume:
+  # media_volume:
   caddy_data:
   caddy_config:

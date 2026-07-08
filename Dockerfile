@@ -26,7 +26,8 @@ RUN useradd -m wagtail
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/install
+    PYTHONPATH=/install \
+    PATH="/install/bin:$PATH"
 
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -47,12 +48,13 @@ RUN chown wagtail:wagtail /Icarus
 
 USER wagtail
 
-RUN python manage.py collectstatic --noinput --clear
 
-CMD set -xe; \
+CMD set -e; \
+    python manage.py collectstatic --noinput; \
+    python manage.py qcluster; \
     python manage.py migrate --noinput; \
     python manage.py setup_page_lock_schedule; \
-    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn.workers.UvicornWorker -w 3
+    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_workers.UvicornWorker -w 3
 
 EXPOSE 8000
 

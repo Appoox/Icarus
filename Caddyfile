@@ -4,19 +4,13 @@
 # (Caddy provisions the Let's Encrypt cert for you, no extra config needed).
 # For local development without a domain, use ":80" instead.
 
-your-domain.example {
+sasthragathy.org {
     encode gzip
 
     # Serve Django/Wagtail's collected static files directly from the
     # shared volume - never touches the web app for these requests.
     handle_path /static/* {
         root * /srv/static
-        file_server
-    }
-
-    # Same idea for user-uploaded media (Wagtail images/documents).
-    handle_path /media/* {
-        root * /srv/media
         file_server
     }
 

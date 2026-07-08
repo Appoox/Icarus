@@ -18,7 +18,7 @@ phonenumbers==9.0.32
 django-phonenumber-field==8.4.0
 psycopg[binary]==3.2.5
 dj-database-url==2.3.0
-gunicorn==20.0.4
+gunicorn==26.0.0
 django-hitcount==1.3.5
 django-allauth==65.16.1
 babel==2.18.0
@@ -59,7 +59,7 @@ pdfplumber==0.11.0
 #Async processing
 django-picklefield==3.4.0
 django-q2==1.10.0
-uvicorn==0.49.0
+uvicorn-worker==0.4.0
 channels==4.3.2
 channels-postgres==1.1.4
 msgpack==1.2.1

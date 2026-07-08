@@ -44,7 +44,7 @@ wheels/
 .git
 .venv
 venv
-env
+.env
 .pytest_cache
 media/
 static/
