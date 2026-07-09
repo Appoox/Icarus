@@ -52,9 +52,9 @@ services:
       # App now connects THROUGH the bouncer (bouncer:6432), never straight to
       # db:5432. The environment block wins over anything in .env, so this is
       # the effective DSN.
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_NAME}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:5432/${POSTGRES_NAME}
       DB_HOST: bouncer
-      DB_PORT: "6432"
+      DB_PORT: "5432"
     volumes:
       - static_volume:/Icarus/static
       - media_volume:/Icarus/media
@@ -73,24 +73,24 @@ services:
   # no qcluster service, the page-lock job - and every other django_q task -
   # gets created and then never executes. This service reuses web's image and
   # just runs a different command. Remove it only if you run qcluster elsewhere.
-  qcluster:
-    image: icarus-web:latest
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_NAME}
-      DB_HOST: bouncer
-      DB_PORT: "6432"
-    # Background tasks may write generated files (e.g. TTS audio) into media.
-    volumes:
-      - media_volume:/Icarus/media
-    command: python manage.py qcluster
-    depends_on:
-      bouncer:
-        condition: service_started
-    networks:
-      - webnet
+  # qcluster:
+  #   image: icarus-web:latest
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:6432/${POSTGRES_NAME}
+  #     DB_HOST: bouncer
+  #     DB_PORT: "6432"
+  #   # Background tasks may write generated files (e.g. TTS audio) into media.
+  #   volumes:
+  #     - media_volume:/Icarus/media
+  #   command: python manage.py qcluster
+  #   depends_on:
+  #     bouncer:
+  #       condition: service_started
+  #   networks:
+  #     - webnet
 
   caddy:
     image: caddy:2-alpine

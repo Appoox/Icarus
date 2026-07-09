@@ -45,11 +45,19 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 WORKDIR /Icarus
 COPY --chown=wagtail:wagtail . .
-RUN chown wagtail:wagtail /Icarus
+
+# static/ and media/ are the only runtime-writable dirs, and both are backed by
+# named volumes in docker-compose.yml. Create them and give wagtail ownership
+# BEFORE dropping privileges. On a freshly-created (empty) named volume, Docker
+# copies this ownership onto the volume; an already-existing root-owned volume
+# must be chowned once out-of-band (see deploy notes).
+RUN mkdir -p /Icarus/static /Icarus/media \
+    && chown -R wagtail:wagtail /Icarus/static /Icarus/media
 
 USER wagtail
 
-
+# collectstatic stays at runtime on purpose: static_volume is served read-only
+# by Caddy, and running it on boot keeps the volume refreshed after each rebuild.
 CMD set -e; \
     python manage.py collectstatic --noinput; \
     python manage.py migrate --noinput; \
