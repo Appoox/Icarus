@@ -58,10 +58,11 @@ USER wagtail
 
 # collectstatic stays at runtime on purpose: static_volume is served read-only
 # by Caddy, and running it on boot keeps the volume refreshed after each rebuild.
+# setup_page_lock_schedule commented out: qcluster not running
 CMD set -e; \
     python manage.py collectstatic --noinput; \
     python manage.py migrate --noinput; \
-    python manage.py setup_page_lock_schedule; \
+    # python manage.py setup_page_lock_schedule; \
     gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker
 
 EXPOSE 8000

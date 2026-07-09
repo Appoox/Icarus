@@ -10,4 +10,4 @@ class ArticlesConfig(AppConfig):
         from .models import Article, ArticleIndexPage
         auditlog.register(Article)
         auditlog.register(ArticleIndexPage)
-        import articles.signals
+        # import articles.signals  # Commented out: qcluster not running
