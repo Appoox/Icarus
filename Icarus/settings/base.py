@@ -316,7 +316,7 @@ PAGE_LOCK_DAYS = env.int("PAGE_LOCK_DAYS", default=10)
 # Adjust 'workers', 'timeout', and 'queue_limit' based on your server resources
 Q_CLUSTER = {
     'name': 'DjangORM',
-    'workers': 4,
+    'workers': 1,
     'timeout': 8400,
     'retry': 8410,
     'queue_limit': 50,
