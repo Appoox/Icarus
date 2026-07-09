@@ -55,7 +55,7 @@ CMD set -e; \
     python manage.py qcluster; \
     python manage.py migrate --noinput; \
     python manage.py setup_page_lock_schedule; \
-    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker -w 3
+    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker -w 2 --preload
 
 EXPOSE 8000
 
