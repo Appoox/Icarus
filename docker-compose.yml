@@ -25,6 +25,7 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_NAME}
       DB_ADMIN_PASSWORD: ${BOUNCER_ADMIN_PASSWORD}
+      AUTH_TYPE: scram-sha-256
       # SESSION pooling is deliberate and important here. This project uses
       # channels_postgres, which relies on LISTEN/NOTIFY. Transaction- or
       # statement-mode pooling would return the listening connection to the
