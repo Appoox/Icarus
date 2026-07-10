@@ -4,7 +4,8 @@
 # (Caddy provisions the Let's Encrypt cert for you, no extra config needed).
 # For local development without a domain, use ":80" instead.
 
-sasthragathy.org {
+# sasthragathy.org {
+65.109.131.232.sslip.io {
     encode gzip
 
     # Serve Django/Wagtail's collected static files directly from the
