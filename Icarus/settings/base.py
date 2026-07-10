@@ -314,7 +314,6 @@ PAGE_LOCK_DAYS = env.int("PAGE_LOCK_DAYS", default=10)
 # Q2 cluster configuration
 # 'name' can be 'default', 'redis', or 'dq' (for database)
 # Adjust 'workers', 'timeout', and 'queue_limit' based on your server resources
-# Commented out: qcluster not running
 Q_CLUSTER = {
     'name': 'DjangORM',
     'workers': 1,

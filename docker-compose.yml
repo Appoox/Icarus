@@ -74,7 +74,6 @@ services:
   # no qcluster service, the page-lock job - and every other django_q task -
   # gets created and then never executes. This service reuses web's image and
   # just runs a different command. Remove it only if you run qcluster elsewhere.
-  # Commented out: qcluster not running
   qcluster:
     image: icarus-web:latest
     restart: unless-stopped
