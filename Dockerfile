@@ -62,7 +62,7 @@ CMD set -e; \
     python manage.py collectstatic --noinput; \
     python manage.py migrate --noinput; \
     python manage.py setup_page_lock_schedule; \
-    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker
+    gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker -w 2 --preload
 
 EXPOSE 8000
 
