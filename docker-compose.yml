@@ -75,68 +75,42 @@ services:
   # gets created and then never executes. This service reuses web's image and
   # just runs a different command. Remove it only if you run qcluster elsewhere.
   # Commented out: qcluster not running
-  # qcluster:
-  #   image: icarus-web:latest
-  #   restart: unless-stopped
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:5432/${POSTGRES_NAME}
-  #     DB_HOST: bouncer
-  #     DB_PORT: "5432"
-  #   # Background tasks may write generated files (e.g. TTS audio) into media.
-  #   volumes:
-  #     - media_volume:/Icarus/media
-  #   command: python manage.py qcluster
-  #   depends_on:
-  #     bouncer:
-  #       condition: service_started
-  #   networks:
-  #     - webnet
+  qcluster:
+    image: icarus-web:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:5432/${POSTGRES_NAME}
+      DB_HOST: bouncer
+      DB_PORT: "5432"
+    # Background tasks may write generated files (e.g. TTS audio) into media.
+    volumes:
+      - media_volume:/Icarus/media
+    command: python manage.py qcluster
+    depends_on:
+      bouncer:
+        condition: service_started
+    networks:
+      - webnet
 
-  # caddy:
-  #   image: caddybuilds/caddy-cloudflare:alpine
-  #   restart: unless-stopped
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #     - "443:443/udp"
-  #   volumes:
-  #     - ./Caddyfile:/etc/caddy/Caddyfile:ro
-  #     - static_volume:/srv/static:ro
-  #     # - media_volume:/srv/media:ro
-  #     - caddy_data:/data
-  #     - caddy_config:/config
-  #   depends_on:
-  #     - web
-  #   networks:
-  #     - webnet
-
-  nginx:
-    image: nginx:1.31.2-trixie
+  caddy:
+    image: caddy:2-alpine
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      # - ./docker/nginx/certs:/etc/nginx/certs:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - static_volume:/srv/static:ro
-      - certbot_www:/var/www/certbot:ro
-      - certbot_certs:/etc/letsencrypt:ro
       # - media_volume:/srv/media:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - web
     networks:
       - webnet
-
-  certbot:
-    image: certbot/certbot:latest
-    volumes:
-      - certbot_certs:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
-
-  
 
 networks:
   webnet:
@@ -149,7 +123,5 @@ volumes:
   pgdata:
   static_volume:
   media_volume:
-  certbot_www:
-  certbot_certs:
-  # caddy_data:
-  # caddy_config:
+  caddy_data:
+  caddy_config:
