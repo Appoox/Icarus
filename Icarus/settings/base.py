@@ -76,7 +76,7 @@ INSTALLED_APPS = [
     "auditlog",
     "channels",
     "channels_postgres",
-    # "django_q",  # Commented out: qcluster not running
+    "django_q",
     "hitcount",
     "home",
     "search",
@@ -315,15 +315,15 @@ PAGE_LOCK_DAYS = env.int("PAGE_LOCK_DAYS", default=10)
 # 'name' can be 'default', 'redis', or 'dq' (for database)
 # Adjust 'workers', 'timeout', and 'queue_limit' based on your server resources
 # Commented out: qcluster not running
-# Q_CLUSTER = {
-#     'name': 'DjangORM',
-#     'workers': 1,
-#     'timeout': 8400,
-#     'retry': 8410,
-#     'queue_limit': 50,
-#     'bulk': 1,
-#     'orm': 'default'
-# }
+Q_CLUSTER = {
+    'name': 'DjangORM',
+    'workers': 1,
+    'timeout': 8400,
+    'retry': 8410,
+    'queue_limit': 50,
+    'bulk': 1,
+    'orm': 'default'
+}
 
 #Channel layer settings
 CHANNEL_LAYER_CONFIG = dj_database_url.config(
