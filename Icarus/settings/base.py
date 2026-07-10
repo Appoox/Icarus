@@ -59,17 +59,17 @@ SALT_KEY = env.str('SALT_KEY')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 ALLOWED_HOSTS = [
-    '139.162.178.139'
-    '65.109.131.232'
-    '65.109.131.232.sslip.io'
+    '139.162.178.139',
+    '65.109.131.232',
+    '65.109.131.232.sslip.io',
     'sasthragathy.org',
     'www.sasthragathy.org',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://65.109.131.232'
-    'https://65.109.131.232.sslip.io'
-    'http://65.109.131.232'
+    'https://65.109.131.232',
+    'https://65.109.131.232.sslip.io',
+    'http://65.109.131.232',
     'https://sasthragathy.org',
     'https://www.sasthragathy.org',
 ]
