@@ -94,23 +94,53 @@ services:
   #   networks:
   #     - webnet
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+  # caddy:
+  #   image: caddybuilds/caddy-cloudflare:alpine
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #     - "443:443/udp"
+  #   volumes:
+  #     - ./Caddyfile:/etc/caddy/Caddyfile:ro
+  #     - static_volume:/srv/static:ro
+  #     # - media_volume:/srv/media:ro
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+  #   depends_on:
+  #     - web
+  #   networks:
+  #     - webnet
+
+nginx:
+  image: nginx:1.31.2-trixie
+  restart: unless-stopped
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    - ./docker/nginx/certs:/etc/nginx/certs:ro
+    - static_volume:/srv/static:ro
+    - certbot_www:/var/www/certbot:ro
+    - certbot_certs:/etc/letsencrypt:ro
+    # - media_volume:/srv/media:ro
+  depends_on:
+    - web
+  networks:
+    - webnet
+
+  certbot:
+    image: certbot/certbot:latest
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - static_volume:/srv/static:ro
-      # - media_volume:/srv/media:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - certbot_certs:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: command -f ""
     depends_on:
-      - web
+      - nginx
     networks:
       - webnet
+  
 
 networks:
   webnet:
@@ -123,5 +153,7 @@ volumes:
   pgdata:
   static_volume:
   media_volume:
-  caddy_data:
-  caddy_config:
+  certbot_www:
+  certbot_certs:
+  # caddy_data:
+  # caddy_config:
