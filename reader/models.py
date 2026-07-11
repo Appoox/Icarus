@@ -347,6 +347,7 @@ class ReaderUser(AbstractUser, index.Indexed):
     # ── Subscription ──────────────────────────────────────────────────
     SUBSCRIPTION_PLANS = [
         ('none', 'No Subscription'),
+        ('complimentary', 'Complimentary (Temporary Access)'),
         ('1_month', '1 Month'),
         ('3_months', '3 Months'),
         ('6_months', '6 Months'),
@@ -466,6 +467,28 @@ class ReaderUser(AbstractUser, index.Indexed):
         self.subscription_plan = plan_type
         self.subscription_start = new_start
         self.subscription_end = new_start + duration
+        self.is_cancelled = False
+        self.save(update_fields=[
+            'subscription_plan', 'subscription_start', 'subscription_end', 'is_cancelled',
+        ])
+
+    def grant_temporary_access(self, until=None, days=None):
+        """
+        Grant complimentary (unpaid) access — an editor comp or free trial.
+        Records a distinct 'complimentary' entry in the subscription ledger.
+
+        Provide either `until` (an aware datetime) or `days` (int). Access starts
+        now. Payment details are left untouched — a comp grant attaches no payment.
+        """
+        now = timezone.now()
+        if until is None:
+            if not days:
+                return
+            until = now + timedelta(days=days)
+
+        self.subscription_plan = 'complimentary'
+        self.subscription_start = now
+        self.subscription_end = until
         self.is_cancelled = False
         self.save(update_fields=[
             'subscription_plan', 'subscription_start', 'subscription_end', 'is_cancelled',
@@ -767,6 +790,18 @@ class ReaderUser(AbstractUser, index.Indexed):
             # New user who opted in immediately
             self.newsletter_opt_in_at = timezone.now()
             
+
+        if self.subscription_plan != 'none':
+            if self.subscription_start is None:
+                self.subscription_start = timezone.now()
+            if self.subscription_end is None:
+                plan = PLANS.get(self.subscription_plan)
+                if plan:
+                    self.subscription_end = self.subscription_start + timedelta(
+                        days=plan['duration_days']
+                    )
+                    
+
         super().save(*args, **kwargs)
 
         # ── Subscription History Tracking ──

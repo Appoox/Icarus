@@ -121,11 +121,15 @@ def get_embedder() -> CachingEmbeddings:
 
     if embedder_type == "HuggingFace":
         from langchain_huggingface import HuggingFaceEmbeddings
+        
+        # FIX: The meta-tensor error occurs because device constraints 
+        # were incorrectly applied to model_kwargs. 
+        # Since CPU usage is already forced via OS environment variables 
+        # at the top of the file, we can safely remove model_kwargs. 
+        # sentence-transformers will detect the environment variables and 
+        # load the Safetensor weights onto the CPU appropriately.
         base = HuggingFaceEmbeddings(
             model_name=model_name,
-            model_kwargs={
-                'device': 'cpu'
-            },
             encode_kwargs={'normalize_embeddings': True}
         )
     else:

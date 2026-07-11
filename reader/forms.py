@@ -4,13 +4,13 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone  # needed for consent timestamp writes in save()
+from datetime import datetime, time
 
 from .models import ReaderUser
 from issue.models import Topic
 from phonenumber_field.formfields import SplitPhoneNumberField
 from phonenumber_field.phonenumber import PhoneNumber as PhoneNumberObj  # for safe parse in __init__
 
-# Wagtail user forms imports
 from wagtail.users.forms import UserEditForm, UserCreationForm
 
 User = get_user_model()
@@ -307,13 +307,23 @@ class CustomWagtailUserEditForm(UserEditForm):
     properties, optional values, and dynamic multi-part names.
     """
     name = forms.CharField(max_length=255, required=True, label=_("Full Name"))
+    
+    grant_access_until = forms.DateField(
+        required=False,
+        label=_("Grant temporary access until"),
+        help_text=_(
+            "Give this reader complimentary access (no payment) through the "
+            "selected date. Overrides the plan above. Leave blank to make no change."
+        ),
+        widget=forms.DateInput(attrs={'type': 'date'}),
+    )
 
     class Meta:
         model = User
         fields = {
             'phone_number_hash', 
             'name', 'email', 'is_active', 'gender', 'birth_year',
-            'subscription_plan', 'subscription_end',
+            'subscription_plan',
             'print_delivery_status',
             'pincode'
         }
@@ -349,6 +359,21 @@ class CustomWagtailUserEditForm(UserEditForm):
         else:
             cleaned_data['first_name'] = ""
             cleaned_data['last_name'] = ""
+
+        # ── Temporary-access validation ──
+        until = cleaned_data.get('grant_access_until')
+        if until and until < timezone.localdate():
+            self.add_error('grant_access_until',
+                           _("The access-until date must be in the future."))
+
+        # If the plan resolves to complimentary but nothing backs it with a future
+        # end, require a date rather than letting the ledger write fail at the DB.
+        if cleaned_data.get('subscription_plan') == 'complimentary' and not until:
+            existing_end = getattr(self.instance, 'subscription_end', None)
+            if not existing_end or existing_end <= timezone.now():
+                self.add_error('grant_access_until',
+                               _("Set an access-until date to grant complimentary access."))
+
         return cleaned_data
 
     def validate_unique(self):
@@ -361,3 +386,29 @@ class CustomWagtailUserEditForm(UserEditForm):
         if self.instance.email == "":
             self.instance.email = None
         super().validate_unique()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Mirror validate_unique(): a blank email must persist as NULL, never ''.
+        if not instance.email:
+            instance.email = None
+
+        until = self.cleaned_data.get('grant_access_until')
+        until_dt = None
+        if until:
+            # End of the chosen day, so access lasts through that whole date.
+            until_dt = timezone.make_aware(
+                datetime.combine(until, time.max),
+                timezone.get_current_timezone(),
+            )
+
+        if commit:
+            instance.save()
+            self._save_m2m()
+            if until_dt:
+                # Canonical, ledger-aware grant. Runs after the base save so the
+                # profile edits land first; this writes the 'complimentary' record.
+                instance.grant_temporary_access(until=until_dt)
+
+        return instance

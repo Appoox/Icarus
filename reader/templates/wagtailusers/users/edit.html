@@ -72,4 +72,19 @@
     <li>
         {% include "wagtailadmin/shared/field.html" with field=form.subscription_plan %}
     </li>
+
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.subscription_plan %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.grant_access_until %}
+    </li>
+    {% if form.instance.subscription_end %}
+    <li>
+        <p class="help">
+            Current access ends: {{ form.instance.subscription_end }}
+            ({% if form.instance.is_subscribed %}active{% else %}expired{% endif %})
+        </p>
+    </li>
+    {% endif %}
 {% endblock extra_fields %}
