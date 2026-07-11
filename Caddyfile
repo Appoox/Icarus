@@ -8,15 +8,82 @@
 65.109.131.232.sslip.io {
     encode gzip
 
-    # Serve Django/Wagtail's collected static files directly from the
-    # shared volume - never touches the web app for these requests.
+    # Collected static files (unchanged).
     handle_path /static/* {
         root * /srv/static
         file_server
     }
 
-    # Everything else - including websocket upgrade requests for Channels -
-    # goes to gunicorn/uvicorn. reverse_proxy handles the Connection/Upgrade
-    # headers automatically, no special websocket config required.
+    # ── MEDIA: whitelist public folders, block everything else ──────────────
+    # Caddy auto-sorts these by specificity, so the nested thumbnails rule is
+    # evaluated before the /archive/ rule regardless of written order.
+
+    # PUBLIC: archive thumbnails (nested inside the protected /archive/).
+    handle /media/archive/thumbnails/* {
+        root * /srv
+        file_server
+        header Cache-Control "public, max-age=604800"  # 7 days; safe, public
+    }
+
+    # PROTECTED: issue PDFs. Served via Caddy only after successful forward_auth validation.
+    handle /media/archive/* {
+        forward_auth web:8000 {
+            uri /internal/archive-authz
+        }
+        root * /srv
+        file_server
+        header Cache-Control "private, no-store"
+    }
+
+    # BLOCK: Wagtail documents are served only via /documents/ serve_view.
+    handle /media/documents/* {
+        respond "Not Found" 404
+    }
+
+    # PROTECTED: reader feedback uploads. Served via Caddy only after successful forward_auth validation.
+    handle /media/postbox_images/* {
+        forward_auth web:8000 {
+            uri /internal/postbox-authz
+        }
+        root * /srv
+        file_server
+        header Cache-Control "private, no-store"
+    }
+
+    # PROTECTED: pre-rendered page images (WebPs) served directly by Caddy
+    # after Django confirms the user is authorised. A 404 here means the
+    # pre-render task didn't run — fix it upstream, not here.
+    handle /media/page_cache/* {
+        forward_auth web:8000 {
+            uri /internal/page-cache-authz
+        }
+        root * /srv
+        file_server
+        header Cache-Control "private, no-store"
+    }
+
+    # PUBLIC: Wagtail image originals + renditions.
+    handle /media/images/* {
+        root * /srv
+        file_server
+    }
+    handle /media/original_images/* {
+        root * /srv
+        file_server
+    }
+
+    # DEFAULT-DENY: any other /media path is not public until whitelisted above.
+    handle /media/* {
+        respond "Not Found" 404
+    }
+
+    # LOCKDOWN: /internal/* endpoints are for Caddy→Django subrequests only.
+    # Block any request that arrives from the public internet.
+    handle /internal/* {
+        respond "Not Found" 404
+    }
+
+    # Everything else - app routes, AND /documents/ serve_view, /reader/, etc -
+    # goes to gunicorn. Websocket upgrades handled automatically.
     reverse_proxy web:8000
 }
