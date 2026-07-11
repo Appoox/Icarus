@@ -8,6 +8,7 @@ from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail.contrib.sitemaps.views import sitemap
 from search import views as search_views
+from Icarus import protected_media as protected_media_views
 
 urlpatterns = [
     path("sitemap.xml", sitemap),
@@ -23,6 +24,9 @@ urlpatterns = [
     path("kalapila/", include("kalapila.urls")),
     path("postbox/", include("postbox.urls")),
     path("authors/", include("literati.urls")),
+    path("internal/archive-authz", protected_media_views.archive_authz, name="archive_authz"),
+    path("internal/postbox-authz", protected_media_views.postbox_authz, name="postbox_authz"),
+    path("internal/page-cache-authz", protected_media_views.page_cache_authz, name="page_cache_authz"),
 ]
 
 

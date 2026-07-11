@@ -59,6 +59,7 @@ services:
     volumes:
       - static_volume:/Icarus/static
       - media_volume:/Icarus/media
+      - model_volume:/Icarus/models
     depends_on:
       # bouncer starts after db is healthy; web starts after bouncer. If the
       # pool isn't accepting connections on the very first tick, the container
@@ -122,5 +123,6 @@ volumes:
   pgdata:
   static_volume:
   media_volume:
+  model_volume:
   caddy_data:
   caddy_config:

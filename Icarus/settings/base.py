@@ -278,6 +278,11 @@ WAGTAILADMIN_BASE_URL = "http://example.com"
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
 WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip', 'mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'opus', 'mp4', 'webm', 'ogv']
 
+WAGTAILDOCS_SERVE_METHOD = "serve_view"
+WAGTAILDOCS_INLINE_CONTENT_TYPES = [
+    "audio/mpeg", "audio/mp4", "audio/aac", "audio/ogg", "audio/wav", "video/mp4", "video/webm", "video/ogv", "audio/m4a", "audio/flac", "audio/opus", "audio/aac"
+]
+
 # ── Reader / Paywall ──────────────────────────────────────────────────
 FREE_ARTICLE_LIMIT = env.int("FREE_ARTICLE_LIMIT", 3)  # Number of free articles for non-subscribed readers
 LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')

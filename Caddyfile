@@ -1,22 +1,102 @@
-# Caddyfile
+# Caddyfile — Icarus (ശാസ്ത്രഗതി) media + app serving
 #
-# Replace the address below with your real domain to get automatic HTTPS
-# (Caddy provisions the Let's Encrypt cert for you, no extra config needed).
-# For local development without a domain, use ":80" instead.
+# Interim host is the sslip.io name that resolves to this server's IP, giving a
+# real Let's Encrypt cert with no domain. When sasthragathy.org is pointed at
+# this box, uncomment its block below (it gets its own cert automatically).
 
 # sasthragathy.org {
 65.109.131.232.sslip.io {
     encode gzip
 
-    # Serve Django/Wagtail's collected static files directly from the
-    # shared volume - never touches the web app for these requests.
+    # Collected static files (public, served straight from the volume).
     handle_path /static/* {
         root * /srv/static
         file_server
     }
 
-    # Everything else - including websocket upgrade requests for Channels -
-    # goes to gunicorn/uvicorn. reverse_proxy handles the Connection/Upgrade
-    # headers automatically, no special websocket config required.
+    # ── MEDIA: whitelist public folders, gate protected ones, block the rest ──
+    # Caddy auto-sorts handle blocks by path specificity, so the nested
+    # thumbnails rule below is evaluated before the broader /archive/ rule
+    # regardless of the order they appear here.
+
+    # PUBLIC: archive thumbnails (nested inside the protected /archive/ tree).
+    handle /media/archive/thumbnails/* {
+        root * /srv
+        file_server
+        header Cache-Control "public, max-age=604800"  # 7 days; safe, public
+    }
+
+    # PROTECTED: issue PDFs. The route{} wrapper forces LITERAL ordering:
+    # forward_auth runs first, and file_server only runs if Django returned 2xx.
+    # Without route{}, Caddy's directive sorting can prevent the file from ever
+    # being served even after a successful auth check.
+    handle /media/archive/* {
+        route {
+            forward_auth web:8000 {
+                uri /internal/archive-authz
+            }
+            root * /srv
+            file_server
+            header Cache-Control "private, no-store"
+        }
+    }
+
+    # BLOCK: Wagtail documents are served only via the /documents/ serve_view,
+    # which enforces collection privacy. The raw path must never be served.
+    handle /media/documents/* {
+        respond "Not Found" 404
+    }
+
+    # PROTECTED: reader feedback uploads (staff or owner only). route{} wrapped
+    # for the same auth-then-serve ordering reason as archive above.
+    handle /media/postbox_images/* {
+        route {
+            forward_auth web:8000 {
+                uri /internal/postbox-authz
+            }
+            root * /srv
+            file_server
+            header Cache-Control "private, no-store"
+        }
+    }
+
+    # PROTECTED: pre-rendered page images (WebPs), the highest-volume protected
+    # asset. Pre-rendered by a django-q task on publish; a 404 here means that
+    # task didn't run — fix upstream, the authz view never lazy-renders.
+    handle /media/page_cache/* {
+        route {
+            forward_auth web:8000 {
+                uri /internal/page-cache-authz
+            }
+            root * /srv
+            file_server
+            header Cache-Control "private, no-store"
+        }
+    }
+
+    # PUBLIC: Wagtail image originals + renditions (public by design).
+    handle /media/images/* {
+        root * /srv
+        file_server
+    }
+    handle /media/original_images/* {
+        root * /srv
+        file_server
+    }
+
+    # DEFAULT-DENY: any other /media path is not public until whitelisted above.
+    handle /media/* {
+        respond "Not Found" 404
+    }
+
+    # LOCKDOWN: /internal/* authz endpoints are for Caddy→Django subrequests
+    # only (dialled directly at web:8000 over the Docker network). This block
+    # 404s any attempt to reach them from the public internet via this host.
+    handle /internal/* {
+        respond "Not Found" 404
+    }
+
+    # Everything else — app routes, the /documents/ serve_view, /reader/, the
+    # Wagtail admin, websockets for Channels — goes to gunicorn/uvicorn.
     reverse_proxy web:8000
 }
