@@ -22,6 +22,9 @@ from django.dispatch import receiver
 from django.core.cache import cache
 from django.db.models import Q
 
+import re
+_HEX64 = re.compile(r'^[0-9a-f]{64}$')
+
 # ── Single source of truth for plan configuration ───────────────────────
 PLANS = {
     '1_month':  {'name': '1 Month',   'price': 299,  'has_print': False, 'duration_days': 30},
@@ -800,7 +803,12 @@ class ReaderUser(AbstractUser, index.Indexed):
                     self.subscription_end = self.subscription_start + timedelta(
                         days=plan['duration_days']
                     )
-                    
+
+        h = (self.phone_number_hash or '').strip()
+        if h and not _HEX64.match(h):
+            self.phone_number_hash = self.hash_phone(h)
+            if kwargs.get('update_fields') is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {'phone_number_hash'}
 
         super().save(*args, **kwargs)
 
