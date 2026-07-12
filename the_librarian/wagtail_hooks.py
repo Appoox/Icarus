@@ -43,9 +43,10 @@ def register_remote_worker_menu():
 
 class LibrarianIngestPanel(Component):
     """
-    Wagtail dashboard panel for The Librarian's LOCAL in-process ingestion.
-    Shows 4 stat cards and provides one-click async ingestion of all
-    pending ArchiveIssue PDFs via Django-Q2, running on this server.
+    Wagtail dashboard panel for The Librarian's LOCAL in-process pipeline.
+    Shows 4 stat cards and provides a manual "Re-ingest All" recovery
+    action via Django-Q2. New issues are no longer ingested from here —
+    saving an ArchiveIssue snippet queues its ingestion automatically.
     """
     order = 200
 
@@ -115,15 +116,6 @@ class LibrarianIngestPanel(Component):
                 </div>
 
                 <div style="display:flex;justify-content:center;gap:.8em;flex-wrap:wrap;">
-                    <button type="button" id="btn-ingest-archive"
-                            class="button button-small button--primary"
-                            onclick="librarianIngest(false)"
-                            style="display:inline-flex;align-items:center;gap:6px;">
-                        <svg class="icon" aria-hidden="true" style="width:1em;height:1em;">
-                            <use href="#icon-download"></use>
-                        </svg>
-                        Ingest New Issues
-                    </button>
                     <button type="button" id="btn-reingest-archive"
                             class="button button-small button--secondary"
                             onclick="librarianIngest(true)"
@@ -172,14 +164,12 @@ class LibrarianIngestPanel(Component):
             var statusDiv  = document.getElementById('ingest-status');
             var spinner    = document.getElementById('ingest-spinner');
             var resultDiv  = document.getElementById('ingest-result');
-            var btnIngest  = document.getElementById('btn-ingest-archive');
             var btnRe      = document.getElementById('btn-reingest-archive');
             var btnStop    = document.getElementById('btn-stop-ingest');
 
             var stopRequested = false;
 
             function setButtons(busy) {{
-                btnIngest.disabled = busy;
                 btnRe.disabled     = busy;
                 btnStop.style.display = busy ? 'inline-flex' : 'none';
                 if (busy) {{ btnStop.disabled = false; btnStop.innerHTML = 'Stop Ingestion'; }}
