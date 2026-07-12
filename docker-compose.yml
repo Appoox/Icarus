@@ -84,9 +84,11 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:5432/${POSTGRES_NAME}
       DB_HOST: bouncer
       DB_PORT: "5432"
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_CREDENTIALS_JSON}
     # Background tasks may write generated files (e.g. TTS audio) into media.
     volumes:
       - media_volume:/Icarus/media
+      - model_volume:/Icarus/models
     command: python manage.py qcluster
     depends_on:
       bouncer:
