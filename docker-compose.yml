@@ -104,7 +104,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - static_volume:/srv/static:ro
-      # - media_volume:/srv/media:ro
+      - media_volume:/srv/media:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
