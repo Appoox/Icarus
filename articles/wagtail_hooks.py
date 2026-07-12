@@ -711,3 +711,66 @@ def notify_last_edited_by(request, page):
                 </style>
                 """
                 messages.warning(request, mark_safe(modal_html))
+
+"""
+Registers an inline "text colour" feature for the Draftail rich-text editor.
+"""
+
+import wagtail.admin.rich_text.editors.draftail.features as draftail_features
+from wagtail.admin.rich_text.converters.html_to_contentstate import (
+    InlineEntityElementHandler,
+)
+from draftjs_exporter.dom import DOM
+from wagtail import hooks
+
+FEATURE_NAME = 'color'
+ENTITY_TYPE = 'COLOR'
+DEFAULT_COLOR = '#000000'
+
+
+def color_entity_decorator(props):
+    """ContentState → database HTML."""
+    color = props.get('color') or DEFAULT_COLOR
+    return DOM.create_element(
+        'span',
+        {'data-color': color, 'style': 'color: %s;' % color},
+        props['children'],
+    )
+
+
+class ColorEntityElementHandler(InlineEntityElementHandler):
+    """Database HTML → ContentState."""
+    mutability = 'MUTABLE'
+
+    def get_attribute_data(self, attrs):
+        return {'color': attrs.get('data-color', DEFAULT_COLOR)}
+
+
+@hooks.register('register_rich_text_features')
+def register_color_feature(features):
+    control = {
+        'type': ENTITY_TYPE,
+        'label': 'A',
+        'description': 'Text colour',
+    }
+
+    features.register_editor_plugin(
+        'draftail',
+        FEATURE_NAME,
+        draftail_features.EntityFeature(
+            control,
+            js=['js/draftail_color.js'],
+            css={'all': ['css/draftail_color.css']},
+        ),
+    )
+
+    features.register_converter_rule('contentstate', FEATURE_NAME, {
+        'from_database_format': {
+            'span[data-color]': ColorEntityElementHandler(ENTITY_TYPE),
+        },
+        'to_database_format': {
+            'entity_decorators': {ENTITY_TYPE: color_entity_decorator},
+        },
+    })
+
+    features.default_features.append(FEATURE_NAME)
