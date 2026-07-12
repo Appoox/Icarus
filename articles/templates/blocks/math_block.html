@@ -1,0 +1,6 @@
+{# Requires KaTeX auto-render in your base template (see setup note). #}
+{% if self.display %}
+  <div class="math-block">\[{{ self.latex }}\]</div>
+{% else %}
+  <span class="math-inline">\({{ self.latex }}\)</span>
+{% endif %}

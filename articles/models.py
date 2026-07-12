@@ -1,5 +1,6 @@
 from django.db import models
 from django import forms
+from django.utils.functional import cached_property
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from wagtail.contrib.routable_page.models import RoutablePageMixin, route
@@ -74,10 +75,20 @@ class BlockQuoteBlock(blocks.StructBlock):
 class ImageBlock(blocks.StructBlock):
     """Image with optional caption and text-wrap alignment."""
     image = ImageChooserBlock()
+    alt_text = blocks.CharBlock(
+        required=False,
+        label='Alt text',
+        help_text="For screen readers. Leave blank to use the image's own title."
+    )
     caption = blocks.RichTextBlock(
         required=False,
         label='Caption',
         help_text="Optional caption displayed below the image"
+    )
+    credit = blocks.CharBlock(
+        required=False,
+        label='Credit',
+        help_text="Photo credit, e.g. 'ISRO' or a photographer's name"
     )
     alignment = blocks.ChoiceBlock(
         choices=[
@@ -140,6 +151,21 @@ class RichTextImportBlock(blocks.TextBlock):
     happens before the page is saved. The template is a safety fallback only.
     """
 
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('rows', 8)
+        super().__init__(*args, **kwargs)
+
+    @cached_property
+    def field(self):
+        # Override the default plain <textarea> with one that captures the
+        # clipboard's text/html payload on paste (via rich_text_import_paste.js),
+        # so headings / paragraphs / images survive into the converter instead
+        # of being flattened to text/plain.
+        from .wagtail_widgets import RichTextImportTextarea
+        field_kwargs = {'widget': RichTextImportTextarea(attrs={'rows': self.rows})}
+        field_kwargs.update(self.field_options)
+        return forms.CharField(**field_kwargs)
+
     class Meta:
         icon      = 'clipboard-list'
         label     = 'Paste & Import'
@@ -150,6 +176,73 @@ class RichTextImportBlock(blocks.TextBlock):
         template  = 'blocks/rich_text_import_block.html'
 
 
+# ── Science / editorial content blocks ──────────────────────────────────
+
+class CalloutBlock(blocks.StructBlock):
+    """Info / note / tip / warning / key-point box — good for asides."""
+    style = blocks.ChoiceBlock(choices=[
+        ('info', 'Info'),
+        ('note', 'Note'),
+        ('tip', 'Tip'),
+        ('warning', 'Warning'),
+        ('key', 'Key point'),
+    ], default='info')
+    title = blocks.CharBlock(required=False)
+    text  = blocks.RichTextBlock()
+
+    class Meta:
+        icon = 'help'
+        label = 'Callout / Box'
+        template = 'blocks/callout_block.html'
+
+
+class MathBlock(blocks.StructBlock):
+    """LaTeX equation — rendered client-side by KaTeX auto-render."""
+    latex   = blocks.TextBlock(help_text=r"LaTeX without delimiters, e.g. E = mc^2")
+    display = blocks.BooleanBlock(
+        required=False, default=True,
+        help_text="On = centred block equation; off = inline."
+    )
+
+    class Meta:
+        icon = 'cog'
+        label = 'Equation (LaTeX)'
+        template = 'blocks/math_block.html'
+
+
+class ReferencesBlock(blocks.StructBlock):
+    """Numbered citations / footnotes."""
+    heading = blocks.CharBlock(required=False, default="References")
+    items   = blocks.ListBlock(
+        blocks.RichTextBlock(features=['bold', 'italic', 'link'])
+    )
+
+    class Meta:
+        icon = 'list-ol'
+        label = 'References / Footnotes'
+        template = 'blocks/references_block.html'
+
+
+class CodeBlock(blocks.StructBlock):
+    """Syntax-highlighted code — only needed if you publish code."""
+    language = blocks.ChoiceBlock(choices=[
+        ('python', 'Python'),
+        ('javascript', 'JavaScript'),
+        ('bash', 'Bash'),
+        ('html', 'HTML'),
+        ('css', 'CSS'),
+        ('json', 'JSON'),
+        ('sql', 'SQL'),
+        ('text', 'Plain'),
+    ], default='python')
+    code = blocks.TextBlock()
+
+    class Meta:
+        icon = 'code'
+        label = 'Code'
+        template = 'blocks/code_block.html'
+
+
 
 # ── Reusable StreamField Blocks ─────────────────────────────────────────
 
@@ -157,50 +250,33 @@ STREAM_BLOCKS = [
     # ── Import helper (auto-expands on save) ───────────────────────────────
     ('rich_text_import', RichTextImportBlock()),
 
-    # ── Media ──────────────────────────────────────────────────────────────
-    ('audio',           AudioBlock()),
-    ('video',           VideoBlock()),
-
     # ── Text ───────────────────────────────────────────────────────────────
     ('heading',         blocks.RichTextBlock(form_classname="full title")),
     ('colored_heading', ColoredHeadingBlock(label="Colored Heading")),
     ('paragraph',       blocks.RichTextBlock()),
     ('blockquote',      BlockQuoteBlock()),
-    ('text',            blocks.TextBlock()),
+    ('callout',         CalloutBlock()),
+    ('references',      ReferencesBlock()),
 
     # ── Media & Embeds ─────────────────────────────────────────────────────
     ('image',           ImageBlock()),
+    ('audio',           AudioBlock()),
+    ('video',           VideoBlock()),
     ('embed',           EmbedBlock(help_text="Insert a URL to embed (e.g. YouTube, Vimeo, SoundCloud)")),
     ('document',        DocumentChooserBlock()),
     ('table',           TableBlock()),
-    ('raw_html',        blocks.RawHTMLBlock(help_text="Use with caution: raw HTML is not sanitised")),
 
-    # ── Typed primitives ───────────────────────────────────────────────────
-    ('email',           blocks.EmailBlock()),
-    ('url',             blocks.URLBlock()),
-    ('boolean',         blocks.BooleanBlock(required=False)),
-    ('integer',         blocks.IntegerBlock()),
-    ('float',           blocks.FloatBlock()),
-    ('decimal',         blocks.DecimalBlock()),
-    ('date',            blocks.DateBlock()),
-    ('time',            blocks.TimeBlock()),
-    ('datetime',        blocks.DateTimeBlock()),
-    ('rich_text',       blocks.RichTextBlock(label="Rich Text (Full)")),
-    ('choice',          blocks.ChoiceBlock(choices=[
-        ('left',   'Left'),
-        ('center', 'Centre'),
-        ('right',  'Right'),
-    ], help_text="Alignment choice")),
-    ('page',            blocks.PageChooserBlock()),
-    ('static',          blocks.StaticBlock(
-        admin_text="This is a placeholder block — content is defined in the template.",
-        label="Divider / Separator",
+    # ── Science ────────────────────────────────────────────────────────────
+    ('math',            MathBlock()),
+    ('code',            CodeBlock()),   # optional — remove if you never publish code
+
+    # ── Structure & escape hatch ───────────────────────────────────────────
+    ('divider',         blocks.StaticBlock(
+        admin_text='A horizontal section divider.',
+        label='Divider',
+        template='blocks/divider_block.html',
     )),
-    ('list',            blocks.ListBlock(blocks.CharBlock(), label="List of items")),
-    ('stream',          blocks.StreamBlock([
-        ('text',  blocks.CharBlock()),
-        ('image', ImageChooserBlock()),
-    ], label="Nested Stream")),
+    ('raw_html',        blocks.RawHTMLBlock(help_text="Raw HTML — not sanitised, use with care.")),
 ]
 
 class ArticleForm(WagtailAdminPageForm):

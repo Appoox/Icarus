@@ -1,0 +1,7 @@
+{% load wagtailcore_tags %}
+<section class="references">
+  {% if self.heading %}<h3 class="references-title">{{ self.heading }}</h3>{% endif %}
+  <ol>
+    {% for item in self.items %}<li>{{ item|richtext }}</li>{% endfor %}
+  </ol>
+</section>
