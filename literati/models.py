@@ -185,6 +185,30 @@ class Literati(Page, HitCountMixin):
                 })
 
     def save(self, *args, **kwargs):
+        # ── Invariant: every Literati is backed by a ReaderUser ──────────
+        # (The reverse is not true — most readers never become authors.)
+        # Enforced at model level so it holds for admin saves, hooks, and
+        # scripts alike. Idempotent: looks up by phone hash before creating,
+        # so a reader who later becomes an author is linked, not duplicated.
+        newly_linked = False
+        if not self.reader_user and self.phone_number:
+            from reader.models import ReaderUser as _RU
+            phone = str(self.phone_number)
+            existing = _RU.objects.filter(
+                phone_number_hash=_RU.hash_phone(phone)
+            ).first()
+            if existing:
+                self.reader_user = existing
+            else:
+                # No password argument → unusable password; they log in
+                # through the normal phone flow like any other reader.
+                self.reader_user = _RU.objects.create_user(
+                    phone_number=phone,
+                    name=self.title,
+                    email=self.email or None,
+                )
+            newly_linked = True
+
         if self.reader_user:
             user = self.reader_user
             updated_fields = []
@@ -218,6 +242,12 @@ class Literati(Page, HitCountMixin):
                 user.save(update_fields=updated_fields)
 
         super().save(*args, **kwargs)
+
+        # A newly linked user may already sit on the current board (page
+        # created after the board, or a reader merged into an author page)
+        # — reconcile so they receive staff/groups immediately.
+        if newly_linked:
+            sync_editorial_staff()
 
     content_panels = [
         FieldPanel('title', heading="Name", help_text="Enter the full name of the person"),
@@ -306,9 +336,94 @@ class ArticleAuthorRelationship(Orderable):
         FieldPanel('role'),
     ]
 
+def sync_editorial_staff():
+    """
+    Reconcile ReaderUser.is_staff and role-Group membership with the
+    current editorial board. Idempotent full reconciliation — safe to
+    call after any board or membership change, in any order.
+
+    Rules:
+      • Active members of the *current* board whose Literati page is
+        linked to a ReaderUser get is_staff=True. The grant is recorded
+        in ReaderUser.staff_granted_by_board so revocation never touches
+        manually-appointed staff or superusers.
+      • If a Django auth Group exists whose name exactly matches a role's
+        display name ('Editor', 'Associate Editor', 'Managing Editor',
+        'Board Member'), this function owns its membership: entitled
+        users are added, everyone else is removed. Create the group and
+        attach permissions to give that role powers; no group of that
+        name → the role carries no permissions. Groups are never
+        auto-created. To grant editor-like permissions to a non-board
+        user, use a differently named group.
+    """
+    from django.contrib.auth.models import Group
+
+    role_display = dict(EditorialBoardMember.ROLE_CHOICES)   # value → display
+    role_groups = {
+        g.name: g for g in Group.objects.filter(name__in=role_display.values())
+    }
+
+    # user pk → set of role display names held on the current board
+    entitled = {}
+    users_by_pk = {}
+    memberships = (
+        EditorialBoardMember.objects
+        .filter(board__is_current=True, is_active=True,
+                editor__reader_user__isnull=False)
+        .select_related('editor__reader_user')
+    )
+    for m in memberships:
+        user = m.editor.reader_user
+        users_by_pk[user.pk] = user
+        entitled.setdefault(user.pk, set()).add(role_display[m.role])
+
+    # ── Grant staff to entitled users ────────────────────────────────────
+    for user in users_by_pk.values():
+        if not user.is_staff:
+            user.is_staff = True
+            user.staff_granted_by_board = True
+            user.save(update_fields=['is_staff', 'staff_granted_by_board'])
+        # Already staff for another reason (flag False): leave provenance
+        # alone — they keep staff independently of the board.
+
+    # ── Revoke staff we granted from users no longer entitled ───────────
+    stale = ReaderUser.objects.filter(
+        staff_granted_by_board=True
+    ).exclude(pk__in=entitled.keys())
+    for user in stale:
+        if user.is_superuser:
+            # Never demote a superuser; just drop the stale provenance flag.
+            user.staff_granted_by_board = False
+            user.save(update_fields=['staff_granted_by_board'])
+        else:
+            user.is_staff = False
+            user.staff_granted_by_board = False
+            user.save(update_fields=['is_staff', 'staff_granted_by_board'])
+
+    # ── Role-group reconciliation (only for groups the admin created) ───
+    for display_name, group in role_groups.items():
+        should_have = {pk for pk, roles in entitled.items() if display_name in roles}
+        current = set(group.user_set.values_list('pk', flat=True))
+        to_add = should_have - current
+        to_remove = current - should_have
+        if to_add:
+            group.user_set.add(*to_add)
+        if to_remove:
+            group.user_set.remove(*to_remove)
+
+
 @register_snippet
 class EditorialBoard(index.Indexed, ClusterableModel):
     name = models.CharField(max_length=255)
+    is_current = models.BooleanField(
+        default=False,
+        help_text=(
+            "Marks this as the sitting editorial board. Saving a board with "
+            "this ticked automatically unticks every other board — exactly "
+            "one board is current at a time. Old boards are never deleted; "
+            "they remain attached to their issues for history."
+        ),
+    )
     
     search_fields = [
         index.SearchField('name'),
@@ -316,8 +431,27 @@ class EditorialBoard(index.Indexed, ClusterableModel):
 
     panels = [
         FieldPanel('name'),
+        FieldPanel('is_current'),
         InlinePanel('members', label="Board Members"),
     ]
+
+    def save(self, *args, **kwargs):
+        from django.db import transaction
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if self.is_current:
+                # Demote every other board — "new board replaces old".
+                # .update() bypasses save() so this cannot recurse.
+                EditorialBoard.objects.exclude(pk=self.pk).filter(
+                    is_current=True
+                ).update(is_current=False)
+        sync_editorial_staff()
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        # If the deleted board was current, its members lose board-granted
+        # staff; reconciliation picks that up.
+        sync_editorial_staff()
 
     def __str__(self):
         return self.name
@@ -409,6 +543,23 @@ class EditorialBoardMember(Orderable):
                 role=self.role,
                 joined_at=self.joined_at,
             )
+
+        # Membership changed → reconcile staff flags and role groups.
+        sync_editorial_staff()
+
+    def delete(self, *args, **kwargs):
+        from datetime import date
+
+        # Removing the row from the board panel counts as leaving: close
+        # any open history stint so the record shows when they were removed.
+        EditorialBoardMembershipHistory.objects.filter(
+            board_id=self.board_id,
+            editor_id=self.editor_id,
+            left_at__isnull=True,
+        ).update(left_at=date.today())
+
+        super().delete(*args, **kwargs)
+        sync_editorial_staff()
 
 
 @register_snippet

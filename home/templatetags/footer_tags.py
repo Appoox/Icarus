@@ -43,6 +43,7 @@ def get_site_footer():
         ArticleIndexPage = apps.get_model('articles', 'ArticleIndexPage')
         IssueIndexPage   = apps.get_model('issue',    'IssueIndexPage')
         Issue            = apps.get_model('issue',    'Issue')
+        EditorialBoard   = apps.get_model('literati', 'EditorialBoard')
     except LookupError:
         return {'footer': footer, 'editorial_board': None}
 
@@ -69,26 +70,33 @@ def get_site_footer():
     previous_issue = Issue.objects.live().order_by('-date_of_publishing')[1:2].first()
 
     # ── Editorial layout data assembly ────────────────────────────────────
+    # The footer shows the *sitting* board (EditorialBoard.is_current) rather
+    # than deriving it from the latest issue — a new board appears here the
+    # moment it is marked current, before its first issue is published, and
+    # a departed member drops out immediately instead of at the next issue.
+    # Until one board is ticked "current", this footer section simply hides.
     editorial_board = None
-    if current_issue:
-        sections = []
+    current_board = EditorialBoard.objects.filter(is_current=True).first()
+    if current_board:
+        active_members = list(
+            current_board.members
+            .filter(is_active=True)
+            .select_related('editor', 'editor__profile_image')
+        )
         role_map = [
-            ('ചീഫ് എഡിറ്റർ',        'editors_list'),
-            ('മാനേജിംഗ് എഡിറ്റർ',   'managing_editors_list'),
-            ('അസോസിയേറ്റ് എഡിറ്റർ', 'associate_editors_list'),
-            ('സമിതി അംഗങ്ങൾ',       'board_members_only'),
+            ('ചീഫ് എഡിറ്റർ',        'editor'),
+            ('മാനേജിംഗ് എഡിറ്റർ',   'managing'),
+            ('അസോസിയേറ്റ് എഡിറ്റർ', 'associate'),
+            ('സമിതി അംഗങ്ങൾ',       'board'),
         ]
-        for heading, attr in role_map:
-            members = getattr(current_issue, attr, None)
-            if callable(members):
-                members = members()
-            if members:
-                members_list = list(members)
-                if members_list:
-                    sections.append({'heading': heading, 'members': members_list})
+        sections = []
+        for heading, role in role_map:
+            members_list = [m for m in active_members if m.role == role]
+            if members_list:
+                sections.append({'heading': heading, 'members': members_list})
 
         if sections:
-            editorial_board = {'sections': sections, 'issue': current_issue}
+            editorial_board = {'sections': sections, 'board': current_board}
 
     # Added: Dynamically resolve the archive list view route name
     try:

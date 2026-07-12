@@ -21,6 +21,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.models import HitCount
 from hitcount.utils import get_hitcount_model
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils.functional import cached_property
 from articles.wagtail_widgets import ColorPickerBlock
 from articles.models import ColoredHeadingBlock, BlockQuoteBlock, ImageBlock, AudioBlock, VideoBlock, RichTextImportBlock
 
@@ -296,11 +297,65 @@ class Issue(RoutablePageMixin, Page):
         
         return all_articles
 
-    @property
+    @cached_property
     def board_members(self):
-        if self.editorial_board:
-            return self.editorial_board.members.filter(is_active=True)
-        return []
+        """
+        Members of this issue's board who were serving on the date this
+        issue was published — historical issues keep showing the board as
+        it stood at publication.
+
+        Source of truth is EditorialBoardMembershipHistory: one immutable
+        row per stint, so a member who left and later rejoined the same
+        board still appears on issues published during ANY of their stints
+        (the live member row only carries the latest stint's dates), and a
+        member whose row was deleted outright still appears on issues from
+        their closed stints. Live member rows are consulted only for
+        editors with no history at all (rows created before the history
+        model existed).
+
+        Boundary: leaving on the publication date still counts as serving.
+        Cached per instance — the four role properties below all call this.
+        """
+        if not self.editorial_board:
+            return []
+        pub = self.date_of_publishing
+
+        def serving(joined, left):
+            if pub and joined and joined > pub:
+                return False  # joined after this issue was published
+            if pub and left and left < pub:
+                return False  # had already left when this issue published
+            return True
+
+        members = []
+        added = set()        # editor ids already in the result
+        has_history = set()  # editor ids covered by history (authoritative)
+
+        stints = (
+            self.editorial_board.membership_history
+            .select_related('editor')
+            .order_by('joined_at')
+        )
+        for stint in stints:
+            has_history.add(stint.editor_id)
+            if not serving(stint.joined_at, stint.left_at):
+                continue
+            if stint.editor_id in added:
+                continue  # defensive: overlapping stints in dirty data
+            added.add(stint.editor_id)
+            members.append(stint)
+
+        # ── Legacy fallback: member rows predating the history model ──
+        for m in self.editorial_board.members.select_related('editor'):
+            if m.editor_id in has_history:
+                continue  # history is authoritative for this editor
+            if not serving(m.joined_at, m.left_at):
+                continue
+            if m.joined_at is None and m.left_at is None and not m.is_active:
+                continue  # undated legacy row: honour the flag
+            members.append(m)
+
+        return members
 
     @property
     def editors_list(self):

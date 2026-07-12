@@ -183,6 +183,17 @@ class ReaderUser(AbstractUser, index.Indexed):
         help_text="Account status based on successful verification of primary contact method."
     )
 
+    # ── Editorial Board ──
+    staff_granted_by_board = models.BooleanField(
+        default=False,
+        help_text=(
+            "True when is_staff was granted automatically because this user "
+            "sits on the current editorial board (see literati.sync_editorial_staff). "
+            "Revocation on leaving the board only touches users with this flag — "
+            "manually appointed staff and superusers are never demoted."
+        ),
+    )
+
     USERNAME_FIELD = 'phone_number_hash'
     REQUIRED_FIELDS = ['name', 'email']
 
@@ -449,6 +460,38 @@ class ReaderUser(AbstractUser, index.Indexed):
             return "Expired"
         return "No Subscription"
     status_display.short_description = "Status"
+
+    # ── Editorial board ───────────────────────────────────────────────────
+    @property
+    def board_membership(self):
+        """
+        This user's active membership row on the *current* editorial board,
+        or None. Resolved through the linked Literati page (the reverse of
+        Literati.reader_user), so membership lives with the board — nothing
+        is denormalised onto the user and nothing here can go stale.
+        """
+        # getattr is safe: reverse one-to-one raises RelatedObjectDoesNotExist,
+        # which subclasses AttributeError precisely so getattr/hasattr work.
+        literati = getattr(self, 'literati', None)
+        if literati is None:
+            return None
+        return (
+            literati.board_memberships
+            .filter(board__is_current=True, is_active=True)
+            .select_related('board')
+            .first()
+        )
+
+    @property
+    def is_board_member(self):
+        """True if this user sits on the current editorial board."""
+        return self.board_membership is not None
+
+    @property
+    def board_role(self):
+        """Display name of this user's role on the current board, or None."""
+        membership = self.board_membership
+        return membership.get_role_display() if membership else None
 
     def activate_subscription(self, plan_type):
         """
