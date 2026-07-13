@@ -1,5 +1,6 @@
 # articles/tasks.py
 import os
+import re
 import logging
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -10,6 +11,41 @@ from wagtail.signals import page_published
 from Icarus.settings.base import GOOGLE_CREDENTIALS_JSON
 
 logger = logging.getLogger(__name__)
+
+# Chirp3-HD voices reject requests containing any individual sentence that is
+# "too long" — a per-sentence limit enforced separately from the 5000-byte
+# request limit. The threshold is undocumented, so stay conservative. 200
+# Malayalam chars ≈ 600 bytes UTF-8, comfortably inside anything Chirp accepts.
+MAX_SENTENCE_CHARS = 200
+SENTENCE_ENDINGS = ('.', '!', '?', '।', '॥')
+
+
+def _normalize_sentences(text):
+    """
+    Split text into sentences and force-break any exceeding
+    MAX_SENTENCE_CHARS, preferring comma/semicolon boundaries, then spaces,
+    so Chirp3-HD never sees an over-long sentence. Every returned sentence
+    is terminated with sentence-ending punctuation.
+    """
+    out = []
+    for sent in re.split(r'(?<=[.!?।॥])\s+', text):
+        sent = sent.strip()
+        while len(sent) > MAX_SENTENCE_CHARS:
+            window = sent[:MAX_SENTENCE_CHARS]
+            cut = max(window.rfind(','), window.rfind(';'))
+            if cut < MAX_SENTENCE_CHARS // 4:      # no useful punctuation near the cap
+                cut = window.rfind(' ')
+            if cut <= 0:                           # unbroken run — hard cut
+                cut = MAX_SENTENCE_CHARS
+            fragment = sent[:cut].strip().rstrip(',;')
+            if fragment:
+                out.append(fragment + '.')
+            sent = sent[cut:].lstrip(' ,;')
+        if sent:
+            if not sent.endswith(SENTENCE_ENDINGS):
+                sent += '.'
+            out.append(sent)
+    return out
 
 
 def generate_article_audio_task(article_id):
@@ -22,8 +58,16 @@ def generate_article_audio_task(article_id):
         logger.warning(f"Article with ID {article_id} does not exist.")
         return
 
-    # 1. Extract clean text from Title and StreamField text blocks
-    text_parts = [article.title]
+    # 1. Extract clean text from Title and StreamField text blocks.
+    #    Every part is terminated with sentence punctuation so titles and
+    #    headings don't fuse with the following paragraph into one giant
+    #    "sentence" when joined.
+    text_parts = []
+    title_text = (article.title or '').strip()
+    if title_text:
+        if not title_text.endswith(SENTENCE_ENDINGS):
+            title_text += '.'
+        text_parts.append(title_text)
     if article.body:
         for block in article.body:
             if block.block_type in ['paragraph', 'text', 'rich_text', 'heading', 'colored_heading', 'blockquote']:
@@ -37,6 +81,8 @@ def generate_article_audio_task(article_id):
 
                 cleaned = strip_tags(block_text).strip()
                 if cleaned:
+                    if not cleaned.endswith(SENTENCE_ENDINGS):
+                        cleaned += '.'
                     text_parts.append(cleaned)
 
     full_text = " ".join(text_parts).strip()
@@ -61,27 +107,32 @@ def generate_article_audio_task(article_id):
         else:
             client = texttospeech.TextToSpeechClient()
 
-        # 3. SPLIT BY BYTES (Safely targeting 4500 bytes to leave a buffer under GCP's 5000-byte limit)
+        # 3. Normalize into length-capped sentences, then pack whole
+        #    sentences into byte-safe chunks (targeting 4500 bytes to leave
+        #    a buffer under GCP's 5000-byte request limit). Packing whole
+        #    sentences means no chunk ever splits mid-sentence, and the
+        #    normalizer guarantees no sentence exceeds Chirp3-HD's
+        #    per-sentence limit.
+        sentences = _normalize_sentences(full_text)
+
         chunks = []
-        words = full_text.split()
         current_chunk = []
         current_byte_len = 0
 
-        for word in words:
-            # Measure byte-length of word in UTF-8
-            word_byte_len = len(word.encode('utf-8'))
+        for sent in sentences:
+            sent_byte_len = len(sent.encode('utf-8'))
 
-            # Plus 1 byte for the space used when joining words
+            # Plus 1 byte for the space used when joining sentences
             space_byte_len = 1 if current_chunk else 0
 
-            if current_byte_len + word_byte_len + space_byte_len > 4500:
+            if current_byte_len + sent_byte_len + space_byte_len > 4500:
                 # Store the full chunk and start a new one
                 chunks.append(" ".join(current_chunk))
-                current_chunk = [word]
-                current_byte_len = word_byte_len
+                current_chunk = [sent]
+                current_byte_len = sent_byte_len
             else:
-                current_chunk.append(word)
-                current_byte_len += word_byte_len + space_byte_len
+                current_chunk.append(sent)
+                current_byte_len += sent_byte_len + space_byte_len
 
         if current_chunk:
             chunks.append(" ".join(current_chunk))
