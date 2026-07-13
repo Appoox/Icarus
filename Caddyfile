@@ -99,4 +99,7 @@
     # Everything else — app routes, the /documents/ serve_view, /reader/, the
     # Wagtail admin, websockets for Channels — goes to gunicorn/uvicorn.
     reverse_proxy web:8000
+
+        lb_try_duration 60s
+        lb_try_interval 500ms
 }
