@@ -89,7 +89,7 @@ services:
     volumes:
       - media_volume:/Icarus/media
       - model_volume:/Icarus/models
-      - ./opt/Icarus/shared/google.json:/opt/Icarus/shared/google.json:ro
+      - /opt/Icarus/shared:/opt/Icarus/shared:ro
     command: python manage.py qcluster
     depends_on:
       bouncer:
