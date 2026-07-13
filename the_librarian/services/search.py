@@ -15,7 +15,7 @@ Improvements applied
 """
 import logging
 
-from django.db.models import F
+from django.db.models import F, Q
 from django.contrib.postgres.search import SearchQuery, SearchRank
 from pgvector.django import CosineDistance
 
@@ -105,6 +105,7 @@ def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
         .defer("embedding")
         .annotate(distance=CosineDistance("embedding", query_embedding))
         .filter(distance__lte=1.0 - min_score)
+        .filter(Q(article__isnull=True) | Q(article__live=True))
         .order_by("distance")
         .select_related("document", "article", "author", "issue", "topic")[:top_k]
     )
@@ -132,6 +133,7 @@ def search_keyword(query_text: str, top_k: int = 5, min_score: float = 0.0001):
         .filter(search_vector=query)
         .annotate(rank=SearchRank(F("search_vector"), query))
         .filter(rank__gte=min_score)
+        .filter(Q(article__isnull=True) | Q(article__live=True))
         .order_by("-rank")
         .select_related("document", "article", "author", "issue", "topic")[:top_k]
     )
