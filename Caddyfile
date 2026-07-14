@@ -28,6 +28,10 @@ sasthragathy.org {
         route {
             forward_auth web:8000 {
                 uri /internal/archive-authz
+                # Retry the authz subrequest while web restarts (e.g. during
+                # a deploy) instead of failing the media request immediately.
+                lb_try_duration 60s
+                lb_try_interval 500ms
             }
             root * /srv
             file_server
@@ -47,6 +51,10 @@ sasthragathy.org {
         route {
             forward_auth web:8000 {
                 uri /internal/postbox-authz
+                # Retry the authz subrequest while web restarts (e.g. during
+                # a deploy) instead of failing the media request immediately.
+                lb_try_duration 60s
+                lb_try_interval 500ms
             }
             root * /srv
             file_server
@@ -61,6 +69,10 @@ sasthragathy.org {
         route {
             forward_auth web:8000 {
                 uri /internal/page-cache-authz
+                # Retry the authz subrequest while web restarts (e.g. during
+                # a deploy) instead of failing the media request immediately.
+                lb_try_duration 60s
+                lb_try_interval 500ms
             }
             root * /srv
             file_server
@@ -92,9 +104,10 @@ sasthragathy.org {
 
     # Everything else — app routes, the /documents/ serve_view, /reader/, the
     # Wagtail admin, websockets for Channels — goes to gunicorn/uvicorn.
-    reverse_proxy web:8000
-
+    reverse_proxy web:8000 {
+        # Hold and retry requests while the upstream is down (e.g. during a
+        # container restart) instead of immediately returning 502.
         lb_try_duration 60s
         lb_try_interval 500ms
-
+    }
 }
