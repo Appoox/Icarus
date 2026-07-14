@@ -1,3 +1,9 @@
+# Redirect www → apex (canonical host). Requires the www DNS record to
+# exist (it does), since Caddy obtains a separate certificate for it.
+www.sasthragathy.org {
+    redir https://sasthragathy.org{uri} permanent
+}
+
 # 65.109.131.232.sslip.io {
 sasthragathy.org {
     encode gzip
