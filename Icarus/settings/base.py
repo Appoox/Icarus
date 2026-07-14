@@ -25,7 +25,7 @@ ACCOUNT_PHONE_VERIFICATION = "none"  # No SMS backend; skip phone verification
 ACCOUNT_SIGNUP_FORM_CLASS = 'reader.auth_forms.CustomSignupForm'
 ACCOUNT_FORMS = {
     'login': 'reader.auth_forms.CustomLoginForm',
-    # 'signup': 'reader.auth_forms.CustomSignupForm',
+    'signup': 'reader.signup_forms.ReaderSignupForm',
 }
 ACCOUNT_LOGIN_ON_SIGNUP = True
 ACCOUNT_ADAPTER = 'reader.adapter.CustomAccountAdapter'
