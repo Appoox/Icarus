@@ -1,11 +1,7 @@
-# Caddyfile — Icarus (ശാസ്ത്രഗതി) media + app serving
-#
-# Interim host is the sslip.io name that resolves to this server's IP, giving a
-# real Let's Encrypt cert with no domain. When sasthragathy.org is pointed at
-# this box, uncomment its block below (it gets its own cert automatically).
+sasthragathy.org {
 
-# sasthragathy.org {
-65.109.131.232.sslip.io {
+<!-- 65.109.131.232.sslip.io { -->
+
     encode gzip
 
     # Collected static files (public, served straight from the volume).
@@ -102,4 +98,5 @@
 
         lb_try_duration 60s
         lb_try_interval 500ms
+
 }
