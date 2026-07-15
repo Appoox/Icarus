@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags i18n %}
 
 
 {% block extra_css %}
@@ -9,15 +9,16 @@
 {% block content %}
 <header class="topic-header" style="--topic-color: {{ topic.color|default:'#0b1f3a' }};">
     <div class="topic-header__inner">
-        <span class="topic-header__kicker">Exploring</span>
-        <h1>{{ topic.name|default:"Topic Detail" }}</h1>
+        <span class="topic-header__kicker">{% translate "പര്യവേക്ഷണം" %}</span>
+        {% translate "വിഷയ വിശദാംശം" as default_topic %}
+        <h1>{{ topic.name|default:default_topic }}</h1>
     </div>
 </header>
 
 <main class="topic-content">
     {% if articles %}
     <section class="topic-section">
-        <h2 class="topic-section__title">ഈ വിഷയത്തിലെ ലേഖനങ്ങൾ ({{ articles|length }} എണ്ണം) </h2>
+        <h2 class="topic-section__title">{% blocktranslate with count=articles|length %}ഈ വിഷയത്തിലെ ലേഖനങ്ങൾ ({{ count }} എണ്ണം){% endblocktranslate %}</h2>
         <div class="topic-grid">
             {% for article in articles %}
             <article class="topic-card">
@@ -38,7 +39,7 @@
 
     {% if issues %}
     <section class="topic-section">
-        <h2 class="topic-section__title">ഈ വിഷയവുമായി ബന്ധപ്പെട്ട ലക്കങ്ങൾ ({{ issues|length }} എണ്ണം)</h2>
+        <h2 class="topic-section__title">{% blocktranslate with count=issues|length %}ഈ വിഷയവുമായി ബന്ധപ്പെട്ട ലക്കങ്ങൾ ({{ count }} എണ്ണം){% endblocktranslate %}</h2>
         <div class="topic-grid">
             {% for issue in issues %}
             <article class="topic-card">
@@ -58,7 +59,7 @@
 
     {% if not articles and not issues %}
     <div class="empty-msg">
-        <p>No articles or issues found for this topic yet.</p>
+        <p>{% translate "ഈ വിഷയത്തിൽ ലേഖനങ്ങളോ ലക്കങ്ങളോ ഇതുവരെ കണ്ടെത്തിയില്ല." %}</p>
     </div>
     {% endif %}
 </main>
