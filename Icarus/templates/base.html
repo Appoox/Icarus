@@ -1,13 +1,15 @@
-{% load static wagtailcore_tags wagtailuserbar %}
+{% load static wagtailcore_tags wagtailuserbar i18n %}
 {% block branding_favicon %}
     <link rel="shortcut icon" href="{% static 'images/favicon.png' %}" />
 {% endblock %}
+
 <!DOCTYPE html>
 <html lang="ml">
 
 <head>
     <meta charset="utf-8" />
     <title>
+        {% block title %}
         {% if topic.name %}
             ശാസ്ത്രഗതി  |  {{ topic.name }}
         {% elif page.title == 'Home' %}
@@ -17,6 +19,7 @@
         {% else %}
             ശാസ്ത്രഗതി
         {% endif %}
+        {% endblock %}
         {% block title_suffix %}
         {% wagtail_site as current_site %}
         {% if current_site and current_site.site_name %}- {{ current_site.site_name }}{% endif %}
@@ -84,7 +87,7 @@
         <i class="fas fa-arrow-left"></i>
     </button>
 
-    <div class="floating-action-buttons">
+    <div class="floating-action-buttons" data-home-label="{% translate 'ഹോം' %}">
         <button id="goToTopButton" class="floating-btn" title="Go to Top">
             <i class="fas fa-arrow-up"></i>
         </button>

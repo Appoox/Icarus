@@ -25,7 +25,7 @@
         // Synchronize ARIA states dynamically for accessibility compliance
         toggle.setAttribute(
           'aria-label',
-          isHidden ? 'Hide password' : 'Show password'
+          isHidden ? toggle.dataset.labelHide : toggle.dataset.labelShow
         );
 
         // Update active visibility layouts across inline SVG vector nodes

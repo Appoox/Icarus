@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% load static %}
-{% load i18n %}
+{% load static i18n %}
+{% load  %}
 
-{% block title %}Sign In — Icarus{% endblock %}
+{% block title %}{% trans "സൈൻ ഇൻ" %}{% endblock %}
 
 {% block extra_css %}
 {# Clean link to the decoupled structural external stylesheet #}
@@ -11,8 +11,8 @@
 
 {% block content %}
 <div class="auth-page">
-    <h1>Welcome Back</h1>
-    <p class="subtitle">Sign in to access your reading history and subscription on Icarus.</p>
+    <h1>{% trans "വീണ്ടും സ്വാഗതം" %}</h1>
++    <p class="subtitle">{% trans "ശാസ്ത്രഗതിയിൽ നിങ്ങളുടെ വായനാ ചരിത്രവും സബ്സ്ക്രിപ്ഷനും ആക്സസ് ചെയ്യാൻ സൈൻ ഇൻ ചെയ്യുക." %}</p>
 
     {# ── Django System Messages Feedback ── #}
     {% if messages %}
@@ -32,7 +32,7 @@
     </div>
     {% elif form.errors %}
     <div class="form-errors form-errors--center">
-        <p>Invalid phone/email or password. Please try again.</p>
+        <p>{% trans "അസാധുവായ ഫോൺ/ഇമെയിൽ അല്ലെങ്കിൽ പാസ്‌വേഡ്. വീണ്ടും ശ്രമിക്കുക." %}</p>
     </div>
     {% endif %}
 
@@ -40,12 +40,12 @@
     {% if form.failed_attempts > 0 %}
     <div class="login-attempts-warning {% if form.failed_attempts >= form.max_attempts %}lockout{% endif %}">
         <p>
-            <strong>Security Notice:</strong>
-            {{ form.failed_attempts }} failed login attempt{{ form.failed_attempts|pluralize }}.
+            <strong>{% trans "സുരക്ഷാ അറിയിപ്പ്:" %}</strong>
+            {% blocktrans count counter=form.failed_attempts %}{{ counter }} പരാജയപ്പെട്ട ലോഗിൻ ശ്രമം.{% plural %}{{ counter }} പരാജയപ്പെട്ട ലോഗിൻ ശ്രമങ്ങൾ.{% endblocktrans %}
             {% if form.failed_attempts >= form.max_attempts %}
-                <strong>Account temporarily locked.</strong> Access from this location/account will be restricted for {{ form.lockout_duration_text }}.
+                <strong>{% trans "അക്കൗണ്ട് താൽക്കാലികമായി ലോക്ക് ചെയ്തു." %}</strong> {% blocktrans with duration=form.lockout_duration_text %}ഈ ലൊക്കേഷനിൽ/അക്കൗണ്ടിൽ നിന്നുള്ള ആക്സസ് {{ duration }} നേരത്തേക്ക് നിയന്ത്രിക്കപ്പെടും.{% endblocktrans %}
             {% else %}
-                If consecutive failures reach {{ form.max_attempts }}, access will be restricted for {{ form.lockout_duration_text }}.
+               {% blocktrans with max=form.max_attempts duration=form.lockout_duration_text %}തുടർച്ചയായ പരാജയങ്ങൾ {{ max }} എത്തിയാൽ, {{ duration }} നേരത്തേക്ക് ആക്സസ് നിയന്ത്രിക്കപ്പെടും.{% endblocktrans %}
             {% endif %}
         </p>
     </div>
@@ -65,7 +65,7 @@
                 {# Password label bundled with context link for recovery flow #}
                 <label for="{{ field.id_for_label }}" class="label--flex">
                     {{ field.label }}
-                    <a href="{% url 'account_reset_password' %}" class="link--forgot">Forgot Password?</a>
+                    <a href="{% url 'account_reset_password' %}" class="link--forgot">{% trans "പാസ്‌വേഡ് മറന്നോ?" %}</a>
                 </label>
                 {% else %}
                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -84,7 +84,9 @@
             <div class="password-wrapper">
                 {{ field }}
                 <button type="button" class="password-toggle"
-                        aria-label="Show password"
+                        aria-label="{% trans 'പാസ്‌വേഡ് കാണിക്കുക' %}"
+                        data-label-show="{% trans 'പാസ്‌വേഡ് കാണിക്കുക' %}"
+                        data-label-hide="{% trans 'പാസ്‌വേഡ് മറയ്ക്കുക' %}"
                         aria-controls="{{ field.id_for_label }}"
                         tabindex="-1">
                     
@@ -114,7 +116,8 @@
             {% elif field.name == 'remember' %}
             {# Inline ordering logic required natively for clean rendering of checkbox sets #}
             {{ field }}
-            <label for="{{ field.id_for_label }}">{{ field.label|default:"Remember me" }}</label>
+            {% trans "എന്നെ ഓർക്കുക" as default_remember %}
+            <label for="{{ field.id_for_label }}">{{ field.label|default:default_remember }}</label>
 
             {% else %}
             {# Fallback representation handling for extra arbitrary fields within standard loop #}
@@ -132,11 +135,11 @@
         <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
         {% endif %}
 
-        <button type="submit" class="auth-submit">Sign In</button>
+        <button type="submit" class="auth-submit">{% trans "സൈൻ ഇൻ" %}</button>
     </form>
 
     <p class="auth-footer">
-        Don't have an account? <a href="{% url 'account_signup' %}">Create one</a>
+        {% trans "അക്കൗണ്ട് ഇല്ലേ?" %} <a href="{% url 'account_signup' %}">{% trans "ഒരെണ്ണം സൃഷ്ടിക്കുക" %}</a>
     </p>
 </div>{# /.auth-page #}
 {% endblock %}

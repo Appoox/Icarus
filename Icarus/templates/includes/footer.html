@@ -1,4 +1,4 @@
-{% load footer_tags wagtailcore_tags wagtailimages_tags %}
+{% load footer_tags wagtailcore_tags wagtailimages_tags i18n %}
 
 {# {# ───────────────────────────────────────────────────────────────────────── #}
    {# footer.html  —  global site footer #}
@@ -14,6 +14,7 @@
 {% get_site_footer as ctx %}
 {% with footer=ctx.footer %}
 
+{% translate "സൈറ്റ് ലോഗോ" as default_logo_alt %}
 {% if footer %}
 <footer class="site-footer" role="contentinfo">
   <div class="site-footer__inner">
@@ -24,7 +25,7 @@
     {# Multiple columns → links flow side-by-side under the same heading. #}
     {% with sections=footer.sections.all %}
     {% if sections %}
-    <nav class="site-footer__sections" aria-label="Footer navigation">
+    <nav class="site-footer__sections" aria-label="{% translate 'ഫൂട്ടർ നാവിഗേഷൻ' %}">
       {% for section in sections %}
 
       {# Count columns so CSS can apply the right flex-grow basis #}
@@ -77,7 +78,7 @@
                 aria-expanded="false"
                 aria-controls="editorial-board-content"
                 aria-haspopup="dialog">
-          പത്രാധിപ സമിതി
+          {% translate "പത്രാധിപ സമിതി" %}
         </button>
       </div>
 
@@ -85,7 +86,7 @@
       <dialog class="editorial-board-content" id="editorial-board-content">
         
         {# NEW: Added a dedicated close button inside the modal #}
-        <button class="editorial-board-close-btn" aria-label="Close modal">&times;</button>
+        <button class="editorial-board-close-btn" aria-label="{% translate 'അടയ്ക്കുക' %}">&times;</button>
 
         <div class="editorial-board-inner">
 
@@ -145,12 +146,12 @@
         {% if footer.footer_logo %}
           {% image footer.footer_logo original as logo_img %}
           <img src="{{ logo_img.url }}"
-               alt="{{ footer.logo_alt_text|default:'Site logo' }}"
+               alt="{{ footer.logo_alt_text|default:default_logo_alt }}"
                class="site-footer__logo">
         {% endif %}
 
         {# Social icons — only rendered when a URL is set in the snippet #}
-        <div class="site-footer__social" aria-label="Social media links">
+        <div class="site-footer__social" aria-label="{% translate 'സോഷ്യൽ മീഡിയ ലിങ്കുകൾ' %}">
 
           {% if footer.facebook_url %}
           <a href="{{ footer.facebook_url }}" class="site-footer__social-link" aria-label="Facebook" target="_blank" rel="noopener noreferrer">

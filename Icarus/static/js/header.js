@@ -6,6 +6,8 @@
     const resultsList = document.getElementById('resultsList');
     const status      = document.getElementById('searchStatus');
     const spinner     = document.getElementById('searchSpinner');
+    const results     = document.getElementById('searchResults');
+    const t           = results ? results.dataset : {};
 
     let debounceTimer;
     // Tracks the in-flight request so a newer keystroke can cancel it —
@@ -33,7 +35,7 @@
                 currentSearchController = null;
             }
             resultsList.innerHTML = '';
-            status.textContent = 'Type at least 2 characters...';
+            status.textContent = t.i18nMinChars;
             spinner.style.display = 'none';
             return;
         }
@@ -47,7 +49,7 @@
         currentSearchController = controller;
 
         spinner.style.display = 'block';
-        status.textContent = 'Searching across archive, articles, and authors...';
+        status.textContent = t.i18nSearching;
 
         const url = `/librarian/api/search/?q=${encodeURIComponent(query)}&top_k=10&mode=hybrid`;
 
@@ -61,7 +63,7 @@
             .catch(err => {
                 if (err.name === 'AbortError') return; // superseded by a newer keystroke
                 spinner.style.display = 'none';
-                status.textContent = 'Error fetching results. Please try again.';
+                status.textContent = t.i18nError;
                 console.error('Search error:', err);
             });
     }
@@ -69,18 +71,18 @@
     function renderResults(results, query) {
         if (!results || results.length === 0) {
             resultsList.innerHTML = '';
-            status.textContent = `No results found for "${query}"`;
+            status.textContent = `${t.i18nNoResults}: ${query}`;
             return;
         }
 
-        status.textContent = `Found ${results.length} results for "${query}"`;
+        status.textContent = `${t.i18nFound}: ${results.length} — ${query}`;
         
         resultsList.innerHTML = results.map(res => {
             const icon = getIcon(res.type);
             const title = highlightMatch(res.title, query);
             const snippet = highlightMatch(res.chunk_text, query);
             const url = getUrl(res);
-            const typeLabel = res.type.charAt(0).toUpperCase() + res.type.slice(1);
+            const typeLabel = typeLabelFor(res.type);
 
             return `
                 <a href="${url}" class="search-result-item">
@@ -92,7 +94,7 @@
                         <span class="search-result-item__snippet">${snippet}</span>
                         <div class="search-result-item__meta">
                             <span class="search-result-item__badge">${typeLabel}</span>
-                            ${res.page_number ? `<span class="search-result-item__page">Page ${res.page_number}</span>` : ''}
+                            ${res.page_number ? `<span class="search-result-item__page">${escapeHtml(t.i18nPage)} ${res.page_number}</span>` : ''}
                         </div>
                     </div>
                 </a>
@@ -101,12 +103,14 @@
     }
 
     function getIcon(type) {
-        switch(type) {
-            case 'pdf': return 'fa-file-pdf';
-            case 'article': return 'fa-newspaper';
-            case 'author': return 'fa-user-circle';
-            default: return 'fa-search';
+       function typeLabelFor(type) {
+        switch (type) {
+            case 'pdf':     return t.i18nPdf;
+            case 'article': return t.i18nArticle;
+            case 'author':  return t.i18nAuthor;
+            default:        return type;
         }
+    }
     }
 
     function getUrl(res) {
@@ -118,16 +122,25 @@
 
     function highlightMatch(text, query) {
         if (!text || !query) return text;
+        text = escapeHtml(text);
         const words = query.trim().split(/\s+/);
         let highlighted = text;
         
         words.forEach(word => {
             if (word.length < 2) return;
-            const regex = new RegExp(`(${word})`, 'gi');
+            const regex = new RegExp(`(${escapeRegex(word)})`, 'gi');
             highlighted = highlighted.replace(regex, '<mark>$1</mark>');
         });
         
         return highlighted;
+    }
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s == null ? '' : s;
+        return d.innerHTML;
+    }
+    function escapeRegex(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     input.addEventListener('input', (e) => {

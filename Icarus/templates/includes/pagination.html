@@ -3,14 +3,15 @@
 
    {# {# Renders:  ← Prev   1  2  …  5 [6]  …  11  12   Next → #}
    {# Shows at most 2 page numbers on each side of the current page. #}
+{% load i18n %}
 
 {% if page_obj.paginator.num_pages > 1 %}
-<nav class="pagination-wrapper" aria-label="Page navigation">
+<nav class="pagination-wrapper" aria-label="{% translate 'പേജ് നാവിഗേഷൻ' %}">
 
   <p class="pagination-info">
-    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    {% blocktranslate with number=page_obj.number pages=page_obj.paginator.num_pages %}പേജ് {{ number }} / {{ pages }}{% endblocktranslate %}
     &nbsp;·&nbsp;
-    {{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}
+    {% blocktranslate count counter=page_obj.paginator.count %}{{ counter }} ഇനം{% plural %}{{ counter }} ഇനങ്ങൾ{% endblocktranslate %}
   </p>
 
   <div class="pagination" role="list">
@@ -19,13 +20,13 @@
     {% if page_obj.has_previous %}
       <a href="?page={{ page_obj.previous_page_number }}"
          class="page-btn page-btn--prev"
-         aria-label="Previous page"
+         aria-label="{% translate 'മുമ്പത്തെ പേജ്' %}"
          role="listitem">
-        &#8592; <span>Prev</span>
+        &#8592; <span>{% translate "മുമ്പത്തേത്" %}</span>
       </a>
     {% else %}
       <span class="page-btn page-btn--prev page-btn--disabled" aria-disabled="true" role="listitem">
-        &#8592; <span>Prev</span>
+        &#8592; <span>{% translate "മുമ്പത്തേത്" %}</span>
       </span>
     {% endif %}
 
@@ -77,13 +78,13 @@
     {% if page_obj.has_next %}
       <a href="?page={{ page_obj.next_page_number }}"
          class="page-btn page-btn--next"
-         aria-label="Next page"
+         aria-label="{% translate 'അടുത്ത പേജ്' %}"
          role="listitem">
-        <span>Next</span> &#8594;
+        <span>{% translate "അടുത്തത്" %}</span> &#8594;
       </a>
     {% else %}
       <span class="page-btn page-btn--next page-btn--disabled" aria-disabled="true" role="listitem">
-        <span>Next</span> &#8594;
+        <span>{% translate "അടുത്തത്" %}</span> &#8594;
       </span>
     {% endif %}
 
