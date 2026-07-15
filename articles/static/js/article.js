@@ -120,14 +120,13 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.favorited !== undefined) {
                 btn.setAttribute('data-favorited', data.favorited);
-                btn.title = data.favorited ? 'Remove from Favorites' : 'Add to Favorites';
-            } else if (data.error) {
+                btn.title = data.favorited ? btn.dataset.labelRemove : btn.dataset.labelAdd;
                 alert(data.error);
             }
         })
         .catch(error => {
             console.error('Error toggling favorite:', error);
-            alert('Failed to update favorite: ' + error.message);
+            alert(btn.dataset.labelError);
         });
     });
 

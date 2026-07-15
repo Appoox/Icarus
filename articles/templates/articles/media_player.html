@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% load static wagtailcore_tags i18n %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/media_player.css' %}">
@@ -34,7 +34,7 @@
                 <div class="modern-audio-player">
                     <audio src="{{ doc.url }}" autoplay></audio>
                     <div class="player-main">
-                        <button class="play-btn" title="Play">
+                        <button class="play-btn" title="{% translate 'പ്ലേ ചെയ്യുക' %}">
                             <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
                             <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                         </button>
@@ -53,7 +53,7 @@
             {% else %}
                 <div class="unsupported-media">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <p>This file type is not supported for playback.</p>
+                    <p>{% translate "ഈ ഫയൽ പ്ലേ ചെയ്യാൻ കഴിയില്ല." %}</p>
                 </div>
             {% endif %}
         </div>
@@ -64,7 +64,7 @@
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-        Go Back
+        {% translate "തിരികെ പോകുക" %}
     </a>
 </div>
 {% endblock %}

@@ -1,9 +1,11 @@
+{% load i18n %}
+
 <div class="cover-preview-wrap w-field__wrapper" {% if not image_url %}style="display:none" {% endif %}>
 
   <div class="w-field">
 
     <label class="w-field__label">
-      Preview
+      {% translate "പ്രിവ്യൂ" %}
       <span id="cover-preview-badge"
         style="margin-left:8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:2px 8px;border-radius:99px;background:var(--w-color-secondary-75,#e0f5f5);color:var(--w-color-secondary-400,#017373)">
         {{ aspect }}
@@ -13,14 +15,13 @@
     <div class="w-field__input">
       <div id="cover-preview-viewport" data-aspect="{{ aspect }}"
         style="width:100%;overflow:hidden;border-radius:3px;background:var(--w-color-grey-150,#ebebeb);border:1px solid var(--w-color-grey-150,#ebebeb)">
-        <img id="cover-preview-img" src="{% if image_url %}{{ image_url }}{% endif %}" alt="Cover image preview"
+        <img id="cover-preview-img" src="{% if image_url %}{{ image_url }}{% endif %}" alt="{% translate 'കവർ ചിത്രത്തിന്റെ പ്രിവ്യൂ' %}"
           style="width:100%;height:100%;object-fit:cover;display:block">
       </div>
     </div>
 
     <p class="w-field__help">
-      If the wrong part of the photo is visible, open the image in the
-      <strong>image library</strong> and set a <strong>focal point</strong>.
+      {% blocktranslate %}ഫോട്ടോയുടെ തെറ്റായ ഭാഗമാണ് ദൃശ്യമാകുന്നതെങ്കിൽ, <strong>ഇമേജ് ലൈബ്രറിയിൽ</strong> ചിത്രം തുറന്ന് ഒരു <strong>ഫോക്കൽ പോയിന്റ്</strong> സജ്ജീകരിക്കുക.{% endblocktranslate %}
     </p>
 
   </div>

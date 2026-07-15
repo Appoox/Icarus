@@ -1,4 +1,4 @@
-{% load wagtailcore_tags wagtailembeds_tags %}
+{% load wagtailcore_tags wagtailembeds_tags i18n %}
 
 <div class="audio-block">
     {% if self.audio_file %}
@@ -6,7 +6,7 @@
             <audio src="{{ self.audio_file.url }}"></audio>
             
             <div class="player-main">
-                <button class="play-btn" title="Play">
+                <button class="play-btn" title="{% translate 'പ്ലേ ചെയ്യുക' %}">
                     <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     <svg class="pause-icon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                 </button>

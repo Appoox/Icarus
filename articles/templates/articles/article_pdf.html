@@ -1,6 +1,6 @@
-{% load wagtailcore_tags wagtailimages_tags header_tags %}
+{% load wagtailcore_tags wagtailimages_tags header_tags i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ml">
 <head>
   <meta charset="utf-8">
   <title>{{ page.title }}</title>
@@ -244,11 +244,11 @@
   <div class="pdf-site-header">
     {% if header.logo %}
       {% image header.logo height-60 as logo_img %}
-      <img src="{{ logo_img.url }}" alt="Site Logo">
+      <img src="{{ logo_img.url }}" alt="{% translate 'ലോഗോ' %}">
     {% endif %}
     {% if header.site_title_image %}
       {% image header.site_title_image height-60 as title_img %}
-      <img src="{{ title_img.url }}" alt="Site Title">
+      <img src="{{ title_img.url }}" alt="{% translate 'ശീർഷകം' %}">
     {% else %}
       <span class="pdf-site-title-text">{{ header.site_title }}</span>
     {% endif %}

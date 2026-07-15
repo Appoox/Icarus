@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags i18n %}
 
-{% block title %}Tag: {{ tag_name }}{% endblock %}
+{% block title %}{% blocktranslate %}ടാഗ്: {{ tag_name }}{% endblocktranslate %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/article.css' %}">
@@ -10,7 +10,7 @@
 {% block content %}
 <header class="topic-header">
     <div class="topic-header__inner">
-        <span class="topic-header__kicker">Browsing Tag</span>
+        <span class="topic-header__kicker">{% translate "ടാഗ്" %}</span>
         <h1>{{ tag_name }}</h1>
     </div>
 </header>
@@ -32,7 +32,7 @@
             </article>
             {% empty %}
             <div class="empty-msg">
-                <p>No articles found with this tag.</p>
+                <p>{% translate "ഈ ടാഗിൽ ലേഖനങ്ങളൊന്നും കണ്ടെത്തിയില്ല." %}</p>
             </div>
             {% endfor %}
         </div>
