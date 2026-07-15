@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags i18n %}
 
 {% block body_class %}template-homepage{% endblock %}
 
@@ -18,11 +18,11 @@
 
   {# ── FEATURED ISSUE + ARTICLES ── #}
   {% if current_issue %}
-  <section class="sg-featured-issue" aria-label="Featured issue">
+  <section class="sg-featured-issue" aria-label="{% translate 'വിശേഷലക്കം' %}">
 
     {# Left: Issue cover #}
     <div class="sg-issue-cover">
-      <div class="sg-issue-cover__label">വിശേഷലക്കം</div>
+      <div class="sg-issue-cover__label">{% translate "വിശേഷലക്കം" %}</div>
 
       {% if current_issue.cover_image %}
       <a href="{{ current_issue.url }}" class="sg-issue-cover__image-wrap" aria-hidden="true" tabindex="-1">
@@ -46,12 +46,12 @@
         </a>
         {% endif %}
       </div>
-      <a href="{{ current_issue.url }}" class="sg-issue-cover__cta">ലക്കം പരിശോധിക്കാം</a>
+      <a href="{{ current_issue.url }}" class="sg-issue-cover__cta">{% translate "ലക്കം പരിശോധിക്കാം" %}</a>
     </div>
 
     {# Middle: Issue articles (same topic) #}
     <div class="sg-issue-articles">
-      <div class="sg-issue-articles__heading">ഈ ലക്കത്തില്‍...</div>
+      <div class="sg-issue-articles__heading">{% translate "ഈ ലക്കത്തില്‍..." %}</div>
 
       <div class="sg-issue-articles__scroll-wrapper">
         <div class="sg-issue-articles__grid">
@@ -68,7 +68,7 @@
       {# Thumbnails navigation #}
       <div class="sg-issue-thumbnails">
         {% for article in same_topic_articles %}
-        <div class="sg-issue-thumbnail" data-index="{{ forloop.counter0 }}" aria-label="Go to article {{ forloop.counter }}">
+        <div class="sg-issue-thumbnail" data-index="{{ forloop.counter0 }}" aria-label="{% blocktranslate with n=forloop.counter %}ലേഖനം {{ n }}-ലേക്ക് പോകുക{% endblocktranslate %}">
           {% if article.cover_image %}
             {% image article.cover_image fill-150x150 as thumb_img %}
             <img src="{{ thumb_img.url }}" alt="{{ article.title }}" width="48" height="48">
@@ -84,7 +84,7 @@
 
     {# Right: Other topics #}
     <div class="sg-issue-other-topics">
-      <div class="sg-issue-other-topics__heading">മറ്റുള്ള വിഷയങ്ങള്‍</div>
+      <div class="sg-issue-other-topics__heading">{% translate "മറ്റുള്ള വിഷയങ്ങള്‍" %}</div>
       
       <div class="sg-issue-other-topics__scroll-wrapper">
         <div class="sg-issue-other-topics__grid">
@@ -117,7 +117,7 @@
             </time>
           </article>
           {% empty %}
-          <p class="sg-empty">No other topics.</p>
+          <p class="sg-empty">{% translate "മറ്റ് വിഷയങ്ങളൊന്നുമില്ല." %}</p>
           {% endfor %}
         </div>
       </div>
@@ -128,16 +128,14 @@
 
   {# ── SUBSCRIBE BANNER ── #}
   {% if not request.user.is_authenticated or not request.user.is_subscribed %}
-  <div class="sg-subscribe" role="complementary" aria-label="Subscribe">
+  <div class="sg-subscribe" role="complementary" aria-label="{% translate 'വരിക്കാരാകൂ' %}">
     <div class="sg-subscribe__text">
-      <div class="sg-subscribe__kicker">വരിക്കാരാകൂ</div>
-      {# <h2 class="sg-subscribe__title">Stay Informed. Stay Ahead.</h2> #}
-      {# <p class="sg-subscribe__sub">Get unlimited access to every article, issue, and exclusive content.</p> #}
+      <div class="sg-subscribe__kicker">{% translate "വരിക്കാരാകൂ" %}</div>
       {% if request.user.is_authenticated %}
-      <a href="{% url 'reader_profile' %}" class="sg-subscribe__cta">സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക</a>
+      <a href="{% url 'reader_profile' %}" class="sg-subscribe__cta">{% translate "സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക" %}</a>
       {% else %}
       {# <a href="{% url 'reader_signup' %}" class="sg-subscribe__cta">ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ</a> #}
-      <a href="{% url 'account_signup' %}" class="sg-subscribe__cta">ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ</a>
+      <a href="{% url 'account_signup' %}" class="sg-subscribe__cta">{% translate "ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ" %}</a>
     {% endif %}
     </div>
   </div>
@@ -146,7 +144,7 @@
   {# ── PAST ISSUES ── #}
   {% if past_issues %}
   <div class="sg-section-head">
-    <h2 class="sg-section-head__title">മുൻപത്തെ ലക്കങ്ങൾ</h2>
+    <h2 class="sg-section-head__title">{% translate "മുൻപത്തെ ലക്കങ്ങൾ" %}</h2>
     <span class="sg-section-head__rule" aria-hidden="true"></span>
   </div>
 
@@ -180,7 +178,7 @@
   {% if issue_index_page %}
   <div class="sg-more-issues">
     <a href="{{ issue_index_page.url }}" class="sg-btn-secondary">
-      <span>എല്ലാ ലക്കങ്ങളും കാണുക</span>
+      <span>{% translate "എല്ലാ ലക്കങ്ങളും കാണുക" %}</span>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
     </a>
   </div>
@@ -189,7 +187,7 @@
 
   {# ── LATEST ARTICLES ── #}
   <div class="sg-section-head">
-    <h2 class="sg-section-head__title">മറ്റുള്ള ലേഖനങ്ങള്‍</h2>
+    <h2 class="sg-section-head__title">{% translate "മറ്റുള്ള ലേഖനങ്ങള്‍" %}</h2>
     <span class="sg-section-head__rule" aria-hidden="true"></span>
   </div>
 
@@ -233,7 +231,7 @@
   {% if article_index_page %}
   <div class="sg-more-articles">
     <a href="{{ article_index_page.url }}" class="sg-btn-more">
-      <span>കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക</span>
+      <span>{% translate "കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക" %}</span>
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
     </a>
   </div>
