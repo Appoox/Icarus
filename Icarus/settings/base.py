@@ -126,6 +126,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -213,7 +214,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ml"
+LANGUAGES = [
+    ("ml", "മലയാളം"),
+    ("en", "English"),
+]
+
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
 TIME_ZONE = "UTC"
 
@@ -286,7 +293,7 @@ WAGTAILDOCS_INLINE_CONTENT_TYPES = [
 # ── Reader / Paywall ──────────────────────────────────────────────────
 FREE_ARTICLE_LIMIT = env.int("FREE_ARTICLE_LIMIT", 3)  # Number of free articles for non-subscribed readers
 LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')
-LOGIN_URL = env.str("LOGIN_URL", '/accounts/login/')
+LOGIN_URL = env.str("LOGIN_URL", "account_login")
 # ACCOUNT_LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')
 
 # ── The Librarian ─────────────────────────────────────────────────────

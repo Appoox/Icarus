@@ -1,5 +1,5 @@
-
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.urls import include, path
 from django.contrib import admin
 
@@ -10,12 +10,27 @@ from wagtail.contrib.sitemaps.views import sitemap
 from search import views as search_views
 from Icarus import protected_media as protected_media_views
 
+# ── Never language-prefixed: infra, admin, machine endpoints ──────────
 urlpatterns = [
     path("sitemap.xml", sitemap),
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
-    path("accounts/", include("allauth.urls")),
     path("documents/", include(wagtaildocs_urls)),
+    path("internal/archive-authz", protected_media_views.archive_authz, name="archive_authz"),
+    path("internal/postbox-authz", protected_media_views.postbox_authz, name="postbox_authz"),
+    path("internal/page-cache-authz", protected_media_views.page_cache_authz, name="page_cache_authz"),
+]
+
+if settings.DEBUG:
+    from django.conf.urls.static import static
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+    urlpatterns += staticfiles_urlpatterns()
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# ── Language-prefixed public site (ml unprefixed, en at /en/) ─────────
+urlpatterns += i18n_patterns(
+    path("accounts/", include("allauth.urls")),
     path("search/", search_views.search, name="search"),
     path("reader/", include("reader.urls")),
     path("issues/", include("issue.urls")),
@@ -24,26 +39,6 @@ urlpatterns = [
     path("kalapila/", include("kalapila.urls")),
     path("postbox/", include("postbox.urls")),
     path("authors/", include("literati.urls")),
-    path("internal/archive-authz", protected_media_views.archive_authz, name="archive_authz"),
-    path("internal/postbox-authz", protected_media_views.postbox_authz, name="postbox_authz"),
-    path("internal/page-cache-authz", protected_media_views.page_cache_authz, name="page_cache_authz"),
-]
-
-
-if settings.DEBUG:
-    from django.conf.urls.static import static
-    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
-    # Serve static and media files from development server
-    urlpatterns += staticfiles_urlpatterns()
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-urlpatterns = urlpatterns + [
-    # For anything not caught by a more specific rule above, hand over to
-    # Wagtail's page serving mechanism. This should be the last pattern in
-    # the list:
-    path("", include(wagtail_urls)),
-    # Alternatively, if you want Wagtail pages to be served from a subpath
-    # of your site, rather than the site root:
-    #    path("pages/", include(wagtail_urls)),
-]
+    path("", include(wagtail_urls)),  # must stay last
+    prefix_default_language=False,
+)

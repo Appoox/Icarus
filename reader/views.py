@@ -11,7 +11,7 @@ from the_librarian.views import superuser_required
 
 from .forms import ReaderProfileEditForm, UpdateInterestsForm
 from .models import ReaderUser, PaymentDetails, PLANS
-
+from django.conf import settings
 
 # def reader_signup(request):
 #     """Register a new reader account."""
@@ -31,7 +31,7 @@ from .models import ReaderUser, PaymentDetails, PLANS
 #     return render(request, 'reader/signup.html', {'form': form})
 
 
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 def reader_profile(request):
     """Display reader profile with reading history and subscription info."""
     reader = request.user
@@ -61,7 +61,7 @@ def reader_profile(request):
     return render(request, 'reader/profile.html', context)
 
 
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 def edit_profile(request):
     """Let readers edit their profile."""
     reader = request.user
@@ -78,7 +78,7 @@ def edit_profile(request):
     return render(request, 'reader/edit_profile.html', {'form': form})
 
 
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 def reader_checkout(request, plan_type):
     """Render the checkout page for a specific plan."""
     plan = PLANS.get(plan_type)   # ✅ Uses shared PLANS dict
@@ -94,7 +94,7 @@ def reader_checkout(request, plan_type):
     })
 
 
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 @require_POST   # ✅ Blocks GET requests entirely — no more silent redirect fallback
 def process_payment(request):
     """Simulate payment gateway callback and activate subscription."""
@@ -142,7 +142,7 @@ def process_payment(request):
     return redirect('reader_profile')
 
 
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 @require_POST   # ✅ Cancellation must be a POST action, not a GET link
 def cancel_subscription(request):
     """Cancel the reader's active subscription, keeping access active until end date."""
@@ -160,7 +160,7 @@ def cancel_subscription(request):
     return redirect('reader_profile')
 
 
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 def update_interests(request):
     """Let readers update their topic interests after signup."""
     try:
@@ -179,7 +179,7 @@ def update_interests(request):
 
     return render(request, 'reader/update_interests.html', {'form': form})
 
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 @require_POST
 def toggle_favorite_article(request, article_id):
     """Toggle an article's favourite status for the logged-in reader."""
@@ -201,7 +201,7 @@ def toggle_favorite_article(request, article_id):
     return JsonResponse({'favorited': favorited, 'id': article_id, 'type': 'article'})
 
 
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 @require_POST
 def toggle_favorite_issue(request, issue_id):
     """Toggle an issue's favourite status for the logged-in reader."""
@@ -246,7 +246,7 @@ def print_subscribers(request):
         'subscribers': subscribers,
         'now': timezone.now()
     })
-@login_required(login_url='/reader/login/')
+@login_required(login_url=settings.LOGIN_URL)
 @require_POST
 def deactivate_account(request):
     """
