@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var imageInput = document.querySelector('.custom-file-upload input[type="file"]');
     if (imageInput) {
         imageInput.addEventListener('change', function () {
-            var fileName = this.files[0] ? this.files[0].name : D.labelChoose;
+            var fileName = this.files[0] ? this.files[0].name : SL.labelChoose;
             var span = document.querySelector('.custom-browse-btn span');
             if (span) span.textContent = fileName;
         });
@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
     /* ── Star rating ─────────────────────────────────── */
     var stars = Array.from(document.querySelectorAll('.fb-star'));
     var currentRating = 0;
-    var LABELS = { 1: D.label1, 2: D.label2, 3: D.label3, 4: D.label4, 5: D.label5 };
+    var LABELS = { 1: SL.label1, 2: SL.label2, 3: SL.label3, 4: SL.label4, 5: SL.label5 };
 
     function paintStars(n) {
         stars.forEach(function (s, i) { s.classList.toggle('active', i < n); });

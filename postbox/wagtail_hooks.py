@@ -2,7 +2,8 @@ import django_filters
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import path, reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, json_script
+from django.utils.translation import gettext as _
 from django.templatetags.static import static
 
 from wagtail import hooks
@@ -17,16 +18,16 @@ from .models import Postbox, PostboxNotificationPreference
 class PostboxFilterSet(django_filters.FilterSet):
     feedback_type = django_filters.ChoiceFilter(
         choices=Postbox.FEEDBACK_TYPES,
-        empty_label='All types',
+        empty_label=_('എല്ലാ തരങ്ങളും'),
     )
     is_reviewed = django_filters.ChoiceFilter(
         field_name='is_reviewed',
-        choices=[(True, 'Reviewed'), (False, 'Unreviewed')],
-        empty_label='All statuses',
+        choices=[(True, _('അവലോകനം ചെയ്തു')), (False, _('അവലോകനം ചെയ്തിട്ടില്ല'))],
+        empty_label=_('എല്ലാ സ്ഥിതികളും'),
     )
     rating = django_filters.ChoiceFilter(
         choices=[(i, '★' * i) for i in range(1, 6)],
-        empty_label='Any rating',
+        empty_label=_('ഏത് റേറ്റിംഗും'),
     )
 
     class Meta:
@@ -118,7 +119,14 @@ def register_postbox_viewset():
 
 @hooks.register('insert_global_admin_js')
 def postbox_admin_js():
+    labels = {
+        "close": _("അടയ്ക്കുക"),
+        "dismiss": _("തള്ളിക്കളയുക"),
+        "review": _("അവലോകനം ചെയ്യുക"),
+        "newFeedback": _("പുതിയ ഫീഡ്‌ബാക്ക്!"),
+    }
     return format_html(
-        '<script src="{}"></script>',
+        '{}<script src="{}"></script>',
+        json_script(labels, "postbox-toast-i18n"),
         static('js/postbox_admin_notifications.js'),
     )
