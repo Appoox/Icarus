@@ -84,7 +84,7 @@ INSTALLED_APPS = [
     "django_q",
     "hitcount",
     "home",
-    "search",
+    # "search",
     "articles",
     "literati",
     "issue",
