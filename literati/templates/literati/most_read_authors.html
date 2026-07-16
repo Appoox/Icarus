@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags wagtailimages_tags humanize %}
+{% load static wagtailcore_tags wagtailimages_tags humanize i18n %}
 {#
   templates/literati/most_read_authors.html
   Rendered by: literati.views.most_read_authors
@@ -19,8 +19,8 @@
 
   {# ── Page header ──────────────────────────────────────────────── #}
   <header class="trending-header">
-    <h1>ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട എഴുത്തുകാർ</h1>
-    <p class="trending-header__period">കഴിഞ്ഞ 30 ദിവസത്തെ ലേഖന വായനകൾ</p>
+    <h1>{% translate "ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട എഴുത്തുകാർ" %}</h1>
+    <p class="trending-header__period">{% translate "കഴിഞ്ഞ 30 ദിവസത്തെ ലേഖന വായനകൾ" %}</p>
   </header>
 
   {# Split Screen Grid Layout Container #}
@@ -36,10 +36,10 @@
           <a href="{{ author.url }}"
              class="trending-pill trending-pill--author"
              data-target="pane-{{ author.id }}"
-             title="{{ author.title }} — {{ author.total_views|intcomma }} ലേഖന വായനകൾ">
+             title="{% blocktranslate with name=author.title views=author.total_views|intcomma %}{{ name }} — {{ views }} ലേഖന വായനകൾ{% endblocktranslate %}">
 
             {# Numerical ranking layout: Calculates true absolute position across paginated subsets #}
-            <span class="trending-pill__rank" aria-label="Rank {{ page_obj.start_index|add:forloop.counter0 }}">
+           <span class="trending-pill__rank" aria-label="{% blocktranslate with rank=page_obj.start_index|add:forloop.counter0 %}റാങ്ക് {{ rank }}{% endblocktranslate %}">
               {{ page_obj.start_index|add:forloop.counter0 }}
             </span>
 
@@ -62,9 +62,9 @@
             </span>
 
             {# View count metrics box #}
-            <span class="trending-pill__views" aria-label="{{ author.total_views|intcomma }} ലേഖന വായനകൾ">
+            <span class="trending-pill__views" aria-label="{% blocktranslate with views=author.total_views|intcomma %}{{ views }} ലേഖന വായനകൾ{% endblocktranslate %}">
               <span class="trending-pill__count">{{ author.total_views|intcomma }}</span>
-              <span class="trending-pill__unit">വായനകൾ</span>
+              <span class="trending-pill__unit">{% translate "വായനകൾ" %}</span>
             </span>
 
           </a>
@@ -73,7 +73,7 @@
       </ol>
       {% else %}
       <div class="trending-empty">
-        <p>നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല.</p>
+        <p>{% translate "നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല." %}</p>
       </div>
       {% endif %}
     </div>
@@ -84,8 +84,8 @@
         
         {# Default State Message Box #}
         <div id="pane-default" class="articles-preview-pane active">
-          <h3 class="preview-pane-title">ലേഖനങ്ങൾ</h3>
-          <p class="pane-placeholder-text">ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക.</p>
+          <h3 class="preview-pane-title">{% translate "ലേഖനങ്ങൾ" %}</h3>
+          <p class="pane-placeholder-text">{% translate "ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക." %}</p>
         </div>
 
         {# Generate unique preview item indexes corresponding to each parent author object #}
@@ -118,7 +118,7 @@
               </a>
             </li>
             {% empty %}
-            <li class="pane-placeholder-text">ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങൾ നിലവിൽ ലഭ്യമായിട്ടില്ല.</li>
+            <li class="pane-placeholder-text">{% translate "ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങൾ നിലവിൽ ലഭ്യമായിട്ടില്ല." %}</li>
             {% endfor %}
           </ul>
         </div>
@@ -129,14 +129,13 @@
 
   </div>
 
-  {# Include sitewide navigation block, mapping parameters through your shared pagination system layout #}
   {% include "includes/pagination.html" with page_obj=page_obj %}
 
 </div>
 
+{% endblock %}
+
 {% block extra_js %}
 {# Reuses the high-fidelity dual-column rigid grid styles from the topics view layout #}
 <script src="{% static 'js/most_read_topics.js' %}"></script>
-{% endblock %}
-
 {% endblock %}
