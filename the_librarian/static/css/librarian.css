@@ -318,15 +318,6 @@
 
 .viewer-bar a:hover { color: #fff; }
 
-/* ── The PDF iframe — fills whatever height .viewer-wrapper has left ── */
-.viewer-frame {
-  flex: 1;         /* grow into remaining height */
-  min-height: 0;   /* critical: flex children need this to actually shrink/grow */
-  width: 100%;
-  border: none;
-  display: block;
-}
-
 
 /* ══════════════════════════════════════════════════════════════
    MAGAZINE ARCHIVE GRID  (archive_list.html)
@@ -500,6 +491,7 @@
 .issue-cover-wrapper {
   position: relative;
   aspect-ratio: 3 / 4;
+  width: 100%;
   overflow: hidden;
   border-radius: 4px;
   box-shadow: 0 8px 24px rgba(0,0,0,.14);
@@ -682,6 +674,7 @@
   background: transparent;
   color: var(--navy);
   border: 1.5px solid var(--navy);
+  flex: 1;
 }
 
 .issue-btn--download:hover {

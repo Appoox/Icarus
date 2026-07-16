@@ -26,13 +26,21 @@
     <div id="flipbook-root"
          data-page-meta-url="{{ page_meta_url }}"
          data-page-image-url-template="{{ page_image_url_template }}"
-         data-start-page="{{ page|add:'-1' }}"></div>
+         data-start-page="{{ page|add:'-1' }}"
+         data-i18n-page="{% translate 'പേജ്' %}"
+         data-i18n-page-of="{% translate 'ൽ' %}"
+         data-i18n-loading-doc="{% translate 'ഡോക്യുമെന്റ് ലോഡ് ചെയ്യുന്നു…' %}"
+         data-i18n-loading-pages="{% translate 'പേജുകൾ ലോഡ് ചെയ്യുന്നു…' %}"
+         data-i18n-err-no-data="{% translate 'പേജ് ഡാറ്റ ലഭ്യമല്ല.' %}"
+         data-i18n-err-load="{% translate 'പേജ്-ഫ്ലിപ്പ് വ്യൂവർ ലോഡ് ചെയ്യാനായില്ല. പേജ് പുതുക്കുക.' %}"
+         data-i18n-err-doc="{% translate 'ഈ ഡോക്യുമെന്റ് ലോഡ് ചെയ്യാനായില്ല. അത് നഷ്ടപ്പെട്ടതോ നിങ്ങളുടെ നെറ്റ്‌വർക്ക് തടഞ്ഞതോ ആകാം.' %}">
+    </div>
 
     <div id="flipbook-loading" class="flipbook-loading">
       <div class="flipbook-loading__spinner" aria-hidden="true"></div>
       <p id="flipbook-loading__text" class="flipbook-loading__text">{% translate "ഡോക്യുമെന്റ് ലോഡ് ചെയ്യുന്നു…" %}</p>
       <div class="flipbook-loading__bar">
-        <div id="flipbook-loadinaria-label="Next page" disabled>›</button>g__bar-fill" class="flipbook-loading__bar-fill"></div>
+        <div id="flipbook-loading__bar-fill" class="flipbook-loading__bar-fill"></div>
       </div>
     </div>
 
