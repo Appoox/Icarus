@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Feedback{% endblock %}
+{% block title %}{% translate "ഫീഡ്‌ബാക്ക്" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/postbox.css' %}">
@@ -11,9 +11,9 @@
 
 <header class="fb-header">
     <div class="fb-header__inner">
-        <span class="fb-header__kicker">Testing Phase</span>
-        <h1 class="fb-header__title">ഫീഡ്‌ബാക്ക് അറിയിക്കൂ</h1>
-        <p class="fb-header__sub">വെബ്സൈറ്റ് മെച്ചപ്പെടുത്താൻ നിങ്ങളുടെ നിർദ്ദേശങ്ങളും അഭിപ്രായങ്ങളും അറിയിക്കുക</p>
+        <span class="fb-header__kicker">{% translate "പരീക്ഷണ ഘട്ടം" %}</span>
+        <h1 class="fb-header__title">{% translate "ഫീഡ്‌ബാക്ക് അറിയിക്കൂ" %}</h1>
+        <p class="fb-header__sub">{% translate "വെബ്സൈറ്റ് മെച്ചപ്പെടുത്താൻ നിങ്ങളുടെ നിർദ്ദേശങ്ങളും അഭിപ്രായങ്ങളും അറിയിക്കുക" %}</p>
     </div>
 </header>
 
@@ -24,19 +24,19 @@
 
         {# Type selector — JS updates the hidden input #}
         <fieldset class="fb-group">
-            <legend class="fb-label">ഫീഡ്‌ബാക്കിൻ്റെ തരം</legend>
+            <legend class="fb-label">{% translate "ഫീഡ്‌ബാക്കിൻ്റെ തരം" %}</legend>
             <div class="fb-type-grid">
                 <button type="button" class="fb-type-btn active"  data-type="general">
-                    <span class="fb-type-btn__icon" aria-hidden="true">💬</span> General
+                    <span class="fb-type-btn__icon" aria-hidden="true">💬</span> {% translate "പൊതുവായത്" %}
                 </button>
                 <button type="button" class="fb-type-btn" data-type="bug">
-                    <span class="fb-type-btn__icon" aria-hidden="true">🐛</span> Bug Report
+                    <span class="fb-type-btn__icon" aria-hidden="true">🐛</span> {% translate "ബഗ് റിപ്പോർട്ട്" %}
                 </button>
                 <button type="button" class="fb-type-btn" data-type="suggestion">
-                    <span class="fb-type-btn__icon" aria-hidden="true">💡</span> Suggestion
+                    <span class="fb-type-btn__icon" aria-hidden="true">💡</span> {% translate "നിർദ്ദേശം" %}
                 </button>
                 <button type="button" class="fb-type-btn" data-type="content">
-                    <span class="fb-type-btn__icon" aria-hidden="true">📝</span> Content Issue
+                    <span class="fb-type-btn__icon" aria-hidden="true">📝</span> {% translate "ഉള്ളടക്കത്തിലെ പ്രശ്നം" %}
                 </button>
             </div>
         </fieldset>
@@ -44,14 +44,20 @@
         {# Star rating — JS updates the hidden input #}
         <div class="fb-group">
             <p class="fb-label">
-                റേറ്റുചെയ്യൂ
-                <span class="fb-optional">(optional)</span>
+                {% translate "റേറ്റുചെയ്യൂ" %}
+                <span class="fb-optional">{% translate "(optional)" %}</span>
             </p>
-            <div class="fb-stars" role="group" aria-label="Star rating, 1 to 5">
+            <div class="fb-stars" role="group" aria-label="{% translate 'നക്ഷത്ര റേറ്റിംഗ്, 1 മുതൽ 5 വരെ' %}"
+                 data-label-1="{% translate 'മോശം' %}"
+                 data-label-2="{% translate 'സാധാരണം' %}"
+                 data-label-3="{% translate 'നല്ലത്' %}"
+                 data-label-4="{% translate 'വളരെ നല്ലത്' %}"
+                 data-label-5="{% translate 'മികച്ചത്' %}"
+                 data-label-choose="{% translate 'ഫയൽ തിരഞ്ഞെടുക്കൂ' %}">
                 {% for i in "12345" %}
                 <button type="button" class="fb-star"
                         data-value="{{ i }}"
-                        aria-label="{{ i }} star{% if i != '1' %}s{% endif %}">★</button>
+                        aria-label="{% blocktranslate count counter=i|add:0 %}{{ counter }} നക്ഷത്രം{% plural %}{{ counter }} നക്ഷത്രങ്ങൾ{% endblocktranslate %}">★</button>
                 {% endfor %}
                 <span class="fb-stars__label" id="fb-star-label" aria-live="polite"></span>
             </div>
@@ -67,7 +73,7 @@
 
             <div class="fb-group">
                 <label class="fb-label" for="{{ form.feedback.id_for_label }}">
-                    നിങ്ങള്‍ക്ക് പറയുവാനുള്ളത്
+                    {% translate "നിങ്ങള്‍ക്ക് പറയുവാനുള്ളത്" %}
                     <span class="fb-required" aria-hidden="true">*</span>
                 </label>
 
@@ -87,15 +93,13 @@
             {# Added image upload field group within the form #}
             <div class="fb-group" style="margin-top: 1rem;">
                 <label class="fb-label" for="{{ form.image.id_for_label }}">
-                    ചിത്രം അറ്റാച്ച് ചെയ്യാം
-                    <span class="fb-optional">(optional)</span>
+                    {% translate "ചിത്രം അറ്റാച്ച് ചെയ്യാം" %}
+                    <span class="fb-optional">{% translate "(ഓപ്ഷണൽ)" %}</span>
                 </label>
-                
-                {{ form.image }}
 
                 <div class="custom-file-upload">
-                    <label for="image-upload" class="custom-browse-btn">
-                        <span>📷 ചിത്രം നിങ്ങളുടെ ഉപകരണത്തില്‍ നിന്ന് തിരഞ്ഞെടുക്കൂ</span>
+                    <label for="{{ form.image.id_for_label }}" class="custom-browse-btn">
+                        <span>{% translate "📷 ചിത്രം നിങ്ങളുടെ ഉപകരണത്തില്‍ നിന്ന് തിരഞ്ഞെടുക്കൂ" %}</span>
                     </label>
                     {{ form.image }}
                 </div>
@@ -113,7 +117,7 @@
             </div>
             {% endif %}
 
-            <button type="submit" class="fb-submit">ഫീഡ്‌ബാക്ക് അയക്കൂ</button>
+            <button type="submit" class="fb-submit">{% translate "ഫീഡ്‌ബാക്ക് അയക്കൂ" %}</button>
         </form>
 
         {# Show which page this feedback was triggered from #}
@@ -125,7 +129,7 @@
                 <line x1="12" y1="16" x2="12" y2="12"/>
                 <line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
-            Feedback context: <span class="fb-context-url">{{ ctx }}</span>
+           {% translate "ഫീഡ്‌ബാക്ക് സന്ദർഭം:" %} <span class="fb-context-url">{{ ctx }}</span>
         </p>
         {% endif %}{% endwith %}
 
@@ -134,7 +138,7 @@
     {# ── Previous submissions ── #}
     {% if previous %}
     <section class="fb-history">
-        <h2 class="fb-history__heading">Your previous submissions</h2>
+        <h2 class="fb-history__heading">{% translate "നിങ്ങളുടെ മുൻ സമർപ്പണങ്ങൾ" %}</h2>
         {% for fb in previous %}
         <div class="fb-history-item fb-history-item--{{ fb.feedback_type }}
                     {% if fb.is_reviewed %}fb-history-item--reviewed{% endif %}">
@@ -145,7 +149,7 @@
                 {% endif %}
                 <time class="fb-history-item__time">{{ fb.submitted_at|date:"F j, Y" }}</time>
                 {% if fb.is_reviewed %}
-                <span class="fb-history-item__reviewed">✓ Reviewed</span>
+                <span class="fb-history-item__reviewed">✓ {% translate "റിവ്യൂ ചെയ്തു" %}</span>
                 {% endif %}
             </div>
             <p class="fb-history-item__message">{{ fb.feedback }}</p>
@@ -158,7 +162,7 @@
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                <span style="font-family: var(--label); font-size: 0.65rem; color: var(--muted);">Image Attached</span>
+                <span style="font-family: var(--label); font-size: 0.65rem; color: var(--muted);">{% translate "ചിത്രം അറ്റാച്ച് ചെയ്തു" %}</span>
             </div>
             {% endif %}
         </div>

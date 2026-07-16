@@ -11,6 +11,16 @@
 ───────────────────────────────────────────────────────────────── */
 
 (function () {
+    var i18nEl = document.getElementById('postbox-toast-i18n');
+        var L = i18nEl ? JSON.parse(i18nEl.textContent) : {};
+
+        function safeUrl(u) {
+            if (!u) return '#';
+            try {
+                var parsed = new URL(u, window.location.origin);
+                return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : '#';
+            } catch (e) { return '#'; }
+        }
     'use strict';
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -72,54 +82,49 @@
             var toast = document.createElement('div');
             toast.className = 'admin-toast';
             toast.id = 'postbox-toast-' + notification.id;
-            toast.innerHTML = [
-                '<div class="admin-toast__header">',
-                '  <h4 class="admin-toast__title">',
-                '    <svg viewBox="0 0 24 24" width="15" height="15" fill="none"',
-                '         stroke="currentColor" stroke-width="2.5"',
-                '         style="display:inline-block;vertical-align:middle;margin-right:5px;">',
-                '      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
-                '    </svg>',
-                '    New Feedback',
-                '  </h4>',
-                '  <button class="admin-toast__close-btn" aria-label="Close">&times;</button>',
-                '</div>',
-                '<div class="admin-toast__body">' + notification.feedback + '</div>',
-                '<div class="admin-toast__footer">',
-                '  <a href="' + (notification.url || '#') + '"',
-                '     class="admin-toast__action-link">Review</a>',
-                '  <button class="admin-toast__dismiss-btn">Dismiss</button>',
-                '</div>',
-            ].join('');
 
+            var header = document.createElement('div');
+            header.className = 'admin-toast__header';
+            var title = document.createElement('h4');
+            title.className = 'admin-toast__title';
+            title.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+            title.appendChild(document.createTextNode(' ' + (L.newFeedback || 'New Feedback')));
+            var closeBtn = document.createElement('button');
+            closeBtn.className = 'admin-toast__close-btn';
+            closeBtn.setAttribute('aria-label', L.close || 'Close');
+            closeBtn.innerHTML = '&times;';
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+
+            var body = document.createElement('div');
+            body.className = 'admin-toast__body';
+            body.textContent = notification.feedback || '';   // reader text → textContent
+
+            var footer = document.createElement('div');
+            footer.className = 'admin-toast__footer';
+            var reviewLink = document.createElement('a');
+            reviewLink.className = 'admin-toast__action-link';
+            reviewLink.href = safeUrl(notification.url);
+            reviewLink.textContent = L.review || 'Review';
+            var dismissBtn = document.createElement('button');
+            dismissBtn.className = 'admin-toast__dismiss-btn';
+            dismissBtn.textContent = L.dismiss || 'Dismiss';
+            footer.appendChild(reviewLink);
+            footer.appendChild(dismissBtn);
+
+            toast.appendChild(header);
+            toast.appendChild(body);
+            toast.appendChild(footer);
             container.appendChild(toast);
 
-            /* Auto-dismiss after 15 s; pause on hover */
-            var timer = setTimeout(function () {
-                markRead(notification.id, toast);
-            }, 15000);
-
-            toast.addEventListener('mouseenter', function () {
-                clearTimeout(timer);
-            });
+            var timer = setTimeout(function () { markRead(notification.id, toast); }, 15000);
+            toast.addEventListener('mouseenter', function () { clearTimeout(timer); });
             toast.addEventListener('mouseleave', function () {
-                timer = setTimeout(function () {
-                    markRead(notification.id, toast);
-                }, 8000);
+                timer = setTimeout(function () { markRead(notification.id, toast); }, 8000);
             });
-
-            toast.querySelector('.admin-toast__close-btn')
-                 .addEventListener('click', function () {
-                     markRead(notification.id, toast);
-                 });
-            toast.querySelector('.admin-toast__dismiss-btn')
-                 .addEventListener('click', function () {
-                     markRead(notification.id, toast);
-                 });
-            toast.querySelector('.admin-toast__action-link')
-                 .addEventListener('click', function () {
-                     markRead(notification.id, toast);
-                 });
+            closeBtn.addEventListener('click', function () { markRead(notification.id, toast); });
+            reviewLink.addEventListener('click', function () { markRead(notification.id, toast); });
+            dismissBtn.addEventListener('click', function () { markRead(notification.id, toast); });
         }
 
         /* ── WebSocket connection ─────────────────────────────────────── */
