@@ -7,6 +7,10 @@
             document.body.appendChild(container);
         }
 
+        // Malayalam toast labels, emitted server-side via json_script in wagtail_hooks.py
+        const i18nEl = document.getElementById("admin-toast-i18n");
+        const L = i18nEl ? JSON.parse(i18nEl.textContent) : {};
+
         // Retrieves the CSRF token from cookies or the DOM
         function getCsrfToken() {
             let cookieValue = null;
@@ -25,6 +29,18 @@
                 if (input) cookieValue = input.value;
             }
             return cookieValue;
+        }
+
+        // Returns the URL only if it is a safe http(s) link, else '#'.
+        // Blocks javascript:/data: schemes that encodeURI would let through.
+        function safeUrl(u) {
+            if (!u) return '#';
+            try {
+                const parsed = new URL(u, window.location.origin);
+                return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : '#';
+            } catch (e) {
+                return '#';
+            }
         }
 
         const activeToastIds = new Set();
@@ -46,7 +62,9 @@
             setTimeout(() => toastElement.remove(), 350);
         }
 
-        // Constructs and displays the notification toast
+        // Constructs and displays the notification toast.
+        // Built with createElement/textContent — no innerHTML sink — because
+        // notification.message contains the reader's unescaped display name.
         function showToast(notification) {
             if (activeToastIds.has(notification.id)) return;
             activeToastIds.add(notification.id);
@@ -54,22 +72,57 @@
             const toast = document.createElement("div");
             toast.className = "admin-toast";
             toast.id = `toast-${notification.id}`;
-            // Inside your showToast(notification) function template mapping:
-            toast.innerHTML = `
-                <div class="admin-toast__header">
-                    <h4 class="admin-toast__title">
-                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline-block; vertical-align:middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        പുതിയ അഭിപ്രായം!
-                    </h4>
-                    <button class="admin-toast__close-btn" aria-label="Close">&times;</button>
-                </div>
-                <div class="admin-toast__body">${notification.message}</div>
-                <div class="admin-toast__footer">
-                    <a href="${notification.page_url || '#'}" class="admin-toast__view-btn" target="_blank">View</a>
-                    <button class="admin-toast__dismiss-btn">Dismiss</button>
-                    <a href="${notification.url}" class="admin-toast__action-link" target="_blank">Moderate</a>
-                </div>
-            `;
+
+            // ── Header ──
+            const header = document.createElement("div");
+            header.className = "admin-toast__header";
+
+            const title = document.createElement("h4");
+            title.className = "admin-toast__title";
+            // Constant markup, no interpolation — safe.
+            title.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline-block; vertical-align:middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+            title.appendChild(document.createTextNode(' ' + (L.newComment || '')));
+
+            const closeBtn = document.createElement("button");
+            closeBtn.className = "admin-toast__close-btn";
+            closeBtn.setAttribute("aria-label", L.close || 'Close');
+            closeBtn.innerHTML = '&times;';
+
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+
+            // ── Body ── (attacker-influenced text → textContent, never parsed as HTML)
+            const body = document.createElement("div");
+            body.className = "admin-toast__body";
+            body.textContent = notification.message || '';
+
+            // ── Footer ──
+            const footer = document.createElement("div");
+            footer.className = "admin-toast__footer";
+
+            const viewBtn = document.createElement("a");
+            viewBtn.className = "admin-toast__view-btn";
+            viewBtn.target = "_blank";
+            viewBtn.href = safeUrl(notification.page_url);
+            viewBtn.textContent = L.view || 'View';
+
+            const dismissBtn = document.createElement("button");
+            dismissBtn.className = "admin-toast__dismiss-btn";
+            dismissBtn.textContent = L.dismiss || 'Dismiss';
+
+            const actionLink = document.createElement("a");
+            actionLink.className = "admin-toast__action-link";
+            actionLink.target = "_blank";
+            actionLink.href = safeUrl(notification.url);
+            actionLink.textContent = L.moderate || 'Moderate';
+
+            footer.appendChild(viewBtn);
+            footer.appendChild(dismissBtn);
+            footer.appendChild(actionLink);
+
+            toast.appendChild(header);
+            toast.appendChild(body);
+            toast.appendChild(footer);
             container.appendChild(toast);
 
             let dismissTimeout = setTimeout(() => markAsRead(notification.id, toast), 15000);
@@ -77,10 +130,10 @@
             toast.addEventListener("mouseleave", () => {
                 dismissTimeout = setTimeout(() => markAsRead(notification.id, toast), 8000);
             });
-            toast.querySelector(".admin-toast__close-btn").addEventListener("click", () => markAsRead(notification.id, toast));
-            toast.querySelector(".admin-toast__view-btn").addEventListener("click", () => markAsRead(notification.id, toast));
-            toast.querySelector(".admin-toast__dismiss-btn").addEventListener("click", () => markAsRead(notification.id, toast));
-            toast.querySelector(".admin-toast__action-link").addEventListener("click", () => markAsRead(notification.id, toast));
+            closeBtn.addEventListener("click", () => markAsRead(notification.id, toast));
+            viewBtn.addEventListener("click", () => markAsRead(notification.id, toast));
+            dismissBtn.addEventListener("click", () => markAsRead(notification.id, toast));
+            actionLink.addEventListener("click", () => markAsRead(notification.id, toast));
         }
 
         let socket = null;
@@ -99,7 +152,7 @@
                     clearTimeout(reconnectTimeout);
                     reconnectTimeout = null;
                 }
-                
+
                 // Fetch initially to catch any missed notifications
                 fetch("/kalapila/admin/notifications/")
                     .then(res => res.json())
@@ -114,7 +167,7 @@
             socket.onmessage = function(e) {
                 try {
                     const data = JSON.parse(e.data);
-                    
+
                     // CORRECTION: Added a console log to help verify the exact structure of the WebSocket payload.
                     console.log("Admin WebSocket received:", data);
 

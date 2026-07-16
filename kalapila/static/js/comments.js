@@ -8,9 +8,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const emptyState = document.getElementById("comments-empty-message");
     const countBadge = document.getElementById("comment-count-badge");
 
-    // Helper: get CSRF token
+    // Malayalam labels emitted as data-i18n-* attributes on #comments-wrapper
+    const T = commentsWrapper.dataset;
+
     function getCsrfToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const el = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (el) return el.value;
+        const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
     }
 
     // Helper: update comment count badge
@@ -24,38 +29,38 @@ document.addEventListener("DOMContentLoaded", function () {
     // Client-Side Permission Corrector: Adjusts button states for WebSocket-injected comments
     function adjustCommentButtons(commentCard) {
         if (!commentCard) return;
-        
+
         // Extract credentials from global wrapper and card attributes
         const currentUserId = commentsWrapper.getAttribute("data-current-user-id");
         const isStaff = commentsWrapper.getAttribute("data-is-staff") === "true";
         const isSuperuser = commentsWrapper.getAttribute("data-is-superuser") === "true";
         const authorId = commentCard.getAttribute("data-author-id");
         const commentId = commentCard.getAttribute("data-comment-id");
-        
+
         const actionsContainer = commentCard.querySelector(".comment-card__actions");
         if (!actionsContainer) return;
-        
+
         let deleteBtn = actionsContainer.querySelector(".delete-comment-btn");
         let reportBtn = actionsContainer.querySelector(".report-comment-btn");
-        
+
         // If the viewing user is anonymous/not authenticated, remove operational buttons
         if (!currentUserId) {
             if (deleteBtn) deleteBtn.remove();
             if (reportBtn) reportBtn.remove();
             return;
         }
-        
+
         const isAuthor = (currentUserId === authorId);
         const canDelete = isAuthor || isStaff || isSuperuser;
-        
+
         // Correct Delete button presence matching actual permissions
         if (canDelete) {
             if (!deleteBtn) {
                 deleteBtn = document.createElement("button");
                 deleteBtn.className = "comment-action-btn delete-comment-btn";
                 deleteBtn.setAttribute("data-url", `/kalapila/comment/${commentId}/delete/`);
-                deleteBtn.innerHTML = `<i class="far fa-trash-alt"></i> ഒഴിവാക്കുക`;
-                
+                deleteBtn.innerHTML = `<i class="far fa-trash-alt"></i> ${T.i18nDelete}`;
+
                 if (reportBtn) {
                     actionsContainer.insertBefore(deleteBtn, reportBtn);
                 } else {
@@ -65,14 +70,14 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             if (deleteBtn) deleteBtn.remove();
         }
-        
+
         // Correct Report button presence matching actual permissions
         if (!isAuthor) {
             if (!reportBtn) {
                 reportBtn = document.createElement("button");
                 reportBtn.className = "comment-action-btn report-comment-btn";
                 reportBtn.setAttribute("data-url", `/kalapila/comment/${commentId}/report/`);
-                reportBtn.innerHTML = `<i class="far fa-flag"></i> റിപ്പോർട്ട് ചെയ്യുക`;
+                reportBtn.innerHTML = `<i class="far fa-flag"></i> ${T.i18nReport}`;
                 actionsContainer.appendChild(reportBtn);
             }
         } else {
@@ -144,13 +149,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     if (data.parent_id) {
                         const parentCard = document.getElementById(`comment-${data.parent_id}`);
-                        if (parentCard) {
+                        if (parentCard && data.html) {
                             const parentRepliesList = parentCard.querySelector(".replies-list");
                             parentRepliesList.insertAdjacentHTML("beforeend", data.html);
                             // Run the button visibility corrector on the appended child node
                             adjustCommentButtons(parentRepliesList.lastElementChild);
                         }
-                    } else {
+                    } else if (data.html) {
                         commentsList.insertAdjacentHTML("beforeend", data.html);
                         // Run the button visibility corrector on the appended child node
                         adjustCommentButtons(commentsList.lastElementChild);
@@ -211,7 +216,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (response.ok && data.status === "success") {
                 // UI CLEANUP ONLY: The WebSocket onmessage listener will handle the actual
                 // DOM insertion and comment count increment to prevent race conditions.
-                
+
                 // If comment list has an empty state, remove it
                 if (emptyState) {
                     emptyState.style.display = "none";
@@ -237,11 +242,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     form.remove();
                 }
             } else {
-                alert(data.message || "Something went wrong. Please try again.");
+                alert(data.message || T.i18nErrorGeneric);
             }
         } catch (error) {
             console.error("Error submitting comment:", error);
-            alert("Error posting comment. Please try again.");
+            alert(T.i18nErrorPost);
         } finally {
             submitBtn.disabled = false;
         }
@@ -279,15 +284,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         <textarea 
                             name="body" 
                             class="comment-textarea" 
-                            placeholder="മറുപടി രേഖപ്പെടുത്തുക..." 
+                            placeholder="${T.i18nReplyPlaceholder}" 
                             maxlength="3000" 
                             required
                         ></textarea>
                         <div class="comment-form__footer">
                             <span class="char-counter"><span class="char-count-current">0</span> / 3000</span>
                             <div class="reply-form__actions">
-                                <button type="button" class="comment-action-btn cancel-reply-btn">റദ്ദാക്കുക</button>
-                                <button type="submit" class="submit-comment-btn">മറുപടി നൽകുക</button>
+                                <button type="button" class="comment-action-btn cancel-reply-btn">${T.i18nReplyCancel}</button>
+                                <button type="submit" class="submit-comment-btn">${T.i18nReplySubmit}</button>
                             </div>
                         </div>
                     </div>
@@ -322,7 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const url = btn.getAttribute("data-url");
             const commentCard = btn.closest(".comment-card");
 
-            if (confirm("ഈ അഭിപ്രായം ഒഴിവാക്കണോ?")) {
+            if (confirm(T.i18nConfirmDelete)) {
                 fetch(url, {
                     method: "POST",
                     headers: {
@@ -350,7 +355,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .catch(err => {
                     console.error("Error deleting comment:", err);
-                    alert("Error removing comment.");
+                    alert(T.i18nErrorDelete);
                 });
             }
         }
@@ -360,7 +365,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const btn = e.target.classList.contains("report-comment-btn") ? e.target : e.target.closest(".report-comment-btn");
             const url = btn.getAttribute("data-url");
 
-            if (confirm("ഈ അഭിപ്രായം റിപ്പോർട്ട് ചെയ്യണോ?")) {
+            if (confirm(T.i18nConfirmReport)) {
                 fetch(url, {
                     method: "POST",
                     headers: {
@@ -371,7 +376,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(data => {
                     if (data.status === "success") {
                         btn.classList.add("reported");
-                        btn.innerHTML = `<i class="fas fa-flag"></i> റിപ്പോർട്ട് ചെയ്തു`;
+                        btn.innerHTML = `<i class="fas fa-flag"></i> ${T.i18nReported}`;
                         btn.disabled = true;
                     } else {
                         alert(data.message);
@@ -379,7 +384,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .catch(err => {
                     console.error("Error reporting comment:", err);
-                    alert("Error reporting comment.");
+                    alert(T.i18nErrorReport);
                 });
             }
         }
