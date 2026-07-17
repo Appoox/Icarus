@@ -3,43 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Auto-refresh the page every 15 seconds -->
 <meta http-equiv="refresh" content="15">
-<!-- Updated the title to include both Malayalam and English -->
 <title>ശാസ്ത്രഗതി — അൽപസമയത്തേക്ക് ലഭ്യമല്ല | Temporarily Unavailable</title>
 
-<!-- Google Fonts API Integration to load premium modern typography -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-  /* Main body layout for centering the card */
-  /* Uses a premium, soft editorial gradient background */
-  body { 
-    margin: 0; 
-    min-height: 100vh; 
-    display: flex; 
+  /* Centre the card on a soft editorial gradient */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
     align-items: center;
-    justify-content: center; 
-    background: linear-gradient(135deg, #f8f6f2 0%, #e8e2d9 100%); 
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f6f2 0%, #e8e2d9 100%);
     color: #0f172a;
     font-family: "Plus Jakarta Sans", "Manjari", sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  
-  /* Transformed the container into a modern "card" with a crisp shadow */
-  .card { 
-    text-align: center; 
-    padding: 3.5rem 3rem; 
-    max-width: 52rem; 
+
+  .card {
+    text-align: center;
+    padding: 3.5rem 3rem;
+    max-width: 52rem;
     background: #ffffff;
     border-radius: 24px;
     box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
     border: 1px solid rgba(15, 23, 42, 0.04);
   }
 
-  /* Upgraded Logo Wrapper: Acts as a clean placeholder box if the image is missing */
+  /* Keeps vertical rhythm consistent even when the logo image is absent */
   .logo-container {
     width: auto;
     height: 60px;
@@ -52,19 +47,18 @@
   .logo {
     max-height: 100%;
     max-width: 220px;
-    object-fit: contain; 
+    object-fit: contain;
   }
-  
-  /* Flexbox container to split language structures cleanly */
+
+  /* Two-column bilingual layout with a soft divider */
   .message-container {
     display: flex;
     gap: 4rem;
-    text-align: left; 
+    text-align: left;
     margin-top: 2rem;
     position: relative;
   }
 
-  /* Optional visual divider lines between columns on desktop layouts */
   .message-container::after {
     content: "";
     position: absolute;
@@ -74,8 +68,7 @@
     width: 1px;
     background: linear-gradient(to bottom, transparent, #e2e8f0, transparent);
   }
-  
-  /* Explicit column structures handling specific font families for crisp layout execution */
+
   .lang-block-ml {
     flex: 1;
     font-family: "Manjari", sans-serif;
@@ -85,8 +78,8 @@
     flex: 1;
     font-family: "Plus Jakarta Sans", sans-serif;
   }
-  
-  /* Responsive design: Stacks vertically and hides layout dividers on smaller viewports */
+
+  /* Stack vertically and drop the divider on small viewports */
   @media (max-width: 768px) {
     .message-container {
       flex-direction: column;
@@ -102,7 +95,6 @@
     }
   }
 
-  /* Typography adjustments: Malayalam Headings */
   .lang-block-ml h1 {
     font-size: 1.6rem;
     font-weight: 700;
@@ -111,7 +103,6 @@
     color: #0f172a;
   }
 
-  /* Typography adjustments: English Headings with tracking optimizations */
   .lang-block-en h1 {
     font-size: 1.45rem;
     font-weight: 700;
@@ -120,8 +111,7 @@
     margin-bottom: 1rem;
     color: #0f172a;
   }
-  
-  /* Body typography adjustments for maximum line clarity */
+
   .lang-block-ml p {
     font-size: 1.05rem;
     line-height: 1.75;
@@ -136,7 +126,7 @@
     margin: 0;
   }
 
-  /* Clean, minimalist status indicator pill layout */
+  /* Status pill */
   .status-indicator {
     display: inline-flex;
     align-items: center;
@@ -147,18 +137,16 @@
     margin-bottom: 1rem;
     border: 1px solid #fee2e2;
   }
-  
-  /* Pulsing red engine dot */
-  .dot { 
-    display: inline-block; 
-    width: 7px; 
-    height: 7px; 
+
+  .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background: #ef4444; 
-    animation: pulse 1.6s infinite cubic-bezier(0.4, 0, 0.6, 1); 
+    background: #ef4444;
+    animation: pulse 1.6s infinite cubic-bezier(0.4, 0, 0.6, 1);
   }
 
-  /* Text layout properties tracking status */
   .status-text {
     font-size: 0.72rem;
     text-transform: uppercase;
@@ -167,38 +155,35 @@
     margin-left: 0.55rem;
     font-weight: 600;
   }
-  
-  /* Keyframes animating the glowing maintenance indicator */
+
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 </style>
 </head>
 <body>
   <div class="card">
-    
-    <!-- Logo Container: Keeps spacing consistent even if image path src is unlinked or broken -->
+
     <div class="logo-container">
-      <img src="/srv/media/original_images/WhatsApp_Image_2026-03-21_at_12.07.23_PM.jpeg" alt="Sastragathi Logo" class="logo">
+      <img src="title.jpeg"
+           alt="Sasthragathy"
+           class="logo"
+           onerror="this.style.display='none'">
     </div>
 
-    <!-- Live System status tracking banner component -->
     <div class="status-indicator">
         <span class="dot"></span>
         <span class="status-text">System Update</span>
     </div>
-    
-    <!-- Outer block managing columns -->
+
     <div class="message-container">
-      
-      <!-- Malayalam Structural Layout Block -->
+
       <div class="lang-block-ml" lang="ml">
         <h1>സൈറ്റ് പുതുക്കിക്കൊണ്ടിരിക്കുന്നു</h1>
         <p>ശാസ്ത്രഗതി ഇപ്പോൾ ഒരു ഹ്രസ്വമായ പുതുക്കലിലാണ്. ഏതാനും നിമിഷങ്ങൾക്കകം സൈറ്റ് തിരികെയെത്തും — ഈ പേജ് തനിയെ പുതുക്കപ്പെടും.</p>
       </div>
 
-      <!-- English Structural Layout Block -->
       <div class="lang-block-en" lang="en">
         <h1>Site Undergoing Maintenance</h1>
-        <p>Sastragathi is currently undergoing a brief update. The site will return in a few moments — this page will refresh automatically.</p>
+        <p>Sasthragathy is currently undergoing a brief update. The site will return in a few moments — this page will refresh automatically.</p>
       </div>
 
     </div>

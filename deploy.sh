@@ -54,7 +54,18 @@ ln -sf "$ENV_SOURCE" "$PROJECT_DIR/.env"
 docker compose build web
 docker compose up -d
 
-# --- 3. Housekeeping ------------------------------------------------------
+# --- 3. Reload Caddy config ----------------------------------------------
+# The Caddyfile is a bind mount, and bind-mount CONTENTS are not part of
+# Compose's container config hash — so a commit that only edits the Caddyfile
+# does NOT cause `up -d` to recreate caddy, and the change would silently
+# never take effect. `caddy reload` fixes that: it validates the new config
+# first and applies it with zero downtime (on an invalid Caddyfile it errors
+# out — failing this deploy loudly — while caddy keeps serving the old,
+# known-good config). Idempotent when nothing changed, and harmless right
+# after a recreate, so it runs unconditionally on every deploy.
+docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+
+# --- 4. Housekeeping ------------------------------------------------------
 # Only removes dangling (untagged) images left over from old builds.
 # Never touches named volumes.
 docker image prune -f

@@ -107,6 +107,7 @@ services:
       - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./docker/maintenance:/srv/maintenance:ro
       - static_volume:/srv/static:ro
       - media_volume:/srv/media:ro
       - caddy_data:/data
