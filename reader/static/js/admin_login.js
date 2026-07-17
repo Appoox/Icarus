@@ -4,12 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const usernameInput = document.getElementById('id_username');
     if (usernameInput && !document.getElementById('id_username_0')) {
         const parent = usernameInput.parentElement;
-        
+
         const container = document.createElement('div');
         container.style.display = 'flex';
         container.style.gap = '10px';
         container.style.width = '100%';
-        
+
         const select = document.createElement('select');
         select.id = 'id_username_0';
         select.className = 'input';
@@ -20,11 +20,11 @@ document.addEventListener('DOMContentLoaded', function() {
         select.style.border = '1px solid #444';
         select.style.borderRadius = '4px';
         select.style.height = '3rem';
-        
+
         // Comprehensive list of country codes
         const countryCodes = [
-            "+91", "+1", "+44", "+971", "+966", "+965", "+968", "+974", "+973", 
-            "+61", "+1", "+49", "+33", "+39", "+81", "+86", "+7", "+34", "+55", 
+            "+91", "+1", "+44", "+971", "+966", "+965", "+968", "+974", "+973",
+            "+61", "+1", "+49", "+33", "+39", "+81", "+86", "+7", "+34", "+55",
             "+27", "+65", "+60", "+64", "+31", "+41", "+46", "+47", "+45", "+353"
         ].sort((a, b) => {
             if (a === "+91") return -1;
@@ -39,14 +39,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (code === "+91") option.selected = true;
             select.appendChild(option);
         });
-        
+
         parent.insertBefore(container, usernameInput);
         container.appendChild(select);
         container.appendChild(usernameInput);
-        
+
         usernameInput.style.flexGrow = '1';
-        usernameInput.placeholder = 'Phone Number';
-        
+        usernameInput.placeholder =
+            usernameInput.dataset.phonePlaceholder || 'ഫോൺ നമ്പർ';
+
         const form = usernameInput.closest('form');
         form.addEventListener('submit', function() {
             let val = usernameInput.value.trim();

@@ -1,7 +1,7 @@
 {% extends "wagtailadmin/base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block titletag %}Print Subscribers{% endblock %}
+{% block titletag %}{% translate "പ്രിന്റ് വരിക്കാർ" %}{% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
@@ -18,30 +18,30 @@
         <div class="no-print-actions">
             <a href="{% url 'export_mailing_list' %}" class="button button-longrunning">
                 <span class="icon icon-download"></span>
-                Export Mailing List (CSV)
+                {% translate "മെയിലിംഗ് ലിസ്റ്റ് എക്സ്പോർട്ട് ചെയ്യുക (CSV)" %}
             </a>
             <button type="button" id="print-list-btn" class="button button-secondary">
                 <span class="icon icon-print"></span>
-                Print this list
+                {% translate "ഈ പട്ടിക പ്രിന്റ് ചെയ്യുക" %}
             </button>
-            <button type="button" id="close-window-btn" class="button button-secondary">Close</button>
+            <button type="button" id="close-window-btn" class="button button-secondary">{% translate "അടയ്ക്കുക" %}</button>
         </div>
 
         <div class="print-header">
-            <h1>Subscribed Readers List</h1>
-            <p>Generated on {{ now|date:"F j, Y, g:i a" }}</p>
+            <h1>{% translate "വരിക്കാരായ വായനക്കാരുടെ പട്ടിക" %}</h1>
+            <p>{% translate "തയ്യാറാക്കിയത്:" %} {{ now|date:"F j, Y, g:i a" }}</p>
         </div>
 
         <table class="subscribers-table">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Plan</th>
-                    <th>Started</th>
-                    <th>Expires</th>
-                    <th>Status</th>
+                    <th>{% translate "പേര്" %}</th>
+                    <th>{% translate "ഇമെയിൽ" %}</th>
+                    <th>{% translate "പ്ലാൻ" %}</th>
+                    <th>{% translate "ആരംഭിച്ചത്" %}</th>
+                    <th>{% translate "കാലാവധി" %}</th>
+                    <th>{% translate "നില" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -55,23 +55,23 @@
                     <td>{{ reader.subscription_end|date:"d/m/Y" }}</td>
                     <td>
                         {% if reader.is_subscribed %}
-                            <span class="badge badge-active">Active</span>
+                            <span class="badge badge-active">{% translate "സജീവം" %}</span>
                         {% else %}
-                            <span class="badge badge-expired">Expired</span>
+                            <span class="badge badge-expired">{% translate "കാലഹരണപ്പെട്ടു" %}</span>
                         {% endif %}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" style="text-align: center;">No subscribed readers found.</td>
+                    <td colspan="7" style="text-align: center;">{% translate "വരിക്കാരായ വായനക്കാരെയൊന്നും കണ്ടെത്തിയില്ല." %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
         <div class="print-footer">
-            <p>Total Subscriptions: {{ subscribers|length }}</p>
-            <p>Icarus Management System</p>
+            <p>{% translate "ആകെ വരിസംഖ്യകൾ" %}: {{ subscribers|length }}</p>
+            <p>{% translate "ശാസ്ത്രഗതി മാനേജ്മെന്റ് സിസ്റ്റം" %}</p>
         </div>
     </div>
 {% endblock %}

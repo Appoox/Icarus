@@ -12,24 +12,7 @@ from the_librarian.views import superuser_required
 from .forms import ReaderProfileEditForm, UpdateInterestsForm
 from .models import ReaderUser, PaymentDetails, PLANS
 from django.conf import settings
-
-# def reader_signup(request):
-#     """Register a new reader account."""
-#     if request.user.is_authenticated:
-#         return redirect('reader_profile')
-# 
-#     if request.method == 'POST':
-#         form = ReaderSignupForm(request.POST)
-#         if form.is_valid():
-#             user = form.save()
-#             login(request, user)
-#             messages.success(request, 'Welcome! Your account has been created.')
-#             return redirect('reader_profile')
-#     else:
-#         form = ReaderSignupForm()
-# 
-#     return render(request, 'reader/signup.html', {'form': form})
-
+from django.utils.translation import gettext as _
 
 @login_required(login_url=settings.LOGIN_URL)
 def reader_profile(request):
@@ -67,10 +50,10 @@ def edit_profile(request):
     reader = request.user
 
     if request.method == 'POST':
-        form = ReaderProfileEditForm(request.POST, instance=reader)
+        form = ReaderProfileEditForm(request.POST, request.FILES, instance=reader)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Your profile has been updated.')
+            messages.success(request, _('നിങ്ങളുടെ പ്രൊഫൈൽ പുതുക്കി.'))
             return redirect('reader_profile')
     else:
         form = ReaderProfileEditForm(instance=reader)
@@ -83,7 +66,7 @@ def reader_checkout(request, plan_type):
     """Render the checkout page for a specific plan."""
     plan = PLANS.get(plan_type)   # ✅ Uses shared PLANS dict
     if not plan:
-        messages.error(request, "Invalid subscription plan selected.")
+        messages.error(request, _("തിരഞ്ഞെടുത്ത വരിസംഖ്യ പ്ലാൻ അസാധുവാണ്."))
         return redirect('reader_profile')
 
     return render(request, 'reader/checkout.html', {
@@ -104,7 +87,7 @@ def process_payment(request):
     # ✅ Look up amount server-side — never trust the client's posted amount
     plan = PLANS.get(plan_type)
     if not plan:
-        messages.error(request, "Invalid plan selected.")
+        messages.error(request, _("അസാധുവായ പ്ലാൻ തിരഞ്ഞെടുത്തു."))
         return redirect('reader_profile')
 
     amount = plan['price']
@@ -113,7 +96,7 @@ def process_payment(request):
     # ✅ IDEMPOTENCY CHECK: If this key has already been processed, skip creation
     existing_payment = PaymentDetails.objects.filter(idempotency_key=idempotency_key).first()
     if existing_payment:
-        messages.info(request, "Your payment is already being processed.")
+        messages.info(request, _("നിങ്ങളുടെ പേയ്‌മെന്റ് ഇതിനകം പ്രോസസ്സ് ചെയ്യപ്പെടുന്നു."))
         return redirect('reader_profile')
 
     # ✅ Use uuid for transaction IDs instead of timestamp (unique, not guessable)
@@ -134,10 +117,10 @@ def process_payment(request):
         reader.activate_subscription(plan_type)
         messages.success(
             request,
-            f"Successfully subscribed to the {plan['name']} plan!"
+            _("%(plan)s പ്ലാനിലേക്ക് വിജയകരമായി വരിചേർന്നു!") % {'plan': plan['name']}
         )
     except Exception as e:
-        messages.error(request, f"Error: {e}")  
+        messages.error(request, _("പിശക്: %(err)s") % {'err': e})
 
     return redirect('reader_profile')
 
@@ -151,11 +134,11 @@ def cancel_subscription(request):
         if reader.is_subscribed and not reader.is_cancelled:
             reader.is_cancelled = True
             reader.save(update_fields=['is_cancelled'])
-            messages.success(request, "Your subscription auto-renewal has been cancelled. You will continue to have access until your subscription expires.")
+            messages.success(request, _("നിങ്ങളുടെ വരിസംഖ്യയുടെ സ്വയം-പുതുക്കൽ റദ്ദാക്കി. വരിസംഖ്യ കാലാവധി തീരുന്നതുവരെ നിങ്ങൾക്ക് പ്രവേശനം തുടരും."))
         else:
-            messages.info(request, "You don't have an active cancellable subscription.")
+            messages.info(request, _("നിങ്ങൾക്ക് റദ്ദാക്കാവുന്ന സജീവ വരിസംഖ്യ ഇല്ല."))
     except Exception:
-        messages.error(request, "Reader profile not found.")
+        messages.error(request, _("വായനക്കാരന്റെ പ്രൊഫൈൽ കണ്ടെത്താനായില്ല."))
 
     return redirect('reader_profile')
 
@@ -172,7 +155,7 @@ def update_interests(request):
         form = UpdateInterestsForm(request.POST, instance=reader)
         if form.is_valid():
             form.save()
-            messages.success(request, "Your interests have been updated.")
+            messages.success(request, _("നിങ്ങളുടെ താൽപ്പര്യങ്ങൾ പുതുക്കി."))
             return redirect('reader_profile')
     else:
         form = UpdateInterestsForm(instance=reader)
@@ -265,8 +248,8 @@ def deactivate_account(request):
     
     messages.warning(
         request, 
-        "Your account has been deactivated. In accordance with our data retention policy, "
-        "your personal data will be permanently purged after the statutory period."
+        _("നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കി. ഞങ്ങളുടെ ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, "
+          "നിയമപരമായ കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും.")
     )
     return redirect('account_deactivate')
 
@@ -322,9 +305,9 @@ def admin_trigger_purge_deactivated(request):
     """Admin-only view to trigger the anonymize deactivation command."""
     try:
         call_command('purge_deactivated_users')
-        messages.success(request, "Successfully executed deactivation anonymization command.")
+        messages.success(request, _("അജ്ഞാതവൽക്കരണ കമാൻഡ് വിജയകരമായി നടപ്പാക്കി."))
     except Exception as e:
-        messages.error(request, f"Failed to run command: {e}")
+        messages.error(request, _("കമാൻഡ് പ്രവർത്തിപ്പിക്കുന്നതിൽ പരാജയപ്പെട്ടു: %(err)s") % {'err': e})
     
     referer = request.META.get('HTTP_REFERER')
     if referer:
@@ -337,9 +320,9 @@ def admin_trigger_purge_expired(request):
     """Admin-only view to trigger the 8-year purge expired data command."""
     try:
         call_command('purge_expired_data')
-        messages.success(request, "Successfully executed permanent 8-year expired data purge.")
+        messages.success(request, _("കാലഹരണപ്പെട്ട ഡാറ്റയുടെ 8-വർഷ ശാശ്വത നീക്കംചെയ്യൽ വിജയകരമായി നടപ്പാക്കി."))
     except Exception as e:
-        messages.error(request, f"Failed to run command: {e}")
+        messages.error(request, _("കമാൻഡ് പ്രവർത്തിപ്പിക്കുന്നതിൽ പരാജയപ്പെട്ടു: %(err)s") % {'err': e})
     
     referer = request.META.get('HTTP_REFERER')
     if referer:

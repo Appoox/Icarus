@@ -19,7 +19,7 @@
  *     <ul data-w-messages-target="container">      ← we watch this
  *       <li class="warning">
  *         <svg class="icon messages-icon">…</svg>  ← stripped from toast
- *         Your profile is incomplete. …
+ *         …message text…
  *       </li>
  *     </ul>
  *   </div>
@@ -30,6 +30,23 @@
 
     // Confirm the script loaded — remove this log once confirmed working
     console.log('[admin_toasts] script loaded');
+
+    // ── i18n ──────────────────────────────────────────────────────────────
+
+    /** Reads translated labels from the json_script holder injected by the hook. */
+    function i18nLabels() {
+        try {
+            var holder = document.getElementById('toast-i18n');
+            if (holder) {
+                return JSON.parse(holder.textContent) || {};
+            }
+        } catch (e) {
+            /* malformed holder — fall through to defaults */
+        }
+        return {};
+    }
+
+    var LABELS = {};
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -54,14 +71,20 @@
 
     /**
      * Determines the toast colour class from a Wagtail message <li>.
+     *
+     * Classification is by the li's class ONLY. The previous version also
+     * sniffed the message text for English substrings ('incomplete',
+     * 'expired') — that silently stopped matching the moment messages were
+     * translated to Malayalam. Django's message level → class mapping is the
+     * single source of truth and is language-independent.
+     *
      * @param  {Element} li
      * @returns {'warning'|'error'|'info'}
      */
     function toastClass(li) {
-        const cls  = li.className || '';
-        const text = li.textContent || '';
-        if (cls.includes('error') || cls.includes('critical'))                  return 'error';
-        if (cls.includes('warning') || text.includes('incomplete') || text.includes('expired')) return 'warning';
+        const cls = li.className || '';
+        if (cls.includes('error') || cls.includes('critical')) return 'error';
+        if (cls.includes('warning'))                           return 'warning';
         return 'info';
     }
 
@@ -116,7 +139,7 @@
         // Close button
         const btn = document.createElement('button');
         btn.className = 'close-btn';
-        btn.setAttribute('aria-label', 'Dismiss');
+        btn.setAttribute('aria-label', LABELS.dismiss || 'നീക്കം ചെയ്യുക');
         btn.innerHTML = '&times;';
         btn.addEventListener('click', function () { dismiss(toast); });
         toast.appendChild(btn);
@@ -131,6 +154,9 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         console.log('[admin_toasts] DOMContentLoaded fired');
+
+        // Read translated labels injected by the wagtail_hooks json_script
+        LABELS = i18nLabels();
 
         // Primary target: Wagtail 7.4 Stimulus messages container
         const ul = document.querySelector('[data-w-messages-target="container"]');

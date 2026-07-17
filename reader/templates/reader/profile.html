@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailimages_tags %}
+{% load static i18n wagtailimages_tags %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/reader.css' %}">
@@ -18,16 +18,16 @@
             <p class="email">{{ reader.email }}</p>
         </div>
         <div class="profile-header__actions">
-            <a href="{% url 'edit_profile' %}" class="link-edit">Edit Profile</a>
-            <a href="{% url 'account_change_password' %}" class="link-edit">Change Password</a>
+            <a href="{% url 'edit_profile' %}" class="link-edit">{% translate "പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുക" %}</a>
+            <a href="{% url 'account_change_password' %}" class="link-edit">{% translate "പാസ്‌വേഡ് മാറ്റുക" %}</a>
         </div>
     </div>
 
     {# ── Personal Details ── #}
     <div class="profile-section">
         <div class="profile-section__header">
-            <h2>Personal Details</h2>
-            <a href="{% url 'edit_profile' %}" class="link-edit">Edit</a>
+            <h2>{% translate "വ്യക്തിഗത വിവരങ്ങൾ" %}</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">{% translate "എഡിറ്റ്" %}</a>
         </div>
 
         {# Profile image + bio #}
@@ -47,25 +47,25 @@
 
         <div class="address-block">
             {% if reader.phone_number_encrypted %}
-                <strong>Phone:</strong> {{ reader.phone_number_encrypted }}<br>
+                <strong>{% translate "ഫോൺ" %}:</strong> {{ reader.phone_number_encrypted }}<br>
             {% endif %}
             {% if reader.email %}
-                <strong>Email:</strong> {{ reader.email }}<br>
+                <strong>{% translate "ഇമെയിൽ" %}:</strong> {{ reader.email }}<br>
             {% endif %}
             {% if reader.gender %}
-                <strong>Gender:</strong> {{ reader.get_gender_display }}
+                <strong>{% translate "ലിംഗം" %}:</strong> {{ reader.get_gender_display }}
                 {% if reader.gender == 'മറ്റൊന്ന്' and reader.gender_other %}
                     ({{ reader.gender_other }})
                 {% endif %}<br>
             {% endif %}
             {% if reader.birth_year %}
-                <strong>Birth Year:</strong> {{ reader.birth_year }}<br>
+                <strong>{% translate "ജനന വർഷം" %}:</strong> {{ reader.birth_year }}<br>
             {% endif %}
-            <strong>Newsletter:</strong>
+            <strong>{% translate "വാർത്താക്കുറിപ്പ്" %}:</strong>
             {% if reader.newsletter_opt_in %}
-                ✅ Subscribed
+                ✅ {% translate "സബ്‌സ്‌ക്രൈബ് ചെയ്തു" %}
             {% else %}
-                Not subscribed
+                {% translate "സബ്‌സ്‌ക്രൈബ് ചെയ്തിട്ടില്ല" %}
             {% endif %}<br>
         </div>
     </div>
@@ -75,27 +75,27 @@
     {# "Manage" links to edit_profile where all three consent toggles live (Bug 2 fix). #}
     <div class="profile-section">
         <div class="profile-section__header">
-            <h2>Privacy &amp; Consent</h2>
-            <a href="{% url 'edit_profile' %}" class="link-edit">Manage</a>
+            <h2>{% translate "സ്വകാര്യതയും സമ്മതവും" %}</h2>
+            <a href="{% url 'edit_profile' %}" class="link-edit">{% translate "കൈകാര്യം ചെയ്യുക" %}</a>
         </div>
         <div class="address-block">
-            <strong>Reading History:</strong>
+            <strong>{% translate "വായനാ ചരിത്രം" %}:</strong>
             {% if reader.tracking_consent %}
-                ✅ Tracking active
+                ✅ {% translate "ട്രാക്കിംഗ് സജീവം" %}
             {% else %}
-                Not tracking
+                {% translate "ട്രാക്ക് ചെയ്യുന്നില്ല" %}
             {% endif %}<br>
-            <strong>Gender (analytics):</strong>
+            <strong>{% translate "ലിംഗം (വിശകലനം)" %}:</strong>
             {% if reader.gender_consent_at %}
-                ✅ Shared
+                ✅ {% translate "പങ്കിട്ടു" %}
             {% else %}
-                Not shared
+                {% translate "പങ്കിട്ടിട്ടില്ല" %}
             {% endif %}<br>
-            <strong>Birth Year (analytics):</strong>
+            <strong>{% translate "ജനന വർഷം (വിശകലനം)" %}:</strong>
             {% if reader.birth_year_consent_at %}
-                ✅ Shared
+                ✅ {% translate "പങ്കിട്ടു" %}
             {% else %}
-                Not shared
+                {% translate "പങ്കിട്ടിട്ടില്ല" %}
             {% endif %}<br>
         </div>
     </div>
@@ -104,15 +104,15 @@
     {% if reader.is_print_subscriber %}
     <div class="profile-section">
         <div class="profile-section__header">
-            <h2>Print Subscription</h2>
+            <h2>{% translate "പ്രിന്റ് വരിസംഖ്യ" %}</h2>
         </div>
         <div class="address-block">
-            <strong>Delivery Status:</strong> {{ reader.get_print_delivery_status_display }}<br>
+            <strong>{% translate "ഡെലിവറി നില" %}:</strong> {{ reader.get_print_delivery_status_display }}<br>
             {% if reader.print_expiry_date %}
-                <strong>Print Expires:</strong> {{ reader.print_expiry_date|date:"F j, Y" }}<br>
+                <strong>{% translate "പ്രിന്റ് കാലാവധി" %}:</strong> {{ reader.print_expiry_date|date:"F j, Y" }}<br>
             {% endif %}
             {% if reader.delivery_notes %}
-                <strong>Delivery Notes:</strong> {{ reader.delivery_notes }}<br>
+                <strong>{% translate "ഡെലിവറി കുറിപ്പുകൾ" %}:</strong> {{ reader.delivery_notes }}<br>
             {% endif %}
         </div>
     </div>
@@ -124,17 +124,17 @@
     <div class="profile-section profile-section--collapsible">
         <details class="care-of-details">
             <summary class="profile-section__header care-of-summary">
-                <h2>Membership Details (Added By)</h2>
+                <h2>{% translate "അംഗത്വ വിവരങ്ങൾ (ചേർത്തത്)" %}</h2>
                 {# Chevron rotates via CSS when details is open #}
                 <span class="care-of-chevron" aria-hidden="true">&#8250;</span>
             </summary>
             <div class="address-block care-of-body">
-                {% if reader.care_of_name %}<strong>Name:</strong> {{ reader.care_of_name }}<br>{% endif %}
-                {% if reader.care_of_number %}<strong>Phone:</strong> {{ reader.care_of_number }}<br>{% endif %}
-                {% if reader.care_of_district %}<strong>District:</strong> {{ reader.care_of_district }}<br>{% endif %}
-                {% if reader.care_of_meghala %}<strong>Meghala:</strong> {{ reader.care_of_meghala }}<br>{% endif %}
-                {% if reader.care_of_unit %}<strong>Unit:</strong> {{ reader.care_of_unit }}<br>{% endif %}
-                <a href="{% url 'edit_profile' %}" class="link-edit" style="display:inline-block; margin-top: 10px;">Edit</a>
+                {% if reader.care_of_name %}<strong>{% translate "പേര്" %}:</strong> {{ reader.care_of_name }}<br>{% endif %}
+                {% if reader.care_of_number %}<strong>{% translate "ഫോൺ" %}:</strong> {{ reader.care_of_number }}<br>{% endif %}
+                {% if reader.care_of_district %}<strong>{% translate "ജില്ല" %}:</strong> {{ reader.care_of_district }}<br>{% endif %}
+                {% if reader.care_of_meghala %}<strong>{% translate "മേഖല" %}:</strong> {{ reader.care_of_meghala }}<br>{% endif %}
+                {% if reader.care_of_unit %}<strong>{% translate "യൂണിറ്റ്" %}:</strong> {{ reader.care_of_unit }}<br>{% endif %}
+                <a href="{% url 'edit_profile' %}" class="link-edit" style="display:inline-block; margin-top: 10px;">{% translate "എഡിറ്റ്" %}</a>
             </div>
         </details>
     </div>
@@ -142,42 +142,43 @@
 
     {# ── Subscription Status ── #}
     <div class="sub-card">
-        <p class="sub-card__label">Subscription</p>
+        <p class="sub-card__label">{% translate "വരിസംഖ്യ" %}</p>
          {% if reader.is_subscribed %}
             {% if reader.is_cancelled %}
                 <p class="sub-card__status" style="color: orange; font-weight: bold; border-left: 4px solid orange; padding-left: 10px; margin-bottom: 10px;">
-                    Cancelled (Grace Period) — {{ reader.get_subscription_plan_display }}
+                    {% translate "റദ്ദാക്കി (ഗ്രേസ് കാലയളവ്)" %} — {{ reader.get_subscription_plan_display }}
                 </p>
             {% else %}
                 <p class="sub-card__status sub-card__status--active">
-                    Active — {{ reader.get_subscription_plan_display }}
+                    {% translate "സജീവം" %} — {{ reader.get_subscription_plan_display }}
                 </p>
             {% endif %}
 
             {% if reader.subscription_start %}
-            <p class="sub-card__detail">Started: {{ reader.subscription_start|date:"F j, Y" }}</p>
+            <p class="sub-card__detail">{% translate "ആരംഭിച്ചത്" %}: {{ reader.subscription_start|date:"F j, Y" }}</p>
             {% endif %}
             <p class="sub-card__detail">
-                Expires: {{ reader.subscription_end|date:"F j, Y" }}
+                {% translate "കാലാവധി" %}: {{ reader.subscription_end|date:"F j, Y" }}
                 {% if reader.days_until_expiry is not None %}
-                    — {{ reader.days_until_expiry }} day{{ reader.days_until_expiry|pluralize }} remaining
+                    — {% blocktranslate with days=reader.days_until_expiry %}{{ days }} ദിവസം ശേഷിക്കുന്നു{% endblocktranslate %}
                 {% endif %}
             </p>
 
             <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
                 <button type="button" class="btn-renew" id="btn-renew-toggle">
-                    Renew Subscription
+                    {% translate "വരിസംഖ്യ പുതുക്കുക" %}
                 </button>
                 {% if not reader.is_cancelled %}
-                <form method="post" action="{% url 'cancel_subscription' %}" id="cancel-sub-form" style="display: inline-block; margin: 0;">
+                <form method="post" action="{% url 'cancel_subscription' %}" id="cancel-sub-form" style="display: inline-block; margin: 0;"
+                      data-confirm="{% translate 'നിങ്ങളുടെ വരിസംഖ്യ റദ്ദാക്കണമെന്ന് ഉറപ്പാണോ? നിലവിലെ ബില്ലിംഗ് കാലയളവ് അവസാനിക്കുന്നതുവരെ എല്ലാ ഉള്ളടക്കവും ലഭ്യമായിരിക്കും; വരിസംഖ്യ സ്വയം പുതുക്കില്ല.' %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn-cancel">Cancel Subscription</button>
+                    <button type="submit" class="btn-cancel">{% translate "വരിസംഖ്യ റദ്ദാക്കുക" %}</button>
                 </form>
                 {% endif %}
             </div>
 
             <div class="sub-card__plans" id="renew-plans-container" style="display: none; margin-top: 20px; border-top: 1px solid var(--border-color, #eee); padding-top: 20px;">
-                <p class="sub-card__label">Renew Subscription Options</p>
+                <p class="sub-card__label">{% translate "വരിസംഖ്യ പുതുക്കൽ ഓപ്ഷനുകൾ" %}</p>
                 <div class="plans-grid">
                     {% for plan_key, plan in plans.items %}
                     <a href="{% url 'reader_checkout' plan_type=plan_key %}" class="plan-option">
@@ -189,11 +190,11 @@
             </div>
 
         {% else %}
-            <p class="sub-card__status sub-card__status--inactive">Not Subscribed</p>
-            <p class="sub-card__detail">Subscribe to get unlimited access to all articles.</p>
+            <p class="sub-card__status sub-card__status--inactive">{% translate "വരിസംഖ്യ ഇല്ല" %}</p>
+            <p class="sub-card__detail">{% translate "എല്ലാ ലേഖനങ്ങളിലേക്കും പരിധിയില്ലാത്ത പ്രവേശനത്തിന് വരിചേരുക." %}</p>
 
             <div class="sub-card__plans">
-                <p class="sub-card__label">Choose a Plan</p>
+                <p class="sub-card__label">{% translate "ഒരു പ്ലാൻ തിരഞ്ഞെടുക്കുക" %}</p>
                 <div class="plans-grid">
                     {% for plan_key, plan in plans.items %}
                     <a href="{% url 'reader_checkout' plan_type=plan_key %}" class="plan-option">
@@ -209,7 +210,7 @@
     {# ── Favourites ── #}
     <div class="profile-section">
         <div class="profile-section__header">
-            <h2>Favorite Articles</h2>
+            <h2>{% translate "പ്രിയപ്പെട്ട ലേഖനങ്ങൾ" %}</h2>
         </div>
         {% if reader.favorite_articles.all %}
         <ul class="read-list">
@@ -223,13 +224,13 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="empty-state">You haven't favorited any articles yet.</p>
+        <p class="empty-state">{% translate "നിങ്ങൾ ഇതുവരെ ലേഖനങ്ങളൊന്നും പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയിട്ടില്ല." %}</p>
         {% endif %}
     </div>
 
     <div class="profile-section">
         <div class="profile-section__header">
-            <h2>Favorite Issues</h2>
+            <h2>{% translate "പ്രിയപ്പെട്ട ലക്കങ്ങൾ" %}</h2>
         </div>
         {% if reader.favorite_issues.all %}
         <ul class="read-list">
@@ -243,15 +244,15 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="empty-state">You haven't favorited any issues yet.</p>
+        <p class="empty-state">{% translate "നിങ്ങൾ ഇതുവരെ ലക്കങ്ങളൊന്നും പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയിട്ടില്ല." %}</p>
         {% endif %}
     </div>
 
     {# ── Interested Topics ── #}
     <div class="profile-section">
         <div class="profile-section__header">
-            <h2>Your Interests</h2>
-            <a href="{% url 'update_interests' %}" class="link-edit">Edit</a>
+            <h2>{% translate "നിങ്ങളുടെ താൽപ്പര്യങ്ങൾ" %}</h2>
+            <a href="{% url 'update_interests' %}" class="link-edit">{% translate "എഡിറ്റ്" %}</a>
         </div>
         {% if interested_topics %}
         <ul class="topics-list">
@@ -260,20 +261,20 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="empty-state">No topics selected yet. <a href="{% url 'update_interests' %}" class="link-edit">Add some</a></p>
+        <p class="empty-state">{% translate "ഇതുവരെ വിഷയങ്ങളൊന്നും തിരഞ്ഞെടുത്തിട്ടില്ല." %} <a href="{% url 'update_interests' %}" class="link-edit">{% translate "ചിലത് ചേർക്കുക" %}</a></p>
         {% endif %}
     </div>
 
     {# ── Read Articles ── #}
     <div class="profile-section">
         <div class="profile-section__header">
-            <h2>Reading History</h2>
+            <h2>{% translate "വായനാ ചരിത്രം" %}</h2>
         </div>
         {% if not reader.tracking_consent %}
         {# Tracking is off — show a prompt rather than an empty/misleading state. #}
         <p class="empty-state">
-            Reading history tracking is disabled.
-            <a href="{% url 'edit_profile' %}">Enable it in your privacy settings</a> to start recording.
+            {% translate "വായനാ ചരിത്ര ട്രാക്കിംഗ് പ്രവർത്തനരഹിതമാണ്." %}
+            <a href="{% url 'edit_profile' %}">{% translate "രേഖപ്പെടുത്തൽ ആരംഭിക്കാൻ സ്വകാര്യതാ ക്രമീകരണങ്ങളിൽ ഇത് പ്രവർത്തനക്ഷമമാക്കുക" %}</a>
         </p>
         {% elif read_articles %}
         <ul class="read-list">
@@ -287,13 +288,13 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="empty-state">You haven't read any articles yet.</p>
+        <p class="empty-state">{% translate "നിങ്ങൾ ഇതുവരെ ലേഖനങ്ങളൊന്നും വായിച്ചിട്ടില്ല." %}</p>
         {% endif %}
     </div>
 
     <div class="profile-section" id="comments-section">
         <div class="profile-section__header">
-            <h2>My Comments</h2>
+            <h2>{% translate "എന്റെ അഭിപ്രായങ്ങൾ" %}</h2>
             {% if own_comments %}
             <span class="comments-count">{{ own_comments|length }}</span>
             {% endif %}
@@ -310,51 +311,51 @@
                     <a href="{{ comment.page.url }}" class="comment-item__page">{{ comment.page.title }}</a>
                     <span class="comment-item__date">{{ comment.created_at|date:"j M Y" }}</span>
                     {% if comment.is_removed %}
-                        <span class="comment-badge comment-badge--removed">Removed</span>
+                        <span class="comment-badge comment-badge--removed">{% translate "നീക്കം ചെയ്തു" %}</span>
                     {% elif not comment.is_approved %}
-                        <span class="comment-badge comment-badge--pending">Pending</span>
+                        <span class="comment-badge comment-badge--pending">{% translate "തീർപ്പാക്കാത്തത്" %}</span>
                     {% else %}
-                        <span class="comment-badge comment-badge--approved">Published</span>
+                        <span class="comment-badge comment-badge--approved">{% translate "പ്രസിദ്ധീകരിച്ചു" %}</span>
                     {% endif %}
                     {% if comment.parent %}
-                        <span class="comment-badge comment-badge--reply">↩ Reply</span>
+                        <span class="comment-badge comment-badge--reply">↩ {% translate "മറുപടി" %}</span>
                     {% endif %}
                 </div>
                 <div class="comment-item__body-wrap">
                     <p class="comment-item__body">{{ comment.body }}</p>
                     {% if comment.body|length > 160 %}
                     <button class="comment-item__toggle" data-comment-toggle>
-                        <span class="toggle-less hidden">Show less</span>
-                        <span class="toggle-more">Show more</span>
+                        <span class="toggle-less hidden">{% translate "കുറച്ച് കാണിക്കുക" %}</span>
+                        <span class="toggle-more">{% translate "കൂടുതൽ കാണിക്കുക" %}</span>
                     </button>
                     {% endif %}
                 </div>
                 {% if comment.removal_reason %}
-                <p class="comment-item__removal-reason">Reason: {{ comment.removal_reason }}</p>
+                <p class="comment-item__removal-reason">{% translate "കാരണം" %}: {{ comment.removal_reason }}</p>
                 {% endif %}
             </li>
             {% endfor %}
         </ul>
         {% else %}
-        <p class="empty-state">You haven't posted any comments yet.</p>
+        <p class="empty-state">{% translate "നിങ്ങൾ ഇതുവരെ അഭിപ്രായങ്ങളൊന്നും പോസ്റ്റ് ചെയ്തിട്ടില്ല." %}</p>
         {% endif %}
 
         {% if own_comments.paginator.num_pages > 1 %}
         <nav class="comments-pagination">
             {% if own_comments.has_previous %}
-                <a href="?comments_page={{ own_comments.previous_page_number }}#comments-section" class="page-btn">← Previous</a>
+                <a href="?comments_page={{ own_comments.previous_page_number }}#comments-section" class="page-btn">← {% translate "മുമ്പത്തേത്" %}</a>
             {% else %}
-                <span class="page-btn page-btn--disabled">← Previous</span>
+                <span class="page-btn page-btn--disabled">← {% translate "മുമ്പത്തേത്" %}</span>
             {% endif %}
 
             <span class="page-indicator">
-                Page {{ own_comments.number }} of {{ own_comments.paginator.num_pages }}
+                {% blocktranslate with n=own_comments.number total=own_comments.paginator.num_pages %}പേജ് {{ n }} / {{ total }}{% endblocktranslate %}
             </span>
 
             {% if own_comments.has_next %}
-                <a href="?comments_page={{ own_comments.next_page_number }}#comments-section" class="page-btn">Next →</a>
+                <a href="?comments_page={{ own_comments.next_page_number }}#comments-section" class="page-btn">{% translate "അടുത്തത്" %} →</a>
             {% else %}
-                <span class="page-btn page-btn--disabled">Next →</span>
+                <span class="page-btn page-btn--disabled">{% translate "അടുത്തത്" %} →</span>
             {% endif %}
         </nav>
         {% endif %}
@@ -364,15 +365,15 @@
     {% if subscription_history %}
     <div class="profile-section">
         <div class="profile-section__header">
-            <h2>Subscription History</h2>
+            <h2>{% translate "വരിസംഖ്യ ചരിത്രം" %}</h2>
         </div>
         <table class="history-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <thead>
                 <tr style="border-bottom: 2px solid var(--border-color, #eee); text-align: left;">
-                    <th style="padding: 10px 5px;">Plan</th>
-                    <th style="padding: 10px 5px;">Start Date</th>
-                    <th style="padding: 10px 5px;">End Date</th>
-                    <th style="padding: 10px 5px;">Status</th>
+                    <th style="padding: 10px 5px;">{% translate "പ്ലാൻ" %}</th>
+                    <th style="padding: 10px 5px;">{% translate "ആരംഭ തീയതി" %}</th>
+                    <th style="padding: 10px 5px;">{% translate "അവസാന തീയതി" %}</th>
+                    <th style="padding: 10px 5px;">{% translate "നില" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -384,12 +385,12 @@
                     <td style="padding: 10px 5px;">
                         {% if history.is_active %}
                             {% if history.is_cancelled %}
-                                <span style="color: orange; font-weight: bold;">Cancelled</span>
+                                <span style="color: orange; font-weight: bold;">{% translate "റദ്ദാക്കി" %}</span>
                             {% else %}
-                                <span style="color: green; font-weight: bold;">Active</span>
+                                <span style="color: green; font-weight: bold;">{% translate "സജീവം" %}</span>
                             {% endif %}
                         {% else %}
-                            <span style="color: gray;">Expired</span>
+                            <span style="color: gray;">{% translate "കാലഹരണപ്പെട്ടു" %}</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -402,16 +403,15 @@
     {# ── Deactivation ── #}
     <div class="profile-section danger-zone">
         <div class="profile-section__header" style="border-bottom: none;">
-            <h2>Danger Zone</h2>
+            <h2>{% translate "അപകട മേഖല" %}</h2>
         </div>
         <p class="sub-card__detail">
-            Deactivating your account will immediately revoke your access to ശാസ്ത്രഗതി. 
-            In accordance with our data retention policy, your personal data will be 
-            scheduled for permanent deletion after the statutory period.
+            {% translate "അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള നിങ്ങളുടെ പ്രവേശനം ഉടൻ റദ്ദാകും. ഞങ്ങളുടെ ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, നിയമപരമായ കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി ഇല്ലാതാക്കാൻ ഷെഡ്യൂൾ ചെയ്യപ്പെടും." %}
         </p>
-        <form method="post" action="{% url 'deactivate_account' %}" id="deactivate-account-form">
+        <form method="post" action="{% url 'deactivate_account' %}" id="deactivate-account-form"
+              data-confirm="{% translate 'നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കണമെന്ന് ഉറപ്പാണോ? ഇത് നിങ്ങളെ ഉടൻ ലോഗ് ഔട്ട് ചെയ്ത് പ്രവേശനം റദ്ദാക്കും.' %}">
             {% csrf_token %}
-            <button type="submit" class="btn-cancel">Deactivate My Account</button>
+            <button type="submit" class="btn-cancel">{% translate "എന്റെ അക്കൗണ്ട് നിർജ്ജീവമാക്കുക" %}</button>
         </form>
     </div>
 

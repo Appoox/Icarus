@@ -10,17 +10,18 @@ from django.shortcuts import render
 from auditlog.models import LogEntry
 from wagtail.admin.menu import MenuItem
 from django.templatetags.static import static
-from django.utils.html import format_html
+from django.utils.html import format_html, json_script
+from django.utils.translation import gettext_lazy as _
 
 class ReaderFilterSet(django_filters.FilterSet):
     sub_status = django_filters.ChoiceFilter(
         choices=(
-            ('active', 'Active'),
-            ('expired', 'Expired'),
-            ('none', 'No Subscription'),
+            ('active', _('സജീവം')),
+            ('expired', _('കാലഹരണപ്പെട്ടു')),
+            ('none', _('വരിസംഖ്യ ഇല്ല')),
         ),
         method='filter_sub_status',
-        label='Subscription Status'
+        label=_('വരിസംഖ്യ നില')
     )
 
     class Meta:
@@ -41,14 +42,14 @@ class ReaderIndexView(IndexView):
     def get_header_buttons(self):
         buttons = super().get_header_buttons()
         buttons.append(HeaderButton(
-            label='Print Subscriber List',
+            label=_('പ്രിന്റ് വരിക്കാരുടെ പട്ടിക'),
             url=reverse('print_subscribers'),
             icon_name='print',
             classname='button button-secondary',
             attrs={'target': '_blank'}
         ))
         buttons.append(HeaderButton(
-            label='Run Deactivation Purge (Anonymize)',
+            label=_('നിർജ്ജീവമാക്കിയവ നീക്കംചെയ്യൽ കമാന്റ് പ്രവർത്തിപ്പിക്കുക (അജ്ഞാതവൽക്കരണം)'),
             url=reverse('admin_trigger_purge_deactivated'),
             icon_name='user-times',
             classname='button button-secondary',
@@ -84,7 +85,7 @@ class ReaderSnippetViewSet(SnippetViewSet):
     model = ReaderUser
     index_view_class = ReaderIndexView
     url_prefix = 'readers'
-    menu_label = 'Readers'
+    menu_label = _('വായനക്കാർ')
     icon = 'group'
     menu_order = 300
     add_to_admin_menu = True
@@ -99,7 +100,7 @@ class ReaderSnippetViewSet(SnippetViewSet):
 class PaymentDetailsSnippetViewSet(SnippetViewSet):
     model = PaymentDetails
     url_prefix = 'payments'
-    menu_label = 'Payments'
+    menu_label = _('പേയ്‌മെന്റുകൾ')
     icon = 'tag'
     menu_order = 301
     add_to_admin_menu = True
@@ -115,7 +116,7 @@ class SubscriptionHistoryIndexView(IndexView):
     def get_header_buttons(self):
         buttons = super().get_header_buttons()
         buttons.append(HeaderButton(
-            label='Run 8-Year Expired Data Purge',
+            label=_('കാലഹരണപ്പെട്ട ഡാറ്റയുടെ 8-വർഷ നീക്കംചെയ്യൽ പ്രവർത്തിപ്പിക്കുക'),
             url=reverse('admin_trigger_purge_expired'),
             icon_name='bin',
             classname='button button-danger',
@@ -126,7 +127,7 @@ class SubscriptionHistorySnippetViewSet(SnippetViewSet):
     model = SubscriptionHistory
     index_view_class = SubscriptionHistoryIndexView
     url_prefix = 'subscription-histories'
-    menu_label = 'Subscription Histories'
+    menu_label = _('വരിസംഖ്യ ചരിത്രങ്ങൾ')
     icon = 'history'
     menu_order = 302
     add_to_admin_menu = True
@@ -174,7 +175,7 @@ def register_auditlog_url():
 @hooks.register("register_admin_menu_item")
 def register_auditlog_menu_item():
     return MenuItem(
-        "Audit Log",
+        _("ഓഡിറ്റ് ലോഗ്"),
         reverse("auditlog_view"),
         icon_name="list-ul",
         order=900,
@@ -215,7 +216,8 @@ def global_admin_js():
     controllers initialise.  The external file contains the full logic.
     """
     js_url = static('js/admin_toasts.js') + '?v=' + str(int(timezone.now().timestamp()))
-    return format_html(
+    labels = json_script({'dismiss': str(_("നീക്കം ചെയ്യുക"))}, 'toast-i18n')
+    return labels + format_html(
         # Inline bootstrap: confirm hook is alive, then load the full script
         '<script>'
         'console.log("[admin_toasts] hook injected");'

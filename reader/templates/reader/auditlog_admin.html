@@ -1,23 +1,24 @@
 {% extends "wagtailadmin/base.html" %}
-{% load static tz %}
-{% block titletag %}Audit Log{% endblock %}
+{% load static tz i18n %}
+{% block titletag %}{% translate "ഓഡിറ്റ് ലോഗ്" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin.css' %}">
 {% endblock %}
 
 {% block content %}
-    {% include "wagtailadmin/shared/header.html" with title="Audit Log" icon="list-ul" %}
+    {% translate "ഓഡിറ്റ് ലോഗ്" as auditlog_title %}
+    {% include "wagtailadmin/shared/header.html" with title=auditlog_title icon="list-ul" %}
 
     <div class="nice-padding">
         <table class="listing">
             <thead>
                 <tr>
-                    <th class="col-timestamp">Timestamp (IST)</th>
-                    <th class="col-user">User</th>
-                    <th class="col-model">Model</th>
-                    <th class="col-action">Action</th>
-                    <th>Changes</th>
+                    <th class="col-timestamp">{% translate "സമയമുദ്ര (IST)" %}</th>
+                    <th class="col-user">{% translate "ഉപയോക്താവ്" %}</th>
+                    <th class="col-model">{% translate "മോഡൽ" %}</th>
+                    <th class="col-action">{% translate "പ്രവർത്തനം" %}</th>
+                    <th>{% translate "മാറ്റങ്ങൾ" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,17 +33,17 @@
                         {% if entry.actor %}
                             <strong>{{ entry.actor }}</strong>
                         {% else %}
-                            <span class="text-muted">System</span>
+                            <span class="text-muted">{% translate "സിസ്റ്റം" %}</span>
                         {% endif %}
                     </td>
                     <td><code class="code-badge">{{ entry.content_type.model }}</code></td>
                     <td>
                         {% if entry.action == 0 %}
-                            <span class="status-tag primary">Create</span>
+                            <span class="status-tag primary">{% translate "സൃഷ്ടിച്ചു" %}</span>
                         {% elif entry.action == 1 %}
-                            <span class="status-tag secondary">Update</span>
+                            <span class="status-tag secondary">{% translate "പുതുക്കി" %}</span>
                         {% elif entry.action == 2 %}
-                            <span class="status-tag fatal">Delete</span>
+                            <span class="status-tag fatal">{% translate "ഇല്ലാതാക്കി" %}</span>
                         {% else %}
                             {{ entry.get_action_display }}
                         {% endif %}
@@ -58,7 +59,7 @@
                                             {% if values.0 is not None and values.0 != "" %}
                                                 <span class="audit-old-val">{{ values.0|truncatechars:100 }}</span>
                                             {% else %}
-                                                <span class="audit-old-val audit-val--none">(None)</span>
+                                                <span class="audit-old-val audit-val--none">({% translate "ഒന്നുമില്ല" %})</span>
                                             {% endif %}
                                             
                                             <span class="audit-arrow">→</span>
@@ -66,15 +67,15 @@
                                             {% if values.1 is not None and values.1 != "" %}
                                                 <span class="audit-new-val">{{ values.1|truncatechars:100 }}</span>
                                             {% else %}
-                                                <span class="audit-new-val audit-val--none">(None)</span>
+                                                <span class="audit-new-val audit-val--none">({% translate "ഒന്നുമില്ല" %})</span>
                                             {% endif %}
                                         </span>
                                     </li>
                                     {% empty %}
-                                        <li class="text-muted">No specific field changes recorded.</li>
+                                        <li class="text-muted">{% translate "പ്രത്യേക ഫീൽഡ് മാറ്റങ്ങളൊന്നും രേഖപ്പെടുത്തിയിട്ടില്ല." %}</li>
                                     {% endfor %}
                                 {% else %}
-                                    <li class="text-muted"><span style="color: var(--w-color-text-meta); font-style: italic;">(Display error)</span></li>
+                                    <li class="text-muted"><span style="color: var(--w-color-text-meta); font-style: italic;">({% translate "പ്രദർശന പിശക്" %})</span></li>
                                 {% endif %}
                             </ul>
                         </div>

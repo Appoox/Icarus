@@ -32,7 +32,7 @@ class ReaderProfileEditForm(forms.ModelForm):
     Translation happens in save(); initial state is derived in __init__.
     """
     phone_number = SplitPhoneNumberField(
-        label=_("Phone Number"),
+        label=_("ഫോൺ നമ്പർ"),
         required=True,
         # region='IN' propagates to SplitPhoneNumberWidget(region='IN').
         # The widget stores it as self.region, which is passed to
@@ -49,27 +49,52 @@ class ReaderProfileEditForm(forms.ModelForm):
     # handled entirely by our custom save() below.
     read_history_consent = forms.BooleanField(
         required=False,
-        label=_("Track my reading history for personalised recommendations."),
+        label=_("വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുക. (Optional)"),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
         # Shown below the checkbox in the template via form.read_history_consent.help_text
-        help_text=_("Revoking this consent will permanently delete your saved reading history."),
+        help_text=_("ഈ സമ്മതം പിൻവലിച്ചാൽ സൂക്ഷിച്ച നിങ്ങളുടെ വായനാ ചരിത്രം ശാശ്വതമായി ഇല്ലാതാക്കപ്പെടും."),
     )
     gender_consent = forms.BooleanField(
         required=False,
-        label=_("Include my gender in demographic analytics."),
+        label=_("വിശകലനത്തിൽ എന്റെ ലിംഗഭേദം ഉൾപ്പെടുത്തുക."),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
     )
     birth_year_consent = forms.BooleanField(
         required=False,
-        label=_("Include my birth year in demographic analytics."),
+        label=_("വിശകലനത്തിൽ എന്റെ ജനന വർഷം ഉൾപ്പെടുത്തുക."),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
     )
+
+    # ── Avatar upload fields ────────────────────────────────────────────────
+    # Non-model form fields. profile_image is a wagtailimages.Image FK, so a
+    # plain ModelForm can't accept a file for it — save() below wraps the
+    # uploaded file in a Wagtail Image and points the FK at it. profile_image
+    # is intentionally NOT in Meta.fields: leaving it there (unrendered) made
+    # every profile save silently NULL the FK via construct_instance().
+    avatar_upload = forms.ImageField(
+        required=False,
+        label=_("പ്രൊഫൈൽ ചിത്രം"),
+        widget=forms.ClearableFileInput(attrs={'class': 'form-input', 'accept': 'image/*'}),
+        help_text=_("JPG/PNG/WebP, പരമാവധി 5MB."),
+    )
+    remove_avatar = forms.BooleanField(
+        required=False,
+        label=_("നിലവിലുള്ള ചിത്രം നീക്കം ചെയ്യുക"),
+        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+    )
+
+    def clean_avatar_upload(self):
+        f = self.cleaned_data.get('avatar_upload')
+        # ImageField has already verified the file decodes as an image (Pillow).
+        if f and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError(_("ചിത്രത്തിന്റെ വലുപ്പം 5MB-യിൽ കുറവായിരിക്കണം."))
+        return f
 
     class Meta:
         model = ReaderUser
         fields = [
             'name', 'email', 'phone_number', 'gender', 'gender_other', 'birth_year',  # was 'dob' (renamed field); gender_other added
-            'profile_image', 'bio',
+            'bio',  # profile_image removed from Meta — handled via avatar_upload in save()
             # 'magazine_format' removed — field no longer exists on ReaderUser
             'address_line_1', 'address_line_2', 'post_office',
             'city', 'pincode', 'district', 'state', 'delivery_notes',
@@ -81,7 +106,7 @@ class ReaderProfileEditForm(forms.ModelForm):
             'bio': forms.Textarea(attrs={'rows': 3, 'class': 'form-input'}),
             # 'magazine_format' widget removed — field no longer exists on ReaderUser
             'gender': forms.Select(attrs={'class': 'form-input'}),
-            'delivery_notes': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Eg: Leave at security desk', 'class': 'form-input'}),
+            'delivery_notes': forms.Textarea(attrs={'rows': 2, 'placeholder': _('ഉദാ: സെക്യൂരിറ്റി ഡെസ്കിൽ ഏൽപ്പിക്കുക'), 'class': 'form-input'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -197,6 +222,33 @@ class ReaderProfileEditForm(forms.ModelForm):
             # atomically; never assign to those fields individually.
             instance.set_phone(str(phone_val))
 
+        # ── 1a-bis. Avatar ───────────────────────────────────────────────────────
+        # Wrap a validated upload in a Wagtail Image so renditions keep working,
+        # or clear the FK on removal. The previous Image row (file + renditions)
+        # is deleted after commit — avatars use related_name='+' and are created
+        # one-per-reader here, so they are never shared with page content.
+        avatar_file = self.cleaned_data.get('avatar_upload')
+        remove_avatar = self.cleaned_data.get('remove_avatar')
+        old_avatar = instance.profile_image if (avatar_file or remove_avatar) else None
+
+        if remove_avatar and not avatar_file:
+            instance.profile_image = None
+        elif avatar_file:
+            from wagtail.images import get_image_model
+            WagtailImage = get_image_model()
+            # forms.ImageField stores the verified Pillow image on the file object.
+            pil = getattr(avatar_file, 'image', None)
+            width, height = (pil.size if pil is not None else (0, 0))
+            new_image = WagtailImage(
+                title=f"avatar-{instance.pk or 'new'}-{avatar_file.name}"[:255],
+                file=avatar_file,
+                width=width,
+                height=height,
+                uploaded_by_user=instance if instance.pk else None,
+            )
+            new_image.save()
+            instance.profile_image = new_image
+
         # ── 1b. Email null safety ────────────────────────────────────────────────
         # validate_unique() already fixed this once, but AbstractUser.clean() can
         # re-run between there and here (e.g., when super().save() triggers it again).
@@ -250,6 +302,11 @@ class ReaderProfileEditForm(forms.ModelForm):
             # null in the DB before we remove the history rows.
             if not wants_read_history and had_read_history:
                 instance.read_articles.clear()
+            # ── 4. Old-avatar cleanup ────────────────────────────────────────────
+            # Runs after commit so the row never briefly points at a deleted Image.
+            # Image.delete() also removes the file and all renditions from storage.
+            if old_avatar and old_avatar != instance.profile_image:
+                old_avatar.delete()
 
         return instance
 
@@ -263,7 +320,7 @@ class UpdateInterestsForm(forms.ModelForm):
         queryset=Topic.objects.all(),
         widget=forms.CheckboxSelectMultiple,
         required=False,
-        label=_("Select your topics of interest")
+        label=_("നിങ്ങൾക്ക് താൽപ്പര്യമുള്ള വിഷയങ്ങൾ തിരഞ്ഞെടുക്കുക")
     )
 
     class Meta:
@@ -275,7 +332,7 @@ class CustomWagtailUserCreationForm(UserCreationForm):
     """
     Custom implementation of Wagtail's User Creation form matching structural custom user needs.
     """
-    name = forms.CharField(max_length=255, required=True, label=_("Full Name"))
+    name = forms.CharField(max_length=255, required=True, label=_("പൂർണ്ണ നാമം"))
 
     class Meta:
         model = User
@@ -306,14 +363,14 @@ class CustomWagtailUserEditForm(UserEditForm):
     Custom implementation of Wagtail's User Editing form to safely bridge 
     properties, optional values, and dynamic multi-part names.
     """
-    name = forms.CharField(max_length=255, required=True, label=_("Full Name"))
+    name = forms.CharField(max_length=255, required=True, label=_("പൂർണ്ണ നാമം"))
     
     grant_access_until = forms.DateField(
         required=False,
-        label=_("Grant temporary access until"),
+        label=_("ഈ തീയതി വരെ താൽക്കാലിക പ്രവേശനം നൽകുക"),
         help_text=_(
-            "Give this reader complimentary access (no payment) through the "
-            "selected date. Overrides the plan above. Leave blank to make no change."
+            "തിരഞ്ഞെടുത്ത തീയതി വരെ ഈ വായനക്കാരന് സൗജന്യ പ്രവേശനം (പേയ്‌മെന്റ് ഇല്ലാതെ) നൽകുക. "
+            "മുകളിലെ പ്ലാനിനെ മറികടക്കും. മാറ്റം വേണ്ടെങ്കിൽ ശൂന്യമായി വിടുക."
         ),
         widget=forms.DateInput(attrs={'type': 'date'}),
     )
@@ -364,7 +421,7 @@ class CustomWagtailUserEditForm(UserEditForm):
         until = cleaned_data.get('grant_access_until')
         if until and until < timezone.localdate():
             self.add_error('grant_access_until',
-                           _("The access-until date must be in the future."))
+                           _("പ്രവേശന അവസാന തീയതി ഭാവിയിലായിരിക്കണം."))
 
         # If the plan resolves to complimentary but nothing backs it with a future
         # end, require a date rather than letting the ledger write fail at the DB.
@@ -372,7 +429,7 @@ class CustomWagtailUserEditForm(UserEditForm):
             existing_end = getattr(self.instance, 'subscription_end', None)
             if not existing_end or existing_end <= timezone.now():
                 self.add_error('grant_access_until',
-                               _("Set an access-until date to grant complimentary access."))
+                               _("സൗജന്യ പ്രവേശനം നൽകാൻ ഒരു അവസാന തീയതി നിശ്ചയിക്കുക."))
 
         return cleaned_data
 

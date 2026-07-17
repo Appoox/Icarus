@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Checkout — {{ plan_name }}{% endblock %}
+{% block title %}{% translate "ചെക്ക്ഔട്ട്" %} — {{ plan_name }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/reader.css' %}">
@@ -10,22 +10,22 @@
 {% block content %}
 <div class="checkout-page">
     <div class="checkout-header">
-        <h1>Complete Subscription</h1>
+        <h1>{% translate "വരിസംഖ്യ പൂർത്തിയാക്കുക" %}</h1>
     </div>
 
     <div class="checkout-container">
         <div class="summary-box">
-            <h2>Order Summary</h2>
+            <h2>{% translate "ഓർഡർ സംഗ്രഹം" %}</h2>
             <div class="summary-row">
-                <span>Plan</span>
-                <span>{{ plan_name }} Subscription</span>
+                <span>{% translate "പ്ലാൻ" %}</span>
+                <span>{% blocktranslate with plan=plan_name %}{{ plan }} വരിസംഖ്യ{% endblocktranslate %}</span>
             </div>
             <div class="summary-row">
-                <span>Access</span>
-                <span>Unlimited articles</span>
+                <span>{% translate "പ്രവേശനം" %}</span>
+                <span>{% translate "പരിധിയില്ലാതെ" %}</span>
             </div>
             <div class="summary-row total">
-                <span>Total Amount</span>
+                <span>{% translate "ആകെ തുക" %}</span>
                 <span>₹{{ price }}</span>
             </div>
         </div>
@@ -37,11 +37,11 @@
             <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
 
             <div class="form-group">
-                <label>Select Payment Method</label>
+                <label>{% translate "പേയ്‌മെന്റ് രീതി തിരഞ്ഞെടുക്കുക" %}</label>
                 <div class="payment-methods">
                     <label class="method-option active">
                         <input type="radio" name="payment_method" value="card" checked>
-                        Card
+                        {% translate "കാർഡ്" %}
                     </label>
                     <label class="method-option">
                         <input type="radio" name="payment_method" value="upi">
@@ -49,24 +49,24 @@
                     </label>
                     <label class="method-option">
                         <input type="radio" name="payment_method" value="netbanking">
-                        Net Banking
+                        {% translate "നെറ്റ് ബാങ്കിംഗ്" %}
                     </label>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="card_name">Cardholder Name</label>
-                <input type="text" id="card_name" class="form-input" placeholder="Name on card" required>
+                <label for="card_name">{% translate "കാർഡ് ഉടമയുടെ പേര്" %}</label>
+                <input type="text" id="card_name" class="form-input" placeholder="{% translate 'കാർഡിലെ പേര്' %}" required>
             </div>
 
             <div class="form-group">
-                <label for="card_num">Card Number</label>
+                <label for="card_num">{% translate "കാർഡ് നമ്പർ" %}</label>
                 <input type="text" id="card_num" class="form-input" placeholder="0000 0000 0000 0000" required>
             </div>
 
             <div class="summary-row">
                 <div class="form-group">
-                    <label for="expiry">Expiry</label>
+                    <label for="expiry">{% translate "കാലാവധി" %}</label>
                     <input type="text" id="expiry" class="form-input" placeholder="MM/YY" required>
                 </div>
                 <div class="form-group form-group--flex">
@@ -75,9 +75,9 @@
                 </div>
             </div>
 
-            <button type="submit" class="checkout-submit">Pay ₹{{ price }} & Subscribe</button>
+            <button type="submit" class="checkout-submit">{% blocktranslate with amount=price %}₹{{ amount }} അടച്ച് വരിചേരുക{% endblocktranslate %}</button>
             <p style="font-size: 11px; color: #888; text-align: center; margin-top: 12px;">
-                * This is a simulated checkout. No actual payment will be processed.
+                {% translate "* ഇതൊരു സിമുലേറ്റഡ് ചെക്ക്ഔട്ട് ആണ്. യഥാർത്ഥ പേയ്‌മെന്റ് നടക്കില്ല." %}
             </p>
         </form>
     </div>

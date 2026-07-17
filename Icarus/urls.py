@@ -7,7 +7,6 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail.contrib.sitemaps.views import sitemap
-from search import views as search_views
 from Icarus import protected_media as protected_media_views
 
 # ── Never language-prefixed: infra, admin, machine endpoints ──────────

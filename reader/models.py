@@ -8,6 +8,7 @@ from django.conf import settings
 from django.dispatch import receiver
 from django.core.validators import RegexValidator
 from django.utils import timezone
+from django.utils.translation import gettext, gettext_lazy as _
 from datetime import timedelta
 
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, FieldRowPanel
@@ -27,12 +28,12 @@ _HEX64 = re.compile(r'^[0-9a-f]{64}$')
 
 # ── Single source of truth for plan configuration ───────────────────────
 PLANS = {
-    '1_month':  {'name': '1 Month',   'price': 299,  'has_print': False, 'duration_days': 30},
-    '3_months': {'name': '3 Months',  'price': 799,  'has_print': False, 'duration_days': 90},
-    '6_months': {'name': '6 Months',  'price': 1499, 'has_print': True,  'duration_days': 180},
-    '1_year':   {'name': '1 Year',    'price': 2499, 'has_print': True,  'duration_days': 365},
-    '3_years':   {'name': '3 Years',   'price': 5999, 'has_print': True,  'duration_days': 1095},
-    '5_years':   {'name': '5 Years',   'price': 7999, 'has_print': True,  'duration_days': 1825},
+    '1_month':  {'name': _('1 മാസം'),   'price': 299,  'has_print': False, 'duration_days': 30},
+    '3_months': {'name': _('3 മാസം'),  'price': 799,  'has_print': False, 'duration_days': 90},
+    '6_months': {'name': _('6 മാസം'),  'price': 1499, 'has_print': True,  'duration_days': 180},
+    '1_year':   {'name': _('1 വർഷം'),    'price': 2499, 'has_print': True,  'duration_days': 365},
+    '3_years':   {'name': _('3 വർഷം'),   'price': 5999, 'has_print': True,  'duration_days': 1095},
+    '5_years':   {'name': _('5 വർഷം'),   'price': 7999, 'has_print': True,  'duration_days': 1825},
 }
 
 class ReaderUserManager(BaseUserManager):
@@ -74,16 +75,16 @@ class ReaderUser(AbstractUser, index.Indexed):
     # leaks nothing usable. The hash is stable (same input → same output) so exact-match
     # lookups still work for login and uniqueness checks.
     phone_number_hash = models.CharField(
-        "Phone Number (Hash)",
+        _("ഫോൺ നമ്പർ (ഹാഷ്)"),
         max_length=64,
         unique=True,
-        help_text="HMAC-SHA256 of the phone number. Used for fast, secure exact-match lookups.",
+        help_text=_("ഫോൺ നമ്പറിന്റെ HMAC-SHA256. വേഗതയേറിയതും സുരക്ഷിതവുമായ കൃത്യ-പൊരുത്ത തിരയലുകൾക്ക് ഉപയോഗിക്കുന്നു."),
     )
     phone_number_encrypted = EncryptedCharField(
-        "Phone Number (Encrypted)",
+        _("ഫോൺ നമ്പർ (എൻക്രിപ്റ്റഡ്)"),
         max_length=255,
         blank=True,
-        help_text="Fernet-encrypted phone number. Unreadable in raw DB dumps.",
+        help_text=_("Fernet-എൻക്രിപ്റ്റ് ചെയ്ത ഫോൺ നമ്പർ. നേരിട്ടുള്ള DB ഡമ്പുകളിൽ വായിക്കാനാവില്ല."),
     )
 
     email = models.EmailField(unique=True, blank=True, null=True)
@@ -94,16 +95,16 @@ class ReaderUser(AbstractUser, index.Indexed):
         null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='+',
-        help_text='Visible next to your comments.'
+        help_text=_('നിങ്ങളുടെ അഭിപ്രായങ്ങൾക്കൊപ്പം ദൃശ്യമാകും.')
     )
     bio = models.TextField(
         max_length=500, 
         blank=True, 
-        help_text='A short description about yourself.'
+        help_text=_('നിങ്ങളെക്കുറിച്ചുള്ള ഒരു ചെറു വിവരണം.')
     )
     can_comment = models.BooleanField(
         default=True,
-        help_text='Uncheck this to restrict this user from posting comments.'
+        help_text=_('ഈ ഉപയോക്താവിനെ അഭിപ്രായങ്ങൾ പോസ്റ്റ് ചെയ്യുന്നതിൽ നിന്ന് തടയാൻ ഇത് അൺചെക്ക് ചെയ്യുക.')
     )
 
     # def own_comments(self):
@@ -116,81 +117,80 @@ class ReaderUser(AbstractUser, index.Indexed):
 
     accepted_terms_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Timestamp of agreement to Terms of Service for legal enforceability."
+        help_text=_("നിയമപരമായ സാധുതയ്ക്കായി സേവന വ്യവസ്ഥകൾ അംഗീകരിച്ച സമയമുദ്ര.")
     )
     terms_version = models.CharField(
         max_length=20, blank=True,
-        help_text="Specific version of Terms of Service agreed to by the user."
+        help_text=_("ഉപയോക്താവ് അംഗീകരിച്ച സേവന വ്യവസ്ഥകളുടെ പതിപ്പ്.")
     )
     accepted_privacy_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Timestamp of explicit consent to the Privacy Policy."
+        help_text=_("സ്വകാര്യതാ നയത്തിന് വ്യക്തമായ സമ്മതം നൽകിയ സമയമുദ്ര.")
     )
     privacy_version = models.CharField(
         max_length=20, blank=True,
-        help_text="Specific version of Privacy Policy consented to (Required for Consent Versioning)."
+        help_text=_("സമ്മതം നൽകിയ സ്വകാര്യതാ നയത്തിന്റെ പതിപ്പ് (സമ്മത പതിപ്പ് രേഖയ്ക്ക് ആവശ്യം).")
     )
     # ── Age Declaration (Signup Consent) ──
     is_above_18 = models.BooleanField(
         default=False,
-        help_text="Self-declaration that the user is 18 years or older, captured at signup for DPDP compliance."
+        help_text=_("DPDP അനുസരണത്തിനായി സൈൻഅപ്പ് സമയത്ത് രേഖപ്പെടുത്തിയ 18+ പ്രായ സ്വയം-പ്രഖ്യാപനം.")
     )
     age_declaration_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Timestamp of the 18+ age self-declaration at signup."
+        help_text=_("സൈൻഅപ്പിലെ 18+ പ്രായ സ്വയം-പ്രഖ്യാപനത്തിന്റെ സമയമുദ്ര.")
     )
 
     # ── Explicit Consent for Optional Profile Fields ──
     birth_year_consent_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Timestamp of explicit consent to share birth year for demographic analytics."
+        help_text=_("ജനസംഖ്യാ വിശകലനത്തിനായി ജനന വർഷം പങ്കിടാൻ സമ്മതം നൽകിയ സമയമുദ്ര.")
     )
     gender_consent_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Timestamp of explicit consent to share gender information."
+        help_text=_("ലിംഗ വിവരം പങ്കിടാൻ സമ്മതം നൽകിയ സമയമുദ്ര.")
     )
     read_history_consent_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Timestamp of explicit consent to track reading history. Cleared on revocation."
+        help_text=_("വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യാൻ സമ്മതം നൽകിയ സമയമുദ്ര. പിൻവലിക്കുമ്പോൾ മായ്ക്കപ്പെടും.")
     )
 
     newsletter_opt_in = models.BooleanField(
         default=False,
-        help_text="User's choice to receive non-essential marketing communications."
+        help_text=_("അനിവാര്യമല്ലാത്ത മാർക്കറ്റിംഗ് അറിയിപ്പുകൾ സ്വീകരിക്കാനുള്ള ഉപയോക്താവിന്റെ തിരഞ്ഞെടുപ്പ്.")
     )
     newsletter_opt_in_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Timestamp of when the newsletter consent status last changed."
+        help_text=_("വാർത്താക്കുറിപ്പ് സമ്മത നില അവസാനം മാറിയ സമയമുദ്ര.")
     )
     
     # ── Security & Audit ──
     registration_ip = models.GenericIPAddressField(
         null=True, blank=True,
-        help_text="Captured at signup to detect and prevent fraudulent bot registrations."
+        help_text=_("വ്യാജ ബോട്ട് രജിസ്ട്രേഷനുകൾ കണ്ടെത്താനും തടയാനും സൈൻഅപ്പിൽ രേഖപ്പെടുത്തുന്നു.")
     )
     last_login_ip = models.GenericIPAddressField(
         null=True, blank=True,
-        help_text="Monitored for security auditing and to detect unauthorized account access."
+        help_text=_("സുരക്ഷാ ഓഡിറ്റിനും അനധികൃത അക്കൗണ്ട് പ്രവേശനം കണ്ടെത്താനും നിരീക്ഷിക്കുന്നു.")
     )
     
     # ── Account Lifecycle ──
     deactivated_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Marked when a user requests deletion; triggers the statutory data retention clock."
+        help_text=_("ഉപയോക്താവ് ഇല്ലാതാക്കൽ അഭ്യർത്ഥിക്കുമ്പോൾ രേഖപ്പെടുത്തുന്നു; നിയമപരമായ ഡാറ്റ സൂക്ഷിപ്പ് കാലയളവ് ആരംഭിക്കുന്നു.")
     )
     is_verified = models.BooleanField(
         default=False,
-        help_text="Account status based on successful verification of primary contact method."
+        help_text=_("പ്രാഥമിക ബന്ധപ്പെടൽ മാർഗ്ഗം വിജയകരമായി പരിശോധിച്ചതിന്റെ അടിസ്ഥാനത്തിലുള്ള അക്കൗണ്ട് നില.")
     )
 
     # ── Editorial Board ──
     staff_granted_by_board = models.BooleanField(
         default=False,
-        help_text=(
-            "True when is_staff was granted automatically because this user "
-            "sits on the current editorial board (see literati.sync_editorial_staff). "
-            "Revocation on leaving the board only touches users with this flag — "
-            "manually appointed staff and superusers are never demoted."
+        help_text=_(
+            "നിലവിലെ എഡിറ്റോറിയൽ ബോർഡിൽ അംഗമായതിനാൽ is_staff സ്വയമേവ നൽകിയപ്പോൾ True "
+            "(literati.sync_editorial_staff കാണുക). ബോർഡ് വിട്ടാൽ ഈ ഫ്ലാഗ് ഉള്ളവരുടെ മാത്രം "
+            "അനുമതി പിൻവലിക്കും — നേരിട്ട് നിയമിച്ച സ്റ്റാഫും സൂപ്പർയൂസർമാരും ഒരിക്കലും തരംതാഴ്ത്തപ്പെടില്ല."
         ),
     )
 
@@ -250,27 +250,27 @@ class ReaderUser(AbstractUser, index.Indexed):
         return self.name or self.phone_number_encrypted or ''
 
     GENDER_CHOICES = [
-        ('പുരുഷന്‍', 'Male'),
-        ('സ്ത്രീ', 'Female'),
-        ('നോണ്‍ ബൈനറി / ക്വീര്‍', 'Non-binary / Queer'),
-        ('പറയാന്‍ താല്‍പര്യമില്ല', 'Prefer not to say'),
-        ('മറ്റൊന്ന്', 'Other')
+        ('പുരുഷന്‍', _('പുരുഷന്‍')),
+        ('സ്ത്രീ', _('സ്ത്രീ')),
+        ('നോണ്‍ ബൈനറി / ക്വീര്‍', _('നോണ്‍ ബൈനറി / ക്വീര്‍')),
+        ('പറയാന്‍ താല്‍പര്യമില്ല', _('പറയാന്‍ താല്‍പര്യമില്ല')),
+        ('മറ്റൊന്ന്', _('മറ്റൊന്ന്'))
     ]
 
     gender = models.CharField(max_length=100, choices=GENDER_CHOICES, blank=True)
-    gender_other = models.CharField("Other Gender", max_length=100, blank=True)
+    gender_other = models.CharField(_("മറ്റ് ലിംഗം"), max_length=100, blank=True)
 
     # Birth year only — the full date (day + month) is not needed for any use case
     # here and is a meaningfully higher-risk identifier when combined with name.
     # A plain integer is safe, indexable, and directly usable for GROUP BY age-bracket queries.
     birth_year = models.PositiveSmallIntegerField(
         null=True, blank=True,
-        help_text="Year of birth only. Sufficient for demographic analytics; safer than full DOB.",
+        help_text=_("ജനന വർഷം മാത്രം. ജനസംഖ്യാ വിശകലനത്തിന് മതിയാകും; പൂർണ്ണ ജനനത്തീയതിയെക്കാൾ സുരക്ഷിതം."),
     )
 
     # ── Address ──────────────────────────────────────────────────────
     INDIAN_STATES = [
-        ('', '— Select State —'),
+        ('', _('— സംസ്ഥാനം തിരഞ്ഞെടുക്കുക —')),
         ('Andaman and Nicobar Islands', 'Andaman and Nicobar Islands'),
         ('Andhra Pradesh', 'Andhra Pradesh'),
         ('Arunachal Pradesh', 'Arunachal Pradesh'),
@@ -311,16 +311,16 @@ class ReaderUser(AbstractUser, index.Indexed):
 
     pincode_validator = RegexValidator(
         regex=r'^[1-9][0-9]{5}$',
-        message='Enter a valid 6-digit Indian pincode.',
+        message=_('സാധുവായ 6-അക്ക ഇന്ത്യൻ പിൻകോഡ് നൽകുക.'),
     )
 
     address_line_1 = models.CharField(
         max_length=255, blank=True,
-        help_text='House / flat number, street name.',
+        help_text=_('വീട്/ഫ്ലാറ്റ് നമ്പർ, തെരുവിന്റെ പേര്.'),
     )
     address_line_2 = models.CharField(
         max_length=255, blank=True,
-        help_text='Landmark, area, locality.',
+        help_text=_('ലാൻഡ്മാർക്ക്, പ്രദേശം, സ്ഥലം.'),
     )
     city = models.CharField(max_length=100, blank=True)
 
@@ -329,7 +329,7 @@ class ReaderUser(AbstractUser, index.Indexed):
     pincode = models.CharField(
         max_length=6, blank=True,
         validators=[pincode_validator],
-        help_text='6-digit Indian pincode.',
+        help_text=_('6-അക്ക ഇന്ത്യൻ പിൻകോഡ്.'),
     )
 
     district = models.CharField(max_length=100, blank=True)
@@ -341,7 +341,7 @@ class ReaderUser(AbstractUser, index.Indexed):
 
     # ചേര്‍ക്കുന്ന ആളുടെ വിവരങ്ങൾ
     care_of_name = models.CharField(max_length=255, blank=True)
-    care_of_number = PhoneNumberField("C/O Phone Number", blank=True)
+    care_of_number = PhoneNumberField(_("C/O ഫോൺ നമ്പർ"), blank=True)
     care_of_district = models.CharField(max_length=100, blank=True)
     care_of_meghala = models.CharField(max_length=100, blank=True)
     care_of_unit = models.CharField(max_length=100, blank=True)
@@ -360,14 +360,14 @@ class ReaderUser(AbstractUser, index.Indexed):
 
     # ── Subscription ──────────────────────────────────────────────────
     SUBSCRIPTION_PLANS = [
-        ('none', 'No Subscription'),
-        ('complimentary', 'Complimentary (Temporary Access)'),
-        ('1_month', '1 Month'),
-        ('3_months', '3 Months'),
-        ('6_months', '6 Months'),
-        ('1_year', '1 Year'),
-        ('3_years', '3 Years'),
-        ('5_years', '5 Years'),
+        ('none', _('വരിസംഖ്യ ഇല്ല')),
+        ('complimentary', _('സൗജന്യം (താൽക്കാലിക പ്രവേശനം)')),
+        ('1_month', _('1 മാസം')),
+        ('3_months', _('3 മാസം')),
+        ('6_months', _('6 മാസം')),
+        ('1_year', _('1 വർഷം')),
+        ('3_years', _('3 വർഷം')),
+        ('5_years', _('5 വർഷം')),
     ]
 
     PLAN_DURATIONS = {
@@ -384,23 +384,23 @@ class ReaderUser(AbstractUser, index.Indexed):
         max_length=20,
         choices=SUBSCRIPTION_PLANS,
         default='none',
-        help_text='Active subscription plan.',
+        help_text=_('സജീവ വരിസംഖ്യ പ്ലാൻ.'),
     )
     subscription_start = models.DateTimeField(
         null=True, blank=True,
-        help_text='When the current subscription period began.',
+        help_text=_('നിലവിലെ വരിസംഖ്യ കാലയളവ് ആരംഭിച്ചത്.'),
     )
     subscription_end = models.DateTimeField(
         null=True, blank=True,
-        help_text='When the current subscription period expires.',
+        help_text=_('നിലവിലെ വരിസംഖ്യ കാലയളവ് അവസാനിക്കുന്നത്.'),
     )
     is_cancelled = models.BooleanField(
         default=False,
-        help_text="Flag indicating if the active subscription has been cancelled but remains in grace period."
+        help_text=_("സജീവ വരിസംഖ്യ റദ്ദാക്കിയെങ്കിലും ഗ്രേസ് കാലയളവിൽ തുടരുന്നു എന്ന ഫ്ലാഗ്.")
     )
     is_anonymized = models.BooleanField(
         default=False,
-        help_text="Flag indicating if this account has been anonymized under DPDPA/GDPR rules."
+        help_text=_("DPDPA/GDPR ചട്ടപ്രകാരം ഈ അക്കൗണ്ട് അജ്ഞാതവൽക്കരിച്ചിട്ടുണ്ടോ എന്ന ഫ്ലാഗ്.")
     )
 
     # ✅ NEW: Grace period for failed/lapsed renewals (e.g. 3 days leeway)
@@ -453,13 +453,13 @@ class ReaderUser(AbstractUser, index.Indexed):
 
     def status_display(self):
         if self.is_subscribed:
-            return "Active"
+            return gettext("സജീവം")
         if self.is_in_grace_period:
-            return "Grace Period"
+            return gettext("ഗ്രേസ് കാലയളവ്")
         if self.subscription_plan != 'none':
-            return "Expired"
-        return "No Subscription"
-    status_display.short_description = "Status"
+            return gettext("കാലഹരണപ്പെട്ടു")
+        return gettext("വരിസംഖ്യ ഇല്ല")
+    status_display.short_description = _("നില")
 
     # ── Editorial board ───────────────────────────────────────────────────
     @property
@@ -553,13 +553,13 @@ class ReaderUser(AbstractUser, index.Indexed):
         'articles.Article',
         blank=True,
         related_name='readers',
-        help_text='Articles this reader has accessed.',
+        help_text=_('ഈ വായനക്കാരൻ വായിച്ച ലേഖനങ്ങൾ.'),
     )
     interested_topics = models.ManyToManyField(
         'issue.Topic',
         blank=True,
         related_name='interested_readers',
-        help_text="Topics this reader is interested in.",
+        help_text=_("ഈ വായനക്കാരന് താൽപ്പര്യമുള്ള വിഷയങ്ങൾ."),
     )
 
     # ── Favourites ────────────────────────────────────────────────────
@@ -567,13 +567,13 @@ class ReaderUser(AbstractUser, index.Indexed):
         'articles.Article',
         blank=True,
         related_name='favorited_by',
-        help_text='Articles this reader has bookmarked.',
+        help_text=_('ഈ വായനക്കാരൻ പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയ ലേഖനങ്ങൾ.'),
     )
     favorite_issues = models.ManyToManyField(
         'issue.Issue',
         blank=True,
         related_name='favorited_by',
-        help_text='Issues this reader has bookmarked.',
+        help_text=_('ഈ വായനക്കാരൻ പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയ ലക്കങ്ങൾ.'),
     )
 
     # ── Reading History Consent Gate ──────────────────────────────────
@@ -610,7 +610,7 @@ class ReaderUser(AbstractUser, index.Indexed):
         Wagtail calls this as a callable, so it must be a method, not a property.
         """
         return self.phone_number_encrypted or '—'
-    phone_display.short_description = "Phone"
+    phone_display.short_description = _("ഫോൺ")
 
     panels = [
         MultiFieldPanel([
@@ -622,19 +622,19 @@ class ReaderUser(AbstractUser, index.Indexed):
             FieldPanel('gender'),
             FieldPanel('gender_other'),
             FieldPanel('birth_year'),   # was date_of_birth
-        ], heading="Personal Information"),
+        ], heading=_("വ്യക്തിഗത വിവരങ്ങൾ")),
         MultiFieldPanel([
             FieldPanel('profile_image'),
             FieldPanel('bio'),
             FieldPanel('can_comment'),
-        ], heading="Public Profile & Moderation"),
+        ], heading=_("പൊതു പ്രൊഫൈലും മോഡറേഷനും")),
         MultiFieldPanel([
             FieldPanel('care_of_name'),
             FieldPanel('care_of_number'),
             FieldPanel('care_of_district'),
             FieldPanel('care_of_meghala'),
             FieldPanel('care_of_unit'),
-        ], heading="Added By"),
+        ], heading=_("ചേർത്തത് (C/O)")),
         MultiFieldPanel([
             FieldPanel('address_line_1'),
             FieldPanel('address_line_2'),
@@ -647,13 +647,13 @@ class ReaderUser(AbstractUser, index.Indexed):
                 FieldPanel('state'),
             ]),
             FieldPanel('pincode'),
-        ], heading="Mailing Address"),
+        ], heading=_("തപാൽ വിലാസം")),
         MultiFieldPanel([
             FieldPanel('is_print_subscriber'),
             FieldPanel('print_delivery_status'),
             FieldPanel('print_expiry_date'),
             FieldPanel('delivery_notes'),
-        ], heading="Print Circulation Management"),
+        ], heading=_("പ്രിന്റ് വിതരണ നിർവഹണം")),
         MultiFieldPanel([
             FieldPanel('subscription_plan'),
             FieldPanel('is_cancelled'),
@@ -661,16 +661,16 @@ class ReaderUser(AbstractUser, index.Indexed):
                 FieldPanel('subscription_start'),
                 FieldPanel('subscription_end'),
             ]),
-        ], heading="Subscription Status"),
+        ], heading=_("വരിസംഖ്യ നില")),
         FieldPanel('payment_details'),
         MultiFieldPanel([
             FieldPanel('read_articles'),
             FieldPanel('interested_topics'),
-        ], heading="Activity & Interests"),
+        ], heading=_("പ്രവർത്തനവും താൽപ്പര്യങ്ങളും")),
         MultiFieldPanel([
             FieldPanel('favorite_articles'),
             FieldPanel('favorite_issues'),
-        ], heading="Favourites"),
+        ], heading=_("പ്രിയപ്പെട്ടവ")),
         MultiFieldPanel([
             FieldPanel('accepted_terms_at', read_only=True),
             FieldPanel('terms_version', read_only=True),
@@ -687,7 +687,7 @@ class ReaderUser(AbstractUser, index.Indexed):
             FieldPanel('deactivated_at', read_only=True),
             FieldPanel('is_verified'),
             FieldPanel('is_anonymized'),
-        ], heading="Legal, Security & Lifecycle"),
+        ], heading=_("നിയമം, സുരക്ഷ, അക്കൗണ്ട് ജീവിതചക്രം")),
     ]
 
     def deactivate(self):
@@ -779,26 +779,26 @@ class ReaderUser(AbstractUser, index.Indexed):
     # ── Print Subscription Management ──
     is_print_subscriber = models.BooleanField(
         default=False,
-        help_text="Designates whether this user receives the physical print magazine."
+        help_text=_("ഈ ഉപയോക്താവിന് അച്ചടി മാസിക ലഭിക്കുന്നുണ്ടോ എന്ന് സൂചിപ്പിക്കുന്നു.")
     )
     print_delivery_status = models.CharField(
         max_length=20,
         choices=[
-            ('active', 'Active Delivery'),
-            ('paused', 'Paused'),
-            ('returned', 'Address Issue / Returned'),
-            ('inactive', 'No Print Copy'),
+            ('active', _('സജീവ ഡെലിവറി')),
+            ('paused', _('താൽക്കാലികമായി നിർത്തി')),
+            ('returned', _('വിലാസ പ്രശ്നം / തിരികെ വന്നു')),
+            ('inactive', _('അച്ചടി പതിപ്പ് ഇല്ല')),
         ],
         default='inactive',
-        help_text="Current logistical status of the print delivery."
+        help_text=_("പ്രിന്റ് ഡെലിവറിയുടെ നിലവിലെ ലോജിസ്റ്റിക് നില.")
     )
     print_expiry_date = models.DateField(
         null=True, blank=True,
-        help_text="When the print subscription ends (may differ from digital expiry)."
+        help_text=_("പ്രിന്റ് വരിസംഖ്യ അവസാനിക്കുന്നത് (ഡിജിറ്റൽ കാലാവധിയിൽ നിന്ന് വ്യത്യസ്തമാകാം).")
     )
     delivery_notes = models.TextField(
         blank=True,
-        help_text="Special instructions for the courier (e.g., 'Leave at gate')."
+        help_text=_("കൊറിയറിനുള്ള പ്രത്യേക നിർദ്ദേശങ്ങൾ (ഉദാ: 'ഗേറ്റിൽ ഏൽപ്പിക്കുക').")
     )
 
     def save(self, *args, **kwargs):
@@ -916,8 +916,8 @@ class ReaderUser(AbstractUser, index.Indexed):
                     )
 
     class Meta:
-        verbose_name = 'Reader User'
-        verbose_name_plural = 'Reader Users'
+        verbose_name = _('വായനക്കാരൻ')
+        verbose_name_plural = _('വായനക്കാർ')
 
     def __str__(self):
         # Fall back gracefully if the encrypted field hasn't been populated yet.
@@ -935,36 +935,36 @@ class SubscriptionHistory(models.Model):
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='subscription_history_records',
-        help_text='The reader associated with this subscription record.'
+        help_text=_('ഈ വരിസംഖ്യ രേഖയുമായി ബന്ധപ്പെട്ട വായനക്കാരൻ.')
     )
     subscription_plan = models.CharField(
         max_length=20,
         choices=ReaderUser.SUBSCRIPTION_PLANS,
-        help_text='Subscription plan type.'
+        help_text=_('വരിസംഖ്യ പ്ലാൻ തരം.')
     )
     subscription_start = models.DateTimeField(
-        help_text='When this subscription period began.'
+        help_text=_('ഈ വരിസംഖ്യ കാലയളവ് ആരംഭിച്ചത്.')
     )
     subscription_end = models.DateTimeField(
-        help_text='When this subscription period expires/expired.'
+        help_text=_('ഈ വരിസംഖ്യ കാലയളവ് അവസാനിക്കുന്നത്/അവസാനിച്ചത്.')
     )
     payment_details = models.ForeignKey(
         'PaymentDetails',
         null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='subscription_history_records',
-        help_text='Payment transaction details associated with this subscription.'
+        help_text=_('ഈ വരിസംഖ്യയുമായി ബന്ധപ്പെട്ട പേയ്‌മെന്റ് ഇടപാട് വിവരങ്ങൾ.')
     )
     created_at = models.DateTimeField(auto_now_add=True)
     
     # DB Flags
     is_active = models.BooleanField(
         default=True,
-        help_text="Flag indicating if this is currently the active subscription record."
+        help_text=_("ഇത് നിലവിലെ സജീവ വരിസംഖ്യ രേഖയാണോ എന്ന ഫ്ലാഗ്.")
     )
     is_cancelled = models.BooleanField(
         default=False,
-        help_text="Flag indicating if this subscription was cancelled prematurely."
+        help_text=_("ഈ വരിസംഖ്യ കാലാവധിക്കു മുൻപ് റദ്ദാക്കിയോ എന്ന ഫ്ലാഗ്.")
     )
 
     panels = [
@@ -982,8 +982,8 @@ class SubscriptionHistory(models.Model):
     ]
 
     class Meta:
-        verbose_name = 'Subscription History'
-        verbose_name_plural = 'Subscription Histories'
+        verbose_name = _('വരിസംഖ്യ ചരിത്രം')
+        verbose_name_plural = _('വരിസംഖ്യ ചരിത്രങ്ങൾ')
         ordering = ['-subscription_start']
 
     def __str__(self):
@@ -996,18 +996,18 @@ class PaymentDetails(models.Model):
     """
 
     PAYMENT_METHODS = [
-        ('card', 'Credit / Debit Card'),
+        ('card', _('ക്രെഡിറ്റ് / ഡെബിറ്റ് കാർഡ്')),
         ('upi', 'UPI'),
-        ('netbanking', 'Net Banking'),
-        ('wallet', 'Wallet'),
-        ('other', 'Other'),
+        ('netbanking', _('നെറ്റ് ബാങ്കിംഗ്')),
+        ('wallet', _('വാലറ്റ്')),
+        ('other', _('മറ്റുള്ളവ')),
     ]
 
     PAYMENT_STATUSES = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-        ('refunded', 'Refunded'),
+        ('pending', _('തീർപ്പാക്കാത്തത്')),
+        ('completed', _('പൂർത്തിയായി')),
+        ('failed', _('പരാജയപ്പെട്ടു')),
+        ('refunded', _('തിരികെ നൽകി')),
     ]
 
     gateway_name = models.CharField(max_length=50, blank=True)
@@ -1017,13 +1017,13 @@ class PaymentDetails(models.Model):
         max_length=255, 
         unique=True, 
         null=True, blank=True,
-        help_text="Unique key to prevent duplicate payment processing."
+        help_text=_("ഒരേ പേയ്‌മെന്റ് ഇരട്ടിക്കുന്നത് തടയാനുള്ള അദ്വിതീയ കീ.")
     )
 
     payment_method = models.CharField(
         max_length=20, choices=PAYMENT_METHODS, default='card',
     )
-    payment_method_other = models.CharField("Other Payment Method", max_length=100, blank=True)
+    payment_method_other = models.CharField(_("മറ്റ് പേയ്‌മെന്റ് രീതി"), max_length=100, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     currency = models.CharField(max_length=3, default='INR')
     status = models.CharField(
@@ -1038,7 +1038,7 @@ class PaymentDetails(models.Model):
             FieldPanel('gateway_name'),
             FieldPanel('gateway_transaction_id'),
             FieldPanel('gateway_order_id'),
-        ], heading="Gateway Reference"),
+        ], heading=_("ഗേറ്റ്‌വേ റഫറൻസ്")),
         MultiFieldPanel([
             FieldPanel('payment_method'),
             FieldPanel('payment_method_other'),
@@ -1047,16 +1047,16 @@ class PaymentDetails(models.Model):
                 FieldPanel('currency'),
             ]),
             FieldPanel('status'),
-        ], heading="Payment Info"),
+        ], heading=_("പേയ്‌മെന്റ് വിവരം")),
         MultiFieldPanel([
             FieldPanel('created_at', read_only=True),
             FieldPanel('updated_at', read_only=True),
-        ], heading="Timestamps"),
+        ], heading=_("സമയമുദ്രകൾ")),
     ]
 
     class Meta:
-        verbose_name = 'Payment Details'
-        verbose_name_plural = 'Payment Details'
+        verbose_name = _('പേയ്‌മെന്റ് വിവരങ്ങൾ')
+        verbose_name_plural = _('പേയ്‌മെന്റ് വിവരങ്ങൾ')
 
     def __str__(self):
         return (
