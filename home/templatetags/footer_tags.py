@@ -153,6 +153,11 @@ def get_site_footer():
                         final_url = link.get_url()
                         if not final_url or final_url == '#':
                             link._resolved_dynamic_url = '/404/'
+                        # Added: Detect raw email addresses and assign the mailto: protocol
+                        # We verify it has an '@' symbol and doesn't already start with 
+                        # standard web protocols or a relative path slash to avoid false positives.
+                        elif '@' in final_url and not final_url.startswith(('mailto:', 'http:', 'https:', '/')):
+                            link._resolved_dynamic_url = f'mailto:{final_url}'
 
     # Return structured context into the rendering runtime
     return {
