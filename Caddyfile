@@ -17,6 +17,11 @@ encode gzip
         file_server
     }
 
+    handle_path /maintenance/* {
+        root * /srv/maintenance
+        file_server
+    }
+
     # ── MEDIA: whitelist public folders, gate protected ones, block the rest ──
     # Caddy auto-sorts handle blocks by path specificity, so the nested
     # thumbnails rule below is evaluated before the broader /archive/ rule
