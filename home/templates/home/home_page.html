@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags changelog_tags %}
 
 {% block body_class %}template-homepage{% endblock %}
 
@@ -240,6 +240,12 @@
   {% endif %}
 
 </div>
+
+{# ── "WHAT'S NEW" FLOATING BANNER ──
+   Semi-transparent card floating bottom-right (position: fixed, so its
+   placement here in the DOM doesn't affect page flow). Renders only when
+   changelog.json's newest entry hasn't been dismissed on this device. #}
+{% changelog_banner %}
 {% endblock content %}
 
 {% block extra_js %}

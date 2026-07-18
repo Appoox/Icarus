@@ -1,12 +1,15 @@
 # Redirect www → apex (canonical host). Requires the www DNS record to
+
 # exist (it does), since Caddy obtains a separate certificate for it.
+
 www.sasthragathy.org {
-    redir https://sasthragathy.org{uri} permanent
+redir https://sasthragathy.org{uri} permanent
 }
 
 # 65.109.131.232.sslip.io {
+
 sasthragathy.org {
-    encode gzip
+encode gzip
 
     # Collected static files (public, served straight from the volume).
     handle_path /static/* {
@@ -116,4 +119,30 @@ sasthragathy.org {
         lb_try_duration 60s
         lb_try_interval 500ms
     }
+
+    # ── MAINTENANCE FALLBACK ─────────────────────────────────────────────
+    # The lb_try_duration retries above already absorb normal deploys: Caddy
+    # holds each request and re-dials web:8000 for up to 60s, so a routine
+    # restart shows readers a slow page load, never an error. This block is
+    # the fallback for the tail cases — a long migration or a crash-looping
+    # web container — where the retry budget runs out and Caddy would
+    # otherwise emit a bare 502.
+    #
+    # /srv/maintenance is a read-only bind mount of docker/maintenance/ (see
+    # docker-compose.yml). The page is fully self-contained and meta-refreshes
+    # every 15s, so readers land back on the real site automatically.
+    #
+    # `status {err.status_code}` matters: without it, file_server serves the
+    # maintenance page with a 200, and crawlers could index it as page
+    # content. Preserving the 5xx tells search engines this is transient.
+    handle_errors 502 503 504 {
+        root * /srv/maintenance
+        rewrite * /rebooting.html
+        file_server {
+            status {err.status_code}
+        }
+        # Keep in sync with the meta refresh interval in maintenance.html.
+        header Retry-After "15"
+    }
+
 }

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="15">
+<title>ശാസ്ത്രഗതി — അൽപസമയത്തേക്ക് ലഭ്യമല്ല | Temporarily Unavailable</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* Centre the card on a soft editorial gradient */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f6f2 0%, #e8e2d9 100%);
+    color: #0f172a;
+    font-family: "Plus Jakarta Sans", "Manjari", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    text-align: center;
+    padding: 3.5rem 3rem;
+    max-width: 52rem;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
+    border: 1px solid rgba(15, 23, 42, 0.04);
+  }
+
+  /* Keeps vertical rhythm consistent even when the logo image is absent */
+  .logo-container {
+    width: auto;
+    height: 60px;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo {
+    max-height: 100%;
+    max-width: 220px;
+    object-fit: contain;
+  }
+
+  /* Two-column bilingual layout with a soft divider */
+  .message-container {
+    display: flex;
+    gap: 4rem;
+    text-align: left;
+    margin-top: 2rem;
+    position: relative;
+  }
+
+  .message-container::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, #e2e8f0, transparent);
+  }
+
+  .lang-block-ml {
+    flex: 1;
+    font-family: "Manjari", sans-serif;
+  }
+
+  .lang-block-en {
+    flex: 1;
+    font-family: "Plus Jakarta Sans", sans-serif;
+  }
+
+  /* Stack vertically and drop the divider on small viewports */
+  @media (max-width: 768px) {
+    .message-container {
+      flex-direction: column;
+      text-align: center;
+      gap: 2.5rem;
+    }
+    .message-container::after {
+      display: none;
+    }
+    .card {
+      padding: 2.5rem 1.5rem;
+      margin: 1.5rem;
+    }
+  }
+
+  .lang-block-ml h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    color: #0f172a;
+  }
+
+  .lang-block-en h1 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    margin-bottom: 1rem;
+    color: #0f172a;
+  }
+
+  .lang-block-ml p {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #475569;
+    margin: 0;
+  }
+
+  .lang-block-en p {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #475569;
+    margin: 0;
+  }
+
+  /* Status pill */
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fef2f2;
+    padding: 0.45rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+    border: 1px solid #fee2e2;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    animation: pulse 1.6s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
+  .status-text {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #ef4444;
+    margin-left: 0.55rem;
+    font-weight: 600;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+</style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="logo-container">
+      <img src="title.jpeg"
+           alt="Sasthragathy"
+           class="logo"
+           onerror="this.style.display='none'">
+    </div>
+
+    <div class="status-indicator">
+        <span class="dot"></span>
+        <span class="status-text">System Update</span>
+    </div>
+
+    <div class="message-container">
+
+      <div class="lang-block-ml" lang="ml">
+        <h1>സൈറ്റ് പുതുക്കിക്കൊണ്ടിരിക്കുന്നു</h1>
+        <p>ശാസ്ത്രഗതി ഇപ്പോൾ ഒരു ഹ്രസ്വമായ പുതുക്കലിലാണ്. ഏതാനും നിമിഷങ്ങൾക്കകം സൈറ്റ് തിരികെയെത്തും — ഈ പേജ് തനിയെ പുതുക്കപ്പെടും.</p>
+      </div>
+
+      <div class="lang-block-en" lang="en">
+        <h1>Site Undergoing Maintenance</h1>
+        <p>Sasthragathy is currently undergoing a brief update. The site will return in a few moments — this page will refresh automatically.</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
