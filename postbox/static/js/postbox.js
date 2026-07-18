@@ -7,11 +7,17 @@ document.addEventListener("DOMContentLoaded", function () {
     var textarea    = document.querySelector('textarea[name="feedback"]');
     var charCount   = document.getElementById('fb-char-count');
     var starLabel   = document.getElementById('fb-star-label');
+    var starsGroup  = document.querySelector('.fb-stars');
+    var SL = starsGroup ? starsGroup.dataset : {};
 
-    document.getElementById('image-upload').addEventListener('change', function() {
-    var fileName = this.files[0] ? this.files[0].name : 'Choose File';
-    document.querySelector('.custom-browse-btn span').textContent = fileName;
-    });
+    var imageInput = document.querySelector('.custom-file-upload input[type="file"]');
+    if (imageInput) {
+        imageInput.addEventListener('change', function () {
+            var fileName = this.files[0] ? this.files[0].name : SL.labelChoose;
+            var span = document.querySelector('.custom-browse-btn span');
+            if (span) span.textContent = fileName;
+        });
+    }
 
     /* ── Type selector ───────────────────────────────── */
     document.querySelectorAll('.fb-type-btn').forEach(function (btn) {
@@ -29,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
     /* ── Star rating ─────────────────────────────────── */
     var stars = Array.from(document.querySelectorAll('.fb-star'));
     var currentRating = 0;
-    var LABELS = { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very good', 5: 'Excellent' };
+    var LABELS = { 1: SL.label1, 2: SL.label2, 3: SL.label3, 4: SL.label4, 5: SL.label5 };
 
     function paintStars(n) {
         stars.forEach(function (s, i) { s.classList.toggle('active', i < n); });

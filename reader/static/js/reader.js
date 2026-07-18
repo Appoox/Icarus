@@ -3,26 +3,14 @@
    ───────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Subscription Cancellation Confirmation
-    const cancelForm = document.getElementById('cancel-sub-form');
-    if (cancelForm) {
-        cancelForm.addEventListener('submit', function(e) {
-            if (!confirm('Are you sure you want to cancel your subscription? You will continue to have access to all premium content until your current billing cycle ends, and your subscription will not auto-renew.')) {
-                e.preventDefault();
-            }
-        });
-    }
 
-    // Account Deactivation Confirmation
-    const deactivateForm = document.getElementById('deactivate-account-form');
-    if (deactivateForm) {
-        deactivateForm.addEventListener('submit', function(e) {
-            if (!confirm('Are you sure you want to DEACTIVATE your account? This action will log you out immediately and disable your access.')) {
+    document.querySelectorAll('form[data-confirm]').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            if (!window.confirm(form.dataset.confirm)) {
                 e.preventDefault();
             }
         });
-    }
+    });
 
     // Renew Subscription Options Toggle
     const renewToggleBtn = document.getElementById('btn-renew-toggle');
@@ -49,5 +37,42 @@ document.addEventListener('DOMContentLoaded', function() {
             moreLabel.classList.toggle('hidden', expanded);
         });
     });
+
+    // Avatar live preview (edit_profile)
+    var avatarInput = document.getElementById('id_avatar_upload');
+    var avatarPreview = document.getElementById('avatar-preview-img');
+    if (avatarInput && avatarPreview) {
+        avatarInput.addEventListener('change', function() {
+            var file = avatarInput.files && avatarInput.files[0];
+            if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+                return;
+            }
+
+            var url = URL.createObjectURL(file);
+
+            // With no existing avatar the preview slot is an initials
+            // placeholder <div>; swap it for an <img> so preview works
+            // in both states.
+            if (avatarPreview.tagName !== 'IMG') {
+                var img = document.createElement('img');
+                img.id = 'avatar-preview-img';
+                img.className = 'profile-avatar';
+                img.alt = '';
+                avatarPreview.replaceWith(img);
+                avatarPreview = img;
+            }
+
+            avatarPreview.addEventListener('load', function() {
+                URL.revokeObjectURL(url);
+            }, { once: true });
+            avatarPreview.src = url;
+
+            // Choosing a new file supersedes "remove current image"
+            var removeBox = document.getElementById('id_remove_avatar');
+            if (removeBox) {
+                removeBox.checked = false;
+            }
+        });
+    }
 
 });

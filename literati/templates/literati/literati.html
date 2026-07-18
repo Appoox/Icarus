@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags static %}
+{% load wagtailcore_tags wagtailimages_tags static i18n %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/author.css' %}">
@@ -56,7 +56,7 @@
 
     {% if page.areas_of_interest.all %}
     <section class="author-interests">
-        <h2 class="section-title">Areas of Interest</h2>
+        <h2 class="section-title">{% translate "താൽപ്പര്യമുള്ള മേഖലകൾ" %}</h2>
         <div class="interest-tags">
             {% for topic in page.areas_of_interest.all %}
             <a href="{% url 'topic_detail' topic.slug %}" class="topic-tag" style="background-color: {{ topic.color }}22; color: {{ topic.color }}; border: 1px solid {{ topic.color }};">
@@ -69,7 +69,7 @@
 
     {% if page.tags.all %}
     <section class="author-tags">
-        <h2 class="section-title">Tags</h2>
+        <h2 class="section-title">{% translate "ടാഗുകൾ" %}</h2>
         <div class="tags-list">
             {% for tag in page.tags.all %}
             <a href="{% url 'tag_detail' tag=tag.name %}" class="sg-tag-btn">{{ tag.name }}</a>
@@ -102,7 +102,7 @@
                 </div>
             </article>
             {% empty %}
-            <p>No articles found for this author yet.</p>
+            <p>{% translate "ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങളൊന്നും ഇതുവരെ കണ്ടെത്തിയില്ല." %}</p>
             {% endfor %}
         </div>
     </section>

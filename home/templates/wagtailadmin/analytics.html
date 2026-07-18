@@ -1,6 +1,7 @@
 {% extends "wagtailadmin/base.html" %}
+{% load i18n %}
 
-{% block titletag %}Analytics{% endblock %}
+{% block titletag %}{% translate "അനലിറ്റിക്സ്" %}{% endblock %}
 
 {% block content %}
 <div class="nice-padding">
@@ -79,48 +80,48 @@
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
   </svg>
   <div>
-    <h1>Analytics Overview</h1>
-    <p>Platform-wide metrics across content, readers, subscriptions &amp; moderation.</p>
+    <h1>{% translate "അനലിറ്റിക്സ്" %}</h1>
+    <p>{% translate "ഉള്ളടക്കം, വായനക്കാർ, സബ്സ്ക്രിപ്ഷനുകൾ, മോഡറേഷൻ എന്നിവയിലുടനീളമുള്ള പ്ലാറ്റ്‌ഫോം-വ്യാപക അളവുകൾ." %}</p>
   </div>
 </header>
 
 <div class="an-section">
-  <div class="an-section-title">📊 Platform Summary</div>
+  <div class="an-section-title">📊 {% translate "പ്ലാറ്റ്‌ഫോം സംഗ്രഹം" %}</div>
   <div class="an-cards">
     <div class="an-card accent">
-      <div class="an-card-label">Total Readers</div>
+      <div class="an-card-label">{% translate "ആകെ വായനക്കാർ" %}</div>
       <div class="an-card-value">{{ total_users }}</div>
-      <div class="an-card-sub">Active, non-anonymized</div>
+      <div class="an-card-sub">{% translate "സജീവം, non-anonymized" %}</div>
     </div>
     <div class="an-card success">
-      <div class="an-card-label">Active Subscribers</div>
+      <div class="an-card-label">{% translate "സജീവ വായനക്കാർ" %}</div>
       <div class="an-card-value">{{ active_subscribers }}</div>
-      <div class="an-card-sub">Subscription not expired</div>
+      <div class="an-card-sub">{% translate "സബ്സ്ക്രിപ്ഷൻ കാലഹരണപ്പെട്ടിട്ടില്ല" %}</div>
     </div>
     <div class="an-card">
-      <div class="an-card-label">Total Articles</div>
+      <div class="an-card-label">{% translate "ആകെ ലേഖനങ്ങൾ" %}</div>
       <div class="an-card-value">{{ total_articles }}</div>
-      <div class="an-card-sub">Live published</div>
+      <div class="an-card-sub">{% translate "പ്രസിദ്ധീകരിച്ചവ" %}</div>
     </div>
     <div class="an-card">
-      <div class="an-card-label">Homepage Hits (All)</div>
+     <div class="an-card-label">{% translate "ഹോംപേജ് ഹിറ്റുകൾ (ആകെ)" %}</div>
       <div class="an-card-value">{{ homepage_hits_total }}</div>
-      <div class="an-card-sub">{{ homepage_hits_30d }} in last 30 days</div>
+      <div class="an-card-sub">{% blocktranslate %}കഴിഞ്ഞ 30 ദിവസത്തിനുള്ളിൽ {{ homepage_hits_30d }}{% endblocktranslate %}</div>
     </div>
     <div class="an-card warn">
-      <div class="an-card-label">Print Subscribers</div>
+      <div class="an-card-label">{% translate "പ്രിന്റ് വരിക്കാർ" %}</div>
       <div class="an-card-value">{{ total_print_subscribers }}</div>
-      <div class="an-card-sub">Active delivery</div>
+      <div class="an-card-sub">{% translate "Active delivery" %}</div>
     </div>
     <div class="an-card danger">
-      <div class="an-card-label">Mod Backlog</div>
+      <div class="an-card-label">{% translate "മോഡറേഷൻ ബാക്ക്‌ലോഗ്" %}</div>
       <div class="an-card-value">{{ moderation_backlog }}</div>
-      <div class="an-card-sub">Pending approval</div>
+      <div class="an-card-sub">{% translate "അംഗീകാരം കാത്തിരിക്കുന്നു" %}</div>
     </div>
     <div class="an-card warn">
       <div class="an-card-label">Soft Deactivated</div>
       <div class="an-card-value">{{ soft_deactivated }}</div>
-      <div class="an-card-sub">{{ pending_purge }} awaiting purge</div>
+      <div class="an-card-sub">{% blocktranslate %}{{ pending_purge }} ഡിലീറ്റ് ചെയ്യാൻ കാത്തിരിക്കുന്നു{% endblocktranslate %}</div>
     </div>
     <div class="an-card">
       <div class="an-card-label">Anonymized</div>
@@ -131,22 +132,22 @@
 </div>
 
 <div class="an-section">
-  <div class="an-section-title">📈 Homepage Traffic Trends</div>
+  <div class="an-section-title">📈 {% translate "ഹോംപേജ് ട്രാഫിക് ട്രെൻഡുകൾ" %}</div>
   <div class="an-charts">
     <div class="an-chart-box">
-      <h3>Hits Per Day (Last 7 Days)</h3>
+      <h3>{% translate "ദിവസേനയുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 7 ദിവസം)" %}</h3>
       <canvas id="hpDailyChart"></canvas>
     </div>
     <div class="an-chart-box">
-      <h3>Hits Per Week (Last 4 Weeks)</h3>
+      <h3>{% translate "ആഴ്ചതോറുമുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 4 ആഴ്ച)" %}</h3>
       <canvas id="hpWeeklyChart"></canvas>
     </div>
     <div class="an-chart-box">
-      <h3>Hits Per Month (Last 12 Months)</h3>
+      <h3>{% translate "മാസംതോറുമുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 12 മാസം)" %}</h3>
       <canvas id="hpMonthlyChart"></canvas>
     </div>
     <div class="an-chart-box">
-      <h3>Hits Per Year (Last 5 Years)</h3>
+      <h3>{% translate "വർഷംതോറുമുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 5 വർഷം)" %}</h3>
       <canvas id="hpYearlyChart"></canvas>
     </div>
   </div>
@@ -154,41 +155,41 @@
 
 
 <div class="an-section">
-  <div class="an-section-title">💳 Subscription Health</div>
+  <div class="an-section-title">💳 {% translate "സബ്‌സ്‌ക്രിപ്ഷൻ ആരോഗ്യം" %}</div>
   <div class="an-charts">
 
     <div class="an-chart-box">
-      <h3>Active Churn Rate — Cancelled vs Auto-Renewing</h3>
+      <h3>{% translate "കൊഴിഞ്ഞുപോക്ക് നിരക്ക് — റദ്ദാക്കിയവ vs സ്വയം പുതുക്കുന്നവ" %}</h3>
       <canvas id="churnChart"></canvas>
       <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
-        Churn rate: <strong style="color:var(--an-danger)">{{ churn_rate_pct }}%</strong> of active subscribers have cancelled but are still in access period.
+        {% blocktranslate %}കൊഴിഞ്ഞുപോക്ക് നിരക്ക്: <strong style="color:var(--an-danger)">{{ churn_rate_pct }}%</strong> സജീവ വരിക്കാർ റദ്ദാക്കിയെങ്കിലും ഇപ്പോഴും ആക്സസ് കാലയളവിലാണ്.{% endblocktranslate %}
       </p>
     </div>
 
     <div class="an-chart-box">
-      <h3>Grace Period Recovery (Last 33 Days)</h3>
+      <h3>{% translate "ഗ്രേസ് പീരിയഡ് റിക്കവറി (കഴിഞ്ഞ 33 ദിവസം)" %}</h3>
       <canvas id="graceChart"></canvas>
       <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
-        Recovery rate: <strong style="color:var(--an-success)">{{ grace_recovery_pct }}%</strong>
-        — {{ recently_renewed }} renewed out of ~{{ users_in_grace }} who entered grace.
+        {% blocktranslate %}റിക്കവറി നിരക്ക്: <strong style="color:var(--an-success)">{{ grace_recovery_pct }}%</strong>
+                  — ഗ്രേസ് പീരിയഡിൽ പ്രവേശിച്ച ~{{ users_in_grace }} പേരിൽ {{ recently_renewed }} പേർ പുതുക്കി.{% endblocktranslate %}
       </p>
     </div>
 
     <div class="an-chart-box">
-      <h3>Paywall Conversion (Last 30 Days)</h3>
+      <h3>{% translate "പേവാൾ കൺവേർഷൻ (കഴിഞ്ഞ 30 ദിവസം)" %}</h3>
       <canvas id="paywallChart"></canvas>
       <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
-        {{ new_subscribers_30d }} of {{ new_registrations_30d }} new registrations converted to subscribers
-        (<strong>{{ paywall_conversion_pct }}%</strong>).
+        {% blocktranslate %}{{ new_registrations_30d }} പുതിയ രജിസ്ട്രേഷനുകളിൽ {{ new_subscribers_30d }} എണ്ണം വരിക്കാരായി മാറി
+        (<strong>{{ paywall_conversion_pct }}%</strong>).{% endblocktranslate %}
       </p>
     </div>
 
     <div class="an-chart-box">
-      <h3>Retention: Bookmarkers vs Non-Bookmarkers</h3>
+      <h3>{% translate "നിലനിർത്തൽ: ബുക്ക്മാർക്ക് ചെയ്യുന്നവർ vs ചെയ്യാത്തവർ" %}</h3>
       <canvas id="retentionChart"></canvas>
       <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
-        Users who bookmark: <strong style="color:var(--an-success)">{{ retention_with_bm }}%</strong> active |
-        Non-bookmarkers: <strong style="color:var(--an-warn)">{{ retention_without_bm }}%</strong> active.
+        {% blocktranslate %}ബുക്ക്മാർക്ക് ചെയ്യുന്നവർ: <strong style="color:var(--an-success)">{{ retention_with_bm }}%</strong> സജീവം |
+        ബുക്ക്മാർക്ക് ചെയ്യാത്തവർ: <strong style="color:var(--an-warn)">{{ retention_without_bm }}%</strong> സജീവം.{% endblocktranslate %}
       </p>
     </div>
 
@@ -196,30 +197,30 @@
 </div>
 
 <div class="an-section">
-  <div class="an-section-title">📖 Content Engagement</div>
+  <div class="an-section-title">📖 {% translate "എന്‍ഗേജ്മെന്റ്" %}</div>
   <div class="an-charts">
 
     <div class="an-chart-box">
-      <h3>Attention Score — Top Articles (Read Fully %)</h3>
+      <h3>{% translate "ശ്രദ്ധാ സ്കോർ — മികച്ച ലേഖനങ്ങൾ (പൂർണ്ണമായി വായിക്കപ്പെട്ടവ %)" %}</h3>
       <canvas id="attentionChart"></canvas>
     </div>
 
     <div class="an-chart-box">
-      <h3>Language Availability (Translation Coverage)</h3>
+      <h3>{% translate "ഭാഷാ ലഭ്യത (വിവർത്തന കവറേജ്)" %}</h3>
       <canvas id="langChart"></canvas>
     </div>
 
     <div class="an-chart-box">
-      <h3>Passive vs Active Reading</h3>
+      <h3>{% translate "നിഷ്ക്രിയ vs സജീവ വായന" %}</h3>
       <canvas id="passiveChart"></canvas>
       <p style="font-size:0.8rem;color:var(--an-muted);margin-top:10px;">
-        Passive (reads): <strong>{{ passive_total }}</strong> &nbsp;|&nbsp;
-        Active (bookmarks): <strong>{{ active_total }}</strong>
+        {% blocktranslate %}നിഷ്ക്രിയം (വായനകൾ): <strong>{{ passive_total }}</strong> &nbsp;|&nbsp;
+        സജീവം (ബുക്ക്മാർക്കുകൾ): <strong>{{ active_total }}</strong>{% endblocktranslate %}
       </p>
     </div>
 
     <div class="an-chart-box">
-      <h3>Most Favorited Articles</h3>
+      <h3>{% translate "ഏറ്റവും കൂടുതൽ പ്രിയപ്പെട്ടതാക്കിയ ലേഖനങ്ങൾ" %}</h3>
       <canvas id="favChart"></canvas>
     </div>
 
@@ -227,89 +228,89 @@
 </div>
 
 <div class="an-section">
-  <div class="an-section-title">👥 Demographics (Consented Users Only)</div>
+  <div class="an-section-title">👥 {% translate "സംഖ്യാവിവരങ്ങൾ (സമ്മതം നൽകിയ ഉപയോക്താക്കൾ മാത്രം)" %}</div>
   <div class="an-charts">
     <div class="an-chart-box">
-      <h3>Gender — Articles Hit vs Read Fully</h3>
+      <h3>{% translate "ലിംഗഭേദം — സന്ദർശിച്ച ലേഖനങ്ങൾ vs പൂർണ്ണമായി വായിച്ചവ" %}</h3>
       <canvas id="genderChart"></canvas>
     </div>
     <div class="an-chart-box">
-      <h3>Age Bracket — Articles Hit vs Read Fully</h3>
+      <h3>{% translate "പ്രായമനുസരിച്ച് — സന്ദർശിച്ച ലേഖനങ്ങൾ vs പൂർണ്ണമായി വായിച്ചവ" %}</h3>
       <canvas id="ageChart"></canvas>
     </div>
   </div>
 </div>
 
 <div class="an-section">
-  <div class="an-section-title">🗺️ Print Subscribers by Geography</div>
+  <div class="an-section-title">🗺️ {% translate "ഭൂമിശാസ്ത്രം അനുസരിച്ച് പ്രിന്റ് വരിക്കാർ" %}</div>
   <div class="an-two-col">
     <div class="an-chart-box">
-      <h3>By State (Top 15)</h3>
+      <h3>{% translate "സംസ്ഥാനം അനുസരിച്ച് (ആദ്യ 15)" %}</h3>
       <canvas id="printStateChart"></canvas>
     </div>
     <div class="an-chart-box">
-      <h3>By District (Top 10)</h3>
+      <h3>{% translate "ജില്ല അനുസരിച്ച് (ആദ്യ 10)" %}</h3>
       <canvas id="printDistrictChart"></canvas>
     </div>
   </div>
 </div>
 
 <div class="an-section">
-  <div class="an-section-title">🔏 Compliance &amp; Consent</div>
+  <div class="an-section-title">🔏 {% translate "അനുവർത്തനവും സമ്മതവും" %}</div>
   <div class="an-charts">
     <div class="an-chart-box">
-      <h3>Data Opt-In Rates</h3>
+      <h3>{% translate "ഡാറ്റ ഓപ്റ്റ്-ഇൻ നിരക്കുകൾ" %}</h3>
       <canvas id="optinChart"></canvas>
     </div>
     <div class="an-chart-box">
-      <h3>Onboarding Friction — Blank Field Rates</h3>
+      <h3>{% translate "ഓൺബോർഡിംഗ് ഫ്രിക്ഷൻ — ശൂന്യമായ ഫീൽഡ് നിരക്കുകൾ" %}</h3>
       <canvas id="frictionChart"></canvas>
     </div>
   </div>
 </div>
 
 <div class="an-section">
-  <div class="an-section-title">💰 Payment Gateway Performance</div>
+  <div class="an-section-title">💰 {% translate "പേയ്‌മെന്റ് ഗേറ്റ്‌വേ പ്രകടനം" %}</div>
   {% if gateway_names_json != '[]' %}
   <div class="an-chart-box" style="max-width:680px;">
-    <h3>Transaction Failure Rate by Gateway</h3>
+    <h3>{% translate "ഗേറ്റ്‌വേ അനുസരിച്ച് ഇടപാട് പരാജയ നിരക്ക്" %}</h3>
     <canvas id="gatewayChart"></canvas>
   </div>
   {% else %}
-  <p style="color:var(--an-muted);">No gateway payment data recorded yet.</p>
+  <p style="color:var(--an-muted);">{% translate "ഇതുവരെ ഗേറ്റ്‌വേ പേയ്‌മെന്റ് ഡാറ്റ രേഖപ്പെടുത്തിയിട്ടില്ല." %}</p>
   {% endif %}
 </div>
 
 <div class="an-section">
-  <div class="an-section-title">💬 Community Moderation</div>
+  <div class="an-section-title">💬 {% translate "കമ്മ്യൂണിറ്റി മോഡറേഷൻ" %}</div>
   <div class="an-cards" style="max-width:600px;">
     <div class="an-card {% if community_health_pct > 10 %}danger{% else %}success{% endif %}">
-      <div class="an-card-label">Community Health Index</div>
+      <div class="an-card-label">{% translate "കമ്മ്യൂണിറ്റി ഹെൽത്ത് ഇൻഡെക്സ്" %}</div>
       <div class="an-card-value">{{ community_health_pct }}%</div>
-      <div class="an-card-sub">{{ removed_comments }} removed of {{ total_comments }} total</div>
+      <div class="an-card-sub">{% blocktranslate %}ആകെ {{ total_comments }} ൽ {{ removed_comments }} നീക്കം ചെയ്തു{% endblocktranslate %}</div>
     </div>
     <div class="an-card">
-      <div class="an-card-label">Approved Comments</div>
+      <div class="an-card-label">{% translate "അംഗീകരിച്ച അഭിപ്രായങ്ങൾ" %}</div>
       <div class="an-card-value">{{ approved_comments }}</div>
-      <div class="an-card-sub">Visible to readers</div>
+      <div class="an-card-sub">{% translate "വായനക്കാർക്ക് കാണാൻ കഴിയുന്നത്" %}</div>
     </div>
     <div class="an-card {% if moderation_backlog > 0 %}warn{% else %}success{% endif %}">
-      <div class="an-card-label">Moderation Backlog</div>
+      <div class="an-card-label">{% translate "മോഡറേഷൻ ബാക്ക്‌ലോഗ്" %}</div>
       <div class="an-card-value">{{ moderation_backlog }}</div>
-      <div class="an-card-sub">Awaiting is_approved</div>
+      <div class="an-card-sub">{% translate "അംഗീകാരത്തിനായി കാത്തിരിക്കുന്നു" %}</div>
     </div>
   </div>
 </div>
 
 <div class="an-section">
-  <div class="an-section-title">🛡️ Security Signals</div>
+  <div class="an-section-title">🛡️{% translate "സുരക്ഷാ സിഗ്നലുകൾ" %}</div>
   <div class="an-two-col">
 
     <div class="an-chart-box">
-      <h3>Potential Account Sharing — Shared Login IPs (/24 subnets)</h3>
+      <h3>{% translate "അക്കൗണ്ട് പങ്കിടൽ സാധ്യത - പങ്കിട്ട ലോഗിൻ ഐപി(കൾ) (/24 സബ്നെറ്റുകൾ)" %}</h3>
       {% if ip_sharing_suspects %}
       <table class="an-table">
-        <thead><tr><th>Subnet</th><th>Accounts</th></tr></thead>
+        <thead><tr><th>{% translate "സബ്‌നെറ്റ്" %}</th><th>{% translate "അക്കൗണ്ടുകൾ" %}</th></tr></thead>
         <tbody>
         {% for s in ip_sharing_suspects %}
           <tr>
@@ -324,15 +325,15 @@
         </tbody>
       </table>
       {% else %}
-      <p style="color:var(--an-muted);font-size:0.85rem;">No shared login IPs detected.</p>
+      <p style="color:var(--an-muted);font-size:0.85rem;">{% translate "പങ്കിട്ട ലോഗിൻ ഐപികൾ ഒന്നും കണ്ടെത്തിയില്ല." %}</p>
       {% endif %}
     </div>
 
     <div class="an-chart-box">
-      <h3>Credential Stuffing — Multi-Account Registration IPs (/24)</h3>
+      <h3>{% translate "ക്രെഡൻഷ്യൽ സ്റ്റഫിംഗ് — ഒന്നിലധികം അക്കൗണ്ട് രജിസ്ട്രേഷൻ IP-കൾ (/24)" %}</h3>
       {% if stuffing_suspects %}
       <table class="an-table">
-        <thead><tr><th>Subnet</th><th>Registrations</th></tr></thead>
+        <thead><tr><th>{% translate "സബ്‌നെറ്റ്" %}</th><th>{% translate "രജിസ്ട്രേഷനുകൾ" %}</th></tr></thead>
         <tbody>
         {% for s in stuffing_suspects %}
           <tr>
@@ -347,14 +348,14 @@
         </tbody>
       </table>
       {% else %}
-      <p style="color:var(--an-muted);font-size:0.85rem;">No suspicious registration clusters detected.</p>
+      <p style="color:var(--an-muted);font-size:0.85rem;">{% translate "സംശയാസ്പദമായ രജിസ്ട്രേഷൻ ക്ലസ്റ്ററുകളൊന്നും കണ്ടെത്തിയില്ല." %}</p>
       {% endif %}
     </div>
 
   </div>
 </div>
 
-</div>{# end nice-padding #}
+</div>
 
 <script>
 (function () {
@@ -426,29 +427,32 @@
 
   // ── 1. Churn ────────────────────────────────────────────────────────
   mkDoughnut('churnChart',
-    ['Auto-Renewing', 'Cancelled (Active)'],
+    ['{% translate "സ്വയമേവ പുതുക്കുന്നവ" %}', '{% translate "റദ്ദാക്കി (സജീവം)" %}'],
     [{{ auto_renewing }}, {{ cancelled_but_active }}],
     [SUCCESS, DANGER]
   );
 
   // ── 2. Grace Recovery ───────────────────────────────────────────────
   mkDoughnut('graceChart',
-    ['Renewed', 'Did Not Renew'],
+    ['{% translate "പുതുക്കി" %}', '{% translate "പുതുക്കിയില്ല" %}'],
     [{{ recently_renewed }}, Math.max(0, {{ users_in_grace }} - {{ recently_renewed }})],
     [SUCCESS, MUTED]
   );
 
   // ── 3. Paywall Conversion ───────────────────────────────────────────
   mkDoughnut('paywallChart',
-    ['Converted to Subscriber', 'Registered Only'],
+    ['{% translate "സബ്‌സ്‌ക്രൈബർ ആയി മാറിയവർ" %}', '{% translate "രജിസ്റ്റർ മാത്രം ചെയ്തവർ" %}'],
     [{{ new_subscribers_30d }}, Math.max(0, {{ new_registrations_30d }} - {{ new_subscribers_30d }})],
     [ACCENT, MUTED]
   );
 
   // ── 4. Retention Correlation ────────────────────────────────────────
   mkBar('retentionChart',
-    ['With Bookmarks ({{ with_bm_total }})', 'Without Bookmarks ({{ without_bm_total }})'],
-    [{ label: 'Active Subscription %', data: [{{ retention_with_bm }}, {{ retention_without_bm }}], backgroundColor: [SUCCESS, WARN], borderRadius: 6 }]
+    [
+      '{% blocktranslate %}ബുക്ക്മാർക്കുകളോടെ ({{ with_bm_total }}){% endblocktranslate %}',
+      '{% blocktranslate %}ബുക്ക്മാർക്കുകളില്ലാതെ ({{ without_bm_total }}){% endblocktranslate %}'
+    ],
+    [{ label: '{% translate "സജീവ സബ്സ്ക്രിപ്ഷൻ %" %}', data: [{{ retention_with_bm }}, {{ retention_without_bm }}], backgroundColor: [SUCCESS, WARN], borderRadius: 6 }]
   );
 
   // ── 5. Attention Score ──────────────────────────────────────────────
@@ -480,11 +484,11 @@
   // ── 9. Gender ───────────────────────────────────────────────────────
   (function() {
     const labels = {{ gender_labels_json|safe }};
-    if (!labels.length) { document.getElementById('genderChart').closest('.an-chart-box').querySelector('canvas').insertAdjacentHTML('afterend','<p style="color:var(--w-color-text-meta);font-size:.85rem;">No consented gender data yet.</p>'); return; }
+    if (!labels.length) { document.getElementById('genderChart').closest('.an-chart-box').querySelector('canvas').insertAdjacentHTML('afterend','<p style="color:var(--w-color-text-meta);font-size:.85rem;">{% translate "ഇതുവരെ സമ്മതം നൽകിയ ലിംഗഭേദ ഡാറ്റ ലഭ്യമല്ല." %}</p>'); return; }
     mkBar('genderChart', labels,
       [
-        { label: 'Articles Hit', data: {{ gender_hits_json|safe }}, backgroundColor: ACCENT, borderRadius: 4 },
-        { label: 'Read Fully',   data: {{ gender_reads_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 }
+        { label: '{% translate "സന്ദർശിക്കപ്പെട്ട ലേഖനങ്ങൾ" %}', data: {{ gender_hits_json|safe }}, backgroundColor: ACCENT, borderRadius: 4 },
+        { label: '{% translate "പൂർണ്ണമായി വായിച്ചവ" %}',   data: {{ gender_reads_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 }
       ]
     );
   })();
@@ -495,8 +499,8 @@
     if (!labels.length) { return; }
     mkBar('ageChart', labels,
       [
-        { label: 'Articles Hit', data: {{ age_hits_json|safe }}, backgroundColor: ACCENT, borderRadius: 4 },
-        { label: 'Read Fully',   data: {{ age_reads_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 }
+        { label: '{% translate "സന്ദർശിക്കപ്പെട്ട ലേഖനങ്ങൾ" %}', data: {{ age_hits_json|safe }}, backgroundColor: ACCENT, borderRadius: 4 },
+        { label: '{% translate "പൂർണ്ണമായി വായിച്ചവ" %}',   data: {{ age_reads_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 }
       ]
     );
   })();
@@ -518,13 +522,13 @@
   // ── 13. Opt-In Rates ────────────────────────────────────────────────
   mkBar('optinChart',
     {{ optin_labels_json|safe }},
-    [{ label: 'Opt-In %', data: {{ optin_pcts_json|safe }}, backgroundColor: PALETTE, borderRadius: 4 }]
+    [{ label: '{% translate "ഓപ്റ്റ്-ഇൻ %" %}', data: {{ optin_pcts_json|safe }}, backgroundColor: PALETTE, borderRadius: 4 }]
   );
 
   // ── 14. Onboarding Friction ─────────────────────────────────────────
   mkBar('frictionChart',
     {{ friction_labels_json|safe }},
-    [{ label: 'Blank Field %', data: {{ friction_pcts_json|safe }}, backgroundColor: DANGER, borderRadius: 4 }]
+    [{ label: '{% translate "ശൂന്യമായ ഫീൽഡ് %" %}', data: {{ friction_pcts_json|safe }}, backgroundColor: DANGER, borderRadius: 4 }]
   );
 
   // ── 15. Gateway Payments ────────────────────────────────────────────
@@ -532,9 +536,9 @@
     const names = {{ gateway_names_json|safe }};
     if (!names.length) return;
     mkBar('gatewayChart', names, [
-      { label: 'Completed', data: {{ gateway_completed_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 },
-      { label: 'Failed',    data: {{ gateway_failed_json|safe }},    backgroundColor: DANGER,  borderRadius: 4 },
-      { label: 'Pending',   data: {{ gateway_pending_json|safe }},   backgroundColor: WARN,    borderRadius: 4 },
+      { label: '{% translate "പൂർത്തിയായി" %}',    data: {{ gateway_completed_json|safe }}, backgroundColor: SUCCESS, borderRadius: 4 },
+      { label: '{% translate "പരാജയപ്പെട്ടു" %}',    data: {{ gateway_failed_json|safe }},    backgroundColor: DANGER,  borderRadius: 4 },
+      { label: '{% translate "തീർച്ചപ്പെടാത്തത്" %}', data: {{ gateway_pending_json|safe }},   backgroundColor: WARN,    borderRadius: 4 },
     ]);
   })();
 
@@ -543,30 +547,30 @@
   (function() {
       const daily = {{ hp_hits_daily_json|safe|default:"[]" }};
       if (daily && daily.length > 0) {
-          mkBar('hpDailyChart', daily.map(d=>d.label), [{ label: 'Hits', data: daily.map(d=>d.count), backgroundColor: ACCENT, borderRadius: 4 }]);
+          mkBar('hpDailyChart', daily.map(d=>d.label), [{ label: '{% translate "ഹിറ്റുകൾ" %}', data: daily.map(d=>d.count), backgroundColor: ACCENT, borderRadius: 4 }]);
       } else {
-          document.getElementById('hpDailyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No daily data yet.</p>');
+          document.getElementById('hpDailyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">{% translate "ഇതുവരെ ദിവസേനയുള്ള ഡാറ്റ ലഭ്യമല്ല." %}</p>');
       }
 
       const weekly = {{ hp_hits_weekly_json|safe|default:"[]" }};
       if (weekly && weekly.length > 0) {
-          mkBar('hpWeeklyChart', weekly.map(d=>d.label), [{ label: 'Hits', data: weekly.map(d=>d.count), backgroundColor: SUCCESS, borderRadius: 4 }]);
+          mkBar('hpWeeklyChart', weekly.map(d=>d.label), [{ label: '{% translate "ഹിറ്റുകൾ" %}', data: weekly.map(d=>d.count), backgroundColor: SUCCESS, borderRadius: 4 }]);
       } else {
-          document.getElementById('hpWeeklyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No weekly data yet.</p>');
+          document.getElementById('hpWeeklyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">{% translate "ഇതുവരെ ആഴ്ചതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല." %}</p>');
       }
 
       const monthly = {{ hp_hits_monthly_json|safe|default:"[]" }};
       if (monthly && monthly.length > 0) {
-          mkBar('hpMonthlyChart', monthly.map(d=>d.label), [{ label: 'Hits', data: monthly.map(d=>d.count), backgroundColor: WARN, borderRadius: 4 }]);
+          mkBar('hpMonthlyChart', monthly.map(d=>d.label), [{ label: '{% translate "ഹിറ്റുകൾ" %}', data: monthly.map(d=>d.count), backgroundColor: WARN, borderRadius: 4 }]);
       } else {
-          document.getElementById('hpMonthlyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No monthly data yet.</p>');
+          document.getElementById('hpMonthlyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">{% translate "ഇതുവരെ മാസംതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല." %}</p>');
       }
 
       const yearly = {{ hp_hits_yearly_json|safe|default:"[]" }};
       if (yearly && yearly.length > 0) {
-          mkBar('hpYearlyChart', yearly.map(d=>d.label), [{ label: 'Hits', data: yearly.map(d=>d.count), backgroundColor: DANGER, borderRadius: 4 }]);
+          mkBar('hpYearlyChart', yearly.map(d=>d.label), [{ label: '{% translate "ഹിറ്റുകൾ" %}', data: yearly.map(d=>d.count), backgroundColor: DANGER, borderRadius: 4 }]);
       } else {
-          document.getElementById('hpYearlyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">No yearly data yet.</p>');
+          document.getElementById('hpYearlyChart').insertAdjacentHTML('afterend', '<p style="color:var(--an-muted);font-size:.85rem;">{% translate "ഇതുവരെ വർഷംതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല." %}</p>');
       }
   })();
   

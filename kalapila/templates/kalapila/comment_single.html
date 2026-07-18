@@ -1,4 +1,4 @@
-{% load static wagtailimages_tags %}
+{% load static wagtailimages_tags i18n %}
 
 <div class="comment-card" id="comment-{{ comment.id }}" data-comment-id="{{ comment.id }}" data-author-id="{{ comment.user.id }}">
     <div class="comment-card__main">
@@ -30,20 +30,20 @@
             <div class="comment-card__actions">
                 {% if user.is_authenticated and user.can_comment %}
                     <button class="comment-action-btn reply-trigger-btn">
-                        <i class="fas fa-reply"></i> മറുപടി
+                        <i class="fas fa-reply"></i> {% translate "മറുപടി" %}
                     </button>
                 {% endif %}
 
                 {% if user.is_authenticated %}
                     {% if user == comment.user or user.is_staff or user.is_superuser %}
                         <button class="comment-action-btn delete-comment-btn" data-url="{% url 'kalapila:delete_comment' comment.id %}">
-                            <i class="far fa-trash-alt"></i> ഒഴിവാക്കുക
+                            <i class="far fa-trash-alt"></i> {% translate "ഒഴിവാക്കുക" %}
                         </button>
                     {% endif %}
 
                     {% if user != comment.user %}
                         <button class="comment-action-btn report-comment-btn" data-url="{% url 'kalapila:report_comment' comment.id %}">
-                            <i class="far fa-flag"></i> റിപ്പോർട്ട് ചെയ്യുക
+                            <i class="far fa-flag"></i>{% translate "റിപ്പോർട്ട് ചെയ്യുക" %}
                         </button>
                     {% endif %}
                 {% endif %}

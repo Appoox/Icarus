@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags wagtailembeds_tags static %}
+{% load wagtailcore_tags wagtailimages_tags wagtailembeds_tags static i18n %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/article.css' %}">
@@ -66,7 +66,10 @@
         {% if user.is_authenticated %}
         <button class="favorite-btn" data-id="{{ page.id }}" data-type="article" 
                 data-favorited="{% if reader and page in reader.favorite_articles.all %}true{% else %}false{% endif %}"
-                title="Toggle Favorite">
+                data-label-add="{% translate 'പ്രിയപ്പെട്ടവയിൽ ചേർക്കുക' %}"
+                data-label-remove="{% translate 'പ്രിയപ്പെട്ടവയിൽ നിന്ന് നീക്കുക' %}"
+                data-label-error="{% translate 'ഒരു പിശക് സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.' %}"
+                title="{% translate 'പ്രിയപ്പെട്ടതാക്കുക' %}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
           </svg>
@@ -81,7 +84,7 @@
     {# ── MODERN LANGUAGE SLIDER ────────────────── #}
     {% if page.body_en or page.body_hi or page.body_ta %}
     <div class="lang-switcher-container">
-      <nav class="lang-slider" aria-label="Language selection">
+      <nav class="lang-slider" aria-label="{% translate 'ഭാഷ തിരഞ്ഞെടുക്കൽ' %}">
         <div class="lang-slider__indicator"></div>
         <div class="lang-slider__item active" data-lang-target="ml">മലയാളം</div>
         {% if page.body_en %}<div class="lang-slider__item" data-lang-target="en">English</div>{% endif %}
@@ -129,7 +132,7 @@
                     <audio id="audio-main" src="{{ page.audio_file.url }}"></audio>
                     
                     <div class="player-main">
-                        <button class="play-btn" id="play-btn-main" title="Play">
+                        <button class="play-btn" id="play-btn-main" title="{% translate 'പ്ലേ ചെയ്യുക' %}">
                             <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
                             <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                         </button>
@@ -248,20 +251,20 @@
       </div>
       <div class="paywall-cta">
         <div class="paywall-cta__card">
-          <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
+          <h2 class="paywall-cta__title">{% translate "തുടര്‍ന്ന് വായിക്കൂ" %}</h2>
           <p class="paywall-cta__text">
             {% if request.user.is_authenticated %}
-            നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക.
+            {% translate "നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക." %}
             {% else %}
-            പൂർണ്ണരൂപം വായിക്കുന്നതിനായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക.
+            {% translate "പൂർണ്ണരൂപം വായിക്കുന്നതിനായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക." %}
             {% endif %}
           </p>
           <div class="paywall-cta__actions">
             {% if request.user.is_authenticated %}
-            <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">ഇപ്പോൾ വരിക്കാരാകാം</a>
+            <a href="{% url 'reader_profile' %}" class="paywall-btn paywall-btn--primary">{% translate "ഇപ്പോൾ വരിക്കാരാകാം" %}</a>
             {% else %}
-            <a href="{% url 'account_login' %}" class="paywall-btn paywall-btn--secondary">സൈൻ ഇൻ</a>
-            <a href="{% url 'account_signup' %}" class="paywall-btn paywall-btn--primary">വരിക്കാരാകാം</a>
+            <a href="{% url 'account_login' %}" class="paywall-btn paywall-btn--secondary">{% translate "സൈൻ ഇൻ" %}</a>
+            <a href="{% url 'account_signup' %}" class="paywall-btn paywall-btn--primary">{% translate "വരിക്കാരാകാം" %}</a>
             {% endif %}
           </div>
         </div>
@@ -327,12 +330,12 @@
       </div>
       <div class="paywall-cta">
         <div class="paywall-cta__card">
-          <h2 class="paywall-cta__title">തുടര്‍ന്ന് വായിക്കൂ</h2>
+          <h2 class="paywall-cta__title">{% translate "തുടര്‍ന്ന് വായിക്കൂ" %}</h2>
           <p class="paywall-cta__text">
             {% if request.user.is_authenticated %}
-            നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക.
+            {% translate "നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക." %}
             {% else %}
-            പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക.
+            {% translate "പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക." %}
             {% endif %}
           </p>
           <div class="paywall-cta__actions">
@@ -452,7 +455,7 @@
     {# ── Tags ── #}
     {% if page.tags.all %}
     <div class="tags-container">
-      <h3 class="tags-title">Tags</h3>
+      <h3 class="tags-title">{% translate "ടാഗുകൾ" %}</h3>
       <div class="tags-list">
         {% for tag in page.tags.all %}
         <a href="{% url 'tag_detail' tag=tag.name %}" class="sg-tag-btn">{{ tag.name }}</a>
@@ -463,7 +466,7 @@
 
     {# ── Author Info Cards (Placed universally so they show in all languages) ── #}
     <section class="author-section">
-      <h3 class="author-section-title">About the Author{% if page.article_authors.count > 1 %}s{% endif %}</h3>
+      <h3 class="author-section-title">{% blocktranslate count counter=page.article_authors.count %}രചയിതാവിനെക്കുറിച്ച്{% plural %}രചയിതാക്കളെക്കുറിച്ച്{% endblocktranslate %}</h3>
       
       <div class="author-cards">
         {% for author_rel in page.article_authors.all %}
@@ -497,7 +500,7 @@
 
   {% if request.user.is_staff or request.user.is_superuser or request.user.is_subscribed %}
   <div class="article-pdf-download-wrapper">
-      <a href="{{ page.url }}pdf/" class="article-pdf-download-btn" target="_blank" rel="noopener noreferrer" title="Download PDF">
+      <a href="{{ page.url }}pdf/" class="article-pdf-download-btn" target="_blank" rel="noopener noreferrer" title="{% translate 'PDF ഡൗൺലോഡ്' %}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
@@ -514,7 +517,7 @@
 
   {# ── RELATED ARTICLES — siblings from the same topic ── #}
   <section class="related-articles">
-    <h3 class="related-heading">Read This Next</h3>
+    <h3 class="related-heading">{% translate "അടുത്തതായി ഇവ വായിക്കാം" %}</h3>
     <div class="related-grid">
       {% for article in related_articles %}
       <a class="related-card" href="{{ article.url }}">

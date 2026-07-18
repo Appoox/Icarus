@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libwebp7 \
     weasyprint \
     poppler-utils \
+    gettext \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /install
@@ -60,6 +61,7 @@ USER wagtail
 # by Caddy, and running it on boot keeps the volume refreshed after each rebuild.
 CMD set -e; \
     python manage.py collectstatic --noinput; \
+    python manage.py compilemessages -l en; \
     python manage.py migrate --noinput; \
     python manage.py setup_page_lock_schedule; \
     gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker -w 2 --preload

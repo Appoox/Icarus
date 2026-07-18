@@ -1,0 +1,87 @@
+{# templates/wagtailusers/users/edit.html #}
+{% extends "wagtailusers/users/edit.html" %}
+{% load i18n %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <style>
+        /* Hide parent list-items that wrap first_name, last_name, and username inputs */
+        li:has(input[name="first_name"]),
+        li:has(input[name="last_name"]),
+        li:has(input[name="username"]) {
+            display: none !important;
+        }
+    </style>
+{% endblock extra_css %}
+
+{% block extra_fields %}
+    <!-- Section: Core Account Profile -->
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.name %}
+    </li>
+
+    <!-- Section: Personal Demographics -->
+    <h2 class="w-heading-size-3" style="margin-top: 2em; margin-bottom: 0.5em; border-bottom: 1px solid var(--w-color-grey-100); padding-bottom: 0.3em;">
+        {% translate "ജനസംഖ്യാ വിവരങ്ങൾ" %}
+    </h2>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.gender %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.gender_other %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.date_of_birth %}
+    </li>
+
+    <!-- Section: Mailing Address -->
+    <h2 class="w-heading-size-3" style="margin-top: 2em; margin-bottom: 0.5em; border-bottom: 1px solid var(--w-color-grey-100); padding-bottom: 0.3em;">
+        {% translate "തപാൽ വിലാസം" %}
+    </h2>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.address_line_1 %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.address_line_2 %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.city %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.post_office %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.pincode %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.district %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.state %}
+    </li>
+
+    <!-- Section: Subscriptions -->
+    <h2 class="w-heading-size-3" style="margin-top: 2em; margin-bottom: 0.5em; border-bottom: 1px solid var(--w-color-grey-100); padding-bottom: 0.3em;">
+        {% translate "വരിസംഖ്യ വിവരങ്ങൾ" %}
+    </h2>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.is_print_subscriber %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.print_delivery_status %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.subscription_plan %}
+    </li>
+    <li>
+        {% include "wagtailadmin/shared/field.html" with field=form.grant_access_until %}
+    </li>
+    {% if form.instance.subscription_end %}
+    <li>
+        <p class="help">
+            {% translate "നിലവിലെ പ്രവേശനം അവസാനിക്കുന്നത്:" %} {{ form.instance.subscription_end }}
+            ({% if form.instance.is_subscribed %}{% translate "സജീവം" %}{% else %}{% translate "കാലഹരണപ്പെട്ടു" %}{% endif %})
+        </p>
+    </li>
+    {% endif %}
+{% endblock extra_fields %}

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
-
+from django.utils.translation import gettext_lazy as _
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
@@ -28,7 +28,7 @@ def postbox_page(request):
             _notify_staff(postbox)
             messages.success(
                 request,
-                'ഫീഡ്ബാക്കിന് നന്ദി',
+                _('ഫീഡ്ബാക്കിന് നന്ദി'),
             )
             return redirect('postbox:page')
     else:
@@ -38,7 +38,7 @@ def postbox_page(request):
             if referer:
                 page_ctx = referer[:500]
         form = PostboxForm(initial={
-            'postbox_type': 'general',
+            'feedback_type': 'general',
             'page_context':  page_ctx,
         })
 
@@ -70,18 +70,21 @@ def _notify_staff(postbox):
 
     channel_layer = get_channel_layer()
 
+    notifs = []
     for staff in recipients:
         notif = PostboxNotification.objects.create(
             user=staff,
             postbox=postbox,
             feedback=msg,
         )
+        notifs.append(notif)
+    if notifs:
         async_to_sync(channel_layer.group_send)(
             "admin_postbox_notifications",
             {
                 "type": "send_postbox_notification",
                 "notification": {
-                    "id":      notif.id,
+                    "id":      f"postbox-{postbox.pk}",
                     "feedback": msg,
                     "url":     edit_url,
                 },

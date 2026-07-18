@@ -2,25 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{# ─────────────────────────────────────────────────────────────────────────────
-   Template : reader/account_deactivate.html
-   View     : deactivate_account  (reader/views.py)
-   URL      : {% url 'deactivate_account' %}
-              If your reader URLs are namespaced, use {% url 'reader:deactivate_account' %}
-
-   POST fields the view reads:
-     • password — reader.check_password() verifies this server-side.
-       Wrong password → messages.error + redirect to reader_profile.
-       (The `confirm_text` keyword field is client-side friction only and is
-        intentionally ignored by the view.)
-
-   NOTE: On a wrong-password failure, the view redirects to reader_profile,
-   not back here.  To redirect back to this page instead, change the view's
-   failure branch to:  return redirect('deactivate_account_page')
-   (or whatever URL name you give the GET handler for this template).
-   ───────────────────────────────────────────────────────────────────────────── #}
-
-{% block title %}Deactivate Account — Icarus{% endblock %}
+{% block title %}{% translate "അക്കൗണ്ട് നിർജ്ജീവമാക്കുക" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/account.css' %}">
@@ -28,43 +10,42 @@
 
 {% block content %}
 <div class="auth-page">
-    <h1>Deactivate Account</h1>
-    <p class="subtitle">Read every point below carefully before continuing.</p>
+    <h1>{% translate "അക്കൗണ്ട് നിർജ്ജീവമാക്കുക" %}</h1>
+    <p class="subtitle">{% translate "തുടരുന്നതിന് മുമ്പ് താഴെയുള്ള ഓരോ കാര്യവും ശ്രദ്ധയോടെ വായിക്കുക." %}</p>
 
     {# ── Danger banner — reuses existing .lockout token ─────────────── #}
     <div class="login-attempts-warning lockout deactivate-banner" role="alert">
         <p>
-            <strong>⚠ This action is permanent and cannot be undone.</strong>
-            Deactivating your account immediately revokes all access to Icarus
-            and initiates the statutory data-retention countdown.
+            <strong>⚠ {% translate "ഈ നടപടി പഴയപടിയാക്കാനാവില്ല." %}</strong>
+            {% translate "അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള എല്ലാ പ്രവേശനവും ഉടൻ റദ്ദാകുകയും നിയമപരമായി ഡാറ്റ സൂക്ഷിപ്പ് പൂര്‍ണ്ണമായി നശിപ്പിക്കുന്നതിലേക്കുള്ള കൗണ്ട്ഡൗൺ ആരംഭിക്കുകയും ചെയ്യും." %}
         </p>
     </div>
 
     {# ── Consequence + Confirmation Card ─────────────────────────────── #}
     <div class="auth-form deactivate-card">
 
-        <p class="deactivate-section-label">What will happen immediately:</p>
+        <p class="deactivate-section-label">{% translate "ഉടൻ സംഭവിക്കുന്നത്:" %}</p>
 
-        <ul class="consequence-list" aria-label="Consequences of account deactivation">
+        <ul class="consequence-list" aria-label="{% translate 'അക്കൗണ്ട് നിർജ്ജീവമാക്കലിന്റെ അനന്തരഫലങ്ങൾ' %}">
             <li>
                 <span class="consequence-icon" aria-hidden="true">✕</span>
-                You are signed out and your login is permanently disabled
+                {% translate "നിങ്ങൾ ലോഗ് ഔട്ട് ചെയ്യപ്പെടും; ലോഗിൻ ശാശ്വതമായി പ്രവർത്തനരഹിതമാകും" %}
             </li>
             <li>
                 <span class="consequence-icon" aria-hidden="true">✕</span>
-                Any active subscription is cancelled — no refund is issued
+                {% translate "സജീവ വരിസംഖ്യ റദ്ദാകും" %} <b> {% translate " തുക തിരികെ ലഭിക്കില്ല" %} </b>
             </li>
             <li>
                 <span class="consequence-icon" aria-hidden="true">✕</span>
-                Your reading history, bookmarks, and preferences are erased
+                {% translate "നിങ്ങളുടെ വായനാ ചരിത്രം, പ്രിയപ്പെട്ടവ, മുൻഗണനകൾ എന്നിവ മായ്ക്കപ്പെടും" %}
             </li>
             <li>
                 <span class="consequence-icon" aria-hidden="true">✕</span>
-                Your comments are anonymised and retained for moderation records
+                {% translate "നിങ്ങളുടെ അഭിപ്രായങ്ങൾ അജ്ഞാതവൽക്കരിച്ച് മോഡറേഷൻ രേഖകൾക്കായി സൂക്ഷിക്കും" %}
             </li>
             <li>
                 <span class="consequence-icon" aria-hidden="true">✕</span>
-                Personal data will be permanently purged after the statutory retention period
+                {% translate "നിയമപരമായ സൂക്ഷിപ്പ് കാലയളവിനുശേഷം വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും" %}
             </li>
         </ul>
 
@@ -85,7 +66,8 @@
                 <div class="deactivate-step__header">
                     <span class="deactivate-step__num" aria-hidden="true">1</span>
                     <label for="id_confirm_text" class="deactivate-step__label">
-                        Type <kbd class="confirm-keyword">DEACTIVATE</kbd> to acknowledge
+                        {# DEACTIVATE is a functional token checked by JS — never translate the keyword itself #}
+                        <kbd class="confirm-keyword">DEACTIVATE</kbd> {% translate "എന്ന് ടൈപ്പ് ചെയ്ത് സ്ഥിരീകരിക്കുക" %}
                     </label>
                 </div>
                 <input
@@ -100,7 +82,7 @@
                     placeholder="DEACTIVATE"
                     aria-describedby="keyword-hint">
                 <span id="keyword-hint" class="helptext">
-                    All capitals, exact match required.
+                    {% translate "എല്ലാം വലിയക്ഷരങ്ങളിൽ, കൃത്യമായി ടൈപ്പ് ചെയ്യണം." %}
                 </span>
             </div>
 
@@ -110,7 +92,7 @@
                 <div class="deactivate-step__header">
                     <span class="deactivate-step__num" aria-hidden="true">2</span>
                     <label for="id_deactivate_password" class="deactivate-step__label">
-                        Confirm with your account password
+                        {% translate "അക്കൗണ്ട് പാസ്‌വേഡ് നൽകി സ്ഥിരീകരിക്കുക" %}
                     </label>
                 </div>
                 {# Wrap in .password-wrapper for the show/hide toggle #}
@@ -121,12 +103,12 @@
                         name="password"
                         class="form-input"
                         autocomplete="current-password"
-                        placeholder="Your password"
+                        placeholder="{% translate 'നിങ്ങളുടെ പാസ്‌വേഡ്' %}"
                         disabled>
                     <button type="button"
                             class="password-toggle"
                             id="pw-toggle-deactivate"
-                            aria-label="Show password"
+                            aria-label="{% translate 'പാസ്‌വേഡ് കാണിക്കുക' %}"
                             tabindex="-1">
                         {# Eye-open: visible when field is masked #}
                         <svg class="eye-open" xmlns="http://www.w3.org/2000/svg"
@@ -158,13 +140,13 @@
                 id="deactivate-submit-btn"
                 disabled
                 aria-disabled="true">
-                Permanently Deactivate My Account
+                {% translate "എന്റെ അക്കൗണ്ട് ശാശ്വതമായി നിർജ്ജീവമാക്കുക" %}
             </button>
         </form>
     </div>{# /.deactivate-card #}
 
     <p class="auth-footer">
-        <a href="{% url 'reader_profile' %}">← Changed my mind, take me back</a>
+        <a href="{% url 'reader_profile' %}">{% translate "← വേണ്ട, തിരികെ കൊണ്ടുപോകൂ" %}</a>
     </p>
 </div>{# /.auth-page #}
 {% endblock %}
@@ -227,7 +209,7 @@
         pwToggle.addEventListener('click', function () {
             var isHidden = passwordInput.type === 'password';
             passwordInput.type = isHidden ? 'text' : 'password';
-            pwToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            pwToggle.setAttribute('aria-label', isHidden ? '{% translate "പാസ്‌വേഡ് മറയ്ക്കുക" %}' : '{% translate "പാസ്‌വേഡ് കാണിക്കുക" %}');
             if (eyeOpen)   eyeOpen.style.display   = isHidden ? 'none' : '';
             if (eyeClosed) eyeClosed.style.display  = isHidden ? ''     : 'none';
         });

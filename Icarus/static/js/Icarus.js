@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const homeBtn = document.createElement('a');
             homeBtn.href = '/';
             homeBtn.className = 'floating-btn go-home-btn';
-            homeBtn.title = 'Home';
+            homeBtn.title = floatingContainer.dataset.homeLabel || 'Home';
             homeBtn.innerHTML = '<i class="fas fa-home"></i>';
             homeBtn.style.textDecoration = 'none';
             homeBtn.style.justifyContent = 'center';

@@ -17,7 +17,7 @@
      • `autocomplete="one-time-code"` on the first box enables iOS/Android SMS autofill.
    ───────────────────────────────────────────────────────────────────────────── #}
 
-{% block title %}{% trans "Verify Code" %} — Icarus{% endblock %}
+{% block title %}{% trans "കോഡ് പരിശോധിക്കുക" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/account.css' %}">
@@ -25,10 +25,10 @@
 
 {% block content %}
 <div class="auth-page">
-    <h1>{% trans "Check Your Phone" %}</h1>
+    <h1>{% trans "നിങ്ങളുടെ ഫോൺ പരിശോധിക്കുക" %}</h1>
     <p class="subtitle">
-        {% trans "We sent a 6-digit code to your registered phone number." %}
-        {% trans "It expires in 10 minutes." %}
+        {% trans "ഞങ്ങൾ നിങ്ങളുടെ രജിസ്റ്റർ ചെയ്ത ഫോൺ നമ്പറിലേക്ക് 6 അക്ക കോഡ് അയച്ചിട്ടുണ്ട്." %}
+        {% trans "ഇത് 10 മിനിറ്റിനുള്ളിൽ കാലഹരണപ്പെടും." %}
     </p>
 
     {# ── Django system messages (e.g. "Code resent") ─────────────────── #}
@@ -61,30 +61,30 @@
         {# JS syncs their values into the hidden allauth `code` field.   #}
         <div class="otp-digit-group"
              role="group"
-             aria-label="{% trans 'One-time verification code' %}">
+             aria-label="{% trans 'ഒറ്റത്തവണ ഉപയോഗിക്കാവുന്ന കോഡ്' %}">
 
             {# First box gets autocomplete="one-time-code" for SMS autofill #}
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
-                   class="otp-digit" aria-label="{% trans 'Digit 1' %}"
+                   class="otp-digit" aria-label="{% trans 'ആദ്യ അക്കം' %}"
                    autocomplete="one-time-code">
 
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
-                   class="otp-digit" aria-label="{% trans 'Digit 2' %}">
+                   class="otp-digit" aria-label="{% trans 'രണ്ടാം അക്കം' %}">
 
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
-                   class="otp-digit" aria-label="{% trans 'Digit 3' %}">
+                   class="otp-digit" aria-label="{% trans 'മൂന്നാം അക്കം' %}">
 
             {# Visual separator between the two triplets #}
             <span class="otp-sep" aria-hidden="true">–</span>
 
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
-                   class="otp-digit" aria-label="{% trans 'Digit 4' %}">
+                   class="otp-digit" aria-label="{% trans 'നാലാം അക്കം' %}">
 
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
-                   class="otp-digit" aria-label="{% trans 'Digit 5' %}">
+                   class="otp-digit" aria-label="{% trans 'അഞ്ചാം അക്കം' %}">
 
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
-                   class="otp-digit" aria-label="{% trans 'Digit 6' %}">
+                   class="otp-digit" aria-label="{% trans 'ആറാം അക്കം' %}">
         </div>
 
         {# ── Hidden allauth field — rendered but visually hidden ──────── #}
@@ -96,29 +96,29 @@
         {% endif %}
 
         <button type="submit" class="auth-submit" id="otp-submit">
-            {% trans "Verify Code" %}
+            {% trans "കോഡ് പരിശോധിക്കുക" %}
         </button>
     </form>
 
     {# ── Resend section (outside the card) ───────────────────────────── #}
     <div class="otp-resend-section">
         <p class="otp-timer-line">
-            {% trans "Didn't receive it?" %}
+            {% trans "നിങ്ങളുടെ ഫോണിൽ കോഡ് ലഭിച്ചില്ലേ?" %}
             <span id="otp-timer-wrap">
-                {% trans "Resend in" %} <strong id="otp-countdown">60</strong>s
+                {% trans "പുതിയ കോഡ് അയക്കാൻ അമര്‍ത്തുക" %} <strong id="otp-countdown">60</strong>s
             </span>
         </p>
         {# allauth's request_login_code view re-sends the code and redirects back #}
         <form method="post" action="{% url 'account_request_login_code' %}" id="resend-form">
             {% csrf_token %}
             <button type="submit" class="otp-resend-btn" id="otp-resend-btn" disabled>
-                {% trans "Resend Code" %}
+                {% trans "പുതിയ കോഡ് അയക്കുക" %}
             </button>
         </form>
     </div>
 
     <p class="auth-footer">
-        <a href="{% url 'account_login' %}">← {% trans "Back to Sign In" %}</a>
+        <a href="{% url 'account_login' %}">← {% trans "സൈൻ ഇൻ പേജിലേക്ക് തിരികെ പോവുക" %}</a>
     </p>
 </div>{# /.auth-page #}
 {% endblock %}

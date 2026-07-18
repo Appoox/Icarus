@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags static %}
+{% load wagtailcore_tags wagtailimages_tags static i18n %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/most_read_topics.css' %}">
@@ -8,7 +8,7 @@
 {% block content %}
 <div class="trending-container">
   <header class="trending-header">
-    <h1>{{ page.title }} ({{ paginator.count }} പേർ)</h1>
+    <h1>{{ page.title }} {% blocktranslate with count=paginator.count %}({{ count }} പേർ){% endblocktranslate %}</h1>
     {% if page.intro %}
     <div class="trending-header__period">{{ page.intro|richtext }}</div>
     {% endif %}
@@ -27,7 +27,7 @@
              data-target="pane-{{ author.id }}"
              title="{{ author.title }}">
 
-            <span class="trending-pill__rank" aria-label="Rank {{ page_obj.start_index|add:forloop.counter0 }}">
+            <span class="trending-pill__rank" aria-label="{% blocktranslate with rank=page_obj.start_index|add:forloop.counter0 %}റാങ്ക് {{ rank }}{% endblocktranslate %}">
               {{ page_obj.start_index|add:forloop.counter0 }}
             </span>
 
@@ -54,7 +54,7 @@
       </ol>
       {% else %}
       <div class="trending-empty">
-        <p>നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല.</p>
+        <p>{% translate "നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല." %}</p>
       </div>
       {% endif %}
     </div>
@@ -63,8 +63,8 @@
       <div class="preview-panel-sticky">
         
         <div id="pane-default" class="articles-preview-pane active">
-          <h3 class="preview-pane-title">ലേഖനങ്ങൾ</h3>
-          <p class="pane-placeholder-text">ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക.</p>
+          <h3 class="preview-pane-title">{% translate "ലേഖനങ്ങൾ" %}</h3>
+          <p class="pane-placeholder-text">{% translate "ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക." %}</p>
         </div>
 
         {% for author_page in authors %}
@@ -78,11 +78,11 @@
             {% if author.bio %}
             <div class="preview-pane-bio" style="font-size: 0.95rem; line-height: 1.5; color: var(--tr-text, #333);">
               {{ author.bio|truncatechars_html:150|safe }}
-              <a href="{{ author.url }}" style="font-size: 0.85rem; color: var(--tr-accent, #c0392b); font-weight: 600; margin-left: 0.25rem; text-decoration: none; display: inline-block; margin-top: 0.5rem;">പ്രൊഫൈൽ കാണുക &rarr;</a>
+              <a href="{{ author.url }}" style="font-size: 0.85rem; color: var(--tr-accent, #c0392b); font-weight: 600; margin-left: 0.25rem; text-decoration: none; display: inline-block; margin-top: 0.5rem;">{% translate "പ്രൊഫൈൽ കാണുക" %} &rarr;</a>
             </div>
             {% endif %}
           </div>
-          <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--tr-border, #e8e8e8); padding-bottom: 0.5rem; color: var(--tr-text); margin-top: 0;">ലേഖനങ്ങൾ</h4>
+          <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--tr-border, #e8e8e8); padding-bottom: 0.5rem; color: var(--tr-text); margin-top: 0;">{% translate "ലേഖനങ്ങൾ" %}</h4>
           <ul class="preview-article-list">
             {% for article in author.get_articles|slice:":5" %}
             <li class="preview-article-item">
@@ -104,7 +104,7 @@
               </a>
             </li>
             {% empty %}
-            <li class="pane-placeholder-text">ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങൾ നിലവിൽ ലഭ്യമായിട്ടില്ല.</li>
+            <li class="pane-placeholder-text">{% translate "ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങൾ നിലവിൽ ലഭ്യമായിട്ടില്ല." %}</li>
             {% endfor %}
           </ul>
         </div>

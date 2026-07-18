@@ -1,0 +1,3149 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Icarus (sasthragathy.org)\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 12:01+0530\n"
+"PO-Revision-Date: 2026-07-17 22:45+0530\n"
+"Last-Translator: Icarus i18n\n"
+"Language-Team: en\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: Icarus/templates/404.html:5 Icarus/templates/404.html:10
+msgid "പേജ് കാണാനില്ല"
+msgstr "Page Not Found"
+
+#: Icarus/templates/404.html:12
+msgid "ക്ഷമിക്കണം, ഈ പേജ് കണ്ടെത്താനായില്ല."
+msgstr "Sorry, this page could not be found."
+
+#: Icarus/templates/500.html:6 Icarus/templates/500.html:10
+msgid "സര്‍വ്വര്‍ തകരാറ്"
+msgstr "Server Error"
+
+#: Icarus/templates/500.html:12
+msgid "ക്ഷമിക്കണം, ഒരു പിഴവുണ്ടായിരിക്കുന്നു. ദയവായി ഉടൻ വീണ്ടും ശ്രമിക്കുക."
+msgstr "Sorry, something went wrong. Please try again shortly."
+
+#: Icarus/templates/account/account_inactive.html:18
+#: Icarus/templates/account/account_inactive.html:45
+msgid "അക്കൗണ്ട് നിർജ്ജീവമാക്കി"
+msgstr "Account Deactivated"
+
+#: Icarus/templates/account/account_inactive.html:47
+msgid "നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കിയിരിക്കുന്നു, അത് ഇനി ആക്സസ് ചെയ്യാൻ കഴിയില്ല."
+msgstr "Your account has been deactivated and can no longer be accessed."
+
+#: Icarus/templates/account/account_inactive.html:53
+msgid ""
+"നിങ്ങൾ തന്നെയാണ് ഈ നിർജ്ജീവമാക്കൽ ആവശ്യപ്പെട്ടതെങ്കിൽ, ഞങ്ങളുടെ ഡാറ്റാ നിലനിർത്തൽ നയത്തിന് "
+"വിധേയമായി നിങ്ങളുടെ വ്യക്തിഗത വിവരങ്ങൾ സൂക്ഷിച്ചുവെക്കുന്നതാണ്. നിയമപരമായ കാലാവധിക്ക് ശേഷം "
+"എല്ലാ വ്യക്തിഗത വിവരങ്ങളും ശാശ്വതമായും വീണ്ടെടുക്കാൻ കഴിയാത്തവിധവും പൂർണ്ണമായി നീക്കം "
+"ചെയ്യപ്പെടും."
+msgstr ""
+"If you requested this deactivation yourself, your personal data will be "
+"retained subject to our data retention policy. After the statutory period, "
+"all personal data will be permanently and irrecoverably deleted."
+
+#: Icarus/templates/account/account_inactive.html:60
+msgid ""
+"ഈ നിർജ്ജീവമാക്കൽ തെറ്റായി സംഭവിച്ചതാണെന്ന് നിങ്ങൾ കരുതുന്നുവെങ്കിലോ, അല്ലെങ്കിൽ ഡാറ്റ "
+"നിലനിർത്തൽ കാലാവധി അവസാനിക്കുന്നതിന് മുൻപ് നിങ്ങളുടെ അക്കൗണ്ട് വീണ്ടും സജീവമാക്കാൻ "
+"ആഗ്രഹിക്കുന്നുവെങ്കിലോ, ദയവായി എത്രയും വേഗം ഞങ്ങളെ ബന്ധപ്പെടുക."
+msgstr ""
+"If you believe this deactivation happened in error, or if you wish to "
+"reactivate your account before the data retention period ends, please "
+"contact us as soon as possible."
+
+#: Icarus/templates/account/account_inactive.html:76
+msgid "ഞങ്ങളുമായി ബന്ധപ്പെടുക"
+msgstr "Contact Support"
+
+#: Icarus/templates/account/account_inactive.html:82
+msgid "ഹോം പേജിലേക്ക് മടങ്ങുക"
+msgstr "Return to Homepage"
+
+#: Icarus/templates/account/account_inactive.html:88
+msgid ""
+"അക്കൗണ്ട് വീണ്ടും സജീവമാക്കാനുള്ള അഭ്യർത്ഥനകൾ നിലനിർത്തൽ കാലാവധിക്കുള്ളിൽ മാത്രമേ സാധ്യമാകൂ. "
+"ഈ സമയപരിധി കഴിഞ്ഞാൽ, എല്ലാ വ്യക്തിഗത വിവരങ്ങളും ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും, കൂടാതെ "
+"യാതൊരു സാഹചര്യത്തിലും അക്കൗണ്ട് വീണ്ടെടുക്കാൻ സാധിക്കുന്നതല്ല."
+msgstr ""
+"Requests to reactivate your account are only possible within the retention "
+"period. Once this time limit has passed, all personal data will be "
+"permanently deleted, and the account cannot be recovered under any "
+"circumstances."
+
+#: Icarus/templates/account/confirm_login_code.html:20
+#: Icarus/templates/account/confirm_login_code.html:99
+msgid "കോഡ് പരിശോധിക്കുക"
+msgstr "Verify Code"
+
+#: Icarus/templates/account/confirm_login_code.html:28
+msgid "നിങ്ങളുടെ ഫോൺ പരിശോധിക്കുക"
+msgstr "Check Your Phone"
+
+#: Icarus/templates/account/confirm_login_code.html:30
+msgid "ഞങ്ങൾ നിങ്ങളുടെ രജിസ്റ്റർ ചെയ്ത ഫോൺ നമ്പറിലേക്ക് 6 അക്ക കോഡ് അയച്ചിട്ടുണ്ട്."
+msgstr "We've sent a 6-digit code to your registered phone number."
+
+#: Icarus/templates/account/confirm_login_code.html:31
+msgid "ഇത് 10 മിനിറ്റിനുള്ളിൽ കാലഹരണപ്പെടും."
+msgstr "It will expire in 10 minutes."
+
+#: Icarus/templates/account/confirm_login_code.html:64
+msgid "ഒറ്റത്തവണ ഉപയോഗിക്കാവുന്ന കോഡ്"
+msgstr "One-time verification code"
+
+#: Icarus/templates/account/confirm_login_code.html:68
+msgid "ആദ്യ അക്കം"
+msgstr "Digit 1"
+
+#: Icarus/templates/account/confirm_login_code.html:72
+msgid "രണ്ടാം അക്കം"
+msgstr "Digit 2"
+
+#: Icarus/templates/account/confirm_login_code.html:75
+msgid "മൂന്നാം അക്കം"
+msgstr "Digit 3"
+
+#: Icarus/templates/account/confirm_login_code.html:81
+msgid "നാലാം അക്കം"
+msgstr "Digit 4"
+
+#: Icarus/templates/account/confirm_login_code.html:84
+msgid "അഞ്ചാം അക്കം"
+msgstr "Digit 5"
+
+#: Icarus/templates/account/confirm_login_code.html:87
+msgid "ആറാം അക്കം"
+msgstr "Digit 6"
+
+#: Icarus/templates/account/confirm_login_code.html:106
+msgid "നിങ്ങളുടെ ഫോണിൽ കോഡ് ലഭിച്ചില്ലേ?"
+msgstr "Didn't receive the code on your phone?"
+
+#: Icarus/templates/account/confirm_login_code.html:108
+msgid "പുതിയ കോഡ് അയക്കാൻ അമര്‍ത്തുക"
+msgstr "Tap to send a new code"
+
+#: Icarus/templates/account/confirm_login_code.html:115
+msgid "പുതിയ കോഡ് അയക്കുക"
+msgstr "Send New Code"
+
+#: Icarus/templates/account/confirm_login_code.html:121
+msgid "സൈൻ ഇൻ പേജിലേക്ക് തിരികെ പോവുക"
+msgstr "Back to the sign-in page"
+
+#: Icarus/templates/account/login.html:5
+#: Icarus/templates/account/login.html:138
+#: Icarus/templates/account/signup.html:109
+#: articles/templates/articles/article.html:266
+msgid "സൈൻ ഇൻ"
+msgstr "Sign In"
+
+#: Icarus/templates/account/login.html:14
+msgid "വീണ്ടും സ്വാഗതം"
+msgstr "Welcome back"
+
+#: Icarus/templates/account/login.html:15
+msgid "ശാസ്ത്രഗതിയിൽ നിങ്ങളുടെ വായനാ ചരിത്രവും സബ്സ്ക്രിപ്ഷനും ആക്സസ് ചെയ്യാൻ സൈൻ ഇൻ ചെയ്യുക."
+msgstr ""
+"Sign in to access your reading history and subscription on Sasthragathi."
+
+#: Icarus/templates/account/login.html:35
+msgid "അസാധുവായ ഫോൺ/ഇമെയിൽ അല്ലെങ്കിൽ പാസ്‌വേഡ്. വീണ്ടും ശ്രമിക്കുക."
+msgstr "Invalid phone/email or password. Please try again."
+
+#: Icarus/templates/account/login.html:43
+msgid "സുരക്ഷാ അറിയിപ്പ്:"
+msgstr "Security notice:"
+
+#: Icarus/templates/account/login.html:44
+#, python-format
+msgid "%(counter)s പരാജയപ്പെട്ട ലോഗിൻ ശ്രമം."
+msgid_plural "%(counter)s പരാജയപ്പെട്ട ലോഗിൻ ശ്രമങ്ങൾ."
+msgstr[0] "%(counter)s failed login attempt."
+msgstr[1] "%(counter)s failed login attempts."
+
+#: Icarus/templates/account/login.html:46
+msgid "അക്കൗണ്ട് താൽക്കാലികമായി ലോക്ക് ചെയ്തു."
+msgstr "Account temporarily locked."
+
+#: Icarus/templates/account/login.html:46
+#, python-format
+msgid "ഈ ലൊക്കേഷനിൽ/അക്കൗണ്ടിൽ നിന്നുള്ള ആക്സസ് %(duration)s നേരത്തേക്ക് നിയന്ത്രിക്കപ്പെടും."
+msgstr "Access from this location/account will be restricted for %(duration)s."
+
+#: Icarus/templates/account/login.html:48
+#, python-format
+msgid ""
+"തുടർച്ചയായ പരാജയങ്ങൾ %(max)s എത്തിയാൽ, %(duration)s നേരത്തേക്ക് ആക്സസ് നിയന്ത്രിക്കപ്പെടും."
+msgstr ""
+"If consecutive failures reach %(max)s, access will be restricted for "
+"%(duration)s."
+
+#: Icarus/templates/account/login.html:68
+msgid "പാസ്‌വേഡ് മറന്നോ?"
+msgstr "Forgot password?"
+
+#: Icarus/templates/account/login.html:87
+#: Icarus/templates/account/login.html:88
+#: Icarus/templates/account/password_change.html:49
+#: Icarus/templates/account/password_change.html:50
+#: Icarus/templates/account/password_reset_from_key.html:55
+#: Icarus/templates/account/password_reset_from_key.html:56
+#: Icarus/templates/account/signup.html:77
+#: reader/templates/reader/account_deactivate.html:111
+#: reader/templates/reader/account_deactivate.html:212
+msgid "പാസ്‌വേഡ് കാണിക്കുക"
+msgstr "Show password"
+
+#: Icarus/templates/account/login.html:89
+#: Icarus/templates/account/password_change.html:51
+#: Icarus/templates/account/password_reset_from_key.html:57
+#: Icarus/templates/account/signup.html:78
+#: reader/templates/reader/account_deactivate.html:212
+msgid "പാസ്‌വേഡ് മറയ്ക്കുക"
+msgstr "Hide password"
+
+#: Icarus/templates/account/login.html:119
+msgid "എന്നെ ഓർക്കുക"
+msgstr "Remember me"
+
+#: Icarus/templates/account/login.html:142
+msgid "അക്കൗണ്ട് ഇല്ലേ?"
+msgstr "Don't have an account?"
+
+#: Icarus/templates/account/login.html:142
+msgid "ഒരെണ്ണം സൃഷ്ടിക്കുക"
+msgstr "Create one"
+
+#: Icarus/templates/account/logout.html:4
+#: Icarus/templates/account/logout.html:13
+#: Icarus/templates/account/logout.html:21
+msgid "ലോഗ്ഔട്ട്"
+msgstr "Log Out"
+
+#: Icarus/templates/account/logout.html:14
+msgid "നിങ്ങൾ ലോഗ്ഔട്ട് ചെയ്യാൻ ആഗ്രഹിക്കുന്നുണ്ടോ?"
+msgstr "Are you sure you want to log out?"
+
+#: Icarus/templates/account/logout.html:26
+msgid "എന്നെ തിരികെ കൊണ്ടുപോകൂ"
+msgstr "Take me back"
+
+#: Icarus/templates/account/password_change.html:4
+#: Icarus/templates/account/password_change.html:77
+#: Icarus/templates/account/password_reset_from_key.html:4
+msgid "പാസ്സ്‌വേഡ് മാറ്റുക"
+msgstr "Change Password"
+
+#: Icarus/templates/account/password_change.html:22
+#: Icarus/templates/account/password_reset_from_key.html:22
+msgid "പാസ്സ്വേഡ് മാറ്റുക"
+msgstr "Change Password"
+
+#: Icarus/templates/account/password_change.html:23
+msgid "നിങ്ങളുടെ അക്കൗണ്ട് വിവരങ്ങൾ അപ്ഡേറ്റ് ചെയ്യുക"
+msgstr "Update your account details"
+
+#: Icarus/templates/account/password_change.html:81
+msgid "പാസ്സ്‌വേഡ് മറന്നോ?"
+msgstr "Forgot password?"
+
+#: Icarus/templates/account/password_change.html:83
+msgid "പ്രൊഫൈലിലേക്ക് മടങ്ങുക"
+msgstr "Back to Profile"
+
+#: Icarus/templates/account/password_reset.html:4
+#: Icarus/templates/account/password_reset.html:12
+msgid "പാസ്വേഡ് റീസെറ്റ്"
+msgstr "Password Reset"
+
+#: Icarus/templates/account/password_reset.html:19
+msgid ""
+"പാസ്സ്വേഡ് റീസെറ്റ് ചെയ്യുവാനായി നിങ്ങളുടെ ഇമെയിൽ വിലാസം താഴെ നൽകുക. അത് ഞങ്ങൾക്ക് "
+"ലഭിച്ചാലുടൻ ഒരു റീസെറ്റ് ലിങ്ക് നിങ്ങളുടെ ഇമെയിലിൽ അയക്കുന്നതാണ്."
+msgstr ""
+"Enter your email address below to reset your password. As soon as we receive "
+"it, a reset link will be sent to your email."
+
+#: Icarus/templates/account/password_reset.html:36
+msgid "ഇമെയിൽ വിലാസം"
+msgstr "Email Address"
+
+#: Icarus/templates/account/password_reset.html:38
+msgid "നിങ്ങളുടെ ഇമെയിൽ നൽകുക"
+msgstr "Enter your email"
+
+#: Icarus/templates/account/password_reset.html:42
+msgid "എന്റെ പാസ്‍വേര്‍ഡ് റീസെറ്റ് ചെയ്യുക"
+msgstr "Reset My Password"
+
+#: Icarus/templates/account/password_reset.html:47
+msgid "പാസ്സ്വേഡ് മാറ്റുന്നതുമായി ബന്ധപ്പെട്ട് എന്തെങ്കിലും പ്രശ്നങ്ങളുണ്ടെങ്കിൽ ഞങ്ങളെ ബന്ധപ്പെടുക."
+msgstr "If you have any trouble changing your password, contact us."
+
+#: Icarus/templates/account/password_reset.html:49
+#: Icarus/templates/account/password_reset_done.html:17
+msgid "ലോഗിനിലേക്ക് മടങ്ങുക"
+msgstr "Back to login"
+
+#: Icarus/templates/account/password_reset_done.html:4
+msgid "പാസ്സ്‌വേഡ് റീസെറ്റ്"
+msgstr "Password Reset"
+
+#: Icarus/templates/account/password_reset_done.html:13
+msgid "ഇമെയിൽ പരിശോധിക്കുക"
+msgstr "Check Your Email"
+
+#: Icarus/templates/account/password_reset_done.html:15
+msgid ""
+"നിങ്ങളുടെ ഇമെയിലിലേക്ക് ഞങ്ങൾ ഒരു പാസ്‌സ്‌വേഡ് റീസെറ്റ് ലിങ്ക് അയച്ചിട്ടുണ്ട്. അത് ഉടൻ മെയിൽ "
+"ബോക്സിൽ കാണാൻ കഴിയുന്നില്ലെങ്കിൽ നിങ്ങളുടെ സ്പാം ഫോൾഡർ പരിശോധിക്കുക."
+msgstr ""
+"We've sent a password reset link to your email. If you don't see it in your "
+"inbox soon, check your spam folder."
+
+#: Icarus/templates/account/password_reset_from_key.html:26
+msgid ""
+"നിങ്ങളുടെ പാസ്‌വേഡ് റീസെറ്റ് ലിങ്ക് അസാധുവാണ്, കാരണം അത് ഇതിനകം ഉപയോഗിക്കപ്പെട്ടതാകാം. "
+"ദയവായി പുതിയ പാസ്‌വേഡ് റീസെറ്റ് അഭ്യർത്ഥിക്കുക."
+msgstr ""
+"Your password reset link is invalid, possibly because it has already been "
+"used. Please request a new password reset."
+
+#: Icarus/templates/account/password_reset_from_key.html:29
+msgid "പുതിയ പാസ്സ്‌വേഡ് റീസെറ്റ് ലിങ്ക് അഭ്യർത്ഥിക്കുക"
+msgstr "Request a new password reset link"
+
+#: Icarus/templates/account/password_reset_from_key.html:31
+msgid "നിങ്ങളുടെ പുതിയ പാസ്‌വേഡ് താഴെ നൽകുക."
+msgstr "Enter your new password below."
+
+#: Icarus/templates/account/password_reset_from_key.html:83
+msgid "പാസ്‍വേഡ് മാറ്റുക"
+msgstr "Change Password"
+
+#: Icarus/templates/account/signup.html:4
+msgid "സൈൻ അപ്പ്"
+msgstr "Sign Up"
+
+#: Icarus/templates/account/signup.html:49
+msgid "നിങ്ങളുടെ അക്കൗണ്ട് സൃഷ്ടിക്കുക"
+msgstr "Create Your Account"
+
+#: Icarus/templates/account/signup.html:50
+msgid "ലേഖനങ്ങൾ വായിക്കാനും സബ്സ്ക്രിപ്ഷൻ കൈകാര്യം ചെയ്യാനും ചേരുക."
+msgstr "Join to read articles and manage your subscription."
+
+#: Icarus/templates/account/signup.html:105
+msgid "അക്കൗണ്ട് സൃഷ്ടിക്കുക"
+msgstr "Create Account"
+
+#: Icarus/templates/account/signup.html:109
+msgid "നിലവിൽ അക്കൗണ്ട് ഉണ്ടോ?"
+msgstr "Already have an account?"
+
+#: Icarus/templates/base.html:90
+msgid "ഹോം"
+msgstr "Home"
+
+#: Icarus/templates/includes/footer.html:17
+#: Icarus/templates/includes/header.html:5
+msgid "സൈറ്റ് ലോഗോ"
+msgstr "Site logo"
+
+#: Icarus/templates/includes/footer.html:28
+msgid "ഫൂട്ടർ നാവിഗേഷൻ"
+msgstr "Footer navigation"
+
+#: Icarus/templates/includes/footer.html:81
+#: issue/templates/issue/issue.html:215
+msgid "പത്രാധിപ സമിതി"
+msgstr "Editorial Board"
+
+#: Icarus/templates/includes/footer.html:89
+#: home/templates/home/partials/changelog_banner.html:110
+#: issue/templates/issue/issue.html:219 kalapila/wagtail_hooks.py:193
+#: postbox/wagtail_hooks.py:123
+#: reader/templates/reader/admin/print_subscribers.html:27
+msgid "അടയ്ക്കുക"
+msgstr "Close"
+
+#: Icarus/templates/includes/footer.html:154
+msgid "സോഷ്യൽ മീഡിയ ലിങ്കുകൾ"
+msgstr "Social media links"
+
+#: Icarus/templates/includes/header.html:6
+msgid "സൈറ്റ് ശീർഷകം"
+msgstr "Site title"
+
+#: Icarus/templates/includes/header.html:49
+msgid "തിരയാന്‍ തുറക്കുക"
+msgstr "Open search"
+
+#: Icarus/templates/includes/header.html:63
+msgid "പ്രൊഫൈൽ"
+msgstr "Profile"
+
+#: Icarus/templates/includes/header.html:64
+msgid "ലോഗൗട്ട്"
+msgstr "Logout"
+
+#: Icarus/templates/includes/header.html:66
+msgid "ലോഗിൻ"
+msgstr "Login"
+
+#: Icarus/templates/includes/header.html:67
+#: home/templates/home/home_page.html:133
+msgid "വരിക്കാരാകൂ"
+msgstr "Subscribe"
+
+#: Icarus/templates/includes/header.html:86
+msgid "തിരയൽ"
+msgstr "Search"
+
+#: Icarus/templates/includes/header.html:88
+msgid "തിരയൽ അടയ്ക്കുക"
+msgstr "Close search"
+
+#: Icarus/templates/includes/header.html:106
+msgid "ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുക..."
+msgstr "Search the archive, articles, and authors..."
+
+#: Icarus/templates/includes/header.html:118
+msgid "തിരയാൻ കുറഞ്ഞത് 2 അക്ഷരങ്ങൾ ടൈപ്പ് ചെയ്യുക..."
+msgstr "Type at least 2 characters to search..."
+
+#: Icarus/templates/includes/header.html:119
+msgid "ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുന്നു..."
+msgstr "Searching the archive, articles, and authors..."
+
+#: Icarus/templates/includes/header.html:120
+msgid "ഫലങ്ങൾ ലഭ്യമാക്കുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക."
+msgstr "Error fetching results. Please try again."
+
+#: Icarus/templates/includes/header.html:121
+msgid "ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല"
+msgstr "No results found"
+
+#: Icarus/templates/includes/header.html:122
+msgid "ഫലങ്ങൾ കണ്ടെത്തി"
+msgstr "Results found"
+
+#: Icarus/templates/includes/header.html:123
+#: the_librarian/templates/the_librarian/viewer.html:30
+msgid "പേജ്"
+msgstr "Page"
+
+#: Icarus/templates/includes/header.html:124
+msgid "പിഡിഎഫ്"
+msgstr "PDF"
+
+#: Icarus/templates/includes/header.html:125
+#: the_librarian/templates/the_librarian/search.html:77
+msgid "ലേഖനം"
+msgstr "Article"
+
+#: Icarus/templates/includes/header.html:126
+msgid "രചയിതാവ്"
+msgstr "Author"
+
+#: Icarus/templates/includes/header.html:128
+msgid "തിരയാൻ ടൈപ്പ് ചെയ്യുക..."
+msgstr "Type to search..."
+
+#: Icarus/templates/includes/pagination.html:9
+msgid "പേജ് നാവിഗേഷൻ"
+msgstr "Page navigation"
+
+#: Icarus/templates/includes/pagination.html:12
+#: home/templates/wagtailadmin/audit_log.html:252
+#, python-format
+msgid "പേജ് %(number)s / %(pages)s"
+msgstr "Page %(number)s of %(pages)s"
+
+#: Icarus/templates/includes/pagination.html:14
+#, python-format
+msgid "%(counter)s ഇനം"
+msgid_plural "%(counter)s ഇനങ്ങൾ"
+msgstr[0] "%(counter)s item"
+msgstr[1] "%(counter)s items"
+
+#: Icarus/templates/includes/pagination.html:23
+msgid "മുമ്പത്തെ പേജ്"
+msgstr "Previous page"
+
+#: Icarus/templates/includes/pagination.html:25
+#: Icarus/templates/includes/pagination.html:29
+#: reader/templates/reader/profile.html:346
+#: reader/templates/reader/profile.html:348
+msgid "മുമ്പത്തേത്"
+msgstr "Previous"
+
+#: Icarus/templates/includes/pagination.html:81
+#: the_librarian/templates/the_librarian/viewer.html:52
+msgid "അടുത്ത പേജ്"
+msgstr "Next page"
+
+#: Icarus/templates/includes/pagination.html:83
+#: Icarus/templates/includes/pagination.html:87
+#: home/templates/wagtailadmin/audit_log.html:258
+#: home/templates/wagtailadmin/audit_log.html:260
+#: reader/templates/reader/profile.html:356
+#: reader/templates/reader/profile.html:358
+msgid "അടുത്തത്"
+msgstr "Next"
+
+#: articles/templates/articles/article.html:69
+#: issue/templates/issue/issue.html:61
+msgid "പ്രിയപ്പെട്ടവയിൽ ചേർക്കുക"
+msgstr "Add to favorites"
+
+#: articles/templates/articles/article.html:70
+#: issue/templates/issue/issue.html:62
+msgid "പ്രിയപ്പെട്ടവയിൽ നിന്ന് നീക്കുക"
+msgstr "Remove from favorites"
+
+#: articles/templates/articles/article.html:71
+msgid "ഒരു പിശക് സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക."
+msgstr "An error occurred. Please try again."
+
+#: articles/templates/articles/article.html:72
+#: issue/templates/issue/issue.html:64
+msgid "പ്രിയപ്പെട്ടതാക്കുക"
+msgstr "Favorite"
+
+#: articles/templates/articles/article.html:87
+msgid "ഭാഷ തിരഞ്ഞെടുക്കൽ"
+msgstr "Language selection"
+
+#: articles/templates/articles/article.html:135
+#: articles/templates/articles/media_player.html:37
+#: articles/templates/blocks/audio_block.html:9
+#: issue/templates/issue/issue.html:95
+msgid "പ്ലേ ചെയ്യുക"
+msgstr "Play"
+
+#: articles/templates/articles/article.html:254
+#: articles/templates/articles/article.html:333
+msgid "തുടര്‍ന്ന് വായിക്കൂ"
+msgstr "Continue reading"
+
+#: articles/templates/articles/article.html:257
+#: articles/templates/articles/article.html:336
+msgid ""
+"നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക."
+msgstr ""
+"Your free reading limit has been reached. Subscribe to read all articles."
+
+#: articles/templates/articles/article.html:259
+msgid "പൂർണ്ണരൂപം വായിക്കുന്നതിനായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ വരിക്കാരാകുക."
+msgstr "Sign in or subscribe to read the full article."
+
+#: articles/templates/articles/article.html:264
+msgid "ഇപ്പോൾ വരിക്കാരാകാം"
+msgstr "Subscribe Now"
+
+#: articles/templates/articles/article.html:267
+msgid "വരിക്കാരാകാം"
+msgstr "Subscribe"
+
+#: articles/templates/articles/article.html:338
+msgid ""
+"പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ "
+"വരിക്കാരാകുക."
+msgstr "Sign in or subscribe for the full article and unlimited access."
+
+#: articles/templates/articles/article.html:458
+#: literati/templates/literati/literati.html:72
+msgid "ടാഗുകൾ"
+msgstr "Tags"
+
+#: articles/templates/articles/article.html:469
+msgid "രചയിതാവിനെക്കുറിച്ച്"
+msgid_plural "രചയിതാക്കളെക്കുറിച്ച്"
+msgstr[0] "About the Author"
+msgstr[1] "About the Authors"
+
+#: articles/templates/articles/article.html:503
+#: issue/templates/issue/issue.html:412
+msgid "PDF ഡൗൺലോഡ്"
+msgstr "Download PDF"
+
+#: articles/templates/articles/article.html:520
+msgid "അടുത്തതായി ഇവ വായിക്കാം"
+msgstr "Read Next"
+
+#: articles/templates/articles/article_index_page.html:14
+#: issue/templates/issue/issue_index_page.html:15
+#, python-format
+msgid "( %(count)s എണ്ണം )"
+msgstr "( %(count)s articles )"
+
+#: articles/templates/articles/article_pdf.html:247
+msgid "ലോഗോ"
+msgstr "Logo"
+
+#: articles/templates/articles/article_pdf.html:251
+msgid "ശീർഷകം"
+msgstr "Title"
+
+#: articles/templates/articles/media_player.html:56
+msgid "ഈ ഫയൽ പ്ലേ ചെയ്യാൻ കഴിയില്ല."
+msgstr "This file cannot be played."
+
+#: articles/templates/articles/media_player.html:67
+msgid "തിരികെ പോകുക"
+msgstr "Go back"
+
+#: articles/templates/articles/tag_detail.html:4
+#, python-format
+msgid "ടാഗ്: %(tag_name)s"
+msgstr "Tag: %(tag_name)s"
+
+#: articles/templates/articles/tag_detail.html:13
+msgid "ടാഗ്"
+msgstr "Tag"
+
+#: articles/templates/articles/tag_detail.html:35
+msgid "ഈ ടാഗിൽ ലേഖനങ്ങളൊന്നും കണ്ടെത്തിയില്ല."
+msgstr "No articles found with this tag."
+
+#: articles/templates/blocks/rich_text_import_block.html:15
+msgid "ബ്ലോക്ക് ഇതുവരെ പരിവർത്തനം ചെയ്തിട്ടില്ല."
+msgstr "This block has not been converted yet."
+
+#: articles/templates/blocks/rich_text_import_block.html:17
+msgid ""
+"ഈ ഉള്ളടക്കം പേസ്റ്റ് ചെയ്തതാണ്, ഇതുവരെ സേവ് ചെയ്തിട്ടില്ല. ഇത് പരിവർത്തനം ചെയ്യാൻ എഡിറ്ററിൽ "
+"പേജ് തുറന്ന് വീണ്ടും സേവ് ചെയ്യുക."
+msgstr ""
+"This content was pasted and has not been saved yet. Open the page in the "
+"editor and save it again to convert it."
+
+#: articles/templates/blocks/rich_text_import_block.html:20
+msgid "മാറ്റം വരുത്താത്ത ഉള്ളടക്കം കാണിക്കുക"
+msgstr "Show unconverted content"
+
+#: articles/templates/wagtailadmin/panels/cover_image_preview_panel.html:8
+msgid "പ്രിവ്യൂ"
+msgstr "Preview"
+
+#: articles/templates/wagtailadmin/panels/cover_image_preview_panel.html:18
+msgid "കവർ ചിത്രത്തിന്റെ പ്രിവ്യൂ"
+msgstr "Cover image preview"
+
+#: articles/templates/wagtailadmin/panels/cover_image_preview_panel.html:24
+msgid ""
+"ഫോട്ടോയുടെ തെറ്റായ ഭാഗമാണ് ദൃശ്യമാകുന്നതെങ്കിൽ, <strong>ഇമേജ് ലൈബ്രറിയിൽ</strong> ചിത്രം "
+"തുറന്ന് ഒരു <strong>ഫോക്കൽ പോയിന്റ്</strong> സജ്ജീകരിക്കുക."
+msgstr ""
+"If the wrong part of the photo is visible, open the image in the "
+"<strong>image library</strong> and set a <strong>focal point</strong>."
+
+#: articles/templates/wagtailadmin/panels/most_read_articles.html:32
+msgid "ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട ലേഖനങ്ങൾ"
+msgstr "Most Read Articles This Month"
+
+#: articles/templates/wagtailadmin/panels/most_read_articles.html:39
+msgid "ലേഖനത്തിന്റെ തലക്കെട്ട്"
+msgstr "Article title"
+
+#: articles/templates/wagtailadmin/panels/most_read_articles.html:40
+#: articles/templates/wagtailadmin/panels/most_read_issues.html:24
+msgid "പ്രസിദ്ധീകരിച്ച തീയതി"
+msgstr "Published date"
+
+#: articles/templates/wagtailadmin/panels/most_read_articles.html:41
+#: articles/templates/wagtailadmin/panels/most_read_topics.html:24
+msgid "ആകെ കാഴ്ചകൾ"
+msgstr "Total views"
+
+#: articles/templates/wagtailadmin/panels/most_read_articles.html:62
+msgid "ഇതുവരെ കാഴ്ച രേഖപ്പെടുത്തിയിട്ടില്ല."
+msgstr "No views recorded yet."
+
+#: articles/templates/wagtailadmin/panels/most_read_issues.html:16
+msgid "ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട ലക്കങ്ങൾ"
+msgstr "Most Read Issues This Month"
+
+#: articles/templates/wagtailadmin/panels/most_read_issues.html:23
+#: issue/templates/issue/issue.html:36 issue/templates/issue/issue.html:50
+#: the_librarian/templates/the_librarian/archive_list.html:118
+#: the_librarian/templates/the_librarian/archive_list.html:151
+msgid "ലക്കം"
+msgstr "Issue"
+
+#: articles/templates/wagtailadmin/panels/most_read_issues.html:25
+msgid "ആകെ കാഴ്ചക്കാർ"
+msgstr "Total viewers"
+
+#: articles/templates/wagtailadmin/panels/most_read_issues.html:46
+msgid "കഴിഞ്ഞ മാസത്തെ ലക്കങ്ങൾക്കായി കാഴ്ച ഒന്നും രേഖപ്പെടുത്തിയിട്ടില്ല."
+msgstr "No views recorded for last month's issues."
+
+#: articles/templates/wagtailadmin/panels/most_read_topics.html:16
+msgid "ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ"
+msgstr "Most Read Topics This Month"
+
+#: articles/templates/wagtailadmin/panels/most_read_topics.html:23
+#: the_librarian/templates/the_librarian/search.html:83
+msgid "വിഷയം"
+msgstr "Topic"
+
+#: articles/templates/wagtailadmin/panels/most_read_topics.html:40
+msgid "ഇതുവരെ ട്രാക്കിംഗ് രേഖപ്പെടുത്തിയിട്ടില്ല."
+msgstr "No tracking recorded yet."
+
+#: home/templates/home/home_page.html:25
+msgid "വിശേഷലക്കം"
+msgstr "Featured Issue"
+
+#: home/templates/home/home_page.html:49
+msgid "ലക്കം പരിശോധിക്കാം"
+msgstr "Browse the Issue"
+
+#: home/templates/home/home_page.html:54
+msgid "ഈ ലക്കത്തില്‍..."
+msgstr "In this issue..."
+
+#: home/templates/home/home_page.html:87
+msgid "മറ്റുള്ള വിഷയങ്ങള്‍"
+msgstr "Other Topics"
+
+#: home/templates/home/home_page.html:120
+msgid "മറ്റ് വിഷയങ്ങളൊന്നുമില്ല."
+msgstr "No other topics."
+
+#: home/templates/home/home_page.html:137
+msgid "സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക"
+msgstr "Manage Subscription"
+
+#: home/templates/home/home_page.html:140
+msgid "ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ"
+msgstr "Subscribe Now"
+
+#: home/templates/home/home_page.html:149
+msgid "മുൻപത്തെ ലക്കങ്ങൾ"
+msgstr "Previous Issues"
+
+#: home/templates/home/home_page.html:183
+msgid "എല്ലാ ലക്കങ്ങളും കാണുക"
+msgstr "View All Issues"
+
+#: home/templates/home/home_page.html:192
+msgid "മറ്റുള്ള ലേഖനങ്ങള്‍"
+msgstr "Other Articles"
+
+#: home/templates/home/home_page.html:229
+msgid "ലേഖനങ്ങളൊന്നും പ്രസിദ്ധീകരിച്ചിട്ടില്ല."
+msgstr "No Articles published yet."
+
+#: home/templates/home/home_page.html:236
+msgid "കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക"
+msgstr "View More Articles"
+
+#: home/templates/home/partials/changelog_banner.html:106
+#: home/templates/home/partials/changelog_banner.html:113
+msgid "പുതിയ മാറ്റങ്ങൾ"
+msgstr "New Changes"
+
+#: home/templates/home/userbar/custom.html:4
+msgid "ശാസ്ത്രഗതി അഡ്മിന്‍"
+msgstr "Sasthragathi Admin"
+
+#: home/templates/wagtailadmin/analytics.html:4
+#: home/templates/wagtailadmin/analytics.html:83
+msgid "അനലിറ്റിക്സ്"
+msgstr "Analytics"
+
+#: home/templates/wagtailadmin/analytics.html:84
+msgid ""
+"ഉള്ളടക്കം, വായനക്കാർ, സബ്സ്ക്രിപ്ഷനുകൾ, മോഡറേഷൻ എന്നിവയിലുടനീളമുള്ള പ്ലാറ്റ്‌ഫോം-വ്യാപക അളവുകൾ."
+msgstr ""
+"Platform-wide metrics across content, readers, subscriptions, and moderation."
+
+#: home/templates/wagtailadmin/analytics.html:89
+msgid "പ്ലാറ്റ്‌ഫോം സംഗ്രഹം"
+msgstr "Platform Summary"
+
+#: home/templates/wagtailadmin/analytics.html:92
+msgid "ആകെ വായനക്കാർ"
+msgstr "Total Readers"
+
+#: home/templates/wagtailadmin/analytics.html:94
+msgid "സജീവം, non-anonymized"
+msgstr "Active, non-anonymized"
+
+#: home/templates/wagtailadmin/analytics.html:97
+msgid "സജീവ വായനക്കാർ"
+msgstr "Active Readers"
+
+#: home/templates/wagtailadmin/analytics.html:99
+msgid "സബ്സ്ക്രിപ്ഷൻ കാലഹരണപ്പെട്ടിട്ടില്ല"
+msgstr "Subscription not expired"
+
+#: home/templates/wagtailadmin/analytics.html:102
+msgid "ആകെ ലേഖനങ്ങൾ"
+msgstr "Total Articles"
+
+#: home/templates/wagtailadmin/analytics.html:104
+msgid "പ്രസിദ്ധീകരിച്ചവ"
+msgstr "Published"
+
+#: home/templates/wagtailadmin/analytics.html:107
+msgid "ഹോംപേജ് ഹിറ്റുകൾ (ആകെ)"
+msgstr "Homepage hits (total)"
+
+#: home/templates/wagtailadmin/analytics.html:109
+#, python-format
+msgid "കഴിഞ്ഞ 30 ദിവസത്തിനുള്ളിൽ %(homepage_hits_30d)s"
+msgstr "%(homepage_hits_30d)s in the last 30 days"
+
+#: home/templates/wagtailadmin/analytics.html:112
+#: reader/templates/reader/admin/print_subscribers.html:4
+msgid "പ്രിന്റ് വരിക്കാർ"
+msgstr "Print Subscribers"
+
+#: home/templates/wagtailadmin/analytics.html:114
+msgid "Active delivery"
+msgstr "Active delivery"
+
+#: home/templates/wagtailadmin/analytics.html:117
+#: home/templates/wagtailadmin/analytics.html:298
+msgid "മോഡറേഷൻ ബാക്ക്‌ലോഗ്"
+msgstr "Moderation backlog"
+
+#: home/templates/wagtailadmin/analytics.html:119
+msgid "അംഗീകാരം കാത്തിരിക്കുന്നു"
+msgstr "Awaiting approval"
+
+#: home/templates/wagtailadmin/analytics.html:124
+#, python-format
+msgid "%(pending_purge)s ഡിലീറ്റ് ചെയ്യാൻ കാത്തിരിക്കുന്നു"
+msgstr "%(pending_purge)s awaiting deletion"
+
+#: home/templates/wagtailadmin/analytics.html:135
+msgid "ഹോംപേജ് ട്രാഫിക് ട്രെൻഡുകൾ"
+msgstr "Homepage Traffic Trends"
+
+#: home/templates/wagtailadmin/analytics.html:138
+msgid "ദിവസേനയുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 7 ദിവസം)"
+msgstr "Daily hits (last 7 days)"
+
+#: home/templates/wagtailadmin/analytics.html:142
+msgid "ആഴ്ചതോറുമുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 4 ആഴ്ച)"
+msgstr "Weekly hits (last 4 weeks)"
+
+#: home/templates/wagtailadmin/analytics.html:146
+msgid "മാസംതോറുമുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 12 മാസം)"
+msgstr "Monthly hits (last 12 months)"
+
+#: home/templates/wagtailadmin/analytics.html:150
+msgid "വർഷംതോറുമുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 5 വർഷം)"
+msgstr "Yearly hits (last 5 years)"
+
+#: home/templates/wagtailadmin/analytics.html:158
+msgid "സബ്‌സ്‌ക്രിപ്ഷൻ ആരോഗ്യം"
+msgstr "Subscription Health"
+
+#: home/templates/wagtailadmin/analytics.html:162
+msgid "കൊഴിഞ്ഞുപോക്ക് നിരക്ക് — റദ്ദാക്കിയവ vs സ്വയം പുതുക്കുന്നവ"
+msgstr "Churn — cancelled vs auto-renewing"
+
+#: home/templates/wagtailadmin/analytics.html:165
+#, python-format
+msgid ""
+"കൊഴിഞ്ഞുപോക്ക് നിരക്ക്: <strong style=\"color:var(--an-"
+"danger)\">%(churn_rate_pct)s%%</strong> സജീവ വരിക്കാർ റദ്ദാക്കിയെങ്കിലും ഇപ്പോഴും "
+"ആക്സസ് കാലയളവിലാണ്."
+msgstr ""
+"Churn rate: <strong style=\"color:var(--an-danger)\">%(churn_rate_pct)s%%</"
+"strong> of active subscribers have cancelled but are still within their "
+"access period."
+
+#: home/templates/wagtailadmin/analytics.html:170
+msgid "ഗ്രേസ് പീരിയഡ് റിക്കവറി (കഴിഞ്ഞ 33 ദിവസം)"
+msgstr "Grace-period recovery (last 33 days)"
+
+#: home/templates/wagtailadmin/analytics.html:173
+#, python-format
+msgid ""
+"റിക്കവറി നിരക്ക്: <strong style=\"color:var(--an-"
+"success)\">%(grace_recovery_pct)s%%</strong>\n"
+"                  — ഗ്രേസ് പീരിയഡിൽ പ്രവേശിച്ച ~%(users_in_grace)s പേരിൽ "
+"%(recently_renewed)s പേർ പുതുക്കി."
+msgstr ""
+"Recovery rate: <strong style=\"color:var(--an-"
+"success)\">%(grace_recovery_pct)s%%</strong> — %(recently_renewed)s of "
+"~%(users_in_grace)s who entered the grace period renewed."
+
+#: home/templates/wagtailadmin/analytics.html:179
+msgid "പേവാൾ കൺവേർഷൻ (കഴിഞ്ഞ 30 ദിവസം)"
+msgstr "Paywall conversion (last 30 days)"
+
+#: home/templates/wagtailadmin/analytics.html:182
+#, python-format
+msgid ""
+"%(new_registrations_30d)s പുതിയ രജിസ്ട്രേഷനുകളിൽ %(new_subscribers_30d)s എണ്ണം "
+"വരിക്കാരായി മാറി\n"
+"        (<strong>%(paywall_conversion_pct)s%%</strong>)."
+msgstr ""
+"%(new_subscribers_30d)s of %(new_registrations_30d)s new registrations "
+"became subscribers (<strong>%(paywall_conversion_pct)s%%</strong>)."
+
+#: home/templates/wagtailadmin/analytics.html:188
+msgid "നിലനിർത്തൽ: ബുക്ക്മാർക്ക് ചെയ്യുന്നവർ vs ചെയ്യാത്തവർ"
+msgstr "Retention: bookmarkers vs non-bookmarkers"
+
+#: home/templates/wagtailadmin/analytics.html:191
+#, python-format
+msgid ""
+"ബുക്ക്മാർക്ക് ചെയ്യുന്നവർ: <strong style=\"color:var(--an-"
+"success)\">%(retention_with_bm)s%%</strong> സജീവം |\n"
+"        ബുക്ക്മാർക്ക് ചെയ്യാത്തവർ: <strong style=\"color:var(--an-"
+"warn)\">%(retention_without_bm)s%%</strong> സജീവം."
+msgstr ""
+"Bookmarkers: <strong style=\"color:var(--an-"
+"success)\">%(retention_with_bm)s%%</strong> active | Non-bookmarkers: "
+"<strong style=\"color:var(--an-warn)\">%(retention_without_bm)s%%</strong> "
+"active."
+
+#: home/templates/wagtailadmin/analytics.html:200
+msgid "എന്‍ഗേജ്മെന്റ്"
+msgstr "Engagement"
+
+#: home/templates/wagtailadmin/analytics.html:204
+#, python-format
+msgid "ശ്രദ്ധാ സ്കോർ — മികച്ച ലേഖനങ്ങൾ (പൂർണ്ണമായി വായിക്കപ്പെട്ടവ %%)"
+msgstr "Attention score — top articles (%% read fully)"
+
+#: home/templates/wagtailadmin/analytics.html:209
+msgid "ഭാഷാ ലഭ്യത (വിവർത്തന കവറേജ്)"
+msgstr "Language availability (translation coverage)"
+
+#: home/templates/wagtailadmin/analytics.html:214
+msgid "നിഷ്ക്രിയ vs സജീവ വായന"
+msgstr "Passive vs active reading"
+
+#: home/templates/wagtailadmin/analytics.html:217
+#, python-format
+msgid ""
+"നിഷ്ക്രിയം (വായനകൾ): <strong>%(passive_total)s</strong> &nbsp;|&nbsp;\n"
+"        സജീവം (ബുക്ക്മാർക്കുകൾ): <strong>%(active_total)s</strong>"
+msgstr ""
+"Passive (reads): <strong>%(passive_total)s</strong> &nbsp;|&nbsp; Active "
+"(bookmarks): <strong>%(active_total)s</strong>"
+
+#: home/templates/wagtailadmin/analytics.html:223
+msgid "ഏറ്റവും കൂടുതൽ പ്രിയപ്പെട്ടതാക്കിയ ലേഖനങ്ങൾ"
+msgstr "Most favorited articles"
+
+#: home/templates/wagtailadmin/analytics.html:231
+msgid "സംഖ്യാവിവരങ്ങൾ (സമ്മതം നൽകിയ ഉപയോക്താക്കൾ മാത്രം)"
+msgstr "Demographics (consenting users only)"
+
+#: home/templates/wagtailadmin/analytics.html:234
+msgid "ലിംഗഭേദം — സന്ദർശിച്ച ലേഖനങ്ങൾ vs പൂർണ്ണമായി വായിച്ചവ"
+msgstr "Gender — articles visited vs read fully"
+
+#: home/templates/wagtailadmin/analytics.html:238
+msgid "പ്രായമനുസരിച്ച് — സന്ദർശിച്ച ലേഖനങ്ങൾ vs പൂർണ്ണമായി വായിച്ചവ"
+msgstr "By age — articles visited vs read fully"
+
+#: home/templates/wagtailadmin/analytics.html:245
+msgid "ഭൂമിശാസ്ത്രം അനുസരിച്ച് പ്രിന്റ് വരിക്കാർ"
+msgstr "Print subscribers by geography"
+
+#: home/templates/wagtailadmin/analytics.html:248
+msgid "സംസ്ഥാനം അനുസരിച്ച് (ആദ്യ 15)"
+msgstr "By state (top 15)"
+
+#: home/templates/wagtailadmin/analytics.html:252
+msgid "ജില്ല അനുസരിച്ച് (ആദ്യ 10)"
+msgstr "By district (top 10)"
+
+#: home/templates/wagtailadmin/analytics.html:259
+msgid "അനുവർത്തനവും സമ്മതവും"
+msgstr "Compliance & Consent"
+
+#: home/templates/wagtailadmin/analytics.html:262
+msgid "ഡാറ്റ ഓപ്റ്റ്-ഇൻ നിരക്കുകൾ"
+msgstr "Data opt-in rates"
+
+#: home/templates/wagtailadmin/analytics.html:266
+msgid "ഓൺബോർഡിംഗ് ഫ്രിക്ഷൻ — ശൂന്യമായ ഫീൽഡ് നിരക്കുകൾ"
+msgstr "Onboarding friction — blank field rates"
+
+#: home/templates/wagtailadmin/analytics.html:273
+msgid "പേയ്‌മെന്റ് ഗേറ്റ്‌വേ പ്രകടനം"
+msgstr "Payment Gateway Performance"
+
+#: home/templates/wagtailadmin/analytics.html:276
+msgid "ഗേറ്റ്‌വേ അനുസരിച്ച് ഇടപാട് പരാജയ നിരക്ക്"
+msgstr "Transaction failure rate by gateway"
+
+#: home/templates/wagtailadmin/analytics.html:280
+msgid "ഇതുവരെ ഗേറ്റ്‌വേ പേയ്‌മെന്റ് ഡാറ്റ രേഖപ്പെടുത്തിയിട്ടില്ല."
+msgstr "No gateway payment data recorded yet."
+
+#: home/templates/wagtailadmin/analytics.html:285
+msgid "കമ്മ്യൂണിറ്റി മോഡറേഷൻ"
+msgstr "Community Moderation"
+
+#: home/templates/wagtailadmin/analytics.html:288
+msgid "കമ്മ്യൂണിറ്റി ഹെൽത്ത് ഇൻഡെക്സ്"
+msgstr "Community health index"
+
+#: home/templates/wagtailadmin/analytics.html:290
+#, python-format
+msgid "ആകെ %(total_comments)s ൽ %(removed_comments)s നീക്കം ചെയ്തു"
+msgstr "%(removed_comments)s removed out of %(total_comments)s total"
+
+#: home/templates/wagtailadmin/analytics.html:293
+msgid "അംഗീകരിച്ച അഭിപ്രായങ്ങൾ"
+msgstr "Approved comments"
+
+#: home/templates/wagtailadmin/analytics.html:295
+msgid "വായനക്കാർക്ക് കാണാൻ കഴിയുന്നത്"
+msgstr "Visible to readers"
+
+#: home/templates/wagtailadmin/analytics.html:300
+msgid "അംഗീകാരത്തിനായി കാത്തിരിക്കുന്നു"
+msgstr "Awaiting approval"
+
+#: home/templates/wagtailadmin/analytics.html:306
+msgid "സുരക്ഷാ സിഗ്നലുകൾ"
+msgstr "Security Signals"
+
+#: home/templates/wagtailadmin/analytics.html:310
+msgid "അക്കൗണ്ട് പങ്കിടൽ സാധ്യത - പങ്കിട്ട ലോഗിൻ ഐപി(കൾ) (/24 സബ്നെറ്റുകൾ)"
+msgstr "Possible account sharing — shared login IP(s) (/24 subnets)"
+
+#: home/templates/wagtailadmin/analytics.html:313
+#: home/templates/wagtailadmin/analytics.html:336
+msgid "സബ്‌നെറ്റ്"
+msgstr "Subnet"
+
+#: home/templates/wagtailadmin/analytics.html:313
+msgid "അക്കൗണ്ടുകൾ"
+msgstr "Accounts"
+
+#: home/templates/wagtailadmin/analytics.html:328
+msgid "പങ്കിട്ട ലോഗിൻ ഐപികൾ ഒന്നും കണ്ടെത്തിയില്ല."
+msgstr "No shared login IPs found."
+
+#: home/templates/wagtailadmin/analytics.html:333
+msgid "ക്രെഡൻഷ്യൽ സ്റ്റഫിംഗ് — ഒന്നിലധികം അക്കൗണ്ട് രജിസ്ട്രേഷൻ IP-കൾ (/24)"
+msgstr "Credential stuffing — multi-account registration IPs (/24)"
+
+#: home/templates/wagtailadmin/analytics.html:336
+msgid "രജിസ്ട്രേഷനുകൾ"
+msgstr "Registrations"
+
+#: home/templates/wagtailadmin/analytics.html:351
+msgid "സംശയാസ്പദമായ രജിസ്ട്രേഷൻ ക്ലസ്റ്ററുകളൊന്നും കണ്ടെത്തിയില്ല."
+msgstr "No suspicious registration clusters found."
+
+#: home/templates/wagtailadmin/analytics.html:430
+msgid "സ്വയമേവ പുതുക്കുന്നവ"
+msgstr "Auto-renewing"
+
+#: home/templates/wagtailadmin/analytics.html:430
+msgid "റദ്ദാക്കി (സജീവം)"
+msgstr "Cancelled (active)"
+
+#: home/templates/wagtailadmin/analytics.html:437
+msgid "പുതുക്കി"
+msgstr "Updated"
+
+#: home/templates/wagtailadmin/analytics.html:437
+msgid "പുതുക്കിയില്ല"
+msgstr "Did not renew"
+
+#: home/templates/wagtailadmin/analytics.html:444
+msgid "സബ്‌സ്‌ക്രൈബർ ആയി മാറിയവർ"
+msgstr "Became subscribers"
+
+#: home/templates/wagtailadmin/analytics.html:444
+msgid "രജിസ്റ്റർ മാത്രം ചെയ്തവർ"
+msgstr "Registered only"
+
+#: home/templates/wagtailadmin/analytics.html:452
+#, python-format
+msgid "ബുക്ക്മാർക്കുകളോടെ (%(with_bm_total)s)"
+msgstr "With bookmarks (%(with_bm_total)s)"
+
+#: home/templates/wagtailadmin/analytics.html:453
+#, python-format
+msgid "ബുക്ക്മാർക്കുകളില്ലാതെ (%(without_bm_total)s)"
+msgstr "Without bookmarks (%(without_bm_total)s)"
+
+#: home/templates/wagtailadmin/analytics.html:455
+#, python-format
+msgid "സജീവ സബ്സ്ക്രിപ്ഷൻ %%"
+msgstr "Active subscription %%"
+
+#: home/templates/wagtailadmin/analytics.html:487
+msgid "ഇതുവരെ സമ്മതം നൽകിയ ലിംഗഭേദ ഡാറ്റ ലഭ്യമല്ല."
+msgstr "No consented gender data available yet."
+
+#: home/templates/wagtailadmin/analytics.html:490
+#: home/templates/wagtailadmin/analytics.html:502
+msgid "സന്ദർശിക്കപ്പെട്ട ലേഖനങ്ങൾ"
+msgstr "Articles visited"
+
+#: home/templates/wagtailadmin/analytics.html:491
+#: home/templates/wagtailadmin/analytics.html:503
+msgid "പൂർണ്ണമായി വായിച്ചവ"
+msgstr "Read fully"
+
+#: home/templates/wagtailadmin/analytics.html:525
+#, python-format
+msgid "ഓപ്റ്റ്-ഇൻ %%"
+msgstr "Opt-in %%"
+
+#: home/templates/wagtailadmin/analytics.html:531
+#, python-format
+msgid "ശൂന്യമായ ഫീൽഡ് %%"
+msgstr "Blank field %%"
+
+#: home/templates/wagtailadmin/analytics.html:539 reader/models.py:1008
+msgid "പൂർത്തിയായി"
+msgstr "Completed"
+
+#: home/templates/wagtailadmin/analytics.html:540 reader/models.py:1009
+msgid "പരാജയപ്പെട്ടു"
+msgstr "Failed"
+
+#: home/templates/wagtailadmin/analytics.html:541
+msgid "തീർച്ചപ്പെടാത്തത്"
+msgstr "Pending"
+
+#: home/templates/wagtailadmin/analytics.html:550
+#: home/templates/wagtailadmin/analytics.html:557
+#: home/templates/wagtailadmin/analytics.html:564
+#: home/templates/wagtailadmin/analytics.html:571
+msgid "ഹിറ്റുകൾ"
+msgstr "Hits"
+
+#: home/templates/wagtailadmin/analytics.html:552
+msgid "ഇതുവരെ ദിവസേനയുള്ള ഡാറ്റ ലഭ്യമല്ല."
+msgstr "No daily data available yet."
+
+#: home/templates/wagtailadmin/analytics.html:559
+msgid "ഇതുവരെ ആഴ്ചതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല."
+msgstr "No weekly data available yet."
+
+#: home/templates/wagtailadmin/analytics.html:566
+msgid "ഇതുവരെ മാസംതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല."
+msgstr "No monthly data available yet."
+
+#: home/templates/wagtailadmin/analytics.html:573
+msgid "ഇതുവരെ വർഷംതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല."
+msgstr "No yearly data available yet."
+
+#: home/templates/wagtailadmin/audit_log.html:4
+#: home/templates/wagtailadmin/audit_log.html:12
+#: reader/templates/reader/auditlog_admin.html:3
+#: reader/templates/reader/auditlog_admin.html:10 reader/wagtail_hooks.py:178
+msgid "ഓഡിറ്റ് ലോഗ്"
+msgstr "Audit Log"
+
+#: home/templates/wagtailadmin/audit_log.html:19
+#: reader/templates/reader/auditlog_admin.html:18
+#: reader/templates/reader/auditlog_panel.html:9
+msgid "ഉപയോക്താവ്"
+msgstr "User"
+
+#: home/templates/wagtailadmin/audit_log.html:21
+#: home/templates/wagtailadmin/audit_log.html:32
+#: home/templates/wagtailadmin/audit_log.html:41
+#: the_librarian/templates/the_librarian/archive_list.html:28
+#: the_librarian/templates/the_librarian/archive_list.html:42
+#: the_librarian/templates/the_librarian/archive_list.html:56
+msgid "എല്ലാം"
+msgstr "All"
+
+#: home/templates/wagtailadmin/audit_log.html:30
+msgid "പ്രവൃത്തി"
+msgstr "Action"
+
+#: home/templates/wagtailadmin/audit_log.html:39
+#: home/templates/wagtailadmin/audit_log.html:158
+#: reader/templates/reader/auditlog_admin.html:19
+msgid "മോഡൽ"
+msgstr "Model"
+
+#: home/templates/wagtailadmin/audit_log.html:47
+msgid "ഫിൽട്ടർ"
+msgstr "Filter"
+
+#: home/templates/wagtailadmin/audit_log.html:49
+msgid "മായ്ക്കുക"
+msgstr "Clear"
+
+#: home/templates/wagtailadmin/audit_log.html:155
+msgid "സമയം (IST)"
+msgstr "Time (IST)"
+
+#: home/templates/wagtailadmin/audit_log.html:156
+msgid "യൂസര്‍"
+msgstr "User"
+
+#: home/templates/wagtailadmin/audit_log.html:157
+msgid "റോൾ/ഗ്രൂപ്പുകൾ"
+msgstr "Role/Groups"
+
+#: home/templates/wagtailadmin/audit_log.html:159
+#: reader/templates/reader/auditlog_admin.html:20
+#: reader/templates/reader/auditlog_panel.html:10
+msgid "പ്രവർത്തനം"
+msgstr "Action"
+
+#: home/templates/wagtailadmin/audit_log.html:160
+#: reader/templates/reader/auditlog_admin.html:21
+msgid "മാറ്റങ്ങൾ"
+msgstr "Changes"
+
+#: home/templates/wagtailadmin/audit_log.html:213
+#, python-format
+msgid "%(counter)s കൂടുതൽ മാറ്റം കാണിക്കുക"
+msgid_plural "%(counter)s കൂടുതൽ മാറ്റങ്ങൾ കാണിക്കുക"
+msgstr[0] "Show %(counter)s more change"
+msgstr[1] "Show %(counter)s more changes"
+
+#: home/templates/wagtailadmin/audit_log.html:234
+msgid "ഓഡിറ്റ് ലോഗ് എൻട്രികളൊന്നും കണ്ടെത്തിയില്ല."
+msgstr "No audit log entries found."
+
+#: home/templates/wagtailadmin/audit_log.html:246
+#: home/templates/wagtailadmin/audit_log.html:248
+msgid "← മുമ്പത്തേത്"
+msgstr "← Previous"
+
+#: home/templates/wagtailadmin/audit_log.html:253
+#, python-format
+msgid "ആകെ %(counter)s എൻട്രി"
+msgid_plural "ആകെ %(counter)s എൻട്രികൾ"
+msgstr[0] "%(counter)s entry in total"
+msgstr[1] "%(counter)s entries in total"
+
+#: home/templates/wagtailadmin/base.html:5
+msgid "പരിഷത്ത്"
+msgstr "Parishad"
+
+#: home/templates/wagtailadmin/userbar/base.html:43
+msgid "View Wagtail quick actions"
+msgstr "View Wagtail quick actions"
+
+#: home/templates/wagtailadmin/userbar/base.html:61
+msgid "Show issue"
+msgstr "Show issue"
+
+#: issue/templates/issue/issue.html:33
+msgid "ശാസ്ത്രഗതി"
+msgstr "Sasthragathi"
+
+#: issue/templates/issue/issue.html:49
+#: the_librarian/templates/the_librarian/archive_list.html:112
+#: the_librarian/templates/the_librarian/archive_list.html:150
+msgid "വാല്യം"
+msgstr "Volume"
+
+#: issue/templates/issue/issue.html:63
+msgid "അപ്ഡേറ്റ് ചെയ്യാനായില്ല. നിങ്ങൾ ലോഗിൻ ചെയ്തിട്ടുണ്ടോയെന്ന് പരിശോധിക്കുക."
+msgstr "Could not update. Check that you are logged in."
+
+#: issue/templates/issue/issue.html:88
+msgid "ഈ ലക്കം കേൾക്കുക"
+msgstr "Listen to this issue"
+
+#: issue/templates/issue/issue.html:225
+msgid "എഡിറ്റർ"
+msgstr "Editor"
+
+#: issue/templates/issue/issue.html:254
+msgid "മാനേജിംഗ് എഡിറ്റർ"
+msgstr "Managing Editor"
+
+#: issue/templates/issue/issue.html:283
+msgid "അസോസിയേറ്റ് എഡിറ്റർ"
+msgstr "Associate Editor"
+
+#: issue/templates/issue/issue.html:312
+msgid "സമിതി അംഗങ്ങൾ"
+msgstr "Board Members"
+
+#: issue/templates/issue/issue.html:339
+msgid "പത്രാധിപ സമിതി അംഗങ്ങളാരും ലിസ്റ്റ് ചെയ്തിട്ടില്ല."
+msgstr "No editorial board members listed."
+
+#: issue/templates/issue/issue.html:350
+msgid "ഉള്ളടക്കം"
+msgstr "Contents"
+
+#: issue/templates/issue/issue.html:362
+msgid "പൊതു"
+msgstr "General"
+
+#: issue/templates/issue/issue.html:379 issue/templates/issue/issue.html:466
+msgid "ഈ ലക്കത്തിൽ ലേഖനങ്ങളൊന്നുമില്ല."
+msgstr "No articles in this issue."
+
+#: issue/templates/issue/issue.html:385
+msgid "മുഖക്കുറിപ്പ്"
+msgstr "Editorial"
+
+#: issue/templates/issue/issue.html:397
+msgid "കൂടുതൽ കാണുക"
+msgstr "See more"
+
+#: issue/templates/issue/issue.html:401
+msgid "ഈ ലക്കത്തിന് മുഖക്കുറിപ്പ് ലഭ്യമല്ല."
+msgstr "No editorial available for this issue."
+
+#: issue/templates/issue/issue.html:419
+msgid "PDF ഡൗൺലോഡ് ചെയ്യാം"
+msgstr "Download PDF"
+
+#: issue/templates/issue/issue.html:428
+msgid "ഈ ലക്കത്തിലെ ലേഖനങ്ങള്‍"
+msgstr "Articles in this Issue"
+
+#: issue/templates/issue/issue_index_page.html:37
+#, python-format
+msgid "വാല്യം %(vol)s / നമ്പർ %(no)s"
+msgstr "Volume %(vol)s / Number %(no)s"
+
+#: issue/templates/issue/issue_index_page.html:49
+msgid "ലക്കം കാണുക"
+msgstr "View Issue"
+
+#: issue/templates/issue/most_read_topics.html:24
+msgid "ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ"
+msgstr "Most Read Topics"
+
+#: issue/templates/issue/most_read_topics.html:25
+msgid "കഴിഞ്ഞ 30 ദിവസത്തെ വായനകൾ"
+msgstr "Reads in the last 30 days"
+
+#: issue/templates/issue/most_read_topics.html:41
+#, python-format
+msgid "%(name)s — %(views)s വായനകൾ"
+msgstr "%(name)s — %(views)s reads"
+
+#: issue/templates/issue/most_read_topics.html:44
+#: literati/templates/literati/author_index_page.html:30
+#: literati/templates/literati/most_read_authors.html:42
+#, python-format
+msgid "റാങ്ക് %(rank)s"
+msgstr "Rank %(rank)s"
+
+#: issue/templates/issue/most_read_topics.html:57
+#, python-format
+msgid "%(views)s വായനകൾ"
+msgstr "%(views)s reads"
+
+#: issue/templates/issue/most_read_topics.html:59
+#: literati/templates/literati/most_read_authors.html:67
+msgid "വായനകൾ"
+msgstr "Reads"
+
+#: issue/templates/issue/most_read_topics.html:68
+#: literati/templates/literati/author_index_page.html:57
+#: literati/templates/literati/most_read_authors.html:76
+msgid "നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല."
+msgstr "No data available yet."
+
+#: issue/templates/issue/most_read_topics.html:79
+#: literati/templates/literati/author_index_page.html:66
+#: literati/templates/literati/author_index_page.html:85
+#: literati/templates/literati/most_read_authors.html:87
+msgid "ലേഖനങ്ങൾ"
+msgstr "Articles"
+
+#: issue/templates/issue/most_read_topics.html:80
+msgid "ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു വിഷയം തിരഞ്ഞെടുക്കുക."
+msgstr "Select a topic from the left to view articles."
+
+#: issue/templates/issue/most_read_topics.html:114
+msgid "ഈ വിഷയത്തിൽ ലേഖനങ്ങൾ ലഭ്യമായിട്ടില്ല."
+msgstr "No articles available in this topic."
+
+#: issue/templates/issue/topic_detail.html:12
+msgid "പര്യവേക്ഷണം"
+msgstr "Explore"
+
+#: issue/templates/issue/topic_detail.html:13
+msgid "വിഷയ വിശദാംശം"
+msgstr "Topic detail"
+
+#: issue/templates/issue/topic_detail.html:21
+#, python-format
+msgid "ഈ വിഷയത്തിലെ ലേഖനങ്ങൾ (%(count)s എണ്ണം)"
+msgstr "Articles in this topic (%(count)s)"
+
+#: issue/templates/issue/topic_detail.html:42
+#, python-format
+msgid "ഈ വിഷയവുമായി ബന്ധപ്പെട്ട ലക്കങ്ങൾ (%(count)s എണ്ണം)"
+msgstr "Issues related to this topic (%(count)s)"
+
+#: issue/templates/issue/topic_detail.html:62
+msgid "ഈ വിഷയത്തിൽ ലേഖനങ്ങളോ ലക്കങ്ങളോ ഇതുവരെ കണ്ടെത്തിയില്ല."
+msgstr "No articles or issues found in this topic yet."
+
+#: kalapila/templates/kalapila/comment_section.html:8
+#: kalapila/templates/kalapila/comment_single.html:40
+msgid "ഒഴിവാക്കുക"
+msgstr "Remove"
+
+#: kalapila/templates/kalapila/comment_section.html:9
+#: kalapila/templates/kalapila/comment_single.html:46
+msgid "റിപ്പോർട്ട് ചെയ്യുക"
+msgstr "Report"
+
+#: kalapila/templates/kalapila/comment_section.html:10
+msgid "റിപ്പോർട്ട് ചെയ്തു"
+msgstr "Reported"
+
+#: kalapila/templates/kalapila/comment_section.html:11
+msgid "മറുപടി രേഖപ്പെടുത്തുക..."
+msgstr "Write a reply..."
+
+#: kalapila/templates/kalapila/comment_section.html:12
+msgid "റദ്ദാക്കുക"
+msgstr "Cancel"
+
+#: kalapila/templates/kalapila/comment_section.html:13
+msgid "മറുപടി നൽകുക"
+msgstr "Reply"
+
+#: kalapila/templates/kalapila/comment_section.html:14
+msgid "ഈ അഭിപ്രായം ഒഴിവാക്കണോ?"
+msgstr "Remove this comment?"
+
+#: kalapila/templates/kalapila/comment_section.html:15
+msgid "ഈ അഭിപ്രായം റിപ്പോർട്ട് ചെയ്യണോ?"
+msgstr "Report this comment?"
+
+#: kalapila/templates/kalapila/comment_section.html:16
+msgid "എന്തോ കുഴപ്പം സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക."
+msgstr "Something went wrong. Please try again."
+
+#: kalapila/templates/kalapila/comment_section.html:17
+msgid "അഭിപ്രായം പോസ്റ്റ് ചെയ്യുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക."
+msgstr "Error posting comment. Please try again."
+
+#: kalapila/templates/kalapila/comment_section.html:18
+msgid "അഭിപ്രായം നീക്കുന്നതിൽ പിശക്."
+msgstr "Error removing comment."
+
+#: kalapila/templates/kalapila/comment_section.html:19
+msgid "അഭിപ്രായം റിപ്പോർട്ട് ചെയ്യുന്നതിൽ പിശക്."
+msgstr "Error reporting comment."
+
+#: kalapila/templates/kalapila/comment_section.html:24
+msgid "അഭിപ്രായങ്ങൾ"
+msgstr "Comments"
+
+#: kalapila/templates/kalapila/comment_section.html:38
+msgid "അഭിപ്രായം രേഖപ്പെടുത്തുക..."
+msgstr "Write a comment..."
+
+#: kalapila/templates/kalapila/comment_section.html:45
+msgid "കമന്റ് ചെയ്യുക"
+msgstr "Comment"
+
+#: kalapila/templates/kalapila/comment_section.html:52
+msgid "നിങ്ങളുടെ അക്കൗണ്ടിൽ അഭിപ്രായങ്ങൾ രേഖപ്പെടുത്തുന്നത് താൽക്കാലികമായി വിലക്കിയിരിക്കുന്നു."
+msgstr "Commenting from your account is temporarily restricted."
+
+#: kalapila/templates/kalapila/comment_section.html:58
+#, python-format
+msgid ""
+"<i class=\"fas fa-info-circle\"></i> അഭിപ്രായങ്ങൾ രേഖപ്പെടുത്താൻ ദയവായി <a "
+"href=\"%(login_url)s?next=%(next)s\" class=\"comment-login-link\">ലോഗിൻ "
+"ചെയ്യുക</a>."
+msgstr ""
+"<i class=\"fas fa-info-circle\"></i> Please <a href=\"%(login_url)s?"
+"next=%(next)s\" class=\"comment-login-link\">log in</a> to post comments."
+
+#: kalapila/templates/kalapila/comment_section.html:68
+msgid "ആദ്യമായി ഒരു അഭിപ്രായം രേഖപ്പെടുത്തൂ!"
+msgstr "Be the first to comment!"
+
+#: kalapila/templates/kalapila/comment_single.html:33
+#: reader/templates/reader/profile.html:321
+msgid "മറുപടി"
+msgstr "Reply"
+
+#: kalapila/wagtail_hooks.py:194
+#: the_librarian/templates/the_librarian/archive_list.html:167
+msgid "കാണുക"
+msgstr "View"
+
+#: kalapila/wagtail_hooks.py:195 postbox/wagtail_hooks.py:124
+msgid "തള്ളിക്കളയുക"
+msgstr "Dismiss"
+
+#: kalapila/wagtail_hooks.py:196
+msgid "മോഡറേറ്റ് ചെയ്യുക"
+msgstr "Moderate"
+
+#: kalapila/wagtail_hooks.py:197
+msgid "പുതിയ അഭിപ്രായം!"
+msgstr "New comment!"
+
+#: literati/templates/literati/author_index_page.html:11
+#, python-format
+msgid "(%(count)s പേർ)"
+msgstr "(%(count)s authors)"
+
+#: literati/templates/literati/author_index_page.html:67
+#: literati/templates/literati/most_read_authors.html:88
+msgid "ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക."
+msgstr "Select an author from the left to view articles."
+
+#: literati/templates/literati/author_index_page.html:81
+msgid "പ്രൊഫൈൽ കാണുക"
+msgstr "View Profile"
+
+#: literati/templates/literati/author_index_page.html:107
+#: literati/templates/literati/most_read_authors.html:121
+msgid "ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങൾ നിലവിൽ ലഭ്യമായിട്ടില്ല."
+msgstr "No articles available from this author yet."
+
+#: literati/templates/literati/literati.html:59
+msgid "താൽപ്പര്യമുള്ള മേഖലകൾ"
+msgstr "Areas of Interest"
+
+#: literati/templates/literati/literati.html:105
+msgid "ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങളൊന്നും ഇതുവരെ കണ്ടെത്തിയില്ല."
+msgstr "No articles by this author found yet."
+
+#: literati/templates/literati/most_read_authors.html:22
+msgid "ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട എഴുത്തുകാർ"
+msgstr "Most Read Authors"
+
+#: literati/templates/literati/most_read_authors.html:23
+msgid "കഴിഞ്ഞ 30 ദിവസത്തെ ലേഖന വായനകൾ"
+msgstr "Article reads in the last 30 days"
+
+#: literati/templates/literati/most_read_authors.html:39
+#, python-format
+msgid "%(name)s — %(views)s ലേഖന വായനകൾ"
+msgstr "%(name)s — %(views)s article reads"
+
+#: literati/templates/literati/most_read_authors.html:65
+#, python-format
+msgid "%(views)s ലേഖന വായനകൾ"
+msgstr "%(views)s article reads"
+
+#: postbox/models.py:29 postbox/templates/postbox/postbox_page.html:33
+msgid "ബഗ് റിപ്പോർട്ട്"
+msgstr "Bug Report"
+
+#: postbox/models.py:30 postbox/templates/postbox/postbox_page.html:36
+msgid "നിർദ്ദേശം"
+msgstr "Suggestion"
+
+#: postbox/models.py:31 postbox/templates/postbox/postbox_page.html:39
+msgid "ഉള്ളടക്കത്തിലെ പ്രശ്നം"
+msgstr "Content Issue"
+
+#: postbox/models.py:32
+msgid "പൊതുവായ ഫീഡ്‌ബാക്ക്"
+msgstr "General Feedback"
+
+#: postbox/templates/postbox/postbox_page.html:4
+msgid "ഫീഡ്‌ബാക്ക്"
+msgstr "Feedback"
+
+#: postbox/templates/postbox/postbox_page.html:14
+msgid "പരീക്ഷണ ഘട്ടം"
+msgstr "Testing Phase"
+
+#: postbox/templates/postbox/postbox_page.html:15
+msgid "ഫീഡ്‌ബാക്ക് അറിയിക്കൂ"
+msgstr "Share Your Feedback"
+
+#: postbox/templates/postbox/postbox_page.html:16
+msgid "വെബ്സൈറ്റ് മെച്ചപ്പെടുത്താൻ നിങ്ങളുടെ നിർദ്ദേശങ്ങളും അഭിപ്രായങ്ങളും അറിയിക്കുക"
+msgstr "Share your suggestions and comments to help improve the website"
+
+#: postbox/templates/postbox/postbox_page.html:27
+msgid "ഫീഡ്‌ബാക്കിൻ്റെ തരം"
+msgstr "Type of feedback"
+
+#: postbox/templates/postbox/postbox_page.html:30
+msgid "പൊതുവായത്"
+msgstr "General"
+
+#: postbox/templates/postbox/postbox_page.html:47
+msgid "റേറ്റുചെയ്യൂ"
+msgstr "Rate"
+
+#: postbox/templates/postbox/postbox_page.html:48
+msgid "(optional)"
+msgstr "(optional)"
+
+#: postbox/templates/postbox/postbox_page.html:50
+msgid "നക്ഷത്ര റേറ്റിംഗ്, 1 മുതൽ 5 വരെ"
+msgstr "Star rating, 1 to 5"
+
+#: postbox/templates/postbox/postbox_page.html:51
+msgid "മോശം"
+msgstr "Poor"
+
+#: postbox/templates/postbox/postbox_page.html:52
+msgid "സാധാരണം"
+msgstr "Average"
+
+#: postbox/templates/postbox/postbox_page.html:53
+msgid "നല്ലത്"
+msgstr "Good"
+
+#: postbox/templates/postbox/postbox_page.html:54
+msgid "വളരെ നല്ലത്"
+msgstr "Very good"
+
+#: postbox/templates/postbox/postbox_page.html:55
+msgid "മികച്ചത്"
+msgstr "Excellent"
+
+#: postbox/templates/postbox/postbox_page.html:56
+msgid "ഫയൽ തിരഞ്ഞെടുക്കൂ"
+msgstr "Choose file"
+
+#: postbox/templates/postbox/postbox_page.html:60
+#, python-format
+msgid "%(counter)s നക്ഷത്രം"
+msgid_plural "%(counter)s നക്ഷത്രങ്ങൾ"
+msgstr[0] "%(counter)s star"
+msgstr[1] "%(counter)s stars"
+
+#: postbox/templates/postbox/postbox_page.html:76
+msgid "നിങ്ങള്‍ക്ക് പറയുവാനുള്ളത്"
+msgstr "What you'd like to say"
+
+#: postbox/templates/postbox/postbox_page.html:96
+msgid "ചിത്രം അറ്റാച്ച് ചെയ്യാം"
+msgstr "Attach an image"
+
+#: postbox/templates/postbox/postbox_page.html:97
+msgid "(ഓപ്ഷണൽ)"
+msgstr "(optional)"
+
+#: postbox/templates/postbox/postbox_page.html:102
+msgid "📷 ചിത്രം നിങ്ങളുടെ ഉപകരണത്തില്‍ നിന്ന് തിരഞ്ഞെടുക്കൂ"
+msgstr "📷 Choose an image from your device"
+
+#: postbox/templates/postbox/postbox_page.html:120
+msgid "ഫീഡ്‌ബാക്ക് അയക്കൂ"
+msgstr "Send Feedback"
+
+#: postbox/templates/postbox/postbox_page.html:132
+msgid "ഫീഡ്‌ബാക്ക് സന്ദർഭം:"
+msgstr "Feedback context:"
+
+#: postbox/templates/postbox/postbox_page.html:141
+msgid "നിങ്ങളുടെ മുൻ സമർപ്പണങ്ങൾ"
+msgstr "Your previous submissions"
+
+#: postbox/templates/postbox/postbox_page.html:152
+msgid "റിവ്യൂ ചെയ്തു"
+msgstr "Reviewed"
+
+#: postbox/templates/postbox/postbox_page.html:165
+msgid "ചിത്രം അറ്റാച്ച് ചെയ്തു"
+msgstr "Image attached"
+
+#: postbox/views.py:31
+msgid "ഫീഡ്ബാക്കിന് നന്ദി"
+msgstr "Thank you for your feedback"
+
+#: postbox/wagtail_hooks.py:21
+msgid "എല്ലാ തരങ്ങളും"
+msgstr "All types"
+
+#: postbox/wagtail_hooks.py:25
+msgid "അവലോകനം ചെയ്തു"
+msgstr "Reviewed"
+
+#: postbox/wagtail_hooks.py:25
+msgid "അവലോകനം ചെയ്തിട്ടില്ല"
+msgstr "Not reviewed"
+
+#: postbox/wagtail_hooks.py:26
+msgid "എല്ലാ സ്ഥിതികളും"
+msgstr "All statuses"
+
+#: postbox/wagtail_hooks.py:30
+msgid "ഏത് റേറ്റിംഗും"
+msgstr "Any rating"
+
+#: postbox/wagtail_hooks.py:125
+msgid "അവലോകനം ചെയ്യുക"
+msgstr "Review"
+
+#: postbox/wagtail_hooks.py:126
+msgid "പുതിയ ഫീഡ്‌ബാക്ക്!"
+msgstr "New feedback!"
+
+#: reader/auth_forms.py:25 reader/auth_forms.py:247 reader/forms.py:35
+#: reader/templates/reader/edit_profile.html:68
+#: reader/templates/reader/edit_profile.html:181
+msgid "ഫോൺ നമ്പർ"
+msgstr "Phone Number"
+
+#: reader/auth_forms.py:153
+#, python-format
+msgid "%(n)d മണിക്കൂർ"
+msgid_plural "%(n)d മണിക്കൂർ"
+msgstr[0] "%(n)d hour"
+msgstr[1] "%(n)d hours"
+
+#: reader/auth_forms.py:154
+#, python-format
+msgid "%(n)d മിനിറ്റ്"
+msgid_plural "%(n)d മിനിറ്റ്"
+msgstr[0] "%(n)d minute"
+msgstr[1] "%(n)d minutes"
+
+#: reader/auth_forms.py:155
+#, python-format
+msgid "%(n)s മണിക്കൂർ"
+msgstr "%(n)s hour(s)"
+
+#: reader/auth_forms.py:158
+msgid "24 മണിക്കൂർ"
+msgstr "24 hours"
+
+#: reader/auth_forms.py:174 reader/forms.py:335 reader/forms.py:366
+#: reader/templates/reader/edit_profile.html:56
+msgid "പൂർണ്ണ നാമം"
+msgstr "Full Name"
+
+#: reader/auth_forms.py:180
+msgid "എനിക്ക് 18 വയസ്സോ അതിൽ കൂടുതലോ പ്രായമുണ്ടെന്ന് ഞാൻ സ്ഥിരീകരിക്കുന്നു."
+msgstr "I confirm that I am 18 years of age or older."
+
+#: reader/auth_forms.py:182
+msgid "DPDP നിയമപ്രകാരം നിയമപരമായ സമ്മതത്തിന് ആവശ്യമാണ്."
+msgstr "Required for legal consent under the DPDP Act."
+
+#: reader/auth_forms.py:188
+msgid "സേവന വ്യവസ്ഥകളും സ്വകാര്യതാ നയവും ഞാൻ അംഗീകരിക്കുന്നു."
+msgstr "I agree to the Terms of Service and Privacy Policy."
+
+#: reader/auth_forms.py:195
+msgid ""
+"വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുന്നതിന് ഞാൻ സമ്മതിക്കുന്നു. "
+"(Optional)"
+msgstr ""
+"I consent to the tracking of my reading history for personalised "
+"recommendations. (Optional)"
+
+#: reader/auth_forms.py:197
+msgid "ശുപാർശകൾ വേണ്ടെങ്കിൽ ഇത് ചെക്ക് ചെയ്യാതെ വിടാം."
+msgstr ""
+"You can leave this unchecked if you prefer not to receive recommendations."
+
+#: reader/forms.py:52
+msgid "വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുക. (Optional)"
+msgstr "Track my reading history for personalised recommendations. (Optional)"
+
+#: reader/forms.py:55
+msgid "ഈ സമ്മതം പിൻവലിച്ചാൽ സൂക്ഷിച്ച നിങ്ങളുടെ വായനാ ചരിത്രം ശാശ്വതമായി ഇല്ലാതാക്കപ്പെടും."
+msgstr ""
+"Revoking this consent will permanently delete your saved reading history."
+
+#: reader/forms.py:59
+msgid "വിശകലനത്തിൽ എന്റെ ലിംഗഭേദം ഉൾപ്പെടുത്തുക."
+msgstr "Include my gender in analytics."
+
+#: reader/forms.py:64
+msgid "വിശകലനത്തിൽ എന്റെ ജനന വർഷം ഉൾപ്പെടുത്തുക."
+msgstr "Include my birth year in analytics."
+
+#: reader/forms.py:76 reader/templates/reader/edit_profile.html:22
+msgid "പ്രൊഫൈൽ ചിത്രം"
+msgstr "Profile Picture"
+
+#: reader/forms.py:78
+msgid "JPG/PNG/WebP, പരമാവധി 5MB."
+msgstr "JPG/PNG/WebP, maximum 5MB."
+
+#: reader/forms.py:82 reader/templates/reader/edit_profile.html:40
+msgid "നിലവിലുള്ള ചിത്രം നീക്കം ചെയ്യുക"
+msgstr "Remove current picture"
+
+#: reader/forms.py:90
+msgid "ചിത്രത്തിന്റെ വലുപ്പം 5MB-യിൽ കുറവായിരിക്കണം."
+msgstr "The image must be smaller than 5MB."
+
+#: reader/forms.py:109
+msgid "ഉദാ: സെക്യൂരിറ്റി ഡെസ്കിൽ ഏൽപ്പിക്കുക"
+msgstr "Eg: Leave at security desk"
+
+#: reader/forms.py:323
+msgid "നിങ്ങൾക്ക് താൽപ്പര്യമുള്ള വിഷയങ്ങൾ തിരഞ്ഞെടുക്കുക"
+msgstr "Select your topics of interest"
+
+#: reader/forms.py:370
+msgid "ഈ തീയതി വരെ താൽക്കാലിക പ്രവേശനം നൽകുക"
+msgstr "Grant temporary access until"
+
+#: reader/forms.py:372
+msgid ""
+"തിരഞ്ഞെടുത്ത തീയതി വരെ ഈ വായനക്കാരന് സൗജന്യ പ്രവേശനം (പേയ്‌മെന്റ് ഇല്ലാതെ) നൽകുക. മുകളിലെ "
+"പ്ലാനിനെ മറികടക്കും. മാറ്റം വേണ്ടെങ്കിൽ ശൂന്യമായി വിടുക."
+msgstr ""
+"Give this reader complimentary access (no payment) through the selected "
+"date. Overrides the plan above. Leave blank to make no change."
+
+#: reader/forms.py:424
+msgid "പ്രവേശന അവസാന തീയതി ഭാവിയിലായിരിക്കണം."
+msgstr "The access-until date must be in the future."
+
+#: reader/forms.py:432
+msgid "സൗജന്യ പ്രവേശനം നൽകാൻ ഒരു അവസാന തീയതി നിശ്ചയിക്കുക."
+msgstr "Set an access-until date to grant complimentary access."
+
+#: reader/models.py:31 reader/models.py:365
+msgid "1 മാസം"
+msgstr "1 Month"
+
+#: reader/models.py:32 reader/models.py:366
+msgid "3 മാസം"
+msgstr "3 Months"
+
+#: reader/models.py:33 reader/models.py:367
+msgid "6 മാസം"
+msgstr "6 Months"
+
+#: reader/models.py:34 reader/models.py:368
+msgid "1 വർഷം"
+msgstr "1 Year"
+
+#: reader/models.py:35 reader/models.py:369
+msgid "3 വർഷം"
+msgstr "3 Years"
+
+#: reader/models.py:36 reader/models.py:370
+msgid "5 വർഷം"
+msgstr "5 Years"
+
+#: reader/models.py:78
+msgid "ഫോൺ നമ്പർ (ഹാഷ്)"
+msgstr "Phone Number (Hash)"
+
+#: reader/models.py:81
+msgid ""
+"ഫോൺ നമ്പറിന്റെ HMAC-SHA256. വേഗതയേറിയതും സുരക്ഷിതവുമായ കൃത്യ-പൊരുത്ത തിരയലുകൾക്ക് "
+"ഉപയോഗിക്കുന്നു."
+msgstr ""
+"HMAC-SHA256 of the phone number. Used for fast, secure exact-match lookups."
+
+#: reader/models.py:84
+msgid "ഫോൺ നമ്പർ (എൻക്രിപ്റ്റഡ്)"
+msgstr "Phone Number (Encrypted)"
+
+#: reader/models.py:87
+msgid "Fernet-എൻക്രിപ്റ്റ് ചെയ്ത ഫോൺ നമ്പർ. നേരിട്ടുള്ള DB ഡമ്പുകളിൽ വായിക്കാനാവില്ല."
+msgstr "Fernet-encrypted phone number. Unreadable in raw DB dumps."
+
+#: reader/models.py:98
+msgid "നിങ്ങളുടെ അഭിപ്രായങ്ങൾക്കൊപ്പം ദൃശ്യമാകും."
+msgstr "Visible next to your comments."
+
+#: reader/models.py:103
+msgid "നിങ്ങളെക്കുറിച്ചുള്ള ഒരു ചെറു വിവരണം."
+msgstr "A short description about yourself."
+
+#: reader/models.py:107
+msgid "ഈ ഉപയോക്താവിനെ അഭിപ്രായങ്ങൾ പോസ്റ്റ് ചെയ്യുന്നതിൽ നിന്ന് തടയാൻ ഇത് അൺചെക്ക് ചെയ്യുക."
+msgstr "Uncheck this to restrict this user from posting comments."
+
+#: reader/models.py:120
+msgid "നിയമപരമായ സാധുതയ്ക്കായി സേവന വ്യവസ്ഥകൾ അംഗീകരിച്ച സമയമുദ്ര."
+msgstr ""
+"Timestamp of agreement to the Terms of Service for legal enforceability."
+
+#: reader/models.py:124
+msgid "ഉപയോക്താവ് അംഗീകരിച്ച സേവന വ്യവസ്ഥകളുടെ പതിപ്പ്."
+msgstr "Version of the Terms of Service agreed to by the user."
+
+#: reader/models.py:128
+msgid "സ്വകാര്യതാ നയത്തിന് വ്യക്തമായ സമ്മതം നൽകിയ സമയമുദ്ര."
+msgstr "Timestamp of explicit consent to the Privacy Policy."
+
+#: reader/models.py:132
+msgid "സമ്മതം നൽകിയ സ്വകാര്യതാ നയത്തിന്റെ പതിപ്പ് (സമ്മത പതിപ്പ് രേഖയ്ക്ക് ആവശ്യം)."
+msgstr ""
+"Version of the Privacy Policy consented to (required for consent versioning)."
+
+#: reader/models.py:137
+msgid "DPDP അനുസരണത്തിനായി സൈൻഅപ്പ് സമയത്ത് രേഖപ്പെടുത്തിയ 18+ പ്രായ സ്വയം-പ്രഖ്യാപനം."
+msgstr "18+ age self-declaration captured at signup for DPDP compliance."
+
+#: reader/models.py:141
+msgid "സൈൻഅപ്പിലെ 18+ പ്രായ സ്വയം-പ്രഖ്യാപനത്തിന്റെ സമയമുദ്ര."
+msgstr "Timestamp of the 18+ age self-declaration at signup."
+
+#: reader/models.py:147
+msgid "ജനസംഖ്യാ വിശകലനത്തിനായി ജനന വർഷം പങ്കിടാൻ സമ്മതം നൽകിയ സമയമുദ്ര."
+msgstr "Timestamp of consent to share birth year for demographic analytics."
+
+#: reader/models.py:151
+msgid "ലിംഗ വിവരം പങ്കിടാൻ സമ്മതം നൽകിയ സമയമുദ്ര."
+msgstr "Timestamp of consent to share gender information."
+
+#: reader/models.py:155
+msgid "വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യാൻ സമ്മതം നൽകിയ സമയമുദ്ര. പിൻവലിക്കുമ്പോൾ മായ്ക്കപ്പെടും."
+msgstr "Timestamp of consent to track reading history. Cleared on revocation."
+
+#: reader/models.py:160
+msgid "അനിവാര്യമല്ലാത്ത മാർക്കറ്റിംഗ് അറിയിപ്പുകൾ സ്വീകരിക്കാനുള്ള ഉപയോക്താവിന്റെ തിരഞ്ഞെടുപ്പ്."
+msgstr "User's choice to receive non-essential marketing communications."
+
+#: reader/models.py:164
+msgid "വാർത്താക്കുറിപ്പ് സമ്മത നില അവസാനം മാറിയ സമയമുദ്ര."
+msgstr "Timestamp of when the newsletter consent status last changed."
+
+#: reader/models.py:170
+msgid "വ്യാജ ബോട്ട് രജിസ്ട്രേഷനുകൾ കണ്ടെത്താനും തടയാനും സൈൻഅപ്പിൽ രേഖപ്പെടുത്തുന്നു."
+msgstr "Captured at signup to detect and prevent fraudulent bot registrations."
+
+#: reader/models.py:174
+msgid "സുരക്ഷാ ഓഡിറ്റിനും അനധികൃത അക്കൗണ്ട് പ്രവേശനം കണ്ടെത്താനും നിരീക്ഷിക്കുന്നു."
+msgstr ""
+"Monitored for security auditing and to detect unauthorized account access."
+
+#: reader/models.py:180
+msgid ""
+"ഉപയോക്താവ് ഇല്ലാതാക്കൽ അഭ്യർത്ഥിക്കുമ്പോൾ രേഖപ്പെടുത്തുന്നു; നിയമപരമായ ഡാറ്റ സൂക്ഷിപ്പ് കാലയളവ് "
+"ആരംഭിക്കുന്നു."
+msgstr ""
+"Recorded when the user requests deletion; starts the statutory data "
+"retention clock."
+
+#: reader/models.py:184
+msgid ""
+"പ്രാഥമിക ബന്ധപ്പെടൽ മാർഗ്ഗം വിജയകരമായി പരിശോധിച്ചതിന്റെ അടിസ്ഥാനത്തിലുള്ള അക്കൗണ്ട് നില."
+msgstr ""
+"Account status based on successful verification of the primary contact "
+"method."
+
+#: reader/models.py:191
+msgid ""
+"നിലവിലെ എഡിറ്റോറിയൽ ബോർഡിൽ അംഗമായതിനാൽ is_staff സ്വയമേവ നൽകിയപ്പോൾ True "
+"(literati.sync_editorial_staff കാണുക). ബോർഡ് വിട്ടാൽ ഈ ഫ്ലാഗ് ഉള്ളവരുടെ മാത്രം അനുമതി "
+"പിൻവലിക്കും — നേരിട്ട് നിയമിച്ച സ്റ്റാഫും സൂപ്പർയൂസർമാരും ഒരിക്കലും തരംതാഴ്ത്തപ്പെടില്ല."
+msgstr ""
+"True when is_staff was granted automatically because this user sits on the "
+"current editorial board (see literati.sync_editorial_staff). Revocation on "
+"leaving the board only touches users with this flag — manually appointed "
+"staff and superusers are never demoted."
+
+#: reader/models.py:253
+msgid "പുരുഷന്‍"
+msgstr "Male"
+
+#: reader/models.py:254
+msgid "സ്ത്രീ"
+msgstr "Female"
+
+#: reader/models.py:255
+msgid "നോണ്‍ ബൈനറി / ക്വീര്‍"
+msgstr "Non-binary / Queer"
+
+#: reader/models.py:256
+msgid "പറയാന്‍ താല്‍പര്യമില്ല"
+msgstr "Prefer not to say"
+
+#: reader/models.py:257
+msgid "മറ്റൊന്ന്"
+msgstr "Other"
+
+#: reader/models.py:261 reader/templates/reader/edit_profile.html:109
+msgid "മറ്റ് ലിംഗം"
+msgstr "Other Gender"
+
+#: reader/models.py:268
+msgid ""
+"ജനന വർഷം മാത്രം. ജനസംഖ്യാ വിശകലനത്തിന് മതിയാകും; പൂർണ്ണ ജനനത്തീയതിയെക്കാൾ സുരക്ഷിതം."
+msgstr ""
+"Year of birth only. Sufficient for demographic analytics; safer than a full "
+"date of birth."
+
+#: reader/models.py:273
+msgid "— സംസ്ഥാനം തിരഞ്ഞെടുക്കുക —"
+msgstr "— Select State —"
+
+#: reader/models.py:314
+msgid "സാധുവായ 6-അക്ക ഇന്ത്യൻ പിൻകോഡ് നൽകുക."
+msgstr "Enter a valid 6-digit Indian pincode."
+
+#: reader/models.py:319
+msgid "വീട്/ഫ്ലാറ്റ് നമ്പർ, തെരുവിന്റെ പേര്."
+msgstr "House / flat number, street name."
+
+#: reader/models.py:323
+msgid "ലാൻഡ്മാർക്ക്, പ്രദേശം, സ്ഥലം."
+msgstr "Landmark, area, locality."
+
+#: reader/models.py:332
+msgid "6-അക്ക ഇന്ത്യൻ പിൻകോഡ്."
+msgstr "6-digit Indian pincode."
+
+#: reader/models.py:344
+msgid "C/O ഫോൺ നമ്പർ"
+msgstr "C/O Phone Number"
+
+#: reader/models.py:363 reader/models.py:461
+#: reader/templates/reader/profile.html:193 reader/wagtail_hooks.py:21
+msgid "വരിസംഖ്യ ഇല്ല"
+msgstr "No Subscription"
+
+#: reader/models.py:364
+msgid "സൗജന്യം (താൽക്കാലിക പ്രവേശനം)"
+msgstr "Complimentary (Temporary Access)"
+
+#: reader/models.py:387
+msgid "സജീവ വരിസംഖ്യ പ്ലാൻ."
+msgstr "Active subscription plan."
+
+#: reader/models.py:391
+msgid "നിലവിലെ വരിസംഖ്യ കാലയളവ് ആരംഭിച്ചത്."
+msgstr "When the current subscription period began."
+
+#: reader/models.py:395
+msgid "നിലവിലെ വരിസംഖ്യ കാലയളവ് അവസാനിക്കുന്നത്."
+msgstr "When the current subscription period expires."
+
+#: reader/models.py:399
+msgid "സജീവ വരിസംഖ്യ റദ്ദാക്കിയെങ്കിലും ഗ്രേസ് കാലയളവിൽ തുടരുന്നു എന്ന ഫ്ലാഗ്."
+msgstr ""
+"Flag indicating the active subscription has been cancelled but remains in "
+"its grace period."
+
+#: reader/models.py:403
+msgid "DPDPA/GDPR ചട്ടപ്രകാരം ഈ അക്കൗണ്ട് അജ്ഞാതവൽക്കരിച്ചിട്ടുണ്ടോ എന്ന ഫ്ലാഗ്."
+msgstr ""
+"Flag indicating whether this account has been anonymized under DPDPA/GDPR "
+"rules."
+
+#: reader/models.py:456 reader/templates/reader/admin/print_subscribers.html:58
+#: reader/templates/reader/edit.html:83
+#: reader/templates/reader/profile.html:153
+#: reader/templates/reader/profile.html:390 reader/wagtail_hooks.py:19
+msgid "സജീവം"
+msgstr "Active"
+
+#: reader/models.py:458
+msgid "ഗ്രേസ് കാലയളവ്"
+msgstr "Grace Period"
+
+#: reader/models.py:460 reader/templates/reader/admin/print_subscribers.html:60
+#: reader/templates/reader/edit.html:83
+#: reader/templates/reader/profile.html:393 reader/wagtail_hooks.py:20
+msgid "കാലഹരണപ്പെട്ടു"
+msgstr "Expired"
+
+#: reader/models.py:462 reader/templates/reader/admin/print_subscribers.html:44
+#: reader/templates/reader/profile.html:376
+msgid "നില"
+msgstr "Status"
+
+#: reader/models.py:556
+msgid "ഈ വായനക്കാരൻ വായിച്ച ലേഖനങ്ങൾ."
+msgstr "Articles this reader has read."
+
+#: reader/models.py:562
+msgid "ഈ വായനക്കാരന് താൽപ്പര്യമുള്ള വിഷയങ്ങൾ."
+msgstr "Topics this reader is interested in."
+
+#: reader/models.py:570
+msgid "ഈ വായനക്കാരൻ പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയ ലേഖനങ്ങൾ."
+msgstr "Articles this reader has bookmarked."
+
+#: reader/models.py:576
+msgid "ഈ വായനക്കാരൻ പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയ ലക്കങ്ങൾ."
+msgstr "Issues this reader has bookmarked."
+
+#: reader/models.py:613 reader/templates/reader/profile.html:50
+#: reader/templates/reader/profile.html:133
+msgid "ഫോൺ"
+msgstr "Phone"
+
+#: reader/models.py:625 reader/templates/reader/profile.html:29
+msgid "വ്യക്തിഗത വിവരങ്ങൾ"
+msgstr "Personal Information"
+
+#: reader/models.py:630
+msgid "പൊതു പ്രൊഫൈലും മോഡറേഷനും"
+msgstr "Public Profile & Moderation"
+
+#: reader/models.py:637 reader/templates/reader/edit_profile.html:168
+msgid "ചേർത്തത് (C/O)"
+msgstr "Added By (C/O)"
+
+#: reader/models.py:650 reader/templates/reader/create.html:39
+#: reader/templates/reader/edit.html:39
+msgid "തപാൽ വിലാസം"
+msgstr "Mailing Address"
+
+#: reader/models.py:656
+msgid "പ്രിന്റ് വിതരണ നിർവഹണം"
+msgstr "Print Circulation Management"
+
+#: reader/models.py:664 reader/wagtail_hooks.py:24
+msgid "വരിസംഖ്യ നില"
+msgstr "Subscription Status"
+
+#: reader/models.py:669
+msgid "പ്രവർത്തനവും താൽപ്പര്യങ്ങളും"
+msgstr "Activity & Interests"
+
+#: reader/models.py:673
+msgid "പ്രിയപ്പെട്ടവ"
+msgstr "Favourites"
+
+#: reader/models.py:690
+msgid "നിയമം, സുരക്ഷ, അക്കൗണ്ട് ജീവിതചക്രം"
+msgstr "Legal, Security & Lifecycle"
+
+#: reader/models.py:782
+msgid "ഈ ഉപയോക്താവിന് അച്ചടി മാസിക ലഭിക്കുന്നുണ്ടോ എന്ന് സൂചിപ്പിക്കുന്നു."
+msgstr "Designates whether this user receives the physical print magazine."
+
+#: reader/models.py:787
+msgid "സജീവ ഡെലിവറി"
+msgstr "Active Delivery"
+
+#: reader/models.py:788
+msgid "താൽക്കാലികമായി നിർത്തി"
+msgstr "Paused"
+
+#: reader/models.py:789
+msgid "വിലാസ പ്രശ്നം / തിരികെ വന്നു"
+msgstr "Address Issue / Returned"
+
+#: reader/models.py:790
+msgid "അച്ചടി പതിപ്പ് ഇല്ല"
+msgstr "No Print Copy"
+
+#: reader/models.py:793
+msgid "പ്രിന്റ് ഡെലിവറിയുടെ നിലവിലെ ലോജിസ്റ്റിക് നില."
+msgstr "Current logistical status of the print delivery."
+
+#: reader/models.py:797
+msgid "പ്രിന്റ് വരിസംഖ്യ അവസാനിക്കുന്നത് (ഡിജിറ്റൽ കാലാവധിയിൽ നിന്ന് വ്യത്യസ്തമാകാം)."
+msgstr "When the print subscription ends (may differ from digital expiry)."
+
+#: reader/models.py:801
+msgid "കൊറിയറിനുള്ള പ്രത്യേക നിർദ്ദേശങ്ങൾ (ഉദാ: 'ഗേറ്റിൽ ഏൽപ്പിക്കുക')."
+msgstr "Special instructions for the courier (e.g., 'Leave at gate')."
+
+#: reader/models.py:919
+msgid "വായനക്കാരൻ"
+msgstr "Reader"
+
+#: reader/models.py:920 reader/wagtail_hooks.py:88
+msgid "വായനക്കാർ"
+msgstr "Readers"
+
+#: reader/models.py:938
+msgid "ഈ വരിസംഖ്യ രേഖയുമായി ബന്ധപ്പെട്ട വായനക്കാരൻ."
+msgstr "The reader associated with this subscription record."
+
+#: reader/models.py:943
+msgid "വരിസംഖ്യ പ്ലാൻ തരം."
+msgstr "Subscription plan type."
+
+#: reader/models.py:946
+msgid "ഈ വരിസംഖ്യ കാലയളവ് ആരംഭിച്ചത്."
+msgstr "When this subscription period began."
+
+#: reader/models.py:949
+msgid "ഈ വരിസംഖ്യ കാലയളവ് അവസാനിക്കുന്നത്/അവസാനിച്ചത്."
+msgstr "When this subscription period expires/expired."
+
+#: reader/models.py:956
+msgid "ഈ വരിസംഖ്യയുമായി ബന്ധപ്പെട്ട പേയ്‌മെന്റ് ഇടപാട് വിവരങ്ങൾ."
+msgstr "Payment transaction details associated with this subscription."
+
+#: reader/models.py:963
+msgid "ഇത് നിലവിലെ സജീവ വരിസംഖ്യ രേഖയാണോ എന്ന ഫ്ലാഗ്."
+msgstr ""
+"Flag indicating whether this is the current active subscription record."
+
+#: reader/models.py:967
+msgid "ഈ വരിസംഖ്യ കാലാവധിക്കു മുൻപ് റദ്ദാക്കിയോ എന്ന ഫ്ലാഗ്."
+msgstr "Flag indicating whether this subscription was cancelled prematurely."
+
+#: reader/models.py:985 reader/templates/reader/profile.html:368
+msgid "വരിസംഖ്യ ചരിത്രം"
+msgstr "Subscription History"
+
+#: reader/models.py:986 reader/wagtail_hooks.py:130
+msgid "വരിസംഖ്യ ചരിത്രങ്ങൾ"
+msgstr "Subscription Histories"
+
+#: reader/models.py:999
+msgid "ക്രെഡിറ്റ് / ഡെബിറ്റ് കാർഡ്"
+msgstr "Credit / Debit Card"
+
+#: reader/models.py:1001 reader/templates/reader/checkout.html:52
+msgid "നെറ്റ് ബാങ്കിംഗ്"
+msgstr "Net Banking"
+
+#: reader/models.py:1002
+msgid "വാലറ്റ്"
+msgstr "Wallet"
+
+#: reader/models.py:1003
+msgid "മറ്റുള്ളവ"
+msgstr "Other"
+
+#: reader/models.py:1007 reader/templates/reader/profile.html:316
+msgid "തീർപ്പാക്കാത്തത്"
+msgstr "Pending"
+
+#: reader/models.py:1010
+msgid "തിരികെ നൽകി"
+msgstr "Refunded"
+
+#: reader/models.py:1020
+msgid "ഒരേ പേയ്‌മെന്റ് ഇരട്ടിക്കുന്നത് തടയാനുള്ള അദ്വിതീയ കീ."
+msgstr "Unique key to prevent duplicate payment processing."
+
+#: reader/models.py:1026
+msgid "മറ്റ് പേയ്‌മെന്റ് രീതി"
+msgstr "Other Payment Method"
+
+#: reader/models.py:1041
+msgid "ഗേറ്റ്‌വേ റഫറൻസ്"
+msgstr "Gateway Reference"
+
+#: reader/models.py:1050
+msgid "പേയ്‌മെന്റ് വിവരം"
+msgstr "Payment Info"
+
+#: reader/models.py:1054
+msgid "സമയമുദ്രകൾ"
+msgstr "Timestamps"
+
+#: reader/models.py:1058 reader/models.py:1059
+msgid "പേയ്‌മെന്റ് വിവരങ്ങൾ"
+msgstr "Payment Details"
+
+#: reader/signup_forms.py:25
+msgid "നിങ്ങളുടെ പാസ്‌വേഡ് നിങ്ങളുടെ മറ്റ് വ്യക്തിഗത വിവരങ്ങളുമായി വളരെ സാമ്യമുള്ളതാകരുത്."
+msgstr "Your password can't be too similar to your other personal information."
+
+#: reader/signup_forms.py:28
+msgid "നിങ്ങളുടെ പാസ്‌വേഡിൽ കുറഞ്ഞത് 8 അക്ഷരങ്ങളെങ്കിലും ഉണ്ടായിരിക്കണം."
+msgstr "Your password must contain at least 8 characters."
+
+#: reader/signup_forms.py:31
+msgid "നിങ്ങളുടെ പാസ്‌വേഡ് സാധാരണയായി ഉപയോഗിക്കുന്ന ഒരു വാക്കോ അക്ഷരങ്ങളുടെ കൂട്ടമോ ആകരുത്."
+msgstr "Your password can't be a commonly used password."
+
+#: reader/signup_forms.py:34
+msgid "നിങ്ങളുടെ പാസ്‌വേഡ് പൂർണ്ണമായും അക്കങ്ങൾ മാത്രമുള്ളതാകരുത്."
+msgstr "Your password can't be entirely numeric."
+
+#: reader/templates/reader/account_deactivate.html:5
+#: reader/templates/reader/account_deactivate.html:13
+msgid "അക്കൗണ്ട് നിർജ്ജീവമാക്കുക"
+msgstr "Deactivate Account"
+
+#: reader/templates/reader/account_deactivate.html:14
+msgid "തുടരുന്നതിന് മുമ്പ് താഴെയുള്ള ഓരോ കാര്യവും ശ്രദ്ധയോടെ വായിക്കുക."
+msgstr "Read every point below carefully before continuing."
+
+#: reader/templates/reader/account_deactivate.html:19
+msgid "ഈ നടപടി പഴയപടിയാക്കാനാവില്ല."
+msgstr "This action cannot be undone."
+
+#: reader/templates/reader/account_deactivate.html:20
+msgid ""
+"അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള എല്ലാ പ്രവേശനവും ഉടൻ റദ്ദാകുകയും "
+"നിയമപരമായി ഡാറ്റ സൂക്ഷിപ്പ് പൂര്‍ണ്ണമായി നശിപ്പിക്കുന്നതിലേക്കുള്ള കൗണ്ട്ഡൗൺ ആരംഭിക്കുകയും ചെയ്യും."
+msgstr ""
+"Deactivating your account immediately revokes all access to Sasthragathi and "
+"begins the statutory countdown to the complete destruction of your data."
+
+#: reader/templates/reader/account_deactivate.html:27
+msgid "ഉടൻ സംഭവിക്കുന്നത്:"
+msgstr "What will happen immediately:"
+
+#: reader/templates/reader/account_deactivate.html:29
+msgid "അക്കൗണ്ട് നിർജ്ജീവമാക്കലിന്റെ അനന്തരഫലങ്ങൾ"
+msgstr "Consequences of account deactivation"
+
+#: reader/templates/reader/account_deactivate.html:32
+msgid "നിങ്ങൾ ലോഗ് ഔട്ട് ചെയ്യപ്പെടും; ലോഗിൻ ശാശ്വതമായി പ്രവർത്തനരഹിതമാകും"
+msgstr "You are signed out and your login is permanently disabled"
+
+#: reader/templates/reader/account_deactivate.html:36
+msgid "സജീവ വരിസംഖ്യ റദ്ദാകും"
+msgstr "Any active subscription is cancelled"
+
+#: reader/templates/reader/account_deactivate.html:36
+msgid " തുക തിരികെ ലഭിക്കില്ല"
+msgstr " no refund will be issued"
+
+#: reader/templates/reader/account_deactivate.html:40
+msgid "നിങ്ങളുടെ വായനാ ചരിത്രം, പ്രിയപ്പെട്ടവ, മുൻഗണനകൾ എന്നിവ മായ്ക്കപ്പെടും"
+msgstr "Your reading history, favorites, and preferences are erased"
+
+#: reader/templates/reader/account_deactivate.html:44
+msgid "നിങ്ങളുടെ അഭിപ്രായങ്ങൾ അജ്ഞാതവൽക്കരിച്ച് മോഡറേഷൻ രേഖകൾക്കായി സൂക്ഷിക്കും"
+msgstr "Your comments are anonymised and retained for moderation records"
+
+#: reader/templates/reader/account_deactivate.html:48
+msgid "നിയമപരമായ സൂക്ഷിപ്പ് കാലയളവിനുശേഷം വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും"
+msgstr ""
+"Personal data will be permanently purged after the statutory retention period"
+
+#: reader/templates/reader/account_deactivate.html:70
+msgid "എന്ന് ടൈപ്പ് ചെയ്ത് സ്ഥിരീകരിക്കുക"
+msgstr "— type it to confirm"
+
+#: reader/templates/reader/account_deactivate.html:85
+msgid "എല്ലാം വലിയക്ഷരങ്ങളിൽ, കൃത്യമായി ടൈപ്പ് ചെയ്യണം."
+msgstr "All capitals, exact match required."
+
+#: reader/templates/reader/account_deactivate.html:95
+msgid "അക്കൗണ്ട് പാസ്‌വേഡ് നൽകി സ്ഥിരീകരിക്കുക"
+msgstr "Confirm with your account password"
+
+#: reader/templates/reader/account_deactivate.html:106
+msgid "നിങ്ങളുടെ പാസ്‌വേഡ്"
+msgstr "Your password"
+
+#: reader/templates/reader/account_deactivate.html:143
+msgid "എന്റെ അക്കൗണ്ട് ശാശ്വതമായി നിർജ്ജീവമാക്കുക"
+msgstr "Permanently Deactivate My Account"
+
+#: reader/templates/reader/account_deactivate.html:149
+msgid "← വേണ്ട, തിരികെ കൊണ്ടുപോകൂ"
+msgstr "← Changed my mind, take me back"
+
+#: reader/templates/reader/admin/print_subscribers.html:21
+msgid "മെയിലിംഗ് ലിസ്റ്റ് എക്സ്പോർട്ട് ചെയ്യുക (CSV)"
+msgstr "Export Mailing List (CSV)"
+
+#: reader/templates/reader/admin/print_subscribers.html:25
+msgid "ഈ പട്ടിക പ്രിന്റ് ചെയ്യുക"
+msgstr "Print this list"
+
+#: reader/templates/reader/admin/print_subscribers.html:31
+msgid "വരിക്കാരായ വായനക്കാരുടെ പട്ടിക"
+msgstr "Subscribed Readers List"
+
+#: reader/templates/reader/admin/print_subscribers.html:32
+msgid "തയ്യാറാക്കിയത്:"
+msgstr "Generated on:"
+
+#: reader/templates/reader/admin/print_subscribers.html:39
+#: reader/templates/reader/edit_profile.html:175
+#: reader/templates/reader/profile.html:132
+msgid "പേര്"
+msgstr "Name"
+
+#: reader/templates/reader/admin/print_subscribers.html:40
+#: reader/templates/reader/edit_profile.html:62
+#: reader/templates/reader/profile.html:53
+msgid "ഇമെയിൽ"
+msgstr "Email"
+
+#: reader/templates/reader/admin/print_subscribers.html:41
+#: reader/templates/reader/checkout.html:20
+#: reader/templates/reader/profile.html:373
+msgid "പ്ലാൻ"
+msgstr "Plan"
+
+#: reader/templates/reader/admin/print_subscribers.html:42
+#: reader/templates/reader/profile.html:158
+msgid "ആരംഭിച്ചത്"
+msgstr "Started"
+
+#: reader/templates/reader/admin/print_subscribers.html:43
+#: reader/templates/reader/checkout.html:69
+#: reader/templates/reader/profile.html:161
+msgid "കാലാവധി"
+msgstr "Expires"
+
+#: reader/templates/reader/admin/print_subscribers.html:66
+msgid "വരിക്കാരായ വായനക്കാരെയൊന്നും കണ്ടെത്തിയില്ല."
+msgstr "No subscribed readers found."
+
+#: reader/templates/reader/admin/print_subscribers.html:73
+msgid "ആകെ വരിസംഖ്യകൾ"
+msgstr "Total Subscriptions"
+
+#: reader/templates/reader/admin/print_subscribers.html:74
+msgid "ശാസ്ത്രഗതി മാനേജ്മെന്റ് സിസ്റ്റം"
+msgstr "Sasthragathi Management System"
+
+#: reader/templates/reader/auditlog_admin.html:17
+msgid "സമയമുദ്ര (IST)"
+msgstr "Timestamp (IST)"
+
+#: reader/templates/reader/auditlog_admin.html:36
+#: reader/templates/reader/auditlog_panel.html:24
+msgid "സിസ്റ്റം"
+msgstr "System"
+
+#: reader/templates/reader/auditlog_admin.html:42
+#: reader/templates/reader/auditlog_panel.html:28
+msgid "സൃഷ്ടിച്ചു"
+msgstr "Create"
+
+#: reader/templates/reader/auditlog_admin.html:44
+#: reader/templates/reader/auditlog_panel.html:30
+msgctxt "audit action"
+msgid "പുതുക്കി"
+msgstr "Updated"
+
+#: reader/templates/reader/auditlog_admin.html:46
+#: reader/templates/reader/auditlog_panel.html:32
+msgid "ഇല്ലാതാക്കി"
+msgstr "Delete"
+
+#: reader/templates/reader/auditlog_admin.html:62
+#: reader/templates/reader/auditlog_admin.html:70
+msgid "ഒന്നുമില്ല"
+msgstr "None"
+
+#: reader/templates/reader/auditlog_admin.html:75
+msgid "പ്രത്യേക ഫീൽഡ് മാറ്റങ്ങളൊന്നും രേഖപ്പെടുത്തിയിട്ടില്ല."
+msgstr "No specific field changes recorded."
+
+#: reader/templates/reader/auditlog_admin.html:78
+msgid "പ്രദർശന പിശക്"
+msgstr "Display error"
+
+#: reader/templates/reader/auditlog_panel.html:4
+msgid "സമീപകാല പ്രവർത്തനം (ഓഡിറ്റ് ലോഗ്)"
+msgstr "Recent Activity (Audit Log)"
+
+#: reader/templates/reader/auditlog_panel.html:8
+msgid "സമയം"
+msgstr "Time"
+
+#: reader/templates/reader/auditlog_panel.html:11
+msgid "മോഡലും മാറ്റങ്ങളും"
+msgstr "Model & Changes"
+
+#: reader/templates/reader/auditlog_panel.html:47
+msgid "സമീപകാല പ്രവർത്തനങ്ങളൊന്നും കണ്ടെത്തിയില്ല."
+msgstr "No recent activity found."
+
+#: reader/templates/reader/auditlog_panel.html:52
+msgid "പൂർണ്ണ ഓഡിറ്റ് ലോഗ് കാണുക"
+msgstr "View Full Audit Log"
+
+#: reader/templates/reader/checkout.html:4
+msgid "ചെക്ക്ഔട്ട്"
+msgstr "Checkout"
+
+#: reader/templates/reader/checkout.html:13
+msgid "വരിസംഖ്യ പൂർത്തിയാക്കുക"
+msgstr "Complete Subscription"
+
+#: reader/templates/reader/checkout.html:18
+msgid "ഓർഡർ സംഗ്രഹം"
+msgstr "Order Summary"
+
+#: reader/templates/reader/checkout.html:21
+#, python-format
+msgid "%(plan)s വരിസംഖ്യ"
+msgstr "%(plan)s Subscription"
+
+#: reader/templates/reader/checkout.html:24
+msgid "പ്രവേശനം"
+msgstr "Access"
+
+#: reader/templates/reader/checkout.html:25
+msgid "പരിധിയില്ലാതെ"
+msgstr "Unlimited"
+
+#: reader/templates/reader/checkout.html:28
+msgid "ആകെ തുക"
+msgstr "Total Amount"
+
+#: reader/templates/reader/checkout.html:40
+msgid "പേയ്‌മെന്റ് രീതി തിരഞ്ഞെടുക്കുക"
+msgstr "Select Payment Method"
+
+#: reader/templates/reader/checkout.html:44
+msgid "കാർഡ്"
+msgstr "Card"
+
+#: reader/templates/reader/checkout.html:58
+msgid "കാർഡ് ഉടമയുടെ പേര്"
+msgstr "Cardholder Name"
+
+#: reader/templates/reader/checkout.html:59
+msgid "കാർഡിലെ പേര്"
+msgstr "Name on card"
+
+#: reader/templates/reader/checkout.html:63
+msgid "കാർഡ് നമ്പർ"
+msgstr "Card Number"
+
+#: reader/templates/reader/checkout.html:78
+#, python-format
+msgid "₹%(amount)s അടച്ച് വരിചേരുക"
+msgstr "Pay ₹%(amount)s & Subscribe"
+
+#: reader/templates/reader/checkout.html:80
+msgid "* ഇതൊരു സിമുലേറ്റഡ് ചെക്ക്ഔട്ട് ആണ്. യഥാർത്ഥ പേയ്‌മെന്റ് നടക്കില്ല."
+msgstr "* This is a simulated checkout. No actual payment will be processed."
+
+#: reader/templates/reader/create.html:25 reader/templates/reader/edit.html:25
+msgid "ജനസംഖ്യാ വിവരങ്ങൾ"
+msgstr "Demographics"
+
+#: reader/templates/reader/create.html:65 reader/templates/reader/edit.html:65
+msgid "വരിസംഖ്യ വിവരങ്ങൾ"
+msgstr "Subscription Details"
+
+#: reader/templates/reader/edit.html:82
+msgid "നിലവിലെ പ്രവേശനം അവസാനിക്കുന്നത്:"
+msgstr "Current access ends:"
+
+#: reader/templates/reader/edit_profile.html:4
+#: reader/templates/reader/edit_profile.html:13
+#: reader/templates/reader/profile.html:21
+msgid "പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുക"
+msgstr "Edit Profile"
+
+#: reader/templates/reader/edit_profile.html:14
+msgid "നിങ്ങളുടെ വ്യക്തിഗത വിവരങ്ങൾ ചുവടെ പുതുക്കുക."
+msgstr "Update your personal details below."
+
+#: reader/templates/reader/edit_profile.html:50
+msgid "ഒരു ചെറു വിവരണം"
+msgstr "A short bio"
+
+#: reader/templates/reader/edit_profile.html:77
+#: reader/templates/reader/profile.html:56
+msgid "ലിംഗം"
+msgstr "Gender"
+
+#: reader/templates/reader/edit_profile.html:86
+#: reader/templates/reader/profile.html:62
+msgid "ജനന വർഷം"
+msgstr "Birth Year"
+
+#: reader/templates/reader/edit_profile.html:116
+msgid "വിലാസം"
+msgstr "Address"
+
+#: reader/templates/reader/edit_profile.html:119
+msgid "വിലാസ വരി 1"
+msgstr "Address Line 1"
+
+#: reader/templates/reader/edit_profile.html:125
+msgid "വിലാസ വരി 2"
+msgstr "Address Line 2"
+
+#: reader/templates/reader/edit_profile.html:132
+msgid "നഗരം"
+msgstr "City"
+
+#: reader/templates/reader/edit_profile.html:137
+msgid "സംസ്ഥാനം"
+msgstr "State"
+
+#: reader/templates/reader/edit_profile.html:145
+msgid "പോസ്റ്റ് ഓഫീസ്"
+msgstr "Post Office"
+
+#: reader/templates/reader/edit_profile.html:150
+#: reader/templates/reader/edit_profile.html:190
+#: reader/templates/reader/profile.html:134
+msgid "ജില്ല"
+msgstr "District"
+
+#: reader/templates/reader/edit_profile.html:157
+msgid "പിൻകോഡ്"
+msgstr "Pincode"
+
+#: reader/templates/reader/edit_profile.html:195
+#: reader/templates/reader/profile.html:135
+msgid "മേഖല"
+msgstr "Meghala"
+
+#: reader/templates/reader/edit_profile.html:202
+#: reader/templates/reader/profile.html:136
+msgid "യൂണിറ്റ്"
+msgstr "Unit"
+
+#: reader/templates/reader/edit_profile.html:210
+msgid "മാറ്റങ്ങൾ സംരക്ഷിക്കുക"
+msgstr "Save Changes"
+
+#: reader/templates/reader/edit_profile.html:214
+msgid "← പ്രൊഫൈലിലേക്ക് മടങ്ങുക"
+msgstr "← Back to Profile"
+
+#: reader/templates/reader/password_reset_subject.txt:1
+msgid "പാസ്‌വേഡ് പുനഃസജ്ജീകരണം — ശാസ്ത്രഗതി"
+msgstr "Password Reset — Sasthragathi"
+
+#: reader/templates/reader/profile.html:22
+msgid "പാസ്‌വേഡ് മാറ്റുക"
+msgstr "Change Password"
+
+#: reader/templates/reader/profile.html:30
+#: reader/templates/reader/profile.html:137
+#: reader/templates/reader/profile.html:255
+msgid "എഡിറ്റ്"
+msgstr "Edit"
+
+#: reader/templates/reader/profile.html:64
+msgid "വാർത്താക്കുറിപ്പ്"
+msgstr "Newsletter"
+
+#: reader/templates/reader/profile.html:66
+msgid "സബ്‌സ്‌ക്രൈബ് ചെയ്തു"
+msgstr "Subscribed"
+
+#: reader/templates/reader/profile.html:68
+msgid "സബ്‌സ്‌ക്രൈബ് ചെയ്തിട്ടില്ല"
+msgstr "Not subscribed"
+
+#: reader/templates/reader/profile.html:78
+msgid "സ്വകാര്യതയും സമ്മതവും"
+msgstr "Privacy & Consent"
+
+#: reader/templates/reader/profile.html:79
+msgid "കൈകാര്യം ചെയ്യുക"
+msgstr "Manage"
+
+#: reader/templates/reader/profile.html:82
+#: reader/templates/reader/profile.html:271
+msgid "വായനാ ചരിത്രം"
+msgstr "Reading History"
+
+#: reader/templates/reader/profile.html:84
+msgid "ട്രാക്കിംഗ് സജീവം"
+msgstr "Tracking active"
+
+#: reader/templates/reader/profile.html:86
+msgid "ട്രാക്ക് ചെയ്യുന്നില്ല"
+msgstr "Not tracking"
+
+#: reader/templates/reader/profile.html:88
+msgid "ലിംഗം (വിശകലനം)"
+msgstr "Gender (analytics)"
+
+#: reader/templates/reader/profile.html:90
+#: reader/templates/reader/profile.html:96
+msgid "പങ്കിട്ടു"
+msgstr "Shared"
+
+#: reader/templates/reader/profile.html:92
+#: reader/templates/reader/profile.html:98
+msgid "പങ്കിട്ടിട്ടില്ല"
+msgstr "Not shared"
+
+#: reader/templates/reader/profile.html:94
+msgid "ജനന വർഷം (വിശകലനം)"
+msgstr "Birth Year (analytics)"
+
+#: reader/templates/reader/profile.html:107
+msgid "പ്രിന്റ് വരിസംഖ്യ"
+msgstr "Print Subscription"
+
+#: reader/templates/reader/profile.html:110
+msgid "ഡെലിവറി നില"
+msgstr "Delivery Status"
+
+#: reader/templates/reader/profile.html:112
+msgid "പ്രിന്റ് കാലാവധി"
+msgstr "Print Expires"
+
+#: reader/templates/reader/profile.html:115
+msgid "ഡെലിവറി കുറിപ്പുകൾ"
+msgstr "Delivery Notes"
+
+#: reader/templates/reader/profile.html:127
+msgid "അംഗത്വ വിവരങ്ങൾ (ചേർത്തത്)"
+msgstr "Membership Details (Added By)"
+
+#: reader/templates/reader/profile.html:145
+msgid "വരിസംഖ്യ"
+msgstr "Subscription"
+
+#: reader/templates/reader/profile.html:149
+msgid "റദ്ദാക്കി (ഗ്രേസ് കാലയളവ്)"
+msgstr "Cancelled (Grace Period)"
+
+#: reader/templates/reader/profile.html:163
+#, python-format
+msgid "%(days)s ദിവസം ശേഷിക്കുന്നു"
+msgstr "%(days)s days remaining"
+
+#: reader/templates/reader/profile.html:169
+msgid "വരിസംഖ്യ പുതുക്കുക"
+msgstr "Renew Subscription"
+
+#: reader/templates/reader/profile.html:173
+msgid ""
+"നിങ്ങളുടെ വരിസംഖ്യ റദ്ദാക്കണമെന്ന് ഉറപ്പാണോ? നിലവിലെ ബില്ലിംഗ് കാലയളവ് അവസാനിക്കുന്നതുവരെ "
+"എല്ലാ ഉള്ളടക്കവും ലഭ്യമായിരിക്കും; വരിസംഖ്യ സ്വയം പുതുക്കില്ല."
+msgstr ""
+"Are you sure you want to cancel your subscription? All content remains "
+"available until the current billing period ends; the subscription will not "
+"auto-renew."
+
+#: reader/templates/reader/profile.html:175
+msgid "വരിസംഖ്യ റദ്ദാക്കുക"
+msgstr "Cancel Subscription"
+
+#: reader/templates/reader/profile.html:181
+msgid "വരിസംഖ്യ പുതുക്കൽ ഓപ്ഷനുകൾ"
+msgstr "Renew Subscription Options"
+
+#: reader/templates/reader/profile.html:194
+msgid "എല്ലാ ലേഖനങ്ങളിലേക്കും പരിധിയില്ലാത്ത പ്രവേശനത്തിന് വരിചേരുക."
+msgstr "Subscribe to get unlimited access to all articles."
+
+#: reader/templates/reader/profile.html:197
+msgid "ഒരു പ്ലാൻ തിരഞ്ഞെടുക്കുക"
+msgstr "Choose a Plan"
+
+#: reader/templates/reader/profile.html:213
+msgid "പ്രിയപ്പെട്ട ലേഖനങ്ങൾ"
+msgstr "Favorite Articles"
+
+#: reader/templates/reader/profile.html:227
+msgid "നിങ്ങൾ ഇതുവരെ ലേഖനങ്ങളൊന്നും പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയിട്ടില്ല."
+msgstr "You haven't favorited any articles yet."
+
+#: reader/templates/reader/profile.html:233
+msgid "പ്രിയപ്പെട്ട ലക്കങ്ങൾ"
+msgstr "Favorite Issues"
+
+#: reader/templates/reader/profile.html:247
+msgid "നിങ്ങൾ ഇതുവരെ ലക്കങ്ങളൊന്നും പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയിട്ടില്ല."
+msgstr "You haven't favorited any issues yet."
+
+#: reader/templates/reader/profile.html:254
+msgid "നിങ്ങളുടെ താൽപ്പര്യങ്ങൾ"
+msgstr "Your Interests"
+
+#: reader/templates/reader/profile.html:264
+msgid "ഇതുവരെ വിഷയങ്ങളൊന്നും തിരഞ്ഞെടുത്തിട്ടില്ല."
+msgstr "No topics selected yet."
+
+#: reader/templates/reader/profile.html:264
+msgid "ചിലത് ചേർക്കുക"
+msgstr "Add some"
+
+#: reader/templates/reader/profile.html:276
+msgid "വായനാ ചരിത്ര ട്രാക്കിംഗ് പ്രവർത്തനരഹിതമാണ്."
+msgstr "Reading history tracking is disabled."
+
+#: reader/templates/reader/profile.html:277
+msgid "രേഖപ്പെടുത്തൽ ആരംഭിക്കാൻ സ്വകാര്യതാ ക്രമീകരണങ്ങളിൽ ഇത് പ്രവർത്തനക്ഷമമാക്കുക"
+msgstr "Enable it in your privacy settings to start recording"
+
+#: reader/templates/reader/profile.html:291
+msgid "നിങ്ങൾ ഇതുവരെ ലേഖനങ്ങളൊന്നും വായിച്ചിട്ടില്ല."
+msgstr "You haven't read any articles yet."
+
+#: reader/templates/reader/profile.html:297
+msgid "എന്റെ അഭിപ്രായങ്ങൾ"
+msgstr "My Comments"
+
+#: reader/templates/reader/profile.html:314
+msgid "നീക്കം ചെയ്തു"
+msgstr "Removed"
+
+#: reader/templates/reader/profile.html:318
+msgid "പ്രസിദ്ധീകരിച്ചു"
+msgstr "Published"
+
+#: reader/templates/reader/profile.html:328
+msgid "കുറച്ച് കാണിക്കുക"
+msgstr "Show less"
+
+#: reader/templates/reader/profile.html:329
+msgid "കൂടുതൽ കാണിക്കുക"
+msgstr "Show more"
+
+#: reader/templates/reader/profile.html:334
+msgid "കാരണം"
+msgstr "Reason"
+
+#: reader/templates/reader/profile.html:340
+msgid "നിങ്ങൾ ഇതുവരെ അഭിപ്രായങ്ങളൊന്നും പോസ്റ്റ് ചെയ്തിട്ടില്ല."
+msgstr "You haven't posted any comments yet."
+
+#: reader/templates/reader/profile.html:352
+#, python-format
+msgid "പേജ് %(n)s / %(total)s"
+msgstr "Page %(n)s of %(total)s"
+
+#: reader/templates/reader/profile.html:374
+msgid "ആരംഭ തീയതി"
+msgstr "Start Date"
+
+#: reader/templates/reader/profile.html:375
+msgid "അവസാന തീയതി"
+msgstr "End Date"
+
+#: reader/templates/reader/profile.html:388
+msgid "റദ്ദാക്കി"
+msgstr "Cancelled"
+
+#: reader/templates/reader/profile.html:406
+msgid "അപകട മേഖല"
+msgstr "Danger Zone"
+
+#: reader/templates/reader/profile.html:409
+msgid ""
+"അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള നിങ്ങളുടെ പ്രവേശനം ഉടൻ റദ്ദാകും. ഞങ്ങളുടെ "
+"ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, നിയമപരമായ കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി "
+"ഇല്ലാതാക്കാൻ ഷെഡ്യൂൾ ചെയ്യപ്പെടും."
+msgstr ""
+"Deactivating your account will immediately revoke your access to "
+"Sasthragathi. In accordance with our data retention policy, your personal "
+"data will be scheduled for permanent deletion after the statutory period."
+
+#: reader/templates/reader/profile.html:412
+msgid ""
+"നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കണമെന്ന് ഉറപ്പാണോ? ഇത് നിങ്ങളെ ഉടൻ ലോഗ് ഔട്ട് ചെയ്ത് പ്രവേശനം "
+"റദ്ദാക്കും."
+msgstr ""
+"Are you sure you want to deactivate your account? This will log you out "
+"immediately and revoke access."
+
+#: reader/templates/reader/profile.html:414
+msgid "എന്റെ അക്കൗണ്ട് നിർജ്ജീവമാക്കുക"
+msgstr "Deactivate My Account"
+
+#: reader/views.py:56
+msgid "നിങ്ങളുടെ പ്രൊഫൈൽ പുതുക്കി."
+msgstr "Your profile has been updated."
+
+#: reader/views.py:69
+msgid "തിരഞ്ഞെടുത്ത വരിസംഖ്യ പ്ലാൻ അസാധുവാണ്."
+msgstr "Invalid subscription plan selected."
+
+#: reader/views.py:90
+msgid "അസാധുവായ പ്ലാൻ തിരഞ്ഞെടുത്തു."
+msgstr "Invalid plan selected."
+
+#: reader/views.py:99
+msgid "നിങ്ങളുടെ പേയ്‌മെന്റ് ഇതിനകം പ്രോസസ്സ് ചെയ്യപ്പെടുന്നു."
+msgstr "Your payment is already being processed."
+
+#: reader/views.py:120
+#, python-format
+msgid "%(plan)s പ്ലാനിലേക്ക് വിജയകരമായി വരിചേർന്നു!"
+msgstr "Successfully subscribed to the %(plan)s plan!"
+
+#: reader/views.py:123
+#, python-format
+msgid "പിശക്: %(err)s"
+msgstr "Error: %(err)s"
+
+#: reader/views.py:137
+msgid ""
+"നിങ്ങളുടെ വരിസംഖ്യയുടെ സ്വയം-പുതുക്കൽ റദ്ദാക്കി. വരിസംഖ്യ കാലാവധി തീരുന്നതുവരെ നിങ്ങൾക്ക് "
+"പ്രവേശനം തുടരും."
+msgstr ""
+"Your subscription auto-renewal has been cancelled. You will continue to have "
+"access until your subscription expires."
+
+#: reader/views.py:139
+msgid "നിങ്ങൾക്ക് റദ്ദാക്കാവുന്ന സജീവ വരിസംഖ്യ ഇല്ല."
+msgstr "You don't have an active cancellable subscription."
+
+#: reader/views.py:141
+msgid "വായനക്കാരന്റെ പ്രൊഫൈൽ കണ്ടെത്താനായില്ല."
+msgstr "Reader profile not found."
+
+#: reader/views.py:158
+msgid "നിങ്ങളുടെ താൽപ്പര്യങ്ങൾ പുതുക്കി."
+msgstr "Your interests have been updated."
+
+#: reader/views.py:251
+msgid ""
+"നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കി. ഞങ്ങളുടെ ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, നിയമപരമായ "
+"കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും."
+msgstr ""
+"Your account has been deactivated. In accordance with our data retention "
+"policy, your personal data will be permanently deleted after the statutory "
+"period."
+
+#: reader/views.py:308
+msgid "അജ്ഞാതവൽക്കരണ കമാൻഡ് വിജയകരമായി നടപ്പാക്കി."
+msgstr "Successfully executed the anonymization command."
+
+#: reader/views.py:310 reader/views.py:325
+#, python-format
+msgid "കമാൻഡ് പ്രവർത്തിപ്പിക്കുന്നതിൽ പരാജയപ്പെട്ടു: %(err)s"
+msgstr "Failed to run command: %(err)s"
+
+#: reader/views.py:323
+msgid "കാലഹരണപ്പെട്ട ഡാറ്റയുടെ 8-വർഷ ശാശ്വത നീക്കംചെയ്യൽ വിജയകരമായി നടപ്പാക്കി."
+msgstr "Successfully executed the permanent 8-year expired data purge."
+
+#: reader/wagtail_hooks.py:45
+msgid "പ്രിന്റ് വരിക്കാരുടെ പട്ടിക"
+msgstr "Print Subscriber List"
+
+#: reader/wagtail_hooks.py:52
+msgid "നിർജ്ജീവമാക്കിയവ നീക്കംചെയ്യൽ കമാന്റ് പ്രവർത്തിപ്പിക്കുക (അജ്ഞാതവൽക്കരണം)"
+msgstr "Run Deactivation Purge (Anonymize)"
+
+#: reader/wagtail_hooks.py:103
+msgid "പേയ്‌മെന്റുകൾ"
+msgstr "Payments"
+
+#: reader/wagtail_hooks.py:119
+msgid "കാലഹരണപ്പെട്ട ഡാറ്റയുടെ 8-വർഷ നീക്കംചെയ്യൽ പ്രവർത്തിപ്പിക്കുക"
+msgstr "Run 8-Year Expired Data Purge"
+
+#: reader/wagtail_hooks.py:219
+msgid "നീക്കം ചെയ്യുക"
+msgstr "Dismiss"
+
+#: the_librarian/templates/the_librarian/archive_list.html:4
+#: the_librarian/templates/the_librarian/archive_list.html:15
+msgid "ആർക്കൈവ്"
+msgstr "Archive"
+
+#: the_librarian/templates/the_librarian/archive_list.html:16
+msgid "ശാസ്ത്രഗതിയുടെ മുന്‍ ലക്കങ്ങളെല്ലാം ഒരിടത്ത്"
+msgstr "All past issues of Sasthragathi in one place"
+
+#: the_librarian/templates/the_librarian/archive_list.html:25
+msgid "വർഷം"
+msgstr "Year"
+
+#: the_librarian/templates/the_librarian/archive_list.html:39
+msgid "മാസം"
+msgstr "Month"
+
+#: the_librarian/templates/the_librarian/archive_list.html:53
+#: the_librarian/templates/the_librarian/archive_list.html:72
+msgid "വോളിയം"
+msgstr "Volume"
+
+#: the_librarian/templates/the_librarian/archive_list.html:67
+msgid "ക്രമം"
+msgstr "Order"
+
+#: the_librarian/templates/the_librarian/archive_list.html:70
+msgid "പുതിയത് ആദ്യം"
+msgstr "Newest first"
+
+#: the_librarian/templates/the_librarian/archive_list.html:71
+msgid "പഴയത് ആദ്യം"
+msgstr "Oldest first"
+
+#: the_librarian/templates/the_librarian/archive_list.html:78
+msgid "ക്ലിയർ"
+msgstr "Clear"
+
+#: the_librarian/templates/the_librarian/archive_list.html:86
+#, python-format
+msgid "%(count)s ലക്കം കണ്ടെത്തി"
+msgstr "%(count)s issues found"
+
+#: the_librarian/templates/the_librarian/archive_list.html:88
+#, python-format
+msgid "ആകെ %(count)s ലക്കം"
+msgstr "%(count)s issues in total"
+
+#: the_librarian/templates/the_librarian/archive_list.html:127
+#, python-format
+msgid "%(title)s — View PDF"
+msgstr "%(title)s — View PDF"
+
+#: the_librarian/templates/the_librarian/archive_list.html:135
+msgid "PDF കാണുക"
+msgstr "View PDF"
+
+#: the_librarian/templates/the_librarian/archive_list.html:179
+msgid "ഡൗൺലോഡ്"
+msgstr "Download"
+
+#: the_librarian/templates/the_librarian/archive_list.html:184
+msgid "PDF ലഭ്യമല്ല"
+msgstr "PDF not available"
+
+#: the_librarian/templates/the_librarian/archive_list.html:206
+msgid "ഒരു ലക്കവും കണ്ടെത്തിയില്ല"
+msgstr "No issues found"
+
+#: the_librarian/templates/the_librarian/archive_list.html:208
+msgid "ഈ ഫിൽട്ടറുകൾക്ക് അനുയോജ്യമായ ലക്കങ്ങളൊന്നും ഇല്ല."
+msgstr "No issues match these filters."
+
+#: the_librarian/templates/the_librarian/archive_list.html:211
+msgid "ഫിൽട്ടർ നീക്കി എല്ലാം കാണുക"
+msgstr "Clear filters and view all"
+
+#: the_librarian/templates/the_librarian/archive_list.html:214
+msgid "ഇതുവരെ ലക്കങ്ങളൊന്നും ചേർത്തിട്ടില്ല"
+msgstr "No issues added yet"
+
+#: the_librarian/templates/the_librarian/archive_list.html:216
+msgid "ആർക്കൈവ് ഒഴിഞ്ഞിരിക്കുന്നു."
+msgstr "The archive is empty."
+
+#: the_librarian/templates/the_librarian/search.html:4
+msgid "ആർക്കൈവ് തിരയൽ"
+msgstr "Archive Search"
+
+#: the_librarian/templates/the_librarian/search.html:13
+msgid "അര്‍ക്കൈവില്‍ തിരയൂ"
+msgstr "Search the Archive"
+
+#: the_librarian/templates/the_librarian/search.html:14
+msgid "പദാര്‍ത്ഥപരമോ വാക്കുകളോ ഉപയോഗിച്ച് ശാസ്ത്രഗതിയല്‍ മുഴുവന്‍ തിരയൂ"
+msgstr "Search all of Sasthragathi by meaning or by keywords"
+
+#: the_librarian/templates/the_librarian/search.html:23
+msgid "തിരയൂ"
+msgstr "Search"
+
+#: the_librarian/templates/the_librarian/search.html:28
+msgid "തിരയൽ രീതി"
+msgstr "Search method"
+
+#: the_librarian/templates/the_librarian/search.html:30
+msgid "ഹൈബ്രിഡ് (Recomended)"
+msgstr "Hybrid (Recommended)"
+
+#: the_librarian/templates/the_librarian/search.html:31
+msgid "അര്‍ത്ഥത്തിലെ സാമ്യത"
+msgstr "Semantic similarity"
+
+#: the_librarian/templates/the_librarian/search.html:32
+msgid "വാക്കിലെ സാമ്യത"
+msgstr "Keyword match"
+
+#: the_librarian/templates/the_librarian/search.html:35
+msgid "ഫലങ്ങൾ"
+msgstr "Results"
+
+#: the_librarian/templates/the_librarian/search.html:51
+#, python-format
+msgid "\"%(query)s\"-ന് %(counter)s ഫലം"
+msgid_plural "\"%(query)s\"-ന് %(counter)s ഫലങ്ങൾ"
+msgstr[0] "%(counter)s result for \"%(query)s\""
+msgstr[1] "%(counter)s results for \"%(query)s\""
+
+#: the_librarian/templates/the_librarian/search.html:75
+#: the_librarian/templates/the_librarian/viewer.html:16
+#, python-format
+msgid "പേജ് %(n)s"
+msgstr "Page %(n)s"
+
+#: the_librarian/templates/the_librarian/search.html:79
+msgid "രചയിതാവിന്റെ പ്രൊഫൈൽ"
+msgstr "Author profile"
+
+#: the_librarian/templates/the_librarian/search.html:81
+msgid "എഡിറ്റോറിയൽ"
+msgstr "Editorial"
+
+#: the_librarian/templates/the_librarian/search.html:86
+#, python-format
+msgid "പ്രസക്തി: %(score)s"
+msgstr "Relevance: %(score)s"
+
+#: the_librarian/templates/the_librarian/search.html:93
+#, python-format
+msgid "പേജ് %(n)s-ൽ PDF തുറക്കൂ"
+msgstr "Open PDF at page %(n)s"
+
+#: the_librarian/templates/the_librarian/search.html:97
+#: the_librarian/templates/the_librarian/search.html:99
+msgid "വിഷയം പര്യവേക്ഷണം ചെയ്യൂ"
+msgstr "Explore topic"
+
+#: the_librarian/templates/the_librarian/search.html:105
+msgid "മുഴുവൻ പേജും കാണൂ"
+msgstr "View full page"
+
+#: the_librarian/templates/the_librarian/search.html:111
+msgid "ഡോക്യുമെന്റ് തുറക്കൂ"
+msgstr "Open document"
+
+#: the_librarian/templates/the_librarian/search.html:118
+#, python-format
+msgid "\"%(query)s\"-ന് ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല"
+msgstr "No results found for \"%(query)s\""
+
+#: the_librarian/templates/the_librarian/search.html:119
+msgid "മറ്റ് തിരയൽ പദങ്ങൾ ഉപയോഗിക്കുക അല്ലെങ്കിൽ കൂടുതൽ ഡോക്യുമെന്റുകൾ ചേർക്കുക."
+msgstr "Try different search terms or add more documents."
+
+#: the_librarian/templates/the_librarian/viewer.html:19
+msgid "മുൻ പേജിലേക്ക് മടങ്ങുക"
+msgstr "Back to previous page"
+
+#: the_librarian/templates/the_librarian/viewer.html:31
+msgid "ൽ"
+msgstr "of"
+
+#: the_librarian/templates/the_librarian/viewer.html:32
+#: the_librarian/templates/the_librarian/viewer.html:41
+msgid "ഡോക്യുമെന്റ് ലോഡ് ചെയ്യുന്നു…"
+msgstr "Loading document…"
+
+#: the_librarian/templates/the_librarian/viewer.html:33
+msgid "പേജുകൾ ലോഡ് ചെയ്യുന്നു…"
+msgstr "Loading pages…"
+
+#: the_librarian/templates/the_librarian/viewer.html:34
+msgid "പേജ് ഡാറ്റ ലഭ്യമല്ല."
+msgstr "Page data not available."
+
+#: the_librarian/templates/the_librarian/viewer.html:35
+msgid "പേജ്-ഫ്ലിപ്പ് വ്യൂവർ ലോഡ് ചെയ്യാനായില്ല. പേജ് പുതുക്കുക."
+msgstr "Could not load the page-flip viewer. Please refresh the page."
+
+#: the_librarian/templates/the_librarian/viewer.html:36
+msgid "ഈ ഡോക്യുമെന്റ് ലോഡ് ചെയ്യാനായില്ല. അത് നഷ്ടപ്പെട്ടതോ നിങ്ങളുടെ നെറ്റ്‌വർക്ക് തടഞ്ഞതോ ആകാം."
+msgstr ""
+"This document could not be loaded. It may be missing or blocked by your "
+"network."
+
+#: the_librarian/templates/the_librarian/viewer.html:49
+msgid "മുൻ പേജ്"
+msgstr "Previous page"
+
+#~ msgid "No articles published yet."
+#~ msgstr "ലേഖനങ്ങളൊന്നും പ്രസിദ്ധീകരിച്ചിട്ടില്ല"
+
+#, python-format
+#~ msgid "ലേഖനം %(n)s-ലേക്ക് പോകുക"
+#~ msgstr "Go to article %(n)s"

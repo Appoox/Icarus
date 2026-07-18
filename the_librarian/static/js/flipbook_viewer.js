@@ -90,6 +90,7 @@
     function init() {
         var root = document.getElementById('flipbook-root');
         if (!root) return;
+        var t = root.dataset;
 
         var pageMetaUrl          = root.dataset.pageMetaUrl;
         var pageImageUrlTemplate = root.dataset.pageImageUrlTemplate;
@@ -97,11 +98,11 @@
         if (isNaN(startPage) || startPage < 0) startPage = 0;
 
         if (!pageMetaUrl || !pageImageUrlTemplate) {
-            showError(root, 'No page data was provided.');
+            showError(root, t.i18nErrNoData);
             return;
         }
         if (typeof St === 'undefined' || !St.PageFlip) {
-            showError(root, 'The page-flip viewer failed to load. Please refresh the page.');
+            showError(root, t.i18nErrLoad);
             return;
         }
 
@@ -183,8 +184,8 @@
             if (!indicator) return;
             var shown = currentIndex + 1;
             indicator.textContent = pageCount
-                ? 'Page ' + shown + ' of ' + pageCount
-                : 'Page ' + shown;
+                ? pageCount + ' ' + t.i18nPageOf + ' ' + t.i18nPage + ' ' + shown
+                : t.i18nPage + ' ' + shown;
         }
 
         function updateNavButtons(currentIndex) {
@@ -321,7 +322,7 @@
         // instead of jumping once the book is built.
         sizeStageToViewport();
         centerBookInStage();
-        setStatus('Loading document…');
+        setStatus(t.i18nLoadingDoc);
 
         fetch(pageMetaUrl).then(function (response) {
             if (!response.ok) throw new Error('Failed to fetch page metadata (' + response.status + ')');
@@ -369,7 +370,7 @@
 
             function onImageSettled() {
                 loadedCount++;
-                setStatus('Loading pages… (' + loadedCount + ' / ' + total + ')');
+                setStatus(t.i18nLoadingPages + ' (' + loadedCount + ' / ' + total + ')');
                 setProgress(loadedCount, total);
             }
 
@@ -387,16 +388,19 @@
             });
         }).catch(function (err) {
             console.error('Flipbook viewer error:', err);
-            showError(root, 'Could not load this document. It may be missing or blocked by your network.');
+            showError(root, t.i18nErrDoc);
         });
     }
 
     function showError(root, message) {
         var loadingEl = document.getElementById('flipbook-loading');
         if (loadingEl) loadingEl.remove();
-        root.innerHTML =
-            '<div class="flipbook-error">' +
-            '<p>' + message + '</p>' +
-            '</div>';
+        var errDiv = document.createElement('div');
+        errDiv.className = 'flipbook-error';
+        var p = document.createElement('p');
+        p.textContent = message;
+        errDiv.appendChild(p);
+        root.innerHTML = '';
+        root.appendChild(errDiv);
     }
 }());

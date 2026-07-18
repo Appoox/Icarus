@@ -1,6 +1,7 @@
 {% extends "wagtailadmin/base.html" %}
+{% load i18n %}
 
-{% block titletag %}Audit Log{% endblock %}
+{% block titletag %}{% translate "ഓഡിറ്റ് ലോഗ്" %}{% endblock %}
 
 {% block content %}
 <div class="nice-padding">
@@ -8,16 +9,16 @@
     <header class="w-slim-header" style="margin-bottom: 24px;">
         <h1 style="display:flex; align-items:center; gap:10px;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Audit Log
+            {% translate "ഓഡിറ്റ് ലോഗ്" %}
         </h1>
     </header>
 
     {# ── Filter bar ── #}
     <form method="get" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:28px; padding:16px 20px; background:var(--w-color-surface-menus); border-radius:6px;">
         <div style="display:flex; flex-direction:column; gap:4px;">
-            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">User</label>
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">{% translate "ഉപയോക്താവ്" %}</label>
             <select name="actor" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:180px;">
-                <option value="">All</option>
+                <option value="">{% translate "എല്ലാം" %}</option>
                 {% for u in staff_users %}
                 <option value="{{ u.pk }}" {% if filters.actor == u.pk|stringformat:"s" %}selected{% endif %}>
                     {{ u.name|default:u.phone_number_encrypted }}
@@ -26,26 +27,26 @@
             </select>
         </div>
         <div style="display:flex; flex-direction:column; gap:4px;">
-            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">Action</label>
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">{% translate "പ്രവൃത്തി" %}</label>
             <select name="action" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:130px;">
-                <option value="">All</option>
+                <option value="">{% translate "എല്ലാം" %}</option>
                 {% for k, v in action_labels.items %}
                 <option value="{{ k }}" {% if filters.action == k|stringformat:"s" %}selected{% endif %}>{{ v }}</option>
                 {% endfor %}
             </select>
         </div>
         <div style="display:flex; flex-direction:column; gap:4px;">
-            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">Model</label>
+            <label style="font-size:0.75em; font-weight:600; text-transform:uppercase; color:var(--w-color-text-meta);">{% translate "മോഡൽ" %}</label>
             <select name="model" style="padding:6px 10px; border-radius:4px; border:1px solid var(--w-color-border-furniture); background:var(--w-color-surface-field); color:var(--w-color-text-label); min-width:180px;">
-                <option value="">All</option>
+                <option value="">{% translate "എല്ലാം" %}</option>
                 {% for m in distinct_models %}
                 <option value="{{ m }}" {% if filters.model == m %}selected{% endif %}>{{ m|title }}</option>
                 {% endfor %}
             </select>
         </div>
-        <button type="submit" class="button button-secondary button-small" style="align-self:flex-end;">Filter</button>
+        <button type="submit" class="button button-secondary button-small" style="align-self:flex-end;">{% translate "ഫിൽട്ടർ" %}</button>
         {% if filters.actor or filters.action or filters.model %}
-        <a href="{% url 'icarus_audit_log' %}" class="button button-secondary button-small" style="align-self:flex-end;">Clear</a>
+        <a href="{% url 'icarus_audit_log' %}" class="button button-secondary button-small" style="align-self:flex-end;">{% translate "മായ്ക്കുക" %}</a>
         {% endif %}
     </form>
 
@@ -151,12 +152,12 @@
     <table class="listing" style="width:100%; border-collapse:collapse;">
         <thead>
             <tr>
-                <th style="width:160px;">Timestamp (IST)</th>
-                <th style="width:180px;">User</th>
-                <th style="width:150px;">Role/Groups</th>
-                <th style="width:160px;">Model</th>
-                <th style="width:100px;">Action</th>
-                <th>Changes</th>
+                <th style="width:160px;">{% translate "സമയം (IST)" %}</th>
+                <th style="width:180px;">{% translate "യൂസര്‍" %}</th>
+                <th style="width:150px;">{% translate "റോൾ/ഗ്രൂപ്പുകൾ" %}</th>
+                <th style="width:160px;">{% translate "മോഡൽ" %}</th>
+                <th style="width:100px;">{% translate "പ്രവർത്തനം" %}</th>
+                <th>{% translate "മാറ്റങ്ങൾ" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -209,7 +210,7 @@
                     <details class="al-more-changes-details">
                         <summary>
                             <span class="al-details-toggle-icon">▶</span>
-                            Show {{ row.more_count }} more change{{ row.more_count|pluralize }}
+                            {% blocktranslate count counter=row.more_count %}{{ counter }} കൂടുതൽ മാറ്റം കാണിക്കുക{% plural %}{{ counter }} കൂടുതൽ മാറ്റങ്ങൾ കാണിക്കുക{% endblocktranslate %}
                         </summary>
                         <div style="margin-top: 8px; border-left: 2px solid var(--w-color-border-furniture); padding-left: 10px;">
                             {% for change in row.extra_changes %}
@@ -230,7 +231,7 @@
         {% empty %}
             <tr>
                 <td colspan="6" style="padding:32px; color:var(--w-color-text-meta); text-align:center;">
-                    No audit log entries found.
+                    {% translate "ഓഡിറ്റ് ലോഗ് എൻട്രികളൊന്നും കണ്ടെത്തിയില്ല." %}
                 </td>
             </tr>
         {% endfor %}
@@ -242,21 +243,21 @@
     <nav class="al-pagination">
         {% if page_obj.has_previous %}
             <a href="?{% if filters.actor %}actor={{ filters.actor }}&{% endif %}{% if filters.action %}action={{ filters.action }}&{% endif %}{% if filters.model %}model={{ filters.model }}&{% endif %}page={{ page_obj.previous_page_number }}"
-               class="button button-secondary button-small">← Previous</a>
+               class="button button-secondary button-small">{% translate "← മുമ്പത്തേത്" %}</a>
         {% else %}
-            <button class="button button-secondary button-small" disabled>← Previous</button>
+            <button class="button button-secondary button-small" disabled>{% translate "← മുമ്പത്തേത്" %}</button>
         {% endif %}
 
         <span style="color:var(--w-color-text-meta); font-size:0.9em;">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            &nbsp;&middot;&nbsp; {{ page_obj.paginator.count }} total entries
+            {% blocktranslate with number=page_obj.number pages=page_obj.paginator.num_pages %}പേജ് {{ number }} / {{ pages }}{% endblocktranslate %}
++            &nbsp;&middot;&nbsp; {% blocktranslate count counter=page_obj.paginator.count %}ആകെ {{ counter }} എൻട്രി{% plural %}ആകെ {{ counter }} എൻട്രികൾ{% endblocktranslate %}
         </span>
 
         {% if page_obj.has_next %}
             <a href="?{% if filters.actor %}actor={{ filters.actor }}&{% endif %}{% if filters.action %}action={{ filters.action }}&{% endif %}{% if filters.model %}model={{ filters.model }}&{% endif %}page={{ page_obj.next_page_number }}"
-               class="button button-secondary button-small">Next →</a>
+               class="button button-secondary button-small">{% translate "അടുത്തത്" %} →</a>
         {% else %}
-            <button class="button button-secondary button-small" disabled>Next →</button>
+            <button class="button button-secondary button-small" disabled>{% translate "അടുത്തത്" %} →</button>
         {% endif %}
     </nav>
     {% endif %}

@@ -1,14 +1,14 @@
-{% load static tz %}
+{% load static tz i18n %}
 <link rel="stylesheet" href="{% static 'css/admin.css' %}">
 <section class="panel recent-activity nice-padding">
-    <h2 class="icon icon-list-ul">Recent Activity (Audit Log)</h2>
+    <h2 class="icon icon-list-ul">{% translate "സമീപകാല പ്രവർത്തനം (ഓഡിറ്റ് ലോഗ്)" %}</h2>
     <table class="listing">
         <thead>
             <tr>
-                <th class="col-time">Time</th>
-                <th class="col-user">User</th>
-                <th class="col-action">Action</th>
-                <th>Model & Changes</th>
+                <th class="col-time">{% translate "സമയം" %}</th>
+                <th class="col-user">{% translate "ഉപയോക്താവ്" %}</th>
+                <th class="col-action">{% translate "പ്രവർത്തനം" %}</th>
+                <th>{% translate "മോഡലും മാറ്റങ്ങളും" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -21,14 +21,15 @@
                         {% endtimezone %}
                     </div>
                 </td>
-                <td>{{ entry.actor|default:"System" }}</td>
+                {% translate "സിസ്റ്റം" as system_label %}
+                <td>{{ entry.actor|default:system_label }}</td>
                 <td>
                     {% if entry.action == 0 %}
-                        <span class="status-tag primary">Create</span>
+                        <span class="status-tag primary">{% translate "സൃഷ്ടിച്ചു" %}</span>
                     {% elif entry.action == 1 %}
-                        <span class="status-tag secondary">Update</span>
+                        <span class="status-tag secondary">{% translate "പുതുക്കി" context "audit action" %}</span>
                     {% elif entry.action == 2 %}
-                        <span class="status-tag fatal">Delete</span>
+                        <span class="status-tag fatal">{% translate "ഇല്ലാതാക്കി" %}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -43,10 +44,10 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4">No recent activity found.</td>
+                <td colspan="4">{% translate "സമീപകാല പ്രവർത്തനങ്ങളൊന്നും കണ്ടെത്തിയില്ല." %}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <p class="view-all"><a href="{% url 'auditlog_view' %}" class="button button-small button-secondary">View Full Audit Log</a></p>
+    <p class="view-all"><a href="{% url 'auditlog_view' %}" class="button button-small button-secondary">{% translate "പൂർണ്ണ ഓഡിറ്റ് ലോഗ് കാണുക" %}</a></p>
 </section>

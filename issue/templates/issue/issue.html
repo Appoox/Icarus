@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags wagtailembeds_tags static %}
+{% load wagtailcore_tags wagtailimages_tags wagtailembeds_tags static i18n %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/issue.css' %}">
@@ -30,10 +30,10 @@
 
             {# Placeholder — visible when no image or image fails to load #}
             <div class="cover-placeholder__body">
-                <span class="cover-placeholder__pub">ശാസ്ത്രഗതി</span>
+                <span class="cover-placeholder__pub">{% translate "ശാസ്ത്രഗതി" %}</span>
                 {% if page.issue_number %}
                 <span class="cover-placeholder__num">{{ page.issue_number }}</span>
-                <span class="cover-placeholder__label">ലക്കം</span>
+                <span class="cover-placeholder__label">{% translate 'ലക്കം' %}</span>
                 {% endif %}
                 {% if page.topic %}
                 <span class="cover-placeholder__topic">{{ page.topic.name }}</span>
@@ -46,8 +46,8 @@
 
             {% if page.volume %}
             <div class="issue-page-header__kicker">
-                {% if page.volume.title %}{{ page.volume.title }}{% else %}വാല്യം {{ page.volume.number }}{% endif %}
-                {% if page.issue_number %}, ലക്കം {{ page.issue_number }}{% endif %}
+                {% if page.volume.title %}{{ page.volume.title }}{% else %}{% translate 'വാല്യം' %} {{ page.volume.number }}{% endif %}
+                {% if page.issue_number %}, {% translate 'ലക്കം' %} {{ page.issue_number }}{% endif %}
             </div>
             {% endif %}
 
@@ -58,7 +58,10 @@
                 {% if user.is_authenticated %}
                 <button class="favorite-btn" data-id="{{ page.id }}" data-type="issue"
                         data-favorited="{% if reader and page in reader.favorite_issues.all %}true{% else %}false{% endif %}"
-                        title="Toggle Favorite">
+                        data-label-add="{% translate 'പ്രിയപ്പെട്ടവയിൽ ചേർക്കുക' %}"
+                        data-label-remove="{% translate 'പ്രിയപ്പെട്ടവയിൽ നിന്ന് നീക്കുക' %}"
+                        data-label-error="{% translate 'അപ്ഡേറ്റ് ചെയ്യാനായില്ല. നിങ്ങൾ ലോഗിൻ ചെയ്തിട്ടുണ്ടോയെന്ന് പരിശോധിക്കുക.' %}"
+                        title="{% translate 'പ്രിയപ്പെട്ടതാക്കുക' %}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                     </svg>
@@ -82,14 +85,14 @@
     {% if page.audio_file or page.audio_embed_url %}
     <div class="main-audio-container">
         <div class="audio-card">
-            <h4>Listen to this Issue</h4>
+            <h4>{% translate "ഈ ലക്കം കേൾക്കുക" %}</h4>
             
             {% if page.audio_file %}
                 <div class="modern-audio-player" id="player-main">
                     <audio id="audio-main" src="{{ page.audio_file.url }}"></audio>
                     
                     <div class="player-main">
-                        <button class="play-btn" id="play-btn-main" title="Play">
+                        <button class="play-btn" id="play-btn-main" title="{% translate 'പ്ലേ ചെയ്യുക' %}">
                             <svg class="play-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;"><path d="M8 5v14l11-7z"/></svg>
                             <svg class="pause-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                         </button>
@@ -209,17 +212,17 @@
 
     <div class="editorial-board-btn-wrapper">
         <button class="editorial-board-btn" aria-expanded="false" aria-controls="issue-editorial-board-content">
-            പത്രാധിപ സമിതി
+            {% translate 'പത്രാധിപ സമിതി' %}
         </button>
 
         <dialog class="issue-editorial-board-content" id="issue-editorial-board-content">
-            <button class="issue-editorial-board-close-btn" aria-label="Close modal">&times;</button>
+            <button class="issue-editorial-board-close-btn" aria-label="{% translate 'അടയ്ക്കുക' %}">&times;</button>
             <div class="editorial-board-inner">
                 
                 {# 1. EDITOR #}
                 {% if page.editors_list %}
                 <div class="editorial-board-section">
-                    <h3 class="editorial-board-role-heading">എഡിറ്റർ</h3>
+                    <h3 class="editorial-board-role-heading">{% translate 'എഡിറ്റർ' %}</h3>
                     <div class="editorial-board-members-grid">
                         {% for rel in page.editors_list %}
                         <div class="board-member">
@@ -248,7 +251,7 @@
                 {# 2. MANAGING EDITOR #}
                 {% if page.managing_editors_list %}
                 <div class="editorial-board-section">
-                    <h3 class="editorial-board-role-heading">മാനേജിംഗ് എഡിറ്റർ</h3>
+                    <h3 class="editorial-board-role-heading">{% translate 'മാനേജിംഗ് എഡിറ്റർ' %}</h3>
                     <div class="editorial-board-members-grid">
                         {% for rel in page.managing_editors_list %}
                         <div class="board-member">
@@ -277,7 +280,7 @@
                 {# 3. ASSOCIATE EDITOR #}
                 {% if page.associate_editors_list %}
                 <div class="editorial-board-section">
-                    <h3 class="editorial-board-role-heading">അസോസിയേറ്റ് എഡിറ്റർ </h3>
+                    <h3 class="editorial-board-role-heading">{% translate 'അസോസിയേറ്റ് എഡിറ്റർ' %} </h3>
                     <div class="editorial-board-members-grid">
                         {% for rel in page.associate_editors_list %}
                         <div class="board-member">
@@ -306,7 +309,7 @@
                 {# 4. BOARD MEMBERS #}
                 {% if page.board_members_only %}
                 <div class="editorial-board-section">
-                    <h3 class="editorial-board-role-heading">സമിതി അംഗങ്ങൾ</h3>
+                    <h3 class="editorial-board-role-heading">{% translate 'സമിതി അംഗങ്ങൾ' %}</h3>
                     <div class="editorial-board-members-grid">
                         {% for rel in page.board_members_only %}
                         <div class="board-member">
@@ -333,7 +336,7 @@
                 {% endif %}
 
                 {% if not page.board_members %}
-                <p class="editorial-empty">No editorial board members listed.</p>
+                <p class="editorial-empty">{% translate "പത്രാധിപ സമിതി അംഗങ്ങളാരും ലിസ്റ്റ് ചെയ്തിട്ടില്ല." %}</p>
                 {% endif %}
             </div>
         </dialog>
@@ -344,7 +347,7 @@
 
         {# LEFT COLUMN: Table of Contents grouped by topic #}
         <aside class="editorial-toc-col">
-            <h2 class="editorial-toc-col__heading">ഉള്ളടക്കം</h2>
+            <h2 class="editorial-toc-col__heading">{% translate 'ഉള്ളടക്കം' %}</h2>
 
             {% regroup page.get_all_articles by topic as toc_groups %}
             {% if toc_groups %}
@@ -356,7 +359,7 @@
                         <a href="{% url 'topic_detail' slug=group.grouper.slug %}">{{ group.grouper.name }}</a>
                     </h3>
                     {% else %}
-                    <h3 class="toc-group__topic toc-group__topic--general">പൊതു</h3>
+                    <h3 class="toc-group__topic toc-group__topic--general">{% translate 'പൊതു' %}</h3>
                     {% endif %}
                     <ol class="toc-group__list">
                         {% for article in group.list %}
@@ -373,13 +376,13 @@
                 </div>
                 {% endfor %}
             {% else %}
-                <p class="editorial-empty">ഈ ലക്കത്തിൽ ലേഖനങ്ങളൊന്നുമില്ല.</p>
+                <p class="editorial-empty">{% translate "ഈ ലക്കത്തിൽ ലേഖനങ്ങളൊന്നുമില്ല." %}</p>
             {% endif %}
         </aside>
 
         {# RIGHT COLUMN: Editorial content #}
         <div class="editorial-content-col">
-            <h2 class="editorial-content-col__heading">മുഖക്കുറിപ്പ്</h2>
+            <h2 class="editorial-content-col__heading">{% translate 'മുഖക്കുറിപ്പ്' %}</h2>
 
             {% if page.editorial %}
             <div class="expandable-wrapper" data-expand-height="400">
@@ -391,11 +394,11 @@
                     </div>
                 </div>
                 <div class="show-more-banner">
-                    <button class="show-more-btn">കൂടുതൽ കാണുക</button>
+                    <button class="show-more-btn">{% translate "കൂടുതൽ കാണുക" %}</button>
                 </div>
             </div>
             {% else %}
-            <p class="editorial-empty">No editorial content for this issue.</p>
+            <p class="editorial-empty">{% translate "ഈ ലക്കത്തിന് മുഖക്കുറിപ്പ് ലഭ്യമല്ല." %}</p>
             {% endif %}
 
             {% include "kalapila/comment_section.html" %}
@@ -406,14 +409,14 @@
         {% if page.PDF_file %}
             {% if request.user.is_staff or request.user.is_superuser or request.user.is_subscribed %}
             <div class="issue-pdf-download-wrapper">
-                <a href="{{ page.url }}pdf/" class="issue-pdf-download-btn" target="_blank" rel="noopener noreferrer" title="Download PDF">
+                <a href="{{ page.url }}pdf/" class="issue-pdf-download-btn" target="_blank" rel="noopener noreferrer" title="{% translate 'PDF ഡൗൺലോഡ്' %}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="12" y1="18" x2="12" y2="12"></line>
                         <polyline points="9 15 12 18 15 15"></polyline>
                     </svg>
-                    <span>PDF ഡൗൺലോഡ് ചെയ്യാം</span>
+                    <span>{% translate "PDF ഡൗൺലോഡ് ചെയ്യാം" %}</span>
                 </a>
             </div>
             {% endif %}
@@ -422,18 +425,10 @@
 
     {# ── ARTICLES IN THIS ISSUE ── #}
     <div class="issue-section-head">
-        <h2 class="issue-section-head__title">ഈ ലക്കത്തിലെ ലേഖനങ്ങള്‍</h2>
+        <h2 class="issue-section-head__title">{% translate 'ഈ ലക്കത്തിലെ ലേഖനങ്ങള്‍' %}</h2>
         <span class="issue-section-head__rule" aria-hidden="true"></span>
     </div>
 
-    {# <div class="issue-articles-grid"> #}
-        {# {% for article in page.get_all_articles %} #}
-            {# Using the global carousel card component #}
-            {# {% include "includes/carousel_card.html" with article=article %} #}
-        {# {% empty %} #}
-        {# <p class="issue-no-articles">No articles found for this issue.</p> #}
-        {# {% endfor %} #}
-    {# </div> #}
     
     <div class="sg-article-grid">
     {% for article in page.get_all_articles %}
@@ -468,7 +463,7 @@
       </div>
     </article>
     {% empty %}
-    <p class="sg-empty">No articles published yet.</p>
+    <p class="sg-empty">{% translate 'ഈ ലക്കത്തിൽ ലേഖനങ്ങളൊന്നുമില്ല.' %}</p>
     {% endfor %}
   </div>
 

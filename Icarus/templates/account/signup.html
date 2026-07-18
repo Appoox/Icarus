@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Sign Up — Reader Account{% endblock %}
+{% block title %}{% trans "സൈൻ അപ്പ്" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/account.css' %}">
@@ -46,8 +46,8 @@
 
 {% block content %}
 <div class="auth-page">
-    <h1>Create Your Account</h1>
-    <p class="subtitle">Join to read articles and manage your subscription.</p>
+    <h1>{% trans "നിങ്ങളുടെ അക്കൗണ്ട് സൃഷ്ടിക്കുക" %}</h1>
+    <p class="subtitle">{% trans "ലേഖനങ്ങൾ വായിക്കാനും സബ്സ്ക്രിപ്ഷൻ കൈകാര്യം ചെയ്യാനും ചേരുക." %}</p>
 
     <form method="post" action="{% url 'account_signup' %}" class="auth-form" novalidate>
         {% csrf_token %}
@@ -73,7 +73,10 @@
                 {% elif field.name == 'password1' or field.name == 'password2' %}
                 <div class="password-wrapper">
                     {{ field }}
-                    <button type="button" class="password-toggle" aria-label="Show password">
+                    <button type="button" class="password-toggle" 
+                        data-label-show="{% trans 'പാസ്‌വേഡ് കാണിക്കുക' %}"
+                        data-label-hide="{% trans 'പാസ്‌വേഡ് മറയ്ക്കുക' %}"
+                        aria-label="പാസ്‌വേഡ് കാണിക്കുക" tabindex="-1">
                         <svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                             <line x1="1" y1="1" x2="23" y2="23"/>
@@ -99,11 +102,12 @@
         <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
         {% endif %}
 
-        <button type="submit" class="auth-submit">Create Account</button>
+        <button type="submit" class="auth-submit">{% trans "അക്കൗണ്ട് സൃഷ്ടിക്കുക" %}</button>
     </form>
 
     <p class="auth-footer">
-        Already have an account? <a href="{% url 'account_login' %}\">Sign in</a>
+        {% trans "നിലവിൽ അക്കൗണ്ട് ഉണ്ടോ?" %} <a href="{% url 'account_login' %}">{% trans "സൈൻ ഇൻ" %}</a>
+
     </p>
 </div>
 {% endblock %}
@@ -122,7 +126,7 @@
       toggle.addEventListener('click', function () {
         var hidden = input.type === 'password';
         input.type = hidden ? 'text' : 'password';
-        toggle.setAttribute('aria-label', hidden ? 'Hide password' : 'Show password');
+        toggle.setAttribute('aria-label', hidden ? toggle.dataset.labelHide : toggle.dataset.labelShow);
         eyeOpen.style.display = hidden ? 'none' : '';
         eyeClosed.style.display = hidden ? '' : 'none';
       });

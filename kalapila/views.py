@@ -10,6 +10,7 @@ from wagtail.models import Page, Site
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import Comment, CommentReport, CommentSettings, DashboardNotification, CommentNotificationPreference, UserNotification
+from django.utils.html import escape
 
 User = get_user_model()
 
@@ -82,7 +83,7 @@ def post_comment(request):
     notified_staff = staff_users.exclude(id__in=opted_out_ids)
 
     # 1. Create Dashboard Notifications
-    commenter_name = request.user.name or str(request.user.phone_number_encrypted)
+    commenter_name = escape(request.user.name or str(request.user.phone_number_encrypted))
     
     channel_layer = get_channel_layer()
 

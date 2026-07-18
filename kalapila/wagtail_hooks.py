@@ -7,10 +7,12 @@ import django_filters
 from wagtail import hooks
 from wagtail.models import Page
 from wagtail.snippets.views.snippets import SnippetViewSet, IndexView
-from wagtail.admin.ui.tables import Column, BooleanColumn  # Import Column classes to enable column sorting
+from wagtail.admin.ui.tables import Column, BooleanColumn
 from wagtail.admin.widgets import HeaderButton
 from .models import Comment, CommentNotificationPreference
-from reader.models import ReaderUser  # Access custom user model fields for dropdown queries
+from reader.models import ReaderUser
+from django.utils.translation import gettext as _
+from django.utils.html import format_html, json_script
 
 # ---------------------------------------------------------------------------
 # Custom ModelChoiceFilter that renders each option as the user's full name,
@@ -187,7 +189,18 @@ def register_comment_viewset():
 # 4. Global Admin Injections for Real-Time Toast Notifications
 @hooks.register('insert_global_admin_js')
 def global_admin_js():
-    return format_html('<script src="{}"></script>', static('js/admin_notifications.js'))
+    labels = {
+        "close": _("അടയ്ക്കുക"),
+        "view": _("കാണുക"),
+        "dismiss": _("തള്ളിക്കളയുക"),
+        "moderate": _("മോഡറേറ്റ് ചെയ്യുക"),
+        "newComment": _("പുതിയ അഭിപ്രായം!"),
+    }
+    return format_html(
+        '{}<script src="{}"></script>',
+        json_script(labels, "admin-toast-i18n"),
+        static('js/admin_notifications.js'),
+    )
 
 
 @hooks.register('insert_global_admin_css')

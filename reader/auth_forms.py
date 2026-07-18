@@ -10,6 +10,7 @@ from allauth.account.forms import LoginForm
 # initialised and are safe to import. Inheriting from BaseSignupForm restores core fields.
 from allauth.account.adapter import get_adapter
 from django.utils import timezone
+from django.utils.translation import gettext, ngettext, gettext_lazy as _
 
 class CustomLoginForm(LoginForm):
     """
@@ -21,7 +22,7 @@ class CustomLoginForm(LoginForm):
         
         # 1. Set up custom login (phone) field and apply robust sub-widget styling/validation
         if 'login' in self.fields:
-            self.fields['login'] = get_adapter().phone_form_field(label="Phone Number")
+            self.fields['login'] = get_adapter().phone_form_field(label=_("ഫോൺ നമ്പർ"))
             field = self.fields['login']
             
             # Style split widgets if present, otherwise style the single main widget
@@ -147,12 +148,14 @@ class CustomLoginForm(LoginForm):
                         minutes = int(cooloff.total_seconds() / 60)
                         if minutes >= 60:
                             hours = minutes // 60
-                            return f"{hours} hour" + ("s" if hours > 1 else "")
-                        return f"{minutes} minute" + ("s" if minutes > 1 else "")
-                    return f"{cooloff} hour(s)"
+                            # Malayalam does not inflect the noun after numerals;
+                            # ngettext keeps the msgid pluralisable for other languages.
+                            return ngettext("%(n)d മണിക്കൂർ", "%(n)d മണിക്കൂർ", hours) % {'n': hours}
+                        return ngettext("%(n)d മിനിറ്റ്", "%(n)d മിനിറ്റ്", minutes) % {'n': minutes}
+                    return gettext("%(n)s മണിക്കൂർ") % {'n': cooloff}
         except Exception:
             pass
-        return "24 hours"  # Fallback duration matching your custom cache signal period
+        return gettext("24 മണിക്കൂർ")  # Fallback duration matching your custom cache signal period
 
 
 # MODIFIED: Changed base class from forms.Form to BaseSignupForm to securely inherit passwords and emails.
@@ -168,30 +171,30 @@ class CustomSignupForm(forms.Form):
     name = forms.CharField(
         max_length=255,
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'Full name', 'class': 'form-input'}),
+        widget=forms.TextInput(attrs={'placeholder': _('പൂർണ്ണ നാമം'), 'class': 'form-input'}),
     )
     
     # REQUIRED: Age confirmation check
     is_above_18 = forms.BooleanField(
         required=True,
-        label="I CONFIRM THAT I AM 18 YEARS OF AGE OR OLDER.",
+        label=_("എനിക്ക് 18 വയസ്സോ അതിൽ കൂടുതലോ പ്രായമുണ്ടെന്ന് ഞാൻ സ്ഥിരീകരിക്കുന്നു."),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
-        help_text="Required for legal consent under the DPDP Act.",
+        help_text=_("DPDP നിയമപ്രകാരം നിയമപരമായ സമ്മതത്തിന് ആവശ്യമാണ്."),
     )
     
     # REQUIRED: Terms of Service agreement check
     accept_terms = forms.BooleanField(
         required=True,
-        label="I AGREE TO THE TERMS OF SERVICE AND PRIVACY POLICY.",
+        label=_("സേവന വ്യവസ്ഥകളും സ്വകാര്യതാ നയവും ഞാൻ അംഗീകരിക്കുന്നു."),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'})
     )
     
     # OPTIONAL: Reading history tracking consent
     read_history_consent = forms.BooleanField(
         required=False,
-        label="I CONSENT TO THE TRACKING OF MY READING HISTORY FOR PERSONALIZED RECOMMENDATIONS.",
+        label=_("വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുന്നതിന് ഞാൻ സമ്മതിക്കുന്നു. (Optional)"),
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
-        help_text="You can leave this unchecked if you prefer not to receive recommendations."
+        help_text=_("ശുപാർശകൾ വേണ്ടെങ്കിൽ ഇത് ചെക്ക് ചെയ്യാതെ വിടാം.")
     )
 
     def signup(self, request, user):
@@ -241,7 +244,7 @@ class CustomSignupForm(forms.Form):
         # FIX: Dynamically inject the phone field into the dictionary using the adapter (just like CustomLoginForm) 
         # so it is correctly instantiated and passed onto the template.
         if 'phone' not in self.fields:
-            self.fields['phone'] = get_adapter().phone_form_field(label="Phone Number")
+            self.fields['phone'] = get_adapter().phone_form_field(label=_("ഫോൺ നമ്പർ"))
 
         if 'phone' in self.fields:
             field = self.fields['phone']

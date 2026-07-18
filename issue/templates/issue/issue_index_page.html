@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags static %}
+{% load wagtailcore_tags wagtailimages_tags static i18n %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/issue_index.css' %}">
@@ -12,7 +12,7 @@
             {% if page.sort_by == 'most_read' %}
                 <h1 class="archive-title">{{ page.title }}</h1>
             {% else %}
-                <h1 class="archive-title">{{ page.title }} ( {{ paginator.count }} എണ്ണം )</h1>
+                <h1 class="archive-title">{{ page.title }} {% blocktranslate with count=paginator.count %}( {{ count }} എണ്ണം ){% endblocktranslate %}</h1>
             {% endif %}
             <span class="archive-rule"></span>
             {% if page.intro %}
@@ -34,7 +34,7 @@
                     <div class="issue-archive-card__meta">
                         <span class="meta-date">{{ issue.date_of_publishing|date:"F Y" }}</span>
                         {% if issue.volume %}
-                        <span class="meta-volume">Vol. {{ issue.volume.number }} / No. {{ issue.issue_number }}</span>
+                       <span class="meta-volume">{% blocktranslate with vol=issue.volume.number no=issue.issue_number %}വാല്യം {{ vol }} / നമ്പർ {{ no }}{% endblocktranslate %}</span>
                         {% endif %}
                     </div>
                     <h2 class="issue-archive-card__title">
@@ -46,7 +46,7 @@
                         {{ issue.topic.name }}
                         </a>
                     {% endif %}
-                    <a href="{{ issue.url }}" class="issue-archive-card__cta">ലക്കം കാണുക</a>
+                    <a href="{{ issue.url }}" class="issue-archive-card__cta">{% translate "ലക്കം കാണുക" %}</a>
                 </div>
             </article>
             {% endfor %}

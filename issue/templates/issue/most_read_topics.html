@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-<!-- Added wagtailimages_tags to support premium miniature cover layouts -->
-{% load static wagtailcore_tags wagtailimages_tags humanize %}
+{% load static wagtailcore_tags wagtailimages_tags humanize i18n %}
 
 {% comment %}
   templates/issue/trending_topics.html
@@ -18,15 +17,12 @@
 
 {% block content %}
 
-<head>
-  <title>കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ</title>
-</head>
 <div class="trending-container">
 
   {# Page header section #}
   <header class="trending-header">
-    <h1>ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ</h1>
-    <p class="trending-header__period">കഴിഞ്ഞ 30 ദിവസത്തെ വായനകൾ</p>
+    <h1>{% translate "ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ" %}</h1>
+    <p class="trending-header__period">{% translate "കഴിഞ്ഞ 30 ദിവസത്തെ വായനകൾ" %}</p>
   </header>
 
   {# Split Screen Grid Layout Container #}
@@ -42,10 +38,10 @@
           <a href="{% url 'topic_detail' topic.slug %}"
              class="trending-pill"
              data-target="pane-{{ topic.slug }}"
-             title="{{ topic.name }} — {{ topic.total_views|intcomma }} വായനകൾ">
+             title="{% blocktranslate with name=topic.name views=topic.total_views|intcomma %}{{ name }} — {{ views }} വായനകൾ{% endblocktranslate %}">
 
             {# Numerical ranking layout: Calculates true position across multiple pages via start_index #}
-            <span class="trending-pill__rank" aria-label="Rank {{ page_obj.start_index|add:forloop.counter0 }}">
+            <span class="trending-pill__rank" aria-label="{% blocktranslate with rank=page_obj.start_index|add:forloop.counter0 %}റാങ്ക് {{ rank }}{% endblocktranslate %}">
               {{ page_obj.start_index|add:forloop.counter0 }}
             </span>
 
@@ -58,9 +54,9 @@
             </div>
 
             {# Total metrics spacing block #}
-            <span class="trending-pill__views" aria-label="{{ topic.total_views|intcomma }} വായനകൾ">
+            <span class="trending-pill__views" aria-label="{% blocktranslate with views=topic.total_views|intcomma %}{{ views }} വായനകൾ{% endblocktranslate %}">
               <span class="trending-pill__count">{{ topic.total_views|intcomma }}</span>
-              <span class="trending-pill__unit">വായനകൾ</span>
+              <span class="trending-pill__unit">{% translate "വായനകൾ" %}</span>
             </span>
 
           </a>
@@ -69,7 +65,7 @@
       </ol>
       {% else %}
       <div class="trending-empty">
-        <p>നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല.</p>
+        <p>{% translate "നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല." %}</p>
       </div>
       {% endif %}
     </div>
@@ -80,8 +76,8 @@
         
         {# Default State Message Box #}
         <div id="pane-default" class="articles-preview-pane active">
-          <h3 class="preview-pane-title">ലേഖനങ്ങൾ</h3>
-          <p class="pane-placeholder-text">ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു വിഷയം തിരഞ്ഞെടുക്കുക.</p>
+          <h3 class="preview-pane-title">{% translate "ലേഖനങ്ങൾ" %}</h3>
+          <p class="pane-placeholder-text">{% translate "ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു വിഷയം തിരഞ്ഞെടുക്കുക." %}</p>
         </div>
 
         {# Generate descriptive article index blocks linked to each parent slug element #}
@@ -115,7 +111,7 @@
               </a>
             </li>
             {% empty %}
-            <li class="pane-placeholder-text">ഈ വിഷയത്തിൽ ലേഖനങ്ങൾ ലഭ്യമായിട്ടില്ല.</li>
+            <li class="pane-placeholder-text">{% translate "ഈ വിഷയത്തിൽ ലേഖനങ്ങൾ ലഭ്യമായിട്ടില്ല." %}</li>
             {% endfor %}
           </ul>
         </div>
@@ -131,6 +127,8 @@
 
 </div>
 
+{% block extra_js %}
 <script src="{% static 'js/most_read_topics.js' %}"></script>
+{% endblock %}
 
 {% endblock %}

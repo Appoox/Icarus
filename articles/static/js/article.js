@@ -120,14 +120,13 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.favorited !== undefined) {
                 btn.setAttribute('data-favorited', data.favorited);
-                btn.title = data.favorited ? 'Remove from Favorites' : 'Add to Favorites';
-            } else if (data.error) {
+                btn.title = data.favorited ? btn.dataset.labelRemove : btn.dataset.labelAdd;
                 alert(data.error);
             }
         })
         .catch(error => {
             console.error('Error toggling favorite:', error);
-            alert('Failed to update favorite: ' + error.message);
+            alert(btn.dataset.labelError);
         });
     });
 
@@ -249,10 +248,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const url = container.dataset.url;
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
         const match = url.match(regExp);
-        const id = (match && match[2].length == 11) ? match[2] : null;
+        const id = (match && /^[A-Za-z0-9_-]{11}$/.test(match[2])) ? match[2] : null;
 
         if (id) {
-            container.innerHTML = `<iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" src="https://www.youtube.com/embed/${id}" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;';
+            iframe.src = `https://www.youtube.com/embed/${id}`;
+            iframe.title = 'YouTube video player';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+            iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+            iframe.allowFullscreen = true;
+            container.appendChild(iframe);
         }
     });
 

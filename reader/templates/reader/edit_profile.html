@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n wagtailimages_tags %}
 
-{% block title %}Edit Profile{% endblock %}
+{% block title %}{% translate "പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുക" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/reader.css' %}">
@@ -10,26 +10,62 @@
 
 {% block content %}
 <div class="auth-page">
-    <h1>Edit Profile</h1>
-    <p class="subtitle">Update your personal details below.</p>
+    <h1>{% translate "പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുക" %}</h1>
+    <p class="subtitle">{% translate "നിങ്ങളുടെ വ്യക്തിഗത വിവരങ്ങൾ ചുവടെ പുതുക്കുക." %}</p>
 
-    <form method="post" class="auth-form" novalidate>
+    {# enctype is required for the avatar upload — without it the file is silently dropped #}
+    <form method="post" class="auth-form" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
 
+        {# ── Profile image (avatar) ── #}
+        <div class="form-group avatar-field">
+            <label>{% translate "പ്രൊഫൈൽ ചിത്രം" %}</label>
+            <div class="avatar-upload-row">
+                {% if form.instance.profile_image %}
+                    {% image form.instance.profile_image fill-80x80 as av %}
+                    <img src="{{ av.url }}" alt="" class="profile-avatar" id="avatar-preview-img">
+                {% else %}
+                    <div class="profile-avatar-placeholder" id="avatar-preview-img">
+                        {{ form.instance.name|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+                <div class="avatar-upload-controls">
+                    {{ form.avatar_upload }}
+                    {% if form.avatar_upload.help_text %}
+                        <span class="helptext">{{ form.avatar_upload.help_text }}</span>
+                    {% endif %}
+                    {% if form.avatar_upload.errors %}<div class="form-errors">{{ form.avatar_upload.errors }}</div>{% endif %}
+                    {% if form.instance.profile_image %}
+                    <label class="consent-label avatar-remove">
+                        {{ form.remove_avatar }} {% translate "നിലവിലുള്ള ചിത്രം നീക്കം ചെയ്യുക" %}
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# ── Bio ── #}
+        {# Rendering bio also closes the silent-wipe bug: an absent Meta field saved as "" on every submit. #}
         <div class="form-group">
-            <label for="id_name">Full Name</label>
+            <label for="id_bio">{% translate "ഒരു ചെറു വിവരണം" %}</label>
+            {{ form.bio }}
+            {% if form.bio.errors %}<div class="form-errors">{{ form.bio.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_name">{% translate "പൂർണ്ണ നാമം" %}</label>
             {{ form.name }}
             {% if form.name.errors %}<div class="form-errors">{{ form.name.errors }}</div>{% endif %}
         </div>
 
         <div class="form-group">
-            <label for="id_email">Email</label>
+            <label for="id_email">{% translate "ഇമെയിൽ" %}</label>
             {{ form.email }}
             {% if form.email.errors %}<div class="form-errors">{{ form.email.errors }}</div>{% endif %}
         </div>
 
         <div class="form-group">
-            <label for="id_phone_number">Phone Number</label>
+            <label for="id_phone_number">{% translate "ഫോൺ നമ്പർ" %}</label>
             <div class="phone-widget">
                 {{ form.phone_number }}
             </div>
@@ -38,7 +74,7 @@
 
         <div class="form-row">
             <div class="form-group form-group--half">
-                <label for="id_gender">Gender</label>
+                <label for="id_gender">{% translate "ലിംഗം" %}</label>
                 {{ form.gender }}
                 {% if form.gender.errors %}<div class="form-errors">{{ form.gender.errors }}</div>{% endif %}
                 <div class="form-consent-inline">
@@ -47,7 +83,7 @@
                 </div>
             </div>
             <div class="form-group form-group--half">
-                <label for="id_birth_year">Birth Year</label>
+                <label for="id_birth_year">{% translate "ജനന വർഷം" %}</label>
                 {{ form.birth_year }}
                 {% if form.birth_year.errors %}<div class="form-errors">{{ form.birth_year.errors }}</div>{% endif %}
                 <div class="form-consent-inline">
@@ -70,35 +106,35 @@
         </div>
 
         <div class="form-group hidden" id="gender-other-group">
-            <label for="id_gender_other">Other Gender</label>
+            <label for="id_gender_other">{% translate "മറ്റ് ലിംഗം" %}</label>
             {{ form.gender_other }}
             {% if form.gender_other.errors %}<div class="form-errors">{{ form.gender_other.errors }}</div>{% endif %}
         </div>
 
         {# ── Address ── #}
         <fieldset class="form-fieldset">
-            <legend class="form-fieldset__legend">Address</legend>
+            <legend class="form-fieldset__legend">{% translate "വിലാസം" %}</legend>
 
             <div class="form-group">
-                <label for="id_address_line_1">Address Line 1</label>
+                <label for="id_address_line_1">{% translate "വിലാസ വരി 1" %}</label>
                 {{ form.address_line_1 }}
                 {% if form.address_line_1.errors %}<div class="form-errors">{{ form.address_line_1.errors }}</div>{% endif %}
             </div>
 
             <div class="form-group">
-                <label for="id_address_line_2">Address Line 2</label>
+                <label for="id_address_line_2">{% translate "വിലാസ വരി 2" %}</label>
                 {{ form.address_line_2 }}
                 {% if form.address_line_2.errors %}<div class="form-errors">{{ form.address_line_2.errors }}</div>{% endif %}
             </div>
 
             <div class="form-row">
                 <div class="form-group form-group--half">
-                    <label for="id_city">City</label>
+                    <label for="id_city">{% translate "നഗരം" %}</label>
                     {{ form.city }}
                     {% if form.city.errors %}<div class="form-errors">{{ form.city.errors }}</div>{% endif %}
                 </div>
                 <div class="form-group form-group--half">
-                    <label for="id_state">State</label>
+                    <label for="id_state">{% translate "സംസ്ഥാനം" %}</label>
                     {{ form.state }}
                     {% if form.state.errors %}<div class="form-errors">{{ form.state.errors }}</div>{% endif %}
                 </div>
@@ -106,19 +142,19 @@
 
             <div class="form-row">
                 <div class="form-group form-group--half">
-                    <label for="id_post_office">Post Office</label>
+                    <label for="id_post_office">{% translate "പോസ്റ്റ് ഓഫീസ്" %}</label>
                     {{ form.post_office }}
                     {% if form.post_office.errors %}<div class="form-errors">{{ form.post_office.errors }}</div>{% endif %}
                 </div>
                 <div class="form-group form-group--half">
-                    <label for="id_district">District</label>
+                    <label for="id_district">{% translate "ജില്ല" %}</label>
                     {{ form.district }}
                     {% if form.district.errors %}<div class="form-errors">{{ form.district.errors }}</div>{% endif %}
                 </div>
             </div>
 
             <div class="form-group form-group--small">
-                <label for="id_pincode">Pincode</label>
+                <label for="id_pincode">{% translate "പിൻകോഡ്" %}</label>
                 {{ form.pincode }}
                 {% if form.pincode.errors %}<div class="form-errors">{{ form.pincode.errors }}</div>{% endif %}
             </div>
@@ -129,20 +165,20 @@
         <details class="form-fieldset-details care-of-details"
             {% if form.care_of_name.errors or form.care_of_number.errors or form.care_of_district.errors or form.care_of_meghala.errors or form.care_of_unit.errors %}open{% endif %}>
             <summary class="form-fieldset-summary care-of-summary">
-                Added By (C/O)
+                {% translate "ചേർത്തത് (C/O)" %}
                 <span class="care-of-chevron" aria-hidden="true">&#8250;</span>
             </summary>
 
             <fieldset class="form-fieldset form-fieldset--inner">
 
                 <div class="form-group">
-                    <label for="id_care_of_name">Name</label>
+                    <label for="id_care_of_name">{% translate "പേര്" %}</label>
                     {{ form.care_of_name }}
                     {% if form.care_of_name.errors %}<div class="form-errors">{{ form.care_of_name.errors }}</div>{% endif %}
                 </div>
 
                 <div class="form-group">
-                    <label for="id_care_of_number">Phone Number</label>
+                    <label for="id_care_of_number">{% translate "ഫോൺ നമ്പർ" %}</label>
                     <div class="phone-widget">
                         {{ form.care_of_number }}
                     </div>
@@ -151,19 +187,19 @@
 
                 <div class="form-row">
                     <div class="form-group form-group--half">
-                        <label for="id_care_of_district">District</label>
+                        <label for="id_care_of_district">{% translate "ജില്ല" %}</label>
                         {{ form.care_of_district }}
                         {% if form.care_of_district.errors %}<div class="form-errors">{{ form.care_of_district.errors }}</div>{% endif %}
                     </div>
                     <div class="form-group form-group--half">
-                        <label for="id_care_of_meghala">Meghala</label>
+                        <label for="id_care_of_meghala">{% translate "മേഖല" %}</label>
                         {{ form.care_of_meghala }}
                         {% if form.care_of_meghala.errors %}<div class="form-errors">{{ form.care_of_meghala.errors }}</div>{% endif %}
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="id_care_of_unit">Unit</label>
+                    <label for="id_care_of_unit">{% translate "യൂണിറ്റ്" %}</label>
                     {{ form.care_of_unit }}
                     {% if form.care_of_unit.errors %}<div class="form-errors">{{ form.care_of_unit.errors }}</div>{% endif %}
                 </div>
@@ -171,14 +207,16 @@
             </fieldset>
         </details>
 
-        <button type="submit" class="auth-submit">Save Changes</button>
+        <button type="submit" class="auth-submit">{% translate "മാറ്റങ്ങൾ സംരക്ഷിക്കുക" %}</button>
     </form>
 
     <p class="auth-footer">
-        <a href="{% url 'reader_profile' %}">← Back to Profile</a>
+        <a href="{% url 'reader_profile' %}">{% translate "← പ്രൊഫൈലിലേക്ക് മടങ്ങുക" %}</a>
     </p>
 </div>
+{% endblock %}
+
+{# Un-nested from inside {% block content %} — nested blocks work but match the bug pattern found in most_read_authors.html #}
 {% block extra_js %}
 <script src="{% static 'js/reader.js' %}" defer></script>
-{% endblock %}
 {% endblock %}

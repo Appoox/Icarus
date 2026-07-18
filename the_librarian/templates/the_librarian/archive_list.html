@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}ആർക്കൈവ് — ശാസ്ത്രഗതി{% endblock %}
+{% block title %}{% translate "ആർക്കൈവ്" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/librarian.css' %}">
@@ -12,9 +12,8 @@
 {# ── Page header ────────────────────────────────────────────────────────── #}
 <header class="archive-hero">
   <div class="archive-hero__inner">
-    <p class="archive-hero__kicker">The Librarian</p>
-    <h1 class="archive-hero__title">ആർക്കൈവ്</h1>
-    <p class="archive-hero__sub">ശാസ്ത്രഗതിയുടെ എല്ലാ ലക്കങ്ങളും ഒറ്റ ഇടത്ത്</p>
+    <h1 class="archive-hero__title">{% translate "ആർക്കൈവ്" %}</h1>
+    <p class="archive-hero__sub">{% translate "ശാസ്ത്രഗതിയുടെ മുന്‍ ലക്കങ്ങളെല്ലാം ഒരിടത്ത്" %}</p>
   </div>
 </header>
 
@@ -23,10 +22,10 @@
   <form class="archive-filter-bar__form" method="get" action="">
 
     <div class="filter-group">
-      <label class="filter-label" for="filter-year">വർഷം</label>
+      <label class="filter-label" for="filter-year">{% translate "വർഷം" %}</label>
       <select class="filter-select" id="filter-year" name="year"
               onchange="this.form.submit()">
-        <option value="">എല്ലാം</option>
+        <option value="">{% translate "എല്ലാം" %}</option>
         {% for y in all_years %}
         <option value="{{ y }}"
                 {% if y == selected_year %}selected{% endif %}>
@@ -37,10 +36,10 @@
     </div>
 
     <div class="filter-group">
-      <label class="filter-label" for="filter-month">മാസം</label>
+      <label class="filter-label" for="filter-month">{% translate "മാസം" %}</label>
       <select class="filter-select" id="filter-month" name="month"
               onchange="this.form.submit()">
-        <option value="">എല്ലാം</option>
+        <option value="">{% translate "എല്ലാം" %}</option>
         {% for val, name in all_months %}
         <option value="{{ val }}"
                 {% if val == selected_month %}selected{% endif %}>
@@ -51,10 +50,10 @@
     </div>
 
     <div class="filter-group">
-      <label class="filter-label" for="filter-volume">വോളിയം</label>
+      <label class="filter-label" for="filter-volume">{% translate "വോളിയം" %}</label>
       <select class="filter-select" id="filter-volume" name="volume"
               onchange="this.form.submit()">
-        <option value="">എല്ലാം</option>
+        <option value="">{% translate "എല്ലാം" %}</option>
         {% for v in all_volumes %}
         <option value="{{ v }}"
                 {% if v == selected_volume %}selected{% endif %}>
@@ -65,18 +64,18 @@
     </div>
 
     <div class="filter-group">
-      <label class="filter-label" for="filter-sort">ക്രമം</label>
+      <label class="filter-label" for="filter-sort">{% translate "ക്രമം" %}</label>
       <select class="filter-select" id="filter-sort" name="sort"
               onchange="this.form.submit()">
-        <option value="newest"  {% if sort == "newest"  %}selected{% endif %}>പുതിയത് ആദ്യം</option>
-        <option value="oldest"  {% if sort == "oldest"  %}selected{% endif %}>പഴയത് ആദ്യം</option>
-        <option value="volume"  {% if sort == "volume"  %}selected{% endif %}>വോളിയം</option>
+        <option value="newest"  {% if sort == "newest"  %}selected{% endif %}>{% translate "പുതിയത് ആദ്യം" %}</option>
+        <option value="oldest"  {% if sort == "oldest"  %}selected{% endif %}>{% translate "പഴയത് ആദ്യം" %}</option>
+        <option value="volume"  {% if sort == "volume"  %}selected{% endif %}>{% translate "വോളിയം" %}</option>
       </select>
     </div>
 
     {% if has_filter %}
     <a href="{% url 'the_librarian:archive_list' %}" class="filter-clear">
-      ✕ ക്ലിയർ
+      ✕ {% translate "ക്ലിയർ" %}
     </a>
     {% endif %}
 
@@ -84,9 +83,9 @@
 
   <p class="archive-results-count">
     {% if has_filter %}
-      {{ issue_count }} ലക്കം കണ്ടെത്തി
+      {% blocktranslate with count=issue_count %}{{ count }} ലക്കം കണ്ടെത്തി{% endblocktranslate %}
     {% else %}
-      {{ issue_count }} ലക്കം ആകെ
+      {% blocktranslate with count=issue_count %}ആകെ {{ count }} ലക്കം{% endblocktranslate %}
     {% endif %}
   </p>
 </div>
@@ -110,13 +109,13 @@
       <div class="cover-placeholder">
         <span class="cover-placeholder__pub">ശാസ്ത്രഗതി</span>
         {% if issue.volume %}
-        <span class="cover-placeholder__vol">Vol. {{ issue.volume }}</span>
+        <span class="cover-placeholder__vol">{% translate "വാല്യം" %} {{ issue.volume }}</span>
         {% endif %}
         <span class="cover-placeholder__date">
           {{ issue.month_name_ml }}{% if issue.year %} {{ issue.year }}{% endif %}
         </span>
         {% if issue.issue_number %}
-        <span class="cover-placeholder__num">No. {{ issue.issue_number }}</span>
+        <span class="cover-placeholder__num">{% translate "ലക്കം" %} {{ issue.issue_number }}</span>
         {% endif %}
       </div>
       {% endif %}
@@ -125,7 +124,7 @@
       {% if issue.pdf_file %}
       <a class="cover-overlay"
          href="{% url 'the_librarian:magazine_viewer' issue.pk %}"
-         aria-label="{{ issue.title }} — PDF കാണുക">
+         aria-label="{% blocktranslate with title=issue.title %}{{ title }} — View PDF{% endblocktranslate %}">
         <span class="cover-overlay__icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -133,7 +132,7 @@
             <circle cx="12" cy="12" r="3"/>
           </svg>
         </span>
-        <span class="cover-overlay__label">PDF കാണുക</span>
+        <span class="cover-overlay__label">{% translate "PDF കാണുക" %}</span>
       </a>
       {% endif %}
 
@@ -148,8 +147,8 @@
       <h3 class="issue-info__title">{{ issue.title }}</h3>
       {% if issue.volume %}
       <p class="issue-info__meta">
-        Vol.&nbsp;{{ issue.volume }}
-        {% if issue.issue_number %}/ No.&nbsp;{{ issue.issue_number }}{% endif %}
+        {% translate "വാല്യം" %}&nbsp;{{ issue.volume }}
+        {% if issue.issue_number %}/ {% translate "ലക്കം" %}&nbsp;{{ issue.issue_number }}{% endif %}
       </p>
       {% endif %}
     </div>
@@ -165,7 +164,7 @@
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
         </svg>
-        കാണുക
+        {% translate "കാണുക" %}
       </a>
       <a class="issue-btn issue-btn--download"
          href="{% url 'the_librarian:download_magazine_pdf' issue.pk %}"
@@ -177,12 +176,12 @@
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        ഡൗൺലോഡ്
+        {% translate "ഡൗൺലോഡ്" %}
       </a>
     </div>
     {% else %}
     <div class="issue-actions">
-      <span class="issue-btn issue-btn--unavailable">PDF ലഭ്യമല്ല</span>
+      <span class="issue-btn issue-btn--unavailable">{% translate "PDF ലഭ്യമല്ല" %}</span>
     </div>
     {% endif %}
 
@@ -204,17 +203,17 @@
   </div>
 
   {% if has_filter %}
-    <h2 class="archive-empty__title">ഒരു ലക്കവും കണ്ടെത്തിയില്ല</h2>
+    <h2 class="archive-empty__title">{% translate "ഒരു ലക്കവും കണ്ടെത്തിയില്ല" %}</h2>
     <p class="archive-empty__text">
-      ഈ ഫിൽട്ടറുകൾക്ക് അനുയോജ്യമായ ലക്കങ്ങളൊന്നും ഇല്ല.
+      {% translate "ഈ ഫിൽട്ടറുകൾക്ക് അനുയോജ്യമായ ലക്കങ്ങളൊന്നും ഇല്ല." %}
     </p>
     <a href="{% url 'the_librarian:archive_list' %}" class="archive-empty__link">
-      ഫിൽട്ടർ നീക്കി എല്ലാം കാണുക
+      {% translate "ഫിൽട്ടർ നീക്കി എല്ലാം കാണുക" %}
     </a>
   {% else %}
-    <h2 class="archive-empty__title">ഇതുവരെ ലക്കങ്ങളൊന്നും ചേർത്തിട്ടില്ല</h2>
+    <h2 class="archive-empty__title">{% translate "ഇതുവരെ ലക്കങ്ങളൊന്നും ചേർത്തിട്ടില്ല" %}</h2>
     <p class="archive-empty__text">
-      ആർക്കൈവ് ഒഴിഞ്ഞിരിക്കുന്നു.
+      {% translate "ആർക്കൈവ് ഒഴിഞ്ഞിരിക്കുന്നു." %}
     </p>
   {% endif %}
 </div>

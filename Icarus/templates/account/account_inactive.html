@@ -15,7 +15,7 @@
    so the tone is calm and instructional rather than alarming.
    ───────────────────────────────────────────────────────────────────────────── #}
 
-{% block title %}{% trans "Account Deactivated" %} — Icarus{% endblock %}
+{% block title %}{% trans "അക്കൗണ്ട് നിർജ്ജീവമാക്കി" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/account.css' %}">
@@ -42,25 +42,25 @@
         </div>
 
         {# ── Heading ─────────────────────────────────────────────────── #}
-        <h1>{% trans "Account Deactivated" %}</h1>
+        <h1>{% trans "അക്കൗണ്ട് നിർജ്ജീവമാക്കി" %}</h1>
         <p class="subtitle">
-            {% trans "This account has been deactivated and is no longer accessible." %}
+            {% trans "നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കിയിരിക്കുന്നു, അത് ഇനി ആക്സസ് ചെയ്യാൻ കഴിയില്ല." %}
         </p>
 
         {# ── Body copy ───────────────────────────────────────────────── #}
         <div class="inactive-body-wrap">
             <p class="inactive-body">
                 {% blocktrans trimmed %}
-                If you requested this deactivation, your personal data is being held
-                in accordance with our data retention policy. All personal information
-                will be permanently and irreversibly purged after the statutory period.
+                നിങ്ങൾ തന്നെയാണ് ഈ നിർജ്ജീവമാക്കൽ ആവശ്യപ്പെട്ടതെങ്കിൽ, ഞങ്ങളുടെ ഡാറ്റാ നിലനിർത്തൽ നയത്തിന്
+                വിധേയമായി നിങ്ങളുടെ വ്യക്തിഗത വിവരങ്ങൾ സൂക്ഷിച്ചുവെക്കുന്നതാണ്. നിയമപരമായ കാലാവധിക്ക്
+                ശേഷം എല്ലാ വ്യക്തിഗത വിവരങ്ങളും ശാശ്വതമായും വീണ്ടെടുക്കാൻ കഴിയാത്തവിധവും പൂർണ്ണമായി നീക്കം ചെയ്യപ്പെടും.
                 {% endblocktrans %}
             </p>
             <p class="inactive-body">
                 {% blocktrans trimmed %}
-                If you believe this deactivation was made in error, or if you would
-                like to reactivate your account before the retention window closes,
-                please contact our support team as soon as possible.
+                ഈ നിർജ്ജീവമാക്കൽ തെറ്റായി സംഭവിച്ചതാണെന്ന് നിങ്ങൾ കരുതുന്നുവെങ്കിലോ, അല്ലെങ്കിൽ ഡാറ്റ
+                നിലനിർത്തൽ കാലാവധി അവസാനിക്കുന്നതിന് മുൻപ് നിങ്ങളുടെ അക്കൗണ്ട് വീണ്ടും സജീവമാക്കാൻ ആഗ്രഹിക്കുന്നുവെങ്കിലോ,
+                ദയവായി എത്രയും വേഗം ഞങ്ങളെ ബന്ധപ്പെടുക.
                 {% endblocktrans %}
             </p>
         </div>
@@ -73,22 +73,22 @@
     {% if email %}
     <a href="mailto:{{ email }}"
        class="inactive-btn inactive-btn--primary">
-        {% trans "Contact Support" %}
+        {% trans "ഞങ്ങളുമായി ബന്ധപ്പെടുക" %}
     </a>
     {% endif %}
     {% endwith %}
 
     <a href="/" class="inactive-btn inactive-btn--ghost">
-        {% trans "Return to Homepage" %}
+        {% trans "ഹോം പേജിലേക്ക് മടങ്ങുക" %}
     </a>
 </div>
 
         {# ── Retention-window footnote ────────────────────────────────── #}
         <p class="inactive-meta">
             {% blocktrans trimmed %}
-            Reactivation requests are only possible within the retention period.
-            After this window, all personal data is permanently deleted and
-            the account cannot be recovered under any circumstances.
+            അക്കൗണ്ട് വീണ്ടും സജീവമാക്കാനുള്ള അഭ്യർത്ഥനകൾ നിലനിർത്തൽ കാലാവധിക്കുള്ളിൽ മാത്രമേ സാധ്യമാകൂ. 
+            ഈ സമയപരിധി കഴിഞ്ഞാൽ, എല്ലാ വ്യക്തിഗത വിവരങ്ങളും ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും,
+            കൂടാതെ യാതൊരു സാഹചര്യത്തിലും അക്കൗണ്ട് വീണ്ടെടുക്കാൻ സാധിക്കുന്നതല്ല.
             {% endblocktrans %}
         </p>
 

@@ -1,15 +1,22 @@
-{% load header_tags wagtailimages_tags %}
+{% load header_tags wagtailimages_tags i18n %}
 {% get_site_header as header %}
 
 {% if header %}
+{% translate "സൈറ്റ് ലോഗോ" as default_logo_alt %}
+{% translate "സൈറ്റ് ശീർഷകം" as default_title_alt %}
+{% get_current_language as CURRENT_LANGUAGE %}
+{# Language-aware site root: reverses to '/' on the Malayalam site and #}
+{# '/en/' under the English prefix, so the logo/title links keep the    #}
+{# reader in their chosen language.                                     #}
+{% url 'wagtail_serve' '' as home_url %}
 <header class="site-header">
 
     <!-- Left: Logo & Organization Name -->
     <div class="site-header__logo">
-        <a href="{{ header.site_title_url|default:'/' }}" class="site-header__logo-link">
+        <a href="{{ header.site_title_url|default:home_url }}" class="site-header__logo-link">
             {% if header.logo %}
             {% image header.logo height-60 as logo_img %}
-            <img src="{{ logo_img.url }}" alt="{{ header.logo_alt_text|default:'Site logo' }}"
+            <img src="{{ logo_img.url }}" alt="{{ header.logo_alt_text|default:default_logo_alt }}"
                 class="site-header__logo-img">
             {% else %}
             <span class="site-header__logo-placeholder">&#9632;</span>
@@ -26,17 +33,17 @@
 
     <!-- Centre: Site Title (hidden on mobile, shown on desktop) -->
     <div class="site-header__title">
-        <a href="{{ header.site_title_url|default:'/' }}">
+        <a href="{{ header.site_title_url|default:home_url }}">
             {% if header.site_title_image %}
                 {% image header.site_title_image height-60 as title_img %}
-                <img src="{{ title_img.url }}" alt="{{ header.site_title|default:'Site Title' }}" class="site-header__title-img">
+                <img src="{{ title_img.url }}" alt="{{ header.site_title|default:default_title_alt }}" class="site-header__title-img">
             {% else %}
                 {{ header.site_title }}
             {% endif %}
         </a>
     </div>
 
-    <!-- Right: Search & Auth navigation -->
+    <!-- Right: Search, Language & Auth navigation -->
     <div class="site-header__right">
 
         <!-- Search icon toggle -->
@@ -44,7 +51,7 @@
             <button
                 class="search-icon-btn"
                 id="searchToggle"
-                aria-label="Open search"
+                aria-label="{% translate 'തിരയാന്‍ തുറക്കുക' %}"
                 aria-expanded="false"
                 type="button"
             >
@@ -56,13 +63,24 @@
             </button>
         </div>
 
+        <!-- Language switcher: labels intentionally NOT translate-wrapped — -->
+        <!-- a switcher names the target language in its own script so the  -->
+        <!-- reader who can't read the current interface still finds it.    -->
+        {% if CURRENT_LANGUAGE == "en" %}
+        <a href="{% alternate_language_url 'ml' %}" class="header-link header-link--lang"
+           lang="ml" hreflang="ml" rel="alternate">മലയാളം</a>
+        {% else %}
+        <a href="{% alternate_language_url 'en' %}" class="header-link header-link--lang"
+           lang="en" hreflang="en" rel="alternate">English</a>
+        {% endif %}
+
         <!-- Auth links -->
         {% if request.user.is_authenticated %}
-        <a href="{% url 'reader_profile' %}" class="header-link">Profile</a>
-        <a href="{% url 'account_logout' %}" class="header-link header-link--muted">Logout</a>
+        <a href="{% url 'reader_profile' %}" class="header-link">{% translate "പ്രൊഫൈൽ" %}</a>
+        <a href="{% url 'account_logout' %}" class="header-link header-link--muted">{% translate "ലോഗൗട്ട്" %}</a>
         {% else %}
-        <a href="{% url 'account_login' %}" class="header-link">Login</a>
-        <a href="{% url 'account_signup' %}" class="header-link header-link--cta">Subscribe</a>
+        <a href="{% url 'account_login' %}" class="header-link">{% translate "ലോഗിൻ" %}</a>
+        <a href="{% url 'account_signup' %}" class="header-link header-link--cta">{% translate "വരിക്കാരാകൂ" %}</a>
         {% endif %}
     </div>
 
@@ -70,10 +88,10 @@
 
 <!-- Mobile-only title bar (below the header row) -->
 <div class="site-header__mobile-title">
-    <a href="{{ header.site_title_url|default:'/' }}">
+    <a href="{{ header.site_title_url|default:home_url }}">
         {% if header.site_title_image %}
             {% image header.site_title_image height-50 as title_img_mob %}
-            <img src="{{ title_img_mob.url }}" alt="{{ header.site_title|default:'Site Title' }}">
+            <img src="{{ title_img_mob.url }}" alt="{{ header.site_title|default:default_title_alt }}">
         {% else %}
             {{ header.site_title }}
         {% endif %}
@@ -81,9 +99,9 @@
 </div>
 
 <!-- Full-screen search overlay -->
-<div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="Search" aria-hidden="true">
+<div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="{% translate 'തിരയൽ' %}" aria-hidden="true">
     <div class="search-overlay__content">
-        <button type="button" class="search-overlay__close-btn" id="searchClose" aria-label="Close search">
+        <button type="button" class="search-overlay__close-btn" id="searchClose" aria-label="{% translate 'തിരയൽ അടയ്ക്കുക' %}">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -101,7 +119,7 @@
                     <input
                         type="text"
                         name="q"
-                        placeholder="Search the archive, articles, and authors..."
+                        placeholder="{% translate 'ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുക...' %}"
                         class="search-overlay__input"
                         id="searchOverlayInput"
                         autocomplete="off"
@@ -112,9 +130,18 @@
             </form>
 
             <!-- Results Area -->
-            <div class="search-results" id="searchResults">
+             <div class="search-results" id="searchResults"
+                 data-i18n-min-chars="{% translate 'തിരയാൻ കുറഞ്ഞത് 2 അക്ഷരങ്ങൾ ടൈപ്പ് ചെയ്യുക...' %}"
+                 data-i18n-searching="{% translate 'ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുന്നു...' %}"
+                 data-i18n-error="{% translate 'ഫലങ്ങൾ ലഭ്യമാക്കുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക.' %}"
+                 data-i18n-no-results="{% translate 'ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല' %}"
+                 data-i18n-found="{% translate 'ഫലങ്ങൾ കണ്ടെത്തി' %}"
+                 data-i18n-page="{% translate 'പേജ്' %}"
+                 data-i18n-pdf="{% translate 'പിഡിഎഫ്' %}"
+                 data-i18n-article="{% translate 'ലേഖനം' %}"
+                 data-i18n-author="{% translate 'രചയിതാവ്' %}">
                 <div class="search-results__status" id="searchStatus">
-                    Type to start searching...
+                    {% translate "തിരയാൻ ടൈപ്പ് ചെയ്യുക..." %}
                 </div>
                 <div class="search-results__list" id="resultsList"></div>
             </div>

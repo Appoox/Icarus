@@ -34,6 +34,13 @@
 .header-link { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-decoration: none; color: inherit; white-space: nowrap; }
 .header-link--cta { background: #c0392b; color: #fff !important; padding: 5px 12px; border-radius: 4px; }
 
+/* Language switcher — quiet, separated from auth links by a hairline */
+.header-link--lang {
+    color: #6b7280;
+    border-left: 1px solid var(--rule);
+    padding-left: 10px;
+}
+
 .search-icon-btn {
     background: none; border: none; cursor: pointer; color: inherit; padding: 8px;
     display: flex; align-items: center; justify-content: center; border-radius: 50%;
@@ -281,6 +288,9 @@ mark {
     /* Compact auth */
     .header-link { font-size: 0.72rem; }
     .header-link--cta { font-size: 0.72rem; padding: 5px 10px; }
+
+    /* Tighter language switcher */
+    .header-link--lang { padding-left: 8px; }
 
     /* Show the mobile title bar BELOW the header */
     .site-header__mobile-title {

@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.html import format_html # Added format_html for image preview rendering
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, Panel
-
+from django.utils.translation import gettext_lazy as _
 
 # ── Custom Wagtail Panel for Image Preview ─────────────────────────
 class ImagePreviewPanel(Panel):
@@ -26,10 +26,10 @@ class ImagePreviewPanel(Panel):
 
 class Postbox(models.Model):
     FEEDBACK_TYPES = [
-        ('bug',        'Bug Report'),
-        ('suggestion', 'Suggestion'),
-        ('content',    'Content Issue'),
-        ('general',    'General Feedback'),
+        ('bug',        _('ബഗ് റിപ്പോർട്ട്')),
+        ('suggestion', _('നിർദ്ദേശം')),
+        ('content',    _('ഉള്ളടക്കത്തിലെ പ്രശ്നം')),
+        ('general',    _('പൊതുവായ ഫീഡ്‌ബാക്ക്')),
     ]
 
     feedback_type = models.CharField(

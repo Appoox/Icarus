@@ -1,3 +1,5 @@
+{% load i18n %}
+
 <style>
     .icarus-panel summary { list-style: none; display: flex; align-items: center; }
     .icarus-panel summary::-webkit-details-marker { display: none; }
@@ -11,16 +13,16 @@
 
 <details class="icarus-panel" style="margin-bottom: 2rem; border: 1px solid var(--w-color-border-furniture); border-radius: 6px; background-color: var(--w-color-surface-page); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
     <summary style="cursor: pointer; padding: 1.25rem; font-size: 1.2rem; font-weight: 600; color: var(--w-color-text-default); line-height: 1.6;">
-        ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട ലക്കങ്ങൾ
+        {% translate "ഈ മാസം കൂടുതൽ വായിക്കപ്പെട്ട ലക്കങ്ങൾ" %}
     </summary>
     
     <div style="border-top: 1px solid var(--w-color-border-furniture); padding: 1.5rem;">
         <table class="listing" style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr>
-                    <th style="text-align: left; padding: 0.5rem;">ലക്കം</th>
-                    <th style="text-align: left; padding: 0.5rem;">Publishing Date</th>
-                    <th style="text-align: right; padding: 0.5rem;">Total Views</th>
+                    <th style="text-align: left; padding: 0.5rem;">{% translate "ലക്കം" %}</th>
+                    <th style="text-align: left; padding: 0.5rem;">{% translate "പ്രസിദ്ധീകരിച്ച തീയതി" %}</th>
+                    <th style="text-align: right; padding: 0.5rem;">{% translate "ആകെ കാഴ്ചക്കാർ" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,7 +43,7 @@
                 {% empty %}
                     <tr>
                         <td colspan="3" style="padding: 1rem; text-align: center; color: var(--w-color-text-context);">
-                            No view tracking analytics recorded for issues over the past month.
+                            {% translate "കഴിഞ്ഞ മാസത്തെ ലക്കങ്ങൾക്കായി കാഴ്ച ഒന്നും രേഖപ്പെടുത്തിയിട്ടില്ല." %}
                         </td>
                     </tr>
                 {% endfor %}

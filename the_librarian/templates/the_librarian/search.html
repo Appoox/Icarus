@@ -1,40 +1,38 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
+
+{% block title %}ശാസ്ത്രഗതി | {% translate "ആർക്കൈവ് തിരയൽ" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/Icarus.css' %}">
+<link rel="stylesheet" href="{% static 'css/librarian.css' %}">
+{% endblock %}
+
 {% block content %}
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ശാസ്ത്രഗതി | Archive Search </title>
-    <link rel="stylesheet" href="{% static 'css/Icarus.css' %}">
-    <link rel="stylesheet" href="{% static 'css/librarian.css' %}">
-</head>
-<body>
     <div class="container">
-        <h1>അര്‍ക്കൈവില്‍ തിരയൂ</h1>
-        <p class="subtitle">പദാര്‍ത്ഥപരമോ വാക്കുകളോ ഉപയോഗിച്ച് ശാസ്ത്രഗതിയല്‍ മുഴുവന്‍ തിരയൂ</p>
+        <h1>{% translate "അര്‍ക്കൈവില്‍ തിരയൂ" %}</h1>
+        <p class="subtitle">{% translate "പദാര്‍ത്ഥപരമോ വാക്കുകളോ ഉപയോഗിച്ച് ശാസ്ത്രഗതിയല്‍ മുഴുവന്‍ തിരയൂ" %}</p>
 
         <form method="get" class="search-form">
             <input type="text"
                    name="q"
                    class="search-input"
-                   placeholder="Search the archive (e.g. climate change, physics experiments)…"
+                   placeholder="{% translate ആർക്കൈവിൽ തിരയൂ (ഉദാ. കാലാവസ്ഥാ വ്യതിയാനം, പരിസ്ഥിതി...)' %}"
                    value="{{ query }}"
                    autofocus>
-            <button type="submit" class="search-btn">Search</button>
+            <button type="submit" class="search-btn">{% translate "തിരയൂ" %}</button>
         </form>
 
         <div class="search-controls">
             <div class="control-group">
-                <span class="control-label">Search Mode</span>
+                <span class="control-label">{% translate "തിരയൽ രീതി" %}</span>
                 <select name="mode" class="select-input" onchange="this.form.submit()" form="search-form-proxy">
-                    <option value="hybrid" {% if mode == 'hybrid' %}selected{% endif %}>Hybrid (Recommended)</option>
-                    <option value="similarity" {% if mode == 'similarity' %}selected{% endif %}>Semantic Similarity</option>
-                    <option value="keyword" {% if mode == 'keyword' %}selected{% endif %}>Keyword Match</option>
-                </select>
+                    <option value="hybrid" {% if mode == 'hybrid' %}selected{% endif %}>{% translate "ഹൈബ്രിഡ് (Recomended)" %}</option>
+                    <option value="similarity" {% if mode == 'similarity' %}selected{% endif %}>{% translate "അര്‍ത്ഥത്തിലെ സാമ്യത" %}</option>
+                    <option value="keyword" {% if mode == 'keyword' %}selected{% endif %}>{% translate "വാക്കിലെ സാമ്യത" %}</option>
             </div>
             <div class="control-group">
-                <span class="control-label">Results</span>
+                <span class="control-label">{% translate "ഫലങ്ങൾ" %}</span>
                 <select name="top_k" class="select-input" onchange="this.form.submit()" form="search-form-proxy">
                     <option value="3" {% if top_k == 3 %}selected{% endif %}>3</option>
                     <option value="5" {% if top_k == 5 %}selected{% endif %}>5</option>
@@ -50,7 +48,7 @@
 
         {% if query %}
             {% if results %}
-                <p class="results-count">{{ results|length }} result{{ results|length|pluralize }} for "{{ query }}"</p>
+                <p class="results-count">{% blocktranslate count counter=results|length %}"{{ query }}"-ന് {{ counter }} ഫലം{% plural %}"{{ query }}"-ന് {{ counter }} ഫലങ്ങൾ{% endblocktranslate %}</p>
 
                 {% for result in results %}
                 <div class="result-card">
@@ -74,51 +72,51 @@
                             {{ result.search_type|default:'similarity' }}
                         </span>
                         {% if result.type == 'pdf' or result.page_number %}
-                            <span class="result-page">Page {{ result.page_number }}</span>
+                            <span class="result-page">{% blocktranslate with n=result.page_number %}പേജ് {{ n }}{% endblocktranslate %}</span>
                         {% elif result.type == 'article' %}
-                            <span class="result-page">Article</span>
+                             <span class="result-page">{% translate "ലേഖനം" %}</span>
                         {% elif result.type == 'author' %}
-                            <span class="result-page">Author Profile</span>
+                            <span class="result-page">{% translate "രചയിതാവിന്റെ പ്രൊഫൈൽ" %}</span>
                         {% elif result.type == 'editorial' %}
-                            <span class="result-page">Editorial</span>
+                            <span class="result-page">{% translate "എഡിറ്റോറിയൽ" %}</span>
                         {% elif result.type == 'topic' %}
-                            <span class="result-page">Topic</span>
+                            <span class="result-page">{% translate "വിഷയം" %}</span>
                         {% endif %}
                     </div>
-                    <div class="result-score">Relevance: {{ result.score }}</div>
+                    <div class="result-score">{% blocktranslate with score=result.score %}പ്രസക്തി: {{ score }}{% endblocktranslate %}</div>
                     <p class="result-text">{{ result.chunk_text }}</p>
                     
                     {% if result.type == 'pdf' %}
                         <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}"
                            class="result-link stretched-link"
                            target="_blank">
-                            📖 Open PDF at page {{ result.page_number|default:1 }} →
+                            📖 {% blocktranslate with n=result.page_number|default:1 %}പേജ് {{ n }}-ൽ PDF തുറക്കൂ{% endblocktranslate %} →
                         </a>
                     {% elif result.type == 'topic' %}
                         {% if result.url %}
-                            <a href="{{ result.url }}" class="result-link stretched-link">🔗 Explore Topic →</a>
+                            <a href="{{ result.url }}" class="result-link stretched-link">🔗 {% translate "വിഷയം പര്യവേക്ഷണം ചെയ്യൂ" %} →</a>
                         {% else %}
-                            <a href="?q={{ result.title|urlencode }}&mode={{ mode }}" class="result-link stretched-link">🔗 Explore Topic →</a>
+                            <a href="?q={{ result.title|urlencode }}&mode={{ mode }}" class="result-link stretched-link">🔗 {% translate "വിഷയം പര്യവേക്ഷണം ചെയ്യൂ" %} →</a>
                         {% endif %}
                     {% elif result.url %}
                         <a href="{{ result.url }}"
                            class="result-link stretched-link"
                            target="_blank">
-                            🔗 View Full Page →
+                            🔗 {% translate "മുഴുവൻ പേജും കാണൂ" %} →
                         </a>
                     {% elif result.document_id %}
                         <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}"
                            class="result-link stretched-link"
                            target="_blank">
-                            📖 Open Document →
+                            📖 {% translate "ഡോക്യുമെന്റ് തുറക്കൂ" %} →
                         </a>
                     {% endif %}
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="no-results">
-                    <p>No results found for "{{ query }}"</p>
-                    <p>Try different search terms or ingest more documents.</p>
+                    <p>{% blocktranslate %}"{{ query }}"-ന് ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല{% endblocktranslate %}</p>
+                    <p>{% translate "മറ്റ് തിരയൽ പദങ്ങൾ ഉപയോഗിക്കുക അല്ലെങ്കിൽ കൂടുതൽ ഡോക്യുമെന്റുകൾ ചേർക്കുക." %}</p>
                 </div>
             {% endif %}
         {% endif %}
