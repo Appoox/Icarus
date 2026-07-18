@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Icarus (sasthragathy.org)\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 11:04+0530\n"
+"POT-Creation-Date: 2026-07-18 11:30+0530\n"
 "PO-Revision-Date: 2026-07-17 22:45+0530\n"
 "Last-Translator: Icarus i18n\n"
 "Language-Team: en\n"
@@ -72,19 +72,14 @@ msgid "ഹോം പേജിലേക്ക് മടങ്ങുക"
 msgstr "Return to Homepage"
 
 #: Icarus/templates/account/account_inactive.html:88
-#, fuzzy
-#| msgid ""
-#| "അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള നിങ്ങളുടെ പ്രവേശനം ഉടൻ റദ്ദാകും. "
-#| "ഞങ്ങളുടെ ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, നിയമപരമായ കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ "
-#| "ശാശ്വതമായി ഇല്ലാതാക്കാൻ ഷെഡ്യൂൾ ചെയ്യപ്പെടും."
 msgid ""
 "അക്കൗണ്ട് വീണ്ടും സജീവമാക്കാനുള്ള അഭ്യർത്ഥനകൾ നിലനിർത്തൽ കാലാവധിക്കുള്ളിൽ മാത്രമേ സാധ്യമാകൂ. "
 "ഈ സമയപരിധി കഴിഞ്ഞാൽ, എല്ലാ വ്യക്തിഗത വിവരങ്ങളും ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും, കൂടാതെ "
 "യാതൊരു സാഹചര്യത്തിലും അക്കൗണ്ട് വീണ്ടെടുക്കാൻ സാധിക്കുന്നതല്ല."
 msgstr ""
-"Deactivating your account will immediately revoke your access to "
-"Sasthragathi. In accordance with our data retention policy, your personal "
-"data will be scheduled for permanent deletion after the statutory period."
+"Requests to reactivate your account are only possible within the retention period. "
+"Once this time limit has passed, all personal data will be permanently deleted, and "
+"the account cannot be recovered under any circumstances."
 
 #: Icarus/templates/account/confirm_login_code.html:20
 #: Icarus/templates/account/confirm_login_code.html:99
@@ -270,8 +265,6 @@ msgstr "Back to Profile"
 
 #: Icarus/templates/account/password_reset.html:4
 #: Icarus/templates/account/password_reset.html:12
-#, fuzzy
-#| msgid "പാസ്സ്‌വേഡ് റീസെറ്റ്"
 msgid "പാസ്വേഡ് റീസെറ്റ്"
 msgstr "Password Reset"
 
@@ -713,10 +706,8 @@ msgstr "No tracking recorded yet."
 
 #: home/templates/home/partials/changelog_banner.html:106
 #: home/templates/home/partials/changelog_banner.html:113
-#, fuzzy
-#| msgid "മോഡലും മാറ്റങ്ങളും"
 msgid "പുതിയ മാറ്റങ്ങൾ"
-msgstr "Model & Changes"
+msgstr "New Changes"
 
 #: home/templates/home/userbar/custom.html:4
 msgid "ശാസ്ത്രഗതി അഡ്മിന്‍"
@@ -2377,8 +2368,6 @@ msgstr "Create"
 
 #: reader/templates/reader/auditlog_admin.html:44
 #: reader/templates/reader/auditlog_panel.html:30
-#, fuzzy
-#| msgid "പുതുക്കി"
 msgctxt "audit action"
 msgid "പുതുക്കി"
 msgstr "Updated"
