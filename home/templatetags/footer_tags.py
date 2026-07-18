@@ -144,6 +144,15 @@ def get_site_footer():
                         link._resolved_dynamic_url = dynamic_url_map.get(
                             link.dynamic_url_key
                         )
+                    
+                    # Added: Verify the final evaluated destination URL. 
+                    # If it resolves to empty or '#', force it to a non-existent path
+                    # so that a user clicking the link triggers Django's 404 handler 
+                    # rather than reloading the current page.
+                    if hasattr(link, 'get_url'):
+                        final_url = link.get_url()
+                        if not final_url or final_url == '#':
+                            link._resolved_dynamic_url = '/404/'
 
     # Return structured context into the rendering runtime
     return {
