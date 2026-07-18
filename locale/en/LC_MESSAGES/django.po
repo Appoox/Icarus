@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Icarus (sasthragathy.org)\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 22:33+0530\n"
+"POT-Creation-Date: 2026-07-18 10:53+0530\n"
 "PO-Revision-Date: 2026-07-17 22:45+0530\n"
 "Last-Translator: Icarus i18n\n"
 "Language-Team: en\n"
@@ -39,17 +39,14 @@ msgid "അക്കൗണ്ട് നിർജ്ജീവമാക്കി"
 msgstr "Account Deactivated"
 
 #: Icarus/templates/account/account_inactive.html:47
-msgid ""
-"നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കിയിരിക്കുന്നു, അത് ഇനി ആക്സസ് ചെയ്യാൻ "
-"കഴിയില്ല."
+msgid "നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കിയിരിക്കുന്നു, അത് ഇനി ആക്സസ് ചെയ്യാൻ കഴിയില്ല."
 msgstr "Your account has been deactivated and can no longer be accessed."
 
 #: Icarus/templates/account/account_inactive.html:53
 msgid ""
-"നിങ്ങൾ തന്നെയാണ് ഈ നിർജ്ജീവമാക്കൽ ആവശ്യപ്പെട്ടതെങ്കിൽ, ഞങ്ങളുടെ ഡാറ്റാ "
-"നിലനിർത്തൽ നയത്തിന് വിധേയമായി നിങ്ങളുടെ വ്യക്തിഗത വിവരങ്ങൾ "
-"സൂക്ഷിച്ചുവെക്കുന്നതാണ്. നിയമപരമായ കാലാവധിക്ക് ശേഷം എല്ലാ വ്യക്തിഗത "
-"വിവരങ്ങളും ശാശ്വതമായും വീണ്ടെടുക്കാൻ കഴിയാത്തവിധവും പൂർണ്ണമായി നീക്കം "
+"നിങ്ങൾ തന്നെയാണ് ഈ നിർജ്ജീവമാക്കൽ ആവശ്യപ്പെട്ടതെങ്കിൽ, ഞങ്ങളുടെ ഡാറ്റാ നിലനിർത്തൽ നയത്തിന് "
+"വിധേയമായി നിങ്ങളുടെ വ്യക്തിഗത വിവരങ്ങൾ സൂക്ഷിച്ചുവെക്കുന്നതാണ്. നിയമപരമായ കാലാവധിക്ക് ശേഷം "
+"എല്ലാ വ്യക്തിഗത വിവരങ്ങളും ശാശ്വതമായും വീണ്ടെടുക്കാൻ കഴിയാത്തവിധവും പൂർണ്ണമായി നീക്കം "
 "ചെയ്യപ്പെടും."
 msgstr ""
 "If you requested this deactivation yourself, your personal data will be "
@@ -58,10 +55,9 @@ msgstr ""
 
 #: Icarus/templates/account/account_inactive.html:60
 msgid ""
-"ഈ നിർജ്ജീവമാക്കൽ തെറ്റായി സംഭവിച്ചതാണെന്ന് നിങ്ങൾ കരുതുന്നുവെങ്കിലോ, "
-"അല്ലെങ്കിൽ ഡാറ്റ നിലനിർത്തൽ കാലാവധി അവസാനിക്കുന്നതിന് മുൻപ് നിങ്ങളുടെ "
-"അക്കൗണ്ട് വീണ്ടും സജീവമാക്കാൻ ആഗ്രഹിക്കുന്നുവെങ്കിലോ, ദയവായി എത്രയും വേഗം "
-"ഞങ്ങളെ ബന്ധപ്പെടുക."
+"ഈ നിർജ്ജീവമാക്കൽ തെറ്റായി സംഭവിച്ചതാണെന്ന് നിങ്ങൾ കരുതുന്നുവെങ്കിലോ, അല്ലെങ്കിൽ ഡാറ്റ "
+"നിലനിർത്തൽ കാലാവധി അവസാനിക്കുന്നതിന് മുൻപ് നിങ്ങളുടെ അക്കൗണ്ട് വീണ്ടും സജീവമാക്കാൻ "
+"ആഗ്രഹിക്കുന്നുവെങ്കിലോ, ദയവായി എത്രയും വേഗം ഞങ്ങളെ ബന്ധപ്പെടുക."
 msgstr ""
 "If you believe this deactivation happened in error, or if you wish to "
 "reactivate your account before the data retention period ends, please "
@@ -75,7 +71,23 @@ msgstr "Contact Support"
 msgid "ഹോം പേജിലേക്ക് മടങ്ങുക"
 msgstr "Return to Homepage"
 
+#: Icarus/templates/account/account_inactive.html:88
+#, fuzzy
+#| msgid ""
+#| "അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള നിങ്ങളുടെ പ്രവേശനം ഉടൻ റദ്ദാകും. "
+#| "ഞങ്ങളുടെ ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, നിയമപരമായ കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ "
+#| "ശാശ്വതമായി ഇല്ലാതാക്കാൻ ഷെഡ്യൂൾ ചെയ്യപ്പെടും."
+msgid ""
+"അക്കൗണ്ട് വീണ്ടും സജീവമാക്കാനുള്ള അഭ്യർത്ഥനകൾ നിലനിർത്തൽ കാലാവധിക്കുള്ളിൽ മാത്രമേ സാധ്യമാകൂ. "
+"ഈ സമയപരിധി കഴിഞ്ഞാൽ, എല്ലാ വ്യക്തിഗത വിവരങ്ങളും ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും, കൂടാതെ "
+"യാതൊരു സാഹചര്യത്തിലും അക്കൗണ്ട് വീണ്ടെടുക്കാൻ സാധിക്കുന്നതല്ല."
+msgstr ""
+"Deactivating your account will immediately revoke your access to "
+"Sasthragathi. In accordance with our data retention policy, your personal "
+"data will be scheduled for permanent deletion after the statutory period."
+
 #: Icarus/templates/account/confirm_login_code.html:20
+#: Icarus/templates/account/confirm_login_code.html:99
 msgid "കോഡ് പരിശോധിക്കുക"
 msgstr "Verify Code"
 
@@ -84,8 +96,7 @@ msgid "നിങ്ങളുടെ ഫോൺ പരിശോധിക്കു�
 msgstr "Check Your Phone"
 
 #: Icarus/templates/account/confirm_login_code.html:30
-msgid ""
-"ഞങ്ങൾ നിങ്ങളുടെ രജിസ്റ്റർ ചെയ്ത ഫോൺ നമ്പറിലേക്ക് 6 അക്ക കോഡ് അയച്ചിട്ടുണ്ട്."
+msgid "ഞങ്ങൾ നിങ്ങളുടെ രജിസ്റ്റർ ചെയ്ത ഫോൺ നമ്പറിലേക്ക് 6 അക്ക കോഡ് അയച്ചിട്ടുണ്ട്."
 msgstr "We've sent a 6-digit code to your registered phone number."
 
 #: Icarus/templates/account/confirm_login_code.html:31
@@ -120,10 +131,6 @@ msgstr "Digit 5"
 msgid "ആറാം അക്കം"
 msgstr "Digit 6"
 
-#: Icarus/templates/account/confirm_login_code.html:99
-msgid "കോഡ് പരിശോധിക്കുക"
-msgstr "Verify Code"
-
 #: Icarus/templates/account/confirm_login_code.html:106
 msgid "നിങ്ങളുടെ ഫോണിൽ കോഡ് ലഭിച്ചില്ലേ?"
 msgstr "Didn't receive the code on your phone?"
@@ -152,9 +159,7 @@ msgid "വീണ്ടും സ്വാഗതം"
 msgstr "Welcome back"
 
 #: Icarus/templates/account/login.html:15
-msgid ""
-"ശാസ്ത്രഗതിയിൽ നിങ്ങളുടെ വായനാ ചരിത്രവും സബ്സ്ക്രിപ്ഷനും ആക്സസ് ചെയ്യാൻ സൈൻ "
-"ഇൻ ചെയ്യുക."
+msgid "ശാസ്ത്രഗതിയിൽ നിങ്ങളുടെ വായനാ ചരിത്രവും സബ്സ്ക്രിപ്ഷനും ആക്സസ് ചെയ്യാൻ സൈൻ ഇൻ ചെയ്യുക."
 msgstr ""
 "Sign in to access your reading history and subscription on Sasthragathi."
 
@@ -179,17 +184,13 @@ msgstr "Account temporarily locked."
 
 #: Icarus/templates/account/login.html:46
 #, python-format
-msgid ""
-"ഈ ലൊക്കേഷനിൽ/അക്കൗണ്ടിൽ നിന്നുള്ള ആക്സസ് %(duration)s നേരത്തേക്ക് "
-"നിയന്ത്രിക്കപ്പെടും."
-msgstr ""
-"Access from this location/account will be restricted for %(duration)s."
+msgid "ഈ ലൊക്കേഷനിൽ/അക്കൗണ്ടിൽ നിന്നുള്ള ആക്സസ് %(duration)s നേരത്തേക്ക് നിയന്ത്രിക്കപ്പെടും."
+msgstr "Access from this location/account will be restricted for %(duration)s."
 
 #: Icarus/templates/account/login.html:48
 #, python-format
 msgid ""
-"തുടർച്ചയായ പരാജയങ്ങൾ %(max)s എത്തിയാൽ, %(duration)s നേരത്തേക്ക് ആക്സസ് "
-"നിയന്ത്രിക്കപ്പെടും."
+"തുടർച്ചയായ പരാജയങ്ങൾ %(max)s എത്തിയാൽ, %(duration)s നേരത്തേക്ക് ആക്സസ് നിയന്ത്രിക്കപ്പെടും."
 msgstr ""
 "If consecutive failures reach %(max)s, access will be restricted for "
 "%(duration)s."
@@ -200,12 +201,20 @@ msgstr "Forgot password?"
 
 #: Icarus/templates/account/login.html:87
 #: Icarus/templates/account/login.html:88
+#: Icarus/templates/account/password_change.html:49
+#: Icarus/templates/account/password_change.html:50
+#: Icarus/templates/account/password_reset_from_key.html:55
+#: Icarus/templates/account/password_reset_from_key.html:56
+#: Icarus/templates/account/signup.html:77
 #: reader/templates/reader/account_deactivate.html:111
 #: reader/templates/reader/account_deactivate.html:212
 msgid "പാസ്‌വേഡ് കാണിക്കുക"
 msgstr "Show password"
 
 #: Icarus/templates/account/login.html:89
+#: Icarus/templates/account/password_change.html:51
+#: Icarus/templates/account/password_reset_from_key.html:57
+#: Icarus/templates/account/signup.html:78
 #: reader/templates/reader/account_deactivate.html:212
 msgid "പാസ്‌വേഡ് മറയ്ക്കുക"
 msgstr "Hide password"
@@ -251,20 +260,6 @@ msgstr "Change Password"
 msgid "നിങ്ങളുടെ അക്കൗണ്ട് വിവരങ്ങൾ അപ്ഡേറ്റ് ചെയ്യുക"
 msgstr "Update your account details"
 
-#: Icarus/templates/account/password_change.html:49
-#: Icarus/templates/account/password_change.html:50
-#: Icarus/templates/account/password_reset_from_key.html:55
-#: Icarus/templates/account/password_reset_from_key.html:56
-#: Icarus/templates/account/signup.html:77
-msgid "പാസ്‌വേഡ് കാണിക്കുക"
-msgstr "Show password"
-
-#: Icarus/templates/account/password_change.html:51
-#: Icarus/templates/account/password_reset_from_key.html:57
-#: Icarus/templates/account/signup.html:78
-msgid "പാസ്‌വേഡ് മറയ്ക്കുക"
-msgstr "Hide password"
-
 #: Icarus/templates/account/password_change.html:81
 msgid "പാസ്സ്‌വേഡ് മറന്നോ?"
 msgstr "Forgot password?"
@@ -275,16 +270,18 @@ msgstr "Back to Profile"
 
 #: Icarus/templates/account/password_reset.html:4
 #: Icarus/templates/account/password_reset.html:12
+#, fuzzy
+#| msgid "പാസ്സ്‌വേഡ് റീസെറ്റ്"
 msgid "പാസ്വേഡ് റീസെറ്റ്"
 msgstr "Password Reset"
 
 #: Icarus/templates/account/password_reset.html:19
 msgid ""
-"പാസ്സ്വേഡ് റീസെറ്റ് ചെയ്യുവാനായി നിങ്ങളുടെ ഇമെയിൽ വിലാസം താഴെ നൽകുക. അത് "
-"ഞങ്ങൾക്ക് ലഭിച്ചാലുടൻ ഒരു റീസെറ്റ് ലിങ്ക് നിങ്ങളുടെ ഇമെയിലിൽ അയക്കുന്നതാണ്."
+"പാസ്സ്വേഡ് റീസെറ്റ് ചെയ്യുവാനായി നിങ്ങളുടെ ഇമെയിൽ വിലാസം താഴെ നൽകുക. അത് ഞങ്ങൾക്ക് "
+"ലഭിച്ചാലുടൻ ഒരു റീസെറ്റ് ലിങ്ക് നിങ്ങളുടെ ഇമെയിലിൽ അയക്കുന്നതാണ്."
 msgstr ""
-"Enter your email address below to reset your password. As soon as we receive"
-" it, a reset link will be sent to your email."
+"Enter your email address below to reset your password. As soon as we receive "
+"it, a reset link will be sent to your email."
 
 #: Icarus/templates/account/password_reset.html:36
 msgid "ഇമെയിൽ വിലാസം"
@@ -299,9 +296,7 @@ msgid "എന്റെ പാസ്‍വേര്‍ഡ് റീസെറ്�
 msgstr "Reset My Password"
 
 #: Icarus/templates/account/password_reset.html:47
-msgid ""
-"പാസ്സ്വേഡ് മാറ്റുന്നതുമായി ബന്ധപ്പെട്ട് എന്തെങ്കിലും പ്രശ്നങ്ങളുണ്ടെങ്കിൽ "
-"ഞങ്ങളെ ബന്ധപ്പെടുക."
+msgid "പാസ്സ്വേഡ് മാറ്റുന്നതുമായി ബന്ധപ്പെട്ട് എന്തെങ്കിലും പ്രശ്നങ്ങളുണ്ടെങ്കിൽ ഞങ്ങളെ ബന്ധപ്പെടുക."
 msgstr "If you have any trouble changing your password, contact us."
 
 #: Icarus/templates/account/password_reset.html:49
@@ -319,17 +314,16 @@ msgstr "Check Your Email"
 
 #: Icarus/templates/account/password_reset_done.html:15
 msgid ""
-"നിങ്ങളുടെ ഇമെയിലിലേക്ക് ഞങ്ങൾ ഒരു പാസ്‌സ്‌വേഡ് റീസെറ്റ് ലിങ്ക് "
-"അയച്ചിട്ടുണ്ട്. അത് ഉടൻ മെയിൽ ബോക്സിൽ കാണാൻ കഴിയുന്നില്ലെങ്കിൽ നിങ്ങളുടെ "
-"സ്പാം ഫോൾഡർ പരിശോധിക്കുക."
+"നിങ്ങളുടെ ഇമെയിലിലേക്ക് ഞങ്ങൾ ഒരു പാസ്‌സ്‌വേഡ് റീസെറ്റ് ലിങ്ക് അയച്ചിട്ടുണ്ട്. അത് ഉടൻ മെയിൽ "
+"ബോക്സിൽ കാണാൻ കഴിയുന്നില്ലെങ്കിൽ നിങ്ങളുടെ സ്പാം ഫോൾഡർ പരിശോധിക്കുക."
 msgstr ""
 "We've sent a password reset link to your email. If you don't see it in your "
 "inbox soon, check your spam folder."
 
 #: Icarus/templates/account/password_reset_from_key.html:26
 msgid ""
-"നിങ്ങളുടെ പാസ്‌വേഡ് റീസെറ്റ് ലിങ്ക് അസാധുവാണ്, കാരണം അത് ഇതിനകം "
-"ഉപയോഗിക്കപ്പെട്ടതാകാം. ദയവായി പുതിയ പാസ്‌വേഡ് റീസെറ്റ് അഭ്യർത്ഥിക്കുക."
+"നിങ്ങളുടെ പാസ്‌വേഡ് റീസെറ്റ് ലിങ്ക് അസാധുവാണ്, കാരണം അത് ഇതിനകം ഉപയോഗിക്കപ്പെട്ടതാകാം. "
+"ദയവായി പുതിയ പാസ്‌വേഡ് റീസെറ്റ് അഭ്യർത്ഥിക്കുക."
 msgstr ""
 "Your password reset link is invalid, possibly because it has already been "
 "used. Please request a new password reset."
@@ -385,6 +379,7 @@ msgid "പത്രാധിപ സമിതി"
 msgstr "Editorial Board"
 
 #: Icarus/templates/includes/footer.html:89
+#: home/templates/home/partials/changelog_banner.html:110
 #: issue/templates/issue/issue.html:219 kalapila/wagtail_hooks.py:193
 #: postbox/wagtail_hooks.py:123
 #: reader/templates/reader/admin/print_subscribers.html:27
@@ -416,8 +411,6 @@ msgid "ലോഗിൻ"
 msgstr "Login"
 
 #: Icarus/templates/includes/header.html:67
-#: home/templates/home/home_page.html:131
-#: home/templates/home/home_page.html:133
 msgid "വരിക്കാരാകൂ"
 msgstr "Subscribe"
 
@@ -555,8 +548,7 @@ msgstr "Continue reading"
 #: articles/templates/articles/article.html:257
 #: articles/templates/articles/article.html:336
 msgid ""
-"നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി "
-"വരിക്കാരാകുക."
+"നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. എല്ലാ ലേഖനങ്ങളും വായിക്കുന്നതിനായി വരിക്കാരാകുക."
 msgstr ""
 "Your free reading limit has been reached. Subscribe to read all articles."
 
@@ -574,8 +566,8 @@ msgstr "Subscribe"
 
 #: articles/templates/articles/article.html:338
 msgid ""
-"പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക "
-"അല്ലെങ്കിൽ വരിക്കാരാകുക."
+"പൂർണ്ണരൂപം വായിക്കുന്നതിനും പരിധിയില്ലാത്ത സേവനങ്ങൾക്കുമായി സൈൻ ഇൻ ചെയ്യുക അല്ലെങ്കിൽ "
+"വരിക്കാരാകുക."
 msgstr "Sign in or subscribe for the full article and unlimited access."
 
 #: articles/templates/articles/article.html:458
@@ -639,8 +631,8 @@ msgstr "This block has not been converted yet."
 
 #: articles/templates/blocks/rich_text_import_block.html:17
 msgid ""
-"ഈ ഉള്ളടക്കം പേസ്റ്റ് ചെയ്തതാണ്, ഇതുവരെ സേവ് ചെയ്തിട്ടില്ല. ഇത് പരിവർത്തനം "
-"ചെയ്യാൻ എഡിറ്ററിൽ പേജ് തുറന്ന് വീണ്ടും സേവ് ചെയ്യുക."
+"ഈ ഉള്ളടക്കം പേസ്റ്റ് ചെയ്തതാണ്, ഇതുവരെ സേവ് ചെയ്തിട്ടില്ല. ഇത് പരിവർത്തനം ചെയ്യാൻ എഡിറ്ററിൽ "
+"പേജ് തുറന്ന് വീണ്ടും സേവ് ചെയ്യുക."
 msgstr ""
 "This content was pasted and has not been saved yet. Open the page in the "
 "editor and save it again to convert it."
@@ -659,9 +651,8 @@ msgstr "Cover image preview"
 
 #: articles/templates/wagtailadmin/panels/cover_image_preview_panel.html:24
 msgid ""
-"ഫോട്ടോയുടെ തെറ്റായ ഭാഗമാണ് ദൃശ്യമാകുന്നതെങ്കിൽ, <strong>ഇമേജ് "
-"ലൈബ്രറിയിൽ</strong> ചിത്രം തുറന്ന് ഒരു <strong>ഫോക്കൽ പോയിന്റ്</strong> "
-"സജ്ജീകരിക്കുക."
+"ഫോട്ടോയുടെ തെറ്റായ ഭാഗമാണ് ദൃശ്യമാകുന്നതെങ്കിൽ, <strong>ഇമേജ് ലൈബ്രറിയിൽ</strong> ചിത്രം "
+"തുറന്ന് ഒരു <strong>ഫോക്കൽ പോയിന്റ്</strong> സജ്ജീകരിക്കുക."
 msgstr ""
 "If the wrong part of the photo is visible, open the image in the "
 "<strong>image library</strong> and set a <strong>focal point</strong>."
@@ -720,54 +711,12 @@ msgstr "Topic"
 msgid "ഇതുവരെ ട്രാക്കിംഗ് രേഖപ്പെടുത്തിയിട്ടില്ല."
 msgstr "No tracking recorded yet."
 
-#: home/templates/home/home_page.html:21 home/templates/home/home_page.html:25
-msgid "വിശേഷലക്കം"
-msgstr "Featured Issue"
-
-#: home/templates/home/home_page.html:49
-msgid "ലക്കം പരിശോധിക്കാം"
-msgstr "Browse the Issue"
-
-#: home/templates/home/home_page.html:54
-msgid "ഈ ലക്കത്തില്‍..."
-msgstr "In this issue..."
-
-#: home/templates/home/home_page.html:71
-#, python-format
-msgid "ലേഖനം %(n)s-ലേക്ക് പോകുക"
-msgstr "Go to article %(n)s"
-
-#: home/templates/home/home_page.html:87
-msgid "മറ്റുള്ള വിഷയങ്ങള്‍"
-msgstr "Other Topics"
-
-#: home/templates/home/home_page.html:120
-msgid "മറ്റ് വിഷയങ്ങളൊന്നുമില്ല."
-msgstr "No other topics."
-
-#: home/templates/home/home_page.html:135
-msgid "സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക"
-msgstr "Manage Subscription"
-
-#: home/templates/home/home_page.html:138
-msgid "ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ"
-msgstr "Subscribe Now"
-
-#: home/templates/home/home_page.html:147
-msgid "മുൻപത്തെ ലക്കങ്ങൾ"
-msgstr "Previous Issues"
-
-#: home/templates/home/home_page.html:181
-msgid "എല്ലാ ലക്കങ്ങളും കാണുക"
-msgstr "View All Issues"
-
-#: home/templates/home/home_page.html:190
-msgid "മറ്റുള്ള ലേഖനങ്ങള്‍"
-msgstr "Other Articles"
-
-#: home/templates/home/home_page.html:234
-msgid "കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക"
-msgstr "View More Articles"
+#: home/templates/home/partials/changelog_banner.html:106
+#: home/templates/home/partials/changelog_banner.html:113
+#, fuzzy
+#| msgid "മോഡലും മാറ്റങ്ങളും"
+msgid "പുതിയ മാറ്റങ്ങൾ"
+msgstr "Model & Changes"
 
 #: home/templates/home/userbar/custom.html:4
 msgid "ശാസ്ത്രഗതി അഡ്മിന്‍"
@@ -780,11 +729,9 @@ msgstr "Analytics"
 
 #: home/templates/wagtailadmin/analytics.html:84
 msgid ""
-"ഉള്ളടക്കം, വായനക്കാർ, സബ്സ്ക്രിപ്ഷനുകൾ, മോഡറേഷൻ എന്നിവയിലുടനീളമുള്ള "
-"പ്ലാറ്റ്‌ഫോം-വ്യാപക അളവുകൾ."
+"ഉള്ളടക്കം, വായനക്കാർ, സബ്സ്ക്രിപ്ഷനുകൾ, മോഡറേഷൻ എന്നിവയിലുടനീളമുള്ള പ്ലാറ്റ്‌ഫോം-വ്യാപക അളവുകൾ."
 msgstr ""
-"Platform-wide metrics across content, readers, subscriptions, and "
-"moderation."
+"Platform-wide metrics across content, readers, subscriptions, and moderation."
 
 #: home/templates/wagtailadmin/analytics.html:89
 msgid "പ്ലാറ്റ്‌ഫോം സംഗ്രഹം"
@@ -878,12 +825,12 @@ msgstr "Churn — cancelled vs auto-renewing"
 #, python-format
 msgid ""
 "കൊഴിഞ്ഞുപോക്ക് നിരക്ക്: <strong style=\"color:var(--an-"
-"danger)\">%(churn_rate_pct)s%%</strong> സജീവ വരിക്കാർ റദ്ദാക്കിയെങ്കിലും "
-"ഇപ്പോഴും ആക്സസ് കാലയളവിലാണ്."
+"danger)\">%(churn_rate_pct)s%%</strong> സജീവ വരിക്കാർ റദ്ദാക്കിയെങ്കിലും ഇപ്പോഴും "
+"ആക്സസ് കാലയളവിലാണ്."
 msgstr ""
-"Churn rate: <strong style=\"color:var(--an-"
-"danger)\">%(churn_rate_pct)s%%</strong> of active subscribers have cancelled"
-" but are still within their access period."
+"Churn rate: <strong style=\"color:var(--an-danger)\">%(churn_rate_pct)s%%</"
+"strong> of active subscribers have cancelled but are still within their "
+"access period."
 
 #: home/templates/wagtailadmin/analytics.html:170
 msgid "ഗ്രേസ് പീരിയഡ് റിക്കവറി (കഴിഞ്ഞ 33 ദിവസം)"
@@ -892,8 +839,10 @@ msgstr "Grace-period recovery (last 33 days)"
 #: home/templates/wagtailadmin/analytics.html:173
 #, python-format
 msgid ""
-"റിക്കവറി നിരക്ക്: <strong style=\"color:var(--an-success)\">%(grace_recovery_pct)s%%</strong>\n"
-"                  — ഗ്രേസ് പീരിയഡിൽ പ്രവേശിച്ച ~%(users_in_grace)s പേരിൽ %(recently_renewed)s പേർ പുതുക്കി."
+"റിക്കവറി നിരക്ക്: <strong style=\"color:var(--an-"
+"success)\">%(grace_recovery_pct)s%%</strong>\n"
+"                  — ഗ്രേസ് പീരിയഡിൽ പ്രവേശിച്ച ~%(users_in_grace)s പേരിൽ "
+"%(recently_renewed)s പേർ പുതുക്കി."
 msgstr ""
 "Recovery rate: <strong style=\"color:var(--an-"
 "success)\">%(grace_recovery_pct)s%%</strong> — %(recently_renewed)s of "
@@ -906,7 +855,8 @@ msgstr "Paywall conversion (last 30 days)"
 #: home/templates/wagtailadmin/analytics.html:182
 #, python-format
 msgid ""
-"%(new_registrations_30d)s പുതിയ രജിസ്ട്രേഷനുകളിൽ %(new_subscribers_30d)s എണ്ണം വരിക്കാരായി മാറി\n"
+"%(new_registrations_30d)s പുതിയ രജിസ്ട്രേഷനുകളിൽ %(new_subscribers_30d)s എണ്ണം "
+"വരിക്കാരായി മാറി\n"
 "        (<strong>%(paywall_conversion_pct)s%%</strong>)."
 msgstr ""
 "%(new_subscribers_30d)s of %(new_registrations_30d)s new registrations "
@@ -919,8 +869,10 @@ msgstr "Retention: bookmarkers vs non-bookmarkers"
 #: home/templates/wagtailadmin/analytics.html:191
 #, python-format
 msgid ""
-"ബുക്ക്മാർക്ക് ചെയ്യുന്നവർ: <strong style=\"color:var(--an-success)\">%(retention_with_bm)s%%</strong> സജീവം |\n"
-"        ബുക്ക്മാർക്ക് ചെയ്യാത്തവർ: <strong style=\"color:var(--an-warn)\">%(retention_without_bm)s%%</strong> സജീവം."
+"ബുക്ക്മാർക്ക് ചെയ്യുന്നവർ: <strong style=\"color:var(--an-"
+"success)\">%(retention_with_bm)s%%</strong> സജീവം |\n"
+"        ബുക്ക്മാർക്ക് ചെയ്യാത്തവർ: <strong style=\"color:var(--an-"
+"warn)\">%(retention_without_bm)s%%</strong> സജീവം."
 msgstr ""
 "Bookmarkers: <strong style=\"color:var(--an-"
 "success)\">%(retention_with_bm)s%%</strong> active | Non-bookmarkers: "
@@ -1272,8 +1224,7 @@ msgid "വാല്യം"
 msgstr "Volume"
 
 #: issue/templates/issue/issue.html:63
-msgid ""
-"അപ്ഡേറ്റ് ചെയ്യാനായില്ല. നിങ്ങൾ ലോഗിൻ ചെയ്തിട്ടുണ്ടോയെന്ന് പരിശോധിക്കുക."
+msgid "അപ്ഡേറ്റ് ചെയ്യാനായില്ല. നിങ്ങൾ ലോഗിൻ ചെയ്തിട്ടുണ്ടോയെന്ന് പരിശോധിക്കുക."
 msgstr "Could not update. Check that you are logged in."
 
 #: issue/templates/issue/issue.html:88
@@ -1477,9 +1428,7 @@ msgid "കമന്റ് ചെയ്യുക"
 msgstr "Comment"
 
 #: kalapila/templates/kalapila/comment_section.html:52
-msgid ""
-"നിങ്ങളുടെ അക്കൗണ്ടിൽ അഭിപ്രായങ്ങൾ രേഖപ്പെടുത്തുന്നത് താൽക്കാലികമായി "
-"വിലക്കിയിരിക്കുന്നു."
+msgid "നിങ്ങളുടെ അക്കൗണ്ടിൽ അഭിപ്രായങ്ങൾ രേഖപ്പെടുത്തുന്നത് താൽക്കാലികമായി വിലക്കിയിരിക്കുന്നു."
 msgstr "Commenting from your account is temporarily restricted."
 
 #: kalapila/templates/kalapila/comment_section.html:58
@@ -1489,9 +1438,8 @@ msgid ""
 "href=\"%(login_url)s?next=%(next)s\" class=\"comment-login-link\">ലോഗിൻ "
 "ചെയ്യുക</a>."
 msgstr ""
-"<i class=\"fas fa-info-circle\"></i> Please <a "
-"href=\"%(login_url)s?next=%(next)s\" class=\"comment-login-link\">log in</a>"
-" to post comments."
+"<i class=\"fas fa-info-circle\"></i> Please <a href=\"%(login_url)s?"
+"next=%(next)s\" class=\"comment-login-link\">log in</a> to post comments."
 
 #: kalapila/templates/kalapila/comment_section.html:68
 msgid "ആദ്യമായി ഒരു അഭിപ്രായം രേഖപ്പെടുത്തൂ!"
@@ -1526,8 +1474,7 @@ msgstr "(%(count)s authors)"
 
 #: literati/templates/literati/author_index_page.html:67
 #: literati/templates/literati/most_read_authors.html:88
-msgid ""
-"ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക."
+msgid "ലേഖനങ്ങൾ കാണുന്നതിന് ഇടത് വശത്ത് നിന്നും ഒരു എഴുത്തുകാരനെ തിരഞ്ഞെടുക്കുക."
 msgstr "Select an author from the left to view articles."
 
 #: literati/templates/literati/author_index_page.html:81
@@ -1594,9 +1541,7 @@ msgid "ഫീഡ്‌ബാക്ക് അറിയിക്കൂ"
 msgstr "Share Your Feedback"
 
 #: postbox/templates/postbox/postbox_page.html:16
-msgid ""
-"വെബ്സൈറ്റ് മെച്ചപ്പെടുത്താൻ നിങ്ങളുടെ നിർദ്ദേശങ്ങളും അഭിപ്രായങ്ങളും "
-"അറിയിക്കുക"
+msgid "വെബ്സൈറ്റ് മെച്ചപ്പെടുത്താൻ നിങ്ങളുടെ നിർദ്ദേശങ്ങളും അഭിപ്രായങ്ങളും അറിയിക്കുക"
 msgstr "Share your suggestions and comments to help improve the website"
 
 #: postbox/templates/postbox/postbox_page.html:27
@@ -1766,8 +1711,8 @@ msgstr "I agree to the Terms of Service and Privacy Policy."
 
 #: reader/auth_forms.py:195
 msgid ""
-"വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുന്നതിന് ഞാൻ "
-"സമ്മതിക്കുന്നു. (Optional)"
+"വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുന്നതിന് ഞാൻ സമ്മതിക്കുന്നു. "
+"(Optional)"
 msgstr ""
 "I consent to the tracking of my reading history for personalised "
 "recommendations. (Optional)"
@@ -1778,14 +1723,11 @@ msgstr ""
 "You can leave this unchecked if you prefer not to receive recommendations."
 
 #: reader/forms.py:52
-msgid ""
-"വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുക. (Optional)"
+msgid "വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുക. (Optional)"
 msgstr "Track my reading history for personalised recommendations. (Optional)"
 
 #: reader/forms.py:55
-msgid ""
-"ഈ സമ്മതം പിൻവലിച്ചാൽ സൂക്ഷിച്ച നിങ്ങളുടെ വായനാ ചരിത്രം ശാശ്വതമായി "
-"ഇല്ലാതാക്കപ്പെടും."
+msgid "ഈ സമ്മതം പിൻവലിച്ചാൽ സൂക്ഷിച്ച നിങ്ങളുടെ വായനാ ചരിത്രം ശാശ്വതമായി ഇല്ലാതാക്കപ്പെടും."
 msgstr ""
 "Revoking this consent will permanently delete your saved reading history."
 
@@ -1827,8 +1769,8 @@ msgstr "Grant temporary access until"
 
 #: reader/forms.py:372
 msgid ""
-"തിരഞ്ഞെടുത്ത തീയതി വരെ ഈ വായനക്കാരന് സൗജന്യ പ്രവേശനം (പേയ്‌മെന്റ് ഇല്ലാതെ) "
-"നൽകുക. മുകളിലെ പ്ലാനിനെ മറികടക്കും. മാറ്റം വേണ്ടെങ്കിൽ ശൂന്യമായി വിടുക."
+"തിരഞ്ഞെടുത്ത തീയതി വരെ ഈ വായനക്കാരന് സൗജന്യ പ്രവേശനം (പേയ്‌മെന്റ് ഇല്ലാതെ) നൽകുക. മുകളിലെ "
+"പ്ലാനിനെ മറികടക്കും. മാറ്റം വേണ്ടെങ്കിൽ ശൂന്യമായി വിടുക."
 msgstr ""
 "Give this reader complimentary access (no payment) through the selected "
 "date. Overrides the plan above. Leave blank to make no change."
@@ -1871,8 +1813,8 @@ msgstr "Phone Number (Hash)"
 
 #: reader/models.py:81
 msgid ""
-"ഫോൺ നമ്പറിന്റെ HMAC-SHA256. വേഗതയേറിയതും സുരക്ഷിതവുമായ കൃത്യ-പൊരുത്ത "
-"തിരയലുകൾക്ക് ഉപയോഗിക്കുന്നു."
+"ഫോൺ നമ്പറിന്റെ HMAC-SHA256. വേഗതയേറിയതും സുരക്ഷിതവുമായ കൃത്യ-പൊരുത്ത തിരയലുകൾക്ക് "
+"ഉപയോഗിക്കുന്നു."
 msgstr ""
 "HMAC-SHA256 of the phone number. Used for fast, secure exact-match lookups."
 
@@ -1881,9 +1823,7 @@ msgid "ഫോൺ നമ്പർ (എൻക്രിപ്റ്റഡ്)"
 msgstr "Phone Number (Encrypted)"
 
 #: reader/models.py:87
-msgid ""
-"Fernet-എൻക്രിപ്റ്റ് ചെയ്ത ഫോൺ നമ്പർ. നേരിട്ടുള്ള DB ഡമ്പുകളിൽ "
-"വായിക്കാനാവില്ല."
+msgid "Fernet-എൻക്രിപ്റ്റ് ചെയ്ത ഫോൺ നമ്പർ. നേരിട്ടുള്ള DB ഡമ്പുകളിൽ വായിക്കാനാവില്ല."
 msgstr "Fernet-encrypted phone number. Unreadable in raw DB dumps."
 
 #: reader/models.py:98
@@ -1895,9 +1835,7 @@ msgid "നിങ്ങളെക്കുറിച്ചുള്ള ഒരു �
 msgstr "A short description about yourself."
 
 #: reader/models.py:107
-msgid ""
-"ഈ ഉപയോക്താവിനെ അഭിപ്രായങ്ങൾ പോസ്റ്റ് ചെയ്യുന്നതിൽ നിന്ന് തടയാൻ ഇത് അൺചെക്ക് "
-"ചെയ്യുക."
+msgid "ഈ ഉപയോക്താവിനെ അഭിപ്രായങ്ങൾ പോസ്റ്റ് ചെയ്യുന്നതിൽ നിന്ന് തടയാൻ ഇത് അൺചെക്ക് ചെയ്യുക."
 msgstr "Uncheck this to restrict this user from posting comments."
 
 #: reader/models.py:120
@@ -1914,16 +1852,12 @@ msgid "സ്വകാര്യതാ നയത്തിന് വ്യക്�
 msgstr "Timestamp of explicit consent to the Privacy Policy."
 
 #: reader/models.py:132
-msgid ""
-"സമ്മതം നൽകിയ സ്വകാര്യതാ നയത്തിന്റെ പതിപ്പ് (സമ്മത പതിപ്പ് രേഖയ്ക്ക് ആവശ്യം)."
+msgid "സമ്മതം നൽകിയ സ്വകാര്യതാ നയത്തിന്റെ പതിപ്പ് (സമ്മത പതിപ്പ് രേഖയ്ക്ക് ആവശ്യം)."
 msgstr ""
-"Version of the Privacy Policy consented to (required for consent "
-"versioning)."
+"Version of the Privacy Policy consented to (required for consent versioning)."
 
 #: reader/models.py:137
-msgid ""
-"DPDP അനുസരണത്തിനായി സൈൻഅപ്പ് സമയത്ത് രേഖപ്പെടുത്തിയ 18+ പ്രായ "
-"സ്വയം-പ്രഖ്യാപനം."
+msgid "DPDP അനുസരണത്തിനായി സൈൻഅപ്പ് സമയത്ത് രേഖപ്പെടുത്തിയ 18+ പ്രായ സ്വയം-പ്രഖ്യാപനം."
 msgstr "18+ age self-declaration captured at signup for DPDP compliance."
 
 #: reader/models.py:141
@@ -1939,15 +1873,11 @@ msgid "ലിംഗ വിവരം പങ്കിടാൻ സമ്മതം 
 msgstr "Timestamp of consent to share gender information."
 
 #: reader/models.py:155
-msgid ""
-"വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യാൻ സമ്മതം നൽകിയ സമയമുദ്ര. പിൻവലിക്കുമ്പോൾ "
-"മായ്ക്കപ്പെടും."
+msgid "വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യാൻ സമ്മതം നൽകിയ സമയമുദ്ര. പിൻവലിക്കുമ്പോൾ മായ്ക്കപ്പെടും."
 msgstr "Timestamp of consent to track reading history. Cleared on revocation."
 
 #: reader/models.py:160
-msgid ""
-"അനിവാര്യമല്ലാത്ത മാർക്കറ്റിംഗ് അറിയിപ്പുകൾ സ്വീകരിക്കാനുള്ള ഉപയോക്താവിന്റെ "
-"തിരഞ്ഞെടുപ്പ്."
+msgid "അനിവാര്യമല്ലാത്ത മാർക്കറ്റിംഗ് അറിയിപ്പുകൾ സ്വീകരിക്കാനുള്ള ഉപയോക്താവിന്റെ തിരഞ്ഞെടുപ്പ്."
 msgstr "User's choice to receive non-essential marketing communications."
 
 #: reader/models.py:164
@@ -1955,30 +1885,25 @@ msgid "വാർത്താക്കുറിപ്പ് സമ്മത ന�
 msgstr "Timestamp of when the newsletter consent status last changed."
 
 #: reader/models.py:170
-msgid ""
-"വ്യാജ ബോട്ട് രജിസ്ട്രേഷനുകൾ കണ്ടെത്താനും തടയാനും സൈൻഅപ്പിൽ "
-"രേഖപ്പെടുത്തുന്നു."
-msgstr ""
-"Captured at signup to detect and prevent fraudulent bot registrations."
+msgid "വ്യാജ ബോട്ട് രജിസ്ട്രേഷനുകൾ കണ്ടെത്താനും തടയാനും സൈൻഅപ്പിൽ രേഖപ്പെടുത്തുന്നു."
+msgstr "Captured at signup to detect and prevent fraudulent bot registrations."
 
 #: reader/models.py:174
-msgid ""
-"സുരക്ഷാ ഓഡിറ്റിനും അനധികൃത അക്കൗണ്ട് പ്രവേശനം കണ്ടെത്താനും നിരീക്ഷിക്കുന്നു."
+msgid "സുരക്ഷാ ഓഡിറ്റിനും അനധികൃത അക്കൗണ്ട് പ്രവേശനം കണ്ടെത്താനും നിരീക്ഷിക്കുന്നു."
 msgstr ""
 "Monitored for security auditing and to detect unauthorized account access."
 
 #: reader/models.py:180
 msgid ""
-"ഉപയോക്താവ് ഇല്ലാതാക്കൽ അഭ്യർത്ഥിക്കുമ്പോൾ രേഖപ്പെടുത്തുന്നു; നിയമപരമായ ഡാറ്റ"
-" സൂക്ഷിപ്പ് കാലയളവ് ആരംഭിക്കുന്നു."
+"ഉപയോക്താവ് ഇല്ലാതാക്കൽ അഭ്യർത്ഥിക്കുമ്പോൾ രേഖപ്പെടുത്തുന്നു; നിയമപരമായ ഡാറ്റ സൂക്ഷിപ്പ് കാലയളവ് "
+"ആരംഭിക്കുന്നു."
 msgstr ""
 "Recorded when the user requests deletion; starts the statutory data "
 "retention clock."
 
 #: reader/models.py:184
 msgid ""
-"പ്രാഥമിക ബന്ധപ്പെടൽ മാർഗ്ഗം വിജയകരമായി പരിശോധിച്ചതിന്റെ അടിസ്ഥാനത്തിലുള്ള "
-"അക്കൗണ്ട് നില."
+"പ്രാഥമിക ബന്ധപ്പെടൽ മാർഗ്ഗം വിജയകരമായി പരിശോധിച്ചതിന്റെ അടിസ്ഥാനത്തിലുള്ള അക്കൗണ്ട് നില."
 msgstr ""
 "Account status based on successful verification of the primary contact "
 "method."
@@ -1986,9 +1911,8 @@ msgstr ""
 #: reader/models.py:191
 msgid ""
 "നിലവിലെ എഡിറ്റോറിയൽ ബോർഡിൽ അംഗമായതിനാൽ is_staff സ്വയമേവ നൽകിയപ്പോൾ True "
-"(literati.sync_editorial_staff കാണുക). ബോർഡ് വിട്ടാൽ ഈ ഫ്ലാഗ് ഉള്ളവരുടെ "
-"മാത്രം അനുമതി പിൻവലിക്കും — നേരിട്ട് നിയമിച്ച സ്റ്റാഫും സൂപ്പർയൂസർമാരും "
-"ഒരിക്കലും തരംതാഴ്ത്തപ്പെടില്ല."
+"(literati.sync_editorial_staff കാണുക). ബോർഡ് വിട്ടാൽ ഈ ഫ്ലാഗ് ഉള്ളവരുടെ മാത്രം അനുമതി "
+"പിൻവലിക്കും — നേരിട്ട് നിയമിച്ച സ്റ്റാഫും സൂപ്പർയൂസർമാരും ഒരിക്കലും തരംതാഴ്ത്തപ്പെടില്ല."
 msgstr ""
 "True when is_staff was granted automatically because this user sits on the "
 "current editorial board (see literati.sync_editorial_staff). Revocation on "
@@ -2021,8 +1945,7 @@ msgstr "Other Gender"
 
 #: reader/models.py:268
 msgid ""
-"ജനന വർഷം മാത്രം. ജനസംഖ്യാ വിശകലനത്തിന് മതിയാകും; പൂർണ്ണ ജനനത്തീയതിയെക്കാൾ "
-"സുരക്ഷിതം."
+"ജനന വർഷം മാത്രം. ജനസംഖ്യാ വിശകലനത്തിന് മതിയാകും; പൂർണ്ണ ജനനത്തീയതിയെക്കാൾ സുരക്ഷിതം."
 msgstr ""
 "Year of birth only. Sufficient for demographic analytics; safer than a full "
 "date of birth."
@@ -2073,21 +1996,18 @@ msgid "നിലവിലെ വരിസംഖ്യ കാലയളവ് അ�
 msgstr "When the current subscription period expires."
 
 #: reader/models.py:399
-msgid ""
-"സജീവ വരിസംഖ്യ റദ്ദാക്കിയെങ്കിലും ഗ്രേസ് കാലയളവിൽ തുടരുന്നു എന്ന ഫ്ലാഗ്."
+msgid "സജീവ വരിസംഖ്യ റദ്ദാക്കിയെങ്കിലും ഗ്രേസ് കാലയളവിൽ തുടരുന്നു എന്ന ഫ്ലാഗ്."
 msgstr ""
 "Flag indicating the active subscription has been cancelled but remains in "
 "its grace period."
 
 #: reader/models.py:403
-msgid ""
-"DPDPA/GDPR ചട്ടപ്രകാരം ഈ അക്കൗണ്ട് അജ്ഞാതവൽക്കരിച്ചിട്ടുണ്ടോ എന്ന ഫ്ലാഗ്."
+msgid "DPDPA/GDPR ചട്ടപ്രകാരം ഈ അക്കൗണ്ട് അജ്ഞാതവൽക്കരിച്ചിട്ടുണ്ടോ എന്ന ഫ്ലാഗ്."
 msgstr ""
 "Flag indicating whether this account has been anonymized under DPDPA/GDPR "
 "rules."
 
-#: reader/models.py:456
-#: reader/templates/reader/admin/print_subscribers.html:58
+#: reader/models.py:456 reader/templates/reader/admin/print_subscribers.html:58
 #: reader/templates/reader/edit.html:83
 #: reader/templates/reader/profile.html:153
 #: reader/templates/reader/profile.html:390 reader/wagtail_hooks.py:19
@@ -2098,15 +2018,13 @@ msgstr "Active"
 msgid "ഗ്രേസ് കാലയളവ്"
 msgstr "Grace Period"
 
-#: reader/models.py:460
-#: reader/templates/reader/admin/print_subscribers.html:60
+#: reader/models.py:460 reader/templates/reader/admin/print_subscribers.html:60
 #: reader/templates/reader/edit.html:83
 #: reader/templates/reader/profile.html:393 reader/wagtail_hooks.py:20
 msgid "കാലഹരണപ്പെട്ടു"
 msgstr "Expired"
 
-#: reader/models.py:462
-#: reader/templates/reader/admin/print_subscribers.html:44
+#: reader/models.py:462 reader/templates/reader/admin/print_subscribers.html:44
 #: reader/templates/reader/profile.html:376
 msgid "നില"
 msgstr "Status"
@@ -2194,9 +2112,7 @@ msgid "പ്രിന്റ് ഡെലിവറിയുടെ നിലവ�
 msgstr "Current logistical status of the print delivery."
 
 #: reader/models.py:797
-msgid ""
-"പ്രിന്റ് വരിസംഖ്യ അവസാനിക്കുന്നത് (ഡിജിറ്റൽ കാലാവധിയിൽ നിന്ന് "
-"വ്യത്യസ്തമാകാം)."
+msgid "പ്രിന്റ് വരിസംഖ്യ അവസാനിക്കുന്നത് (ഡിജിറ്റൽ കാലാവധിയിൽ നിന്ന് വ്യത്യസ്തമാകാം)."
 msgstr "When the print subscription ends (may differ from digital expiry)."
 
 #: reader/models.py:801
@@ -2297,20 +2213,15 @@ msgid "പേയ്‌മെന്റ് വിവരങ്ങൾ"
 msgstr "Payment Details"
 
 #: reader/signup_forms.py:25
-msgid ""
-"നിങ്ങളുടെ പാസ്‌വേഡ് നിങ്ങളുടെ മറ്റ് വ്യക്തിഗത വിവരങ്ങളുമായി വളരെ "
-"സാമ്യമുള്ളതാകരുത്."
-msgstr ""
-"Your password can't be too similar to your other personal information."
+msgid "നിങ്ങളുടെ പാസ്‌വേഡ് നിങ്ങളുടെ മറ്റ് വ്യക്തിഗത വിവരങ്ങളുമായി വളരെ സാമ്യമുള്ളതാകരുത്."
+msgstr "Your password can't be too similar to your other personal information."
 
 #: reader/signup_forms.py:28
 msgid "നിങ്ങളുടെ പാസ്‌വേഡിൽ കുറഞ്ഞത് 8 അക്ഷരങ്ങളെങ്കിലും ഉണ്ടായിരിക്കണം."
 msgstr "Your password must contain at least 8 characters."
 
 #: reader/signup_forms.py:31
-msgid ""
-"നിങ്ങളുടെ പാസ്‌വേഡ് സാധാരണയായി ഉപയോഗിക്കുന്ന ഒരു വാക്കോ അക്ഷരങ്ങളുടെ കൂട്ടമോ"
-" ആകരുത്."
+msgid "നിങ്ങളുടെ പാസ്‌വേഡ് സാധാരണയായി ഉപയോഗിക്കുന്ന ഒരു വാക്കോ അക്ഷരങ്ങളുടെ കൂട്ടമോ ആകരുത്."
 msgstr "Your password can't be a commonly used password."
 
 #: reader/signup_forms.py:34
@@ -2332,12 +2243,11 @@ msgstr "This action cannot be undone."
 
 #: reader/templates/reader/account_deactivate.html:20
 msgid ""
-"അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള എല്ലാ പ്രവേശനവും ഉടൻ "
-"റദ്ദാകുകയും നിയമപരമായി ഡാറ്റ സൂക്ഷിപ്പ് പൂര്‍ണ്ണമായി "
-"നശിപ്പിക്കുന്നതിലേക്കുള്ള കൗണ്ട്ഡൗൺ ആരംഭിക്കുകയും ചെയ്യും."
+"അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള എല്ലാ പ്രവേശനവും ഉടൻ റദ്ദാകുകയും "
+"നിയമപരമായി ഡാറ്റ സൂക്ഷിപ്പ് പൂര്‍ണ്ണമായി നശിപ്പിക്കുന്നതിലേക്കുള്ള കൗണ്ട്ഡൗൺ ആരംഭിക്കുകയും ചെയ്യും."
 msgstr ""
-"Deactivating your account immediately revokes all access to Sasthragathi and"
-" begins the statutory countdown to the complete destruction of your data."
+"Deactivating your account immediately revokes all access to Sasthragathi and "
+"begins the statutory countdown to the complete destruction of your data."
 
 #: reader/templates/reader/account_deactivate.html:27
 msgid "ഉടൻ സംഭവിക്കുന്നത്:"
@@ -2364,17 +2274,13 @@ msgid "നിങ്ങളുടെ വായനാ ചരിത്രം, പ്
 msgstr "Your reading history, favorites, and preferences are erased"
 
 #: reader/templates/reader/account_deactivate.html:44
-msgid ""
-"നിങ്ങളുടെ അഭിപ്രായങ്ങൾ അജ്ഞാതവൽക്കരിച്ച് മോഡറേഷൻ രേഖകൾക്കായി സൂക്ഷിക്കും"
+msgid "നിങ്ങളുടെ അഭിപ്രായങ്ങൾ അജ്ഞാതവൽക്കരിച്ച് മോഡറേഷൻ രേഖകൾക്കായി സൂക്ഷിക്കും"
 msgstr "Your comments are anonymised and retained for moderation records"
 
 #: reader/templates/reader/account_deactivate.html:48
-msgid ""
-"നിയമപരമായ സൂക്ഷിപ്പ് കാലയളവിനുശേഷം വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി നീക്കം "
-"ചെയ്യപ്പെടും"
+msgid "നിയമപരമായ സൂക്ഷിപ്പ് കാലയളവിനുശേഷം വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും"
 msgstr ""
-"Personal data will be permanently purged after the statutory retention "
-"period"
+"Personal data will be permanently purged after the statutory retention period"
 
 #: reader/templates/reader/account_deactivate.html:70
 msgid "എന്ന് ടൈപ്പ് ചെയ്ത് സ്ഥിരീകരിക്കുക"
@@ -2759,9 +2665,8 @@ msgstr "Renew Subscription"
 
 #: reader/templates/reader/profile.html:173
 msgid ""
-"നിങ്ങളുടെ വരിസംഖ്യ റദ്ദാക്കണമെന്ന് ഉറപ്പാണോ? നിലവിലെ ബില്ലിംഗ് കാലയളവ് "
-"അവസാനിക്കുന്നതുവരെ എല്ലാ ഉള്ളടക്കവും ലഭ്യമായിരിക്കും; വരിസംഖ്യ സ്വയം "
-"പുതുക്കില്ല."
+"നിങ്ങളുടെ വരിസംഖ്യ റദ്ദാക്കണമെന്ന് ഉറപ്പാണോ? നിലവിലെ ബില്ലിംഗ് കാലയളവ് അവസാനിക്കുന്നതുവരെ "
+"എല്ലാ ഉള്ളടക്കവും ലഭ്യമായിരിക്കും; വരിസംഖ്യ സ്വയം പുതുക്കില്ല."
 msgstr ""
 "Are you sure you want to cancel your subscription? All content remains "
 "available until the current billing period ends; the subscription will not "
@@ -2788,8 +2693,7 @@ msgid "പ്രിയപ്പെട്ട ലേഖനങ്ങൾ"
 msgstr "Favorite Articles"
 
 #: reader/templates/reader/profile.html:227
-msgid ""
-"നിങ്ങൾ ഇതുവരെ ലേഖനങ്ങളൊന്നും പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയിട്ടില്ല."
+msgid "നിങ്ങൾ ഇതുവരെ ലേഖനങ്ങളൊന്നും പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയിട്ടില്ല."
 msgstr "You haven't favorited any articles yet."
 
 #: reader/templates/reader/profile.html:233
@@ -2797,8 +2701,7 @@ msgid "പ്രിയപ്പെട്ട ലക്കങ്ങൾ"
 msgstr "Favorite Issues"
 
 #: reader/templates/reader/profile.html:247
-msgid ""
-"നിങ്ങൾ ഇതുവരെ ലക്കങ്ങളൊന്നും പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയിട്ടില്ല."
+msgid "നിങ്ങൾ ഇതുവരെ ലക്കങ്ങളൊന്നും പ്രിയപ്പെട്ടതായി അടയാളപ്പെടുത്തിയിട്ടില്ല."
 msgstr "You haven't favorited any issues yet."
 
 #: reader/templates/reader/profile.html:254
@@ -2818,8 +2721,7 @@ msgid "വായനാ ചരിത്ര ട്രാക്കിംഗ് പ�
 msgstr "Reading history tracking is disabled."
 
 #: reader/templates/reader/profile.html:277
-msgid ""
-"രേഖപ്പെടുത്തൽ ആരംഭിക്കാൻ സ്വകാര്യതാ ക്രമീകരണങ്ങളിൽ ഇത് പ്രവർത്തനക്ഷമമാക്കുക"
+msgid "രേഖപ്പെടുത്തൽ ആരംഭിക്കാൻ സ്വകാര്യതാ ക്രമീകരണങ്ങളിൽ ഇത് പ്രവർത്തനക്ഷമമാക്കുക"
 msgstr "Enable it in your privacy settings to start recording"
 
 #: reader/templates/reader/profile.html:291
@@ -2877,9 +2779,9 @@ msgstr "Danger Zone"
 
 #: reader/templates/reader/profile.html:409
 msgid ""
-"അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള നിങ്ങളുടെ പ്രവേശനം ഉടൻ "
-"റദ്ദാകും. ഞങ്ങളുടെ ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, നിയമപരമായ കാലയളവിനുശേഷം "
-"നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി ഇല്ലാതാക്കാൻ ഷെഡ്യൂൾ ചെയ്യപ്പെടും."
+"അക്കൗണ്ട് നിർജ്ജീവമാക്കിയാൽ ശാസ്ത്രഗതിയിലേക്കുള്ള നിങ്ങളുടെ പ്രവേശനം ഉടൻ റദ്ദാകും. ഞങ്ങളുടെ "
+"ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, നിയമപരമായ കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി "
+"ഇല്ലാതാക്കാൻ ഷെഡ്യൂൾ ചെയ്യപ്പെടും."
 msgstr ""
 "Deactivating your account will immediately revoke your access to "
 "Sasthragathi. In accordance with our data retention policy, your personal "
@@ -2887,8 +2789,8 @@ msgstr ""
 
 #: reader/templates/reader/profile.html:412
 msgid ""
-"നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കണമെന്ന് ഉറപ്പാണോ? ഇത് നിങ്ങളെ ഉടൻ ലോഗ് "
-"ഔട്ട് ചെയ്ത് പ്രവേശനം റദ്ദാക്കും."
+"നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കണമെന്ന് ഉറപ്പാണോ? ഇത് നിങ്ങളെ ഉടൻ ലോഗ് ഔട്ട് ചെയ്ത് പ്രവേശനം "
+"റദ്ദാക്കും."
 msgstr ""
 "Are you sure you want to deactivate your account? This will log you out "
 "immediately and revoke access."
@@ -2925,11 +2827,11 @@ msgstr "Error: %(err)s"
 
 #: reader/views.py:137
 msgid ""
-"നിങ്ങളുടെ വരിസംഖ്യയുടെ സ്വയം-പുതുക്കൽ റദ്ദാക്കി. വരിസംഖ്യ കാലാവധി "
-"തീരുന്നതുവരെ നിങ്ങൾക്ക് പ്രവേശനം തുടരും."
+"നിങ്ങളുടെ വരിസംഖ്യയുടെ സ്വയം-പുതുക്കൽ റദ്ദാക്കി. വരിസംഖ്യ കാലാവധി തീരുന്നതുവരെ നിങ്ങൾക്ക് "
+"പ്രവേശനം തുടരും."
 msgstr ""
-"Your subscription auto-renewal has been cancelled. You will continue to have"
-" access until your subscription expires."
+"Your subscription auto-renewal has been cancelled. You will continue to have "
+"access until your subscription expires."
 
 #: reader/views.py:139
 msgid "നിങ്ങൾക്ക് റദ്ദാക്കാവുന്ന സജീവ വരിസംഖ്യ ഇല്ല."
@@ -2945,9 +2847,8 @@ msgstr "Your interests have been updated."
 
 #: reader/views.py:251
 msgid ""
-"നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കി. ഞങ്ങളുടെ ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, "
-"നിയമപരമായ കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി നീക്കം "
-"ചെയ്യപ്പെടും."
+"നിങ്ങളുടെ അക്കൗണ്ട് നിർജ്ജീവമാക്കി. ഞങ്ങളുടെ ഡാറ്റ സൂക്ഷിപ്പ് നയപ്രകാരം, നിയമപരമായ "
+"കാലയളവിനുശേഷം നിങ്ങളുടെ വ്യക്തിഗത ഡാറ്റ ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും."
 msgstr ""
 "Your account has been deactivated. In accordance with our data retention "
 "policy, your personal data will be permanently deleted after the statutory "
@@ -2963,8 +2864,7 @@ msgid "കമാൻഡ് പ്രവർത്തിപ്പിക്കുന
 msgstr "Failed to run command: %(err)s"
 
 #: reader/views.py:323
-msgid ""
-"കാലഹരണപ്പെട്ട ഡാറ്റയുടെ 8-വർഷ ശാശ്വത നീക്കംചെയ്യൽ വിജയകരമായി നടപ്പാക്കി."
+msgid "കാലഹരണപ്പെട്ട ഡാറ്റയുടെ 8-വർഷ ശാശ്വത നീക്കംചെയ്യൽ വിജയകരമായി നടപ്പാക്കി."
 msgstr "Successfully executed the permanent 8-year expired data purge."
 
 #: reader/wagtail_hooks.py:45
@@ -2972,8 +2872,7 @@ msgid "പ്രിന്റ് വരിക്കാരുടെ പട്ട�
 msgstr "Print Subscriber List"
 
 #: reader/wagtail_hooks.py:52
-msgid ""
-"നിർജ്ജീവമാക്കിയവ നീക്കംചെയ്യൽ കമാന്റ് പ്രവർത്തിപ്പിക്കുക (അജ്ഞാതവൽക്കരണം)"
+msgid "നിർജ്ജീവമാക്കിയവ നീക്കംചെയ്യൽ കമാന്റ് പ്രവർത്തിപ്പിക്കുക (അജ്ഞാതവൽക്കരണം)"
 msgstr "Run Deactivation Purge (Anonymize)"
 
 #: reader/wagtail_hooks.py:103
@@ -3159,8 +3058,7 @@ msgid "\"%(query)s\"-ന് ഫലങ്ങളൊന്നും കണ്ടെ
 msgstr "No results found for \"%(query)s\""
 
 #: the_librarian/templates/the_librarian/search.html:119
-msgid ""
-"മറ്റ് തിരയൽ പദങ്ങൾ ഉപയോഗിക്കുക അല്ലെങ്കിൽ കൂടുതൽ ഡോക്യുമെന്റുകൾ ചേർക്കുക."
+msgid "മറ്റ് തിരയൽ പദങ്ങൾ ഉപയോഗിക്കുക അല്ലെങ്കിൽ കൂടുതൽ ഡോക്യുമെന്റുകൾ ചേർക്കുക."
 msgstr "Try different search terms or add more documents."
 
 #: the_librarian/templates/the_librarian/viewer.html:19
@@ -3189,9 +3087,7 @@ msgid "പേജ്-ഫ്ലിപ്പ് വ്യൂവർ ലോഡ് ച
 msgstr "Could not load the page-flip viewer. Please refresh the page."
 
 #: the_librarian/templates/the_librarian/viewer.html:36
-msgid ""
-"ഈ ഡോക്യുമെന്റ് ലോഡ് ചെയ്യാനായില്ല. അത് നഷ്ടപ്പെട്ടതോ നിങ്ങളുടെ നെറ്റ്‌വർക്ക്"
-" തടഞ്ഞതോ ആകാം."
+msgid "ഈ ഡോക്യുമെന്റ് ലോഡ് ചെയ്യാനായില്ല. അത് നഷ്ടപ്പെട്ടതോ നിങ്ങളുടെ നെറ്റ്‌വർക്ക് തടഞ്ഞതോ ആകാം."
 msgstr ""
 "This document could not be loaded. It may be missing or blocked by your "
 "network."
@@ -3199,3 +3095,40 @@ msgstr ""
 #: the_librarian/templates/the_librarian/viewer.html:49
 msgid "മുൻ പേജ്"
 msgstr "Previous page"
+
+#~ msgid "വിശേഷലക്കം"
+#~ msgstr "Featured Issue"
+
+#~ msgid "ലക്കം പരിശോധിക്കാം"
+#~ msgstr "Browse the Issue"
+
+#~ msgid "ഈ ലക്കത്തില്‍..."
+#~ msgstr "In this issue..."
+
+#, python-format
+#~ msgid "ലേഖനം %(n)s-ലേക്ക് പോകുക"
+#~ msgstr "Go to article %(n)s"
+
+#~ msgid "മറ്റുള്ള വിഷയങ്ങള്‍"
+#~ msgstr "Other Topics"
+
+#~ msgid "മറ്റ് വിഷയങ്ങളൊന്നുമില്ല."
+#~ msgstr "No other topics."
+
+#~ msgid "സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക"
+#~ msgstr "Manage Subscription"
+
+#~ msgid "ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ"
+#~ msgstr "Subscribe Now"
+
+#~ msgid "മുൻപത്തെ ലക്കങ്ങൾ"
+#~ msgstr "Previous Issues"
+
+#~ msgid "എല്ലാ ലക്കങ്ങളും കാണുക"
+#~ msgstr "View All Issues"
+
+#~ msgid "മറ്റുള്ള ലേഖനങ്ങള്‍"
+#~ msgstr "Other Articles"
+
+#~ msgid "കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക"
+#~ msgstr "View More Articles"
