@@ -1,10 +1,9 @@
-{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
-<!DOCTYPE html>
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}<!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ശാസ്ത്രഗതി | {% trans "പേജ് കാണാനില്ല" %}</title>
+<title>ശാസ്ത്രഗതി | {% trans "ഈ പേജ് നിർമ്മാണത്തിലാണ്" %}</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,16 +52,16 @@
     letter-spacing: 0.01em;
   }
 
-  /* Status pill — slate and still: a 404 is a fact, not an incident */
+  /* Status pill — amber with the pulse: work actively in progress */
   .status-indicator {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #f8fafc;
+    background: #fffbeb;
     padding: 0.45rem 0.9rem;
     border-radius: 100px;
     margin-bottom: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #fef3c7;
   }
 
   .dot {
@@ -70,14 +69,15 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #64748b;
+    background: #d97706;
+    animation: pulse 1.6s infinite cubic-bezier(0.4, 0, 0.6, 1);
   }
 
   .status-text {
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #64748b;
+    color: #d97706;
     margin-left: 0.55rem;
     font-weight: 600;
   }
@@ -114,6 +114,12 @@
   .home-btn:hover { background: #1e293b; }
   .home-btn:focus-visible { outline: 2px solid #0f172a; outline-offset: 3px; }
 
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; }
+  }
+
   @media (max-width: 768px) {
     .card {
       padding: 2.5rem 1.5rem;
@@ -131,12 +137,12 @@
 
     <div class="status-indicator">
       <span class="dot"></span>
-      <span class="status-text">404</span>
+      <span class="status-text">{% trans "ഉടൻ വരുന്നു" %}</span>
     </div>
 
-    <h1>{% trans "പേജ് കാണാനില്ല" %}</h1>
+    <h1>{% trans "ഈ പേജ് നിർമ്മാണത്തിലാണ്" %}</h1>
 
-    <p>{% trans "ക്ഷമിക്കണം, ഈ പേജ് കണ്ടെത്താനായില്ല." %}</p>
+    <p>{% trans "ഈ ഭാഗം ഇപ്പോൾ തയ്യാറാക്കിക്കൊണ്ടിരിക്കുകയാണ്. ഉടൻ തന്നെ ഇവിടെ പുതിയ ഉള്ളടക്കം ലഭ്യമാകും." %}</p>
 
     {# Language-aware root: '/' on the Malayalam site, '/en/' under the prefix #}
     <a href="{% url 'wagtail_serve' '' %}" class="home-btn">{% trans "ഹോം പേജിലേക്ക് മടങ്ങുക" %}</a>
