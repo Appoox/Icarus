@@ -8,6 +8,7 @@ from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail.contrib.sitemaps.views import sitemap
 from Icarus import protected_media as protected_media_views
+from Icarus import views as core_views
 
 # ── Never language-prefixed: infra, admin, machine endpoints ──────────
 urlpatterns = [
@@ -38,6 +39,7 @@ urlpatterns += i18n_patterns(
     path("kalapila/", include("kalapila.urls")),
     path("postbox/", include("postbox.urls")),
     path("authors/", include("literati.urls")),
+    path("under-construction/", core_views.under_construction, name="under_construction"),
     path("", include(wagtail_urls)),  # must stay last
     prefix_default_language=False,
 )

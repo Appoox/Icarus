@@ -163,6 +163,15 @@ def get_site_footer():
     except NoReverseMatch:
         postbox_url = '/postbox/'
 
+    # Under-construction placeholder, for links an editor parks there on
+    # purpose.  No literal fallback: if the route is missing, leave the key
+    # unresolved so get_url() falls through to the link's own page/url — and
+    # then to _dead_link_url(), which handles the missing route itself.
+    try:
+        under_construction_url = reverse('under_construction')
+    except NoReverseMatch:
+        under_construction_url = None
+
     # ── Build the dynamic URL map ─────────────────────────────────────────
     # Keys must exactly match the choice values in DYNAMIC_URL_CHOICES
     # (models.py).  A None value means the destination is unavailable right
@@ -181,6 +190,7 @@ def get_site_footer():
         'most_read_authors_url':  most_read_authors_url,
         'archive_list_url':       archive_list_url,
         'postbox_url':            postbox_url,
+        'under_construction_url': under_construction_url,
     }
 
     # ── Inject resolved URLs into prefetched link instances ───────────────

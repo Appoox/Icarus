@@ -1,6 +1,8 @@
 import re
 
+from django.conf import settings
 from django.db import models
+from django.urls import reverse, NoReverseMatch
 from wagtail.models import Page, Orderable  # Orderable added for footer hierarchy
 from wagtail.snippets.models import register_snippet
 from modelcluster.fields import ParentalKey
@@ -211,7 +213,11 @@ DYNAMIC_URL_CHOICES = [
     ('most_read_topics_url',    'Most Read Topics — rolling 30-day most read'),
     ('most_read_authors_url',   'Most Read Authors — rolling 30-day most read'),
     ('archive_list_url',       'Archive'),
-    ('postbox_url', 'Postbox')
+    ('postbox_url', 'Postbox'),
+    # Deliberate placeholder — for a footer link whose section is planned
+    # but not built.  Distinct from an accidentally-empty link, which is
+    # routed here anyway by FooterColumnLink._dead_link_url().
+    ('under_construction_url',  'Under Construction — placeholder for unbuilt sections'),
 ]
 
 
@@ -294,13 +300,48 @@ class FooterColumnLink(Orderable):
     # idempotent: 'mailto:info@x.org' and '/help/@team/' are both rejected.
     _BARE_EMAIL_RE = re.compile(r'^[^@\s:/]+@[^@\s:/]+\.[^@\s:/]+$')
 
-    # Where dead links are sent.  Nothing in urls.py matches this path, so it
-    # falls through to the Wagtail catch-all and raises Http404 rather than
-    # rendering href="" and reloading the current page.
-    # NOTE: this puts a crawlable broken link on every page of the site.  To
-    # suppress the link instead, set this to '' and wrap the anchor in
-    # {% if link.get_url %} in the footer template.
-    DEAD_LINK_URL = '/404/'
+    # ── Dead-link handling ─────────────────────────────────────────────
+    # Where a link with no usable destination is sent.  Change site-wide by
+    # setting FOOTER_DEAD_LINK_MODE in settings.py:
+    #
+    #   'construction'  the under_construction.html placeholder page (default)
+    #   '404'           DEAD_LINK_URL below — a path nothing serves, so
+    #                   Wagtail's catch-all raises Http404
+    #   'hide'          returns '', so the template can omit the anchor
+    #                   entirely.  REQUIRES {% if link.get_url %} around the
+    #                   <a> in the footer template — without it the browser
+    #                   renders href="" and reloads the current page, which
+    #                   is the original bug.
+    DEAD_LINK_MODE_DEFAULT      = 'construction'
+    DEAD_LINK_URL               = '/404/'
+    UNDER_CONSTRUCTION_URL_NAME = 'under_construction'
+
+    @classmethod
+    def _dead_link_url(cls):
+        """
+        Resolve where a link with no usable destination should point.
+
+        reverse() rather than a hardcoded path because the route lives inside
+        i18n_patterns (urls.py): an English visitor browsing under /en/ has to
+        land on /en/under-construction/, not the unprefixed Malayalam default.
+        reverse() honours the active language, a literal string cannot.
+
+        Falls back to a hard 404 if the route is not wired up yet, so a missing
+        URL pattern degrades to the previous behaviour instead of emitting an
+        empty href.
+        """
+        mode = getattr(settings, 'FOOTER_DEAD_LINK_MODE', cls.DEAD_LINK_MODE_DEFAULT)
+
+        if mode == 'hide':
+            return ''
+
+        if mode == 'construction':
+            try:
+                return reverse(cls.UNDER_CONSTRUCTION_URL_NAME)
+            except NoReverseMatch:
+                return cls.DEAD_LINK_URL
+
+        return cls.DEAD_LINK_URL
 
     def get_url(self):
         """
@@ -315,8 +356,9 @@ class FooterColumnLink(Orderable):
            become '/trending/', preventing browsers from interpreting them
            relative to the current page.
 
-        Anything that resolves to nothing usable returns DEAD_LINK_URL, so a
-        misconfigured link 404s instead of silently reloading the page.
+        Anything that resolves to nothing usable goes to _dead_link_url(), so a
+        misconfigured link lands somewhere deliberate instead of silently
+        reloading the page.  See FOOTER_DEAD_LINK_MODE above.
         """
         # Dynamic destination — URL injected by the footer template tag at render time
         resolved = getattr(self, '_resolved_dynamic_url', None)
@@ -327,13 +369,13 @@ class FooterColumnLink(Orderable):
             # Always correct even if the page slug changes.  Page.url is None
             # for a page that is not routable (no site root path), which would
             # otherwise render as the literal string "None" in the template.
-            return self.page.url or self.DEAD_LINK_URL
+            return self.page.url or self._dead_link_url()
 
         url = (self.url or '').strip()
 
         # Nothing configured, or an explicit placeholder anchor
         if not url or url == '#':
-            return self.DEAD_LINK_URL
+            return self._dead_link_url()
 
         # Bare address such as info@sasthragathy.org — checked here, before
         # the slash rule below gets a chance to turn it into a path

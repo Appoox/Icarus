@@ -360,3 +360,9 @@ ASGI_APPLICATION = "Icarus.asgi.application"
 
 # GOOGLE_TTS_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'secrets', 'google_credentials.json')
 GOOGLE_CREDENTIALS_JSON = env.str("GOOGLE_CREDENTIALS_JSON", "")
+
+# Footer dead-link behaviour
+# Set to 'construction' to link to under_construction.html (default).
+# Set to '404' to raise Http404 (original behaviour).
+# Set to 'hide' to omit the anchor (requires {% if link.get_url %} in template).
+FOOTER_DEAD_LINK_MODE = 'construction'
