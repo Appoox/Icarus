@@ -27,7 +27,7 @@
                     {% if entry.action == 0 %}
                         <span class="status-tag primary">{% translate "സൃഷ്ടിച്ചു" %}</span>
                     {% elif entry.action == 1 %}
-                        <span class="status-tag secondary">{% translate "പുതുക്കി" %}</span>
+                        <span class="status-tag secondary">{% translate "പുതുക്കി" context "audit action" %}</span>
                     {% elif entry.action == 2 %}
                         <span class="status-tag fatal">{% translate "ഇല്ലാതാക്കി" %}</span>
                     {% endif %}
