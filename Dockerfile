@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libwebp7 \
     weasyprint \
     poppler-utils \
+    gettext \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /install
