@@ -275,7 +275,7 @@ msgstr "Back to Profile"
 
 #: Icarus/templates/account/password_reset.html:4
 #: Icarus/templates/account/password_reset.html:12
-msgid "Password Reset"
+msgid "പാസ്വേഡ് റീസെറ്റ്"
 msgstr "Password Reset"
 
 #: Icarus/templates/account/password_reset.html:19
@@ -295,7 +295,7 @@ msgid "നിങ്ങളുടെ ഇമെയിൽ നൽകുക"
 msgstr "Enter your email"
 
 #: Icarus/templates/account/password_reset.html:42
-msgid "Reset My Password"
+msgid "എന്റെ പാസ്‍വേര്‍ഡ് റീസെറ്റ് ചെയ്യുക"
 msgstr "Reset My Password"
 
 #: Icarus/templates/account/password_reset.html:47
@@ -343,7 +343,7 @@ msgid "നിങ്ങളുടെ പുതിയ പാസ്‌വേഡ് �
 msgstr "Enter your new password below."
 
 #: Icarus/templates/account/password_reset_from_key.html:83
-msgid "Change Password"
+msgid "പാസ്‍വേഡ് മാറ്റുക"
 msgstr "Change Password"
 
 #: Icarus/templates/account/signup.html:4
@@ -1587,7 +1587,7 @@ msgstr "Feedback"
 
 #: postbox/templates/postbox/postbox_page.html:14
 msgid "പരീക്ഷണ ഘട്ടം"
-msgstr "Beta"
+msgstr "Testing Phase"
 
 #: postbox/templates/postbox/postbox_page.html:15
 msgid "ഫീഡ്‌ബാക്ക് അറിയിക്കൂ"
