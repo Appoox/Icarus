@@ -49,4 +49,3 @@ venv
 media/
 static/
 .cache
-*.json
