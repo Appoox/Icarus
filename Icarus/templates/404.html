@@ -1,13 +1,145 @@
-{% extends "base.html" %}
-{% load i18n %}
-<!DOCTYPE html>
-<html lang="ml" dir="ltr">
-{% block title %}{% trans "പേജ് കാണാനില്ല" %}{% endblock %}
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ശാസ്ത്രഗതി | {% trans "പേജ് കാണാനില്ല" %}</title>
 
-{% block body_class %}template-404{% endblock %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-{% block content %}
-<h1>{% trans "പേജ് കാണാനില്ല" %}</h1>
+<style>
+  /* Centre the card on the same soft editorial gradient as rebooting.html */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f6f2 0%, #e8e2d9 100%);
+    color: #0f172a;
+    /* Jakarta carries Latin; Malayalam glyphs fall through to Manjari */
+    font-family: "Plus Jakarta Sans", "Manjari", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
 
-<h2>{% trans "ക്ഷമിക്കണം, ഈ പേജ് കണ്ടെത്താനായില്ല." %}</h2>
-{% endblock %}
+  .card {
+    text-align: center;
+    padding: 3.5rem 3rem;
+    max-width: 34rem;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
+    border: 1px solid rgba(15, 23, 42, 0.04);
+  }
+
+  /* Same 60px slot as the maintenance page keeps the family's rhythm */
+  .logo-container {
+    height: 60px;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wordmark {
+    font-family: "Manjari", sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: #0f172a;
+    letter-spacing: 0.01em;
+  }
+
+  /* Status pill — slate and still: a 404 is a fact, not an incident */
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    padding: 0.45rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #64748b;
+  }
+
+  .status-text {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-left: 0.55rem;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 1rem 0;
+    color: #0f172a;
+  }
+
+  p {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #475569;
+    margin: 0 auto;
+    max-width: 28rem;
+  }
+
+  .home-btn {
+    display: inline-block;
+    margin-top: 2.25rem;
+    padding: 0.8rem 1.9rem;
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .home-btn:hover { background: #1e293b; }
+  .home-btn:focus-visible { outline: 2px solid #0f172a; outline-offset: 3px; }
+
+  @media (max-width: 768px) {
+    .card {
+      padding: 2.5rem 1.5rem;
+      margin: 1.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="logo-container">
+      <span class="wordmark">ശാസ്ത്രഗതി</span>
+    </div>
+
+    <div class="status-indicator">
+      <span class="dot"></span>
+      <span class="status-text">404</span>
+    </div>
+
+    <h1>{% trans "പേജ് കാണാനില്ല" %}</h1>
+
+    <p>{% trans "ക്ഷമിക്കണം, ഈ പേജ് കണ്ടെത്താനായില്ല." %}</p>
+
+    {# Language-aware root: '/' on the Malayalam site, '/en/' under the prefix #}
+    <a href="{% url 'wagtail_serve' '' %}" class="home-btn">{% trans "ഹോം പേജിലേക്ക് മടങ്ങുക" %}</a>
+
+  </div>
+</body>
+</html>

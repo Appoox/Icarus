@@ -1,14 +1,133 @@
-{% load i18n %}
-<!DOCTYPE html>
-<html lang="ml" dir="ltr">
-    <head>
-        <meta charset="utf-8" />
-        <title>{% trans "സര്‍വ്വര്‍ തകരാറ്" %}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-    </head>
-    <body>
-        <h1>{% trans "സര്‍വ്വര്‍ തകരാറ്" %}</h1>
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ശാസ്ത്രഗതി | {% trans "സര്‍വ്വര്‍ തകരാറ്" %}</title>
 
-        <h2>{% trans "ക്ഷമിക്കണം, ഒരു പിഴവുണ്ടായിരിക്കുന്നു. ദയവായി ഉടൻ വീണ്ടും ശ്രമിക്കുക." %}</h2>
-    </body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* Centre the card on the same soft editorial gradient as rebooting.html */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f6f2 0%, #e8e2d9 100%);
+    color: #0f172a;
+    /* Jakarta carries Latin; Malayalam glyphs fall through to Manjari */
+    font-family: "Plus Jakarta Sans", "Manjari", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    text-align: center;
+    padding: 3.5rem 3rem;
+    max-width: 34rem;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
+    border: 1px solid rgba(15, 23, 42, 0.04);
+  }
+
+  /* Same 60px slot as the maintenance page keeps the family's rhythm */
+  .logo-container {
+    height: 60px;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wordmark {
+    font-family: "Manjari", sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: #0f172a;
+    letter-spacing: 0.01em;
+  }
+
+  /* Status pill — red with the live pulse, same as the maintenance screen */
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fef2f2;
+    padding: 0.45rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+    border: 1px solid #fee2e2;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    animation: pulse 1.6s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
+  .status-text {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #ef4444;
+    margin-left: 0.55rem;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 1rem 0;
+    color: #0f172a;
+  }
+
+  p {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #475569;
+    margin: 0 auto;
+    max-width: 28rem;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; }
+  }
+
+  @media (max-width: 768px) {
+    .card {
+      padding: 2.5rem 1.5rem;
+      margin: 1.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="logo-container">
+      <span class="wordmark">ശാസ്ത്രഗതി</span>
+    </div>
+
+    <div class="status-indicator">
+      <span class="dot"></span>
+      <span class="status-text">500</span>
+    </div>
+
+    <h1>{% trans "സര്‍വ്വര്‍ തകരാറ്" %}</h1>
+
+    <p>{% trans "ക്ഷമിക്കണം, ഒരു പിഴവുണ്ടായിരിക്കുന്നു. ദയവായി ഉടൻ വീണ്ടും ശ്രമിക്കുക." %}</p>
+
+  </div>
+</body>
 </html>
