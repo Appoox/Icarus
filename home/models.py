@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 from wagtail.models import Page, Orderable  # Orderable added for footer hierarchy
 from wagtail.snippets.models import register_snippet
@@ -283,6 +285,23 @@ class FooterColumnLink(Orderable):
     # URL schemes that are already absolute — never need a leading slash
     _ABSOLUTE_SCHEMES = ('/', 'http://', 'https://', 'mailto:', 'tel:', '#')
 
+    # A bare email address: no scheme, no slashes, no whitespace.
+    # This MUST be tested before the site-relative slash rule below —
+    # 'info@sasthragathy.org' matches none of _ABSOLUTE_SCHEMES, so the old
+    # ordering silently rewrote it to '/info@sasthragathy.org', a path that
+    # no longer looks like an email to anything downstream.
+    # Excluding ':' and '/' from every character class keeps the check
+    # idempotent: 'mailto:info@x.org' and '/help/@team/' are both rejected.
+    _BARE_EMAIL_RE = re.compile(r'^[^@\s:/]+@[^@\s:/]+\.[^@\s:/]+$')
+
+    # Where dead links are sent.  Nothing in urls.py matches this path, so it
+    # falls through to the Wagtail catch-all and raises Http404 rather than
+    # rendering href="" and reloading the current page.
+    # NOTE: this puts a crawlable broken link on every page of the site.  To
+    # suppress the link instead, set this to '' and wrap the anchor in
+    # {% if link.get_url %} in the footer template.
+    DEAD_LINK_URL = '/404/'
+
     def get_url(self):
         """
         Return the resolved URL.  Priority order (highest → lowest):
@@ -291,9 +310,13 @@ class FooterColumnLink(Orderable):
            in footer_tags.py when dynamic_url_key is set.  Always an internal
            Wagtail / Django-resolved URL, so no normalisation is needed.
         2. page.url               — slug-safe, always starts with '/'.
-        3. url field              — normalised so that bare site-relative paths
-           like 'trending/' become '/trending/', preventing browsers from
-           interpreting them relative to the current page.
+        3. url field              — normalised so that bare email addresses
+           become mailto: links, and bare site-relative paths like 'trending/'
+           become '/trending/', preventing browsers from interpreting them
+           relative to the current page.
+
+        Anything that resolves to nothing usable returns DEAD_LINK_URL, so a
+        misconfigured link 404s instead of silently reloading the page.
         """
         # Dynamic destination — URL injected by the footer template tag at render time
         resolved = getattr(self, '_resolved_dynamic_url', None)
@@ -301,14 +324,26 @@ class FooterColumnLink(Orderable):
             return resolved
 
         if self.page_id:
-            return self.page.url  # always correct even if the page slug changes
+            # Always correct even if the page slug changes.  Page.url is None
+            # for a page that is not routable (no site root path), which would
+            # otherwise render as the literal string "None" in the template.
+            return self.page.url or self.DEAD_LINK_URL
 
         url = (self.url or '').strip()
+
+        # Nothing configured, or an explicit placeholder anchor
+        if not url or url == '#':
+            return self.DEAD_LINK_URL
+
+        # Bare address such as info@sasthragathy.org — checked here, before
+        # the slash rule below gets a chance to turn it into a path
+        if self._BARE_EMAIL_RE.match(url):
+            return f'mailto:{url}'
 
         # Prepend '/' when the value looks like a bare site-relative path
         # (no scheme, no leading slash).  Genuine external URLs and anchors
         # are left untouched.
-        if url and not url.startswith(self._ABSOLUTE_SCHEMES):
+        if not url.startswith(self._ABSOLUTE_SCHEMES):
             url = '/' + url
 
         return url
