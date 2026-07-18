@@ -4,11 +4,16 @@
 {% if header %}
 {% translate "സൈറ്റ് ലോഗോ" as default_logo_alt %}
 {% translate "സൈറ്റ് ശീർഷകം" as default_title_alt %}
+{% get_current_language as CURRENT_LANGUAGE %}
+{# Language-aware site root: reverses to '/' on the Malayalam site and #}
+{# '/en/' under the English prefix, so the logo/title links keep the    #}
+{# reader in their chosen language.                                     #}
+{% url 'wagtail_serve' '' as home_url %}
 <header class="site-header">
 
     <!-- Left: Logo & Organization Name -->
     <div class="site-header__logo">
-        <a href="{{ header.site_title_url|default:'/' }}" class="site-header__logo-link">
+        <a href="{{ header.site_title_url|default:home_url }}" class="site-header__logo-link">
             {% if header.logo %}
             {% image header.logo height-60 as logo_img %}
             <img src="{{ logo_img.url }}" alt="{{ header.logo_alt_text|default:default_logo_alt }}"
@@ -28,7 +33,7 @@
 
     <!-- Centre: Site Title (hidden on mobile, shown on desktop) -->
     <div class="site-header__title">
-        <a href="{{ header.site_title_url|default:'/' }}">
+        <a href="{{ header.site_title_url|default:home_url }}">
             {% if header.site_title_image %}
                 {% image header.site_title_image height-60 as title_img %}
                 <img src="{{ title_img.url }}" alt="{{ header.site_title|default:default_title_alt }}" class="site-header__title-img">
@@ -38,7 +43,7 @@
         </a>
     </div>
 
-    <!-- Right: Search & Auth navigation -->
+    <!-- Right: Search, Language & Auth navigation -->
     <div class="site-header__right">
 
         <!-- Search icon toggle -->
@@ -58,6 +63,17 @@
             </button>
         </div>
 
+        <!-- Language switcher: labels intentionally NOT translate-wrapped — -->
+        <!-- a switcher names the target language in its own script so the  -->
+        <!-- reader who can't read the current interface still finds it.    -->
+        {% if CURRENT_LANGUAGE == "en" %}
+        <a href="{% alternate_language_url 'ml' %}" class="header-link header-link--lang"
+           lang="ml" hreflang="ml" rel="alternate">മലയാളം</a>
+        {% else %}
+        <a href="{% alternate_language_url 'en' %}" class="header-link header-link--lang"
+           lang="en" hreflang="en" rel="alternate">English</a>
+        {% endif %}
+
         <!-- Auth links -->
         {% if request.user.is_authenticated %}
         <a href="{% url 'reader_profile' %}" class="header-link">{% translate "പ്രൊഫൈൽ" %}</a>
@@ -72,7 +88,7 @@
 
 <!-- Mobile-only title bar (below the header row) -->
 <div class="site-header__mobile-title">
-    <a href="{{ header.site_title_url|default:'/' }}">
+    <a href="{{ header.site_title_url|default:home_url }}">
         {% if header.site_title_image %}
             {% image header.site_title_image height-50 as title_img_mob %}
             <img src="{{ title_img_mob.url }}" alt="{{ header.site_title|default:default_title_alt }}">

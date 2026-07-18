@@ -76,7 +76,7 @@
         }
 
         status.textContent = `${t.i18nFound}: ${results.length} — ${query}`;
-        
+
         resultsList.innerHTML = results.map(res => {
             const icon = getIcon(res.type);
             const title = highlightMatch(res.title, query);
@@ -102,15 +102,24 @@
         }).join('');
     }
 
+    // NOTE: original icon mapping was lost in the nesting accident —
+    // reconstructed below; adjust the Font Awesome classes if yours differed.
     function getIcon(type) {
-       function typeLabelFor(type) {
+        switch (type) {
+            case 'pdf':     return 'fa-file-pdf';
+            case 'article': return 'fa-newspaper';
+            case 'author':  return 'fa-user-pen';
+            default:        return 'fa-file-lines';
+        }
+    }
+
+    function typeLabelFor(type) {
         switch (type) {
             case 'pdf':     return t.i18nPdf;
             case 'article': return t.i18nArticle;
             case 'author':  return t.i18nAuthor;
             default:        return type;
         }
-    }
     }
 
     function getUrl(res) {
@@ -125,13 +134,13 @@
         text = escapeHtml(text);
         const words = query.trim().split(/\s+/);
         let highlighted = text;
-        
+
         words.forEach(word => {
             if (word.length < 2) return;
             const regex = new RegExp(`(${escapeRegex(word)})`, 'gi');
             highlighted = highlighted.replace(regex, '<mark>$1</mark>');
         });
-        
+
         return highlighted;
     }
     function escapeHtml(s) {
