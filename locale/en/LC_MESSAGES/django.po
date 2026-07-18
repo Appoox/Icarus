@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Icarus (sasthragathy.org)\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 11:30+0530\n"
+"POT-Creation-Date: 2026-07-18 12:01+0530\n"
 "PO-Revision-Date: 2026-07-17 22:45+0530\n"
 "Last-Translator: Icarus i18n\n"
 "Language-Team: en\n"
@@ -77,9 +77,10 @@ msgid ""
 "ഈ സമയപരിധി കഴിഞ്ഞാൽ, എല്ലാ വ്യക്തിഗത വിവരങ്ങളും ശാശ്വതമായി നീക്കം ചെയ്യപ്പെടും, കൂടാതെ "
 "യാതൊരു സാഹചര്യത്തിലും അക്കൗണ്ട് വീണ്ടെടുക്കാൻ സാധിക്കുന്നതല്ല."
 msgstr ""
-"Requests to reactivate your account are only possible within the retention period. "
-"Once this time limit has passed, all personal data will be permanently deleted, and "
-"the account cannot be recovered under any circumstances."
+"Requests to reactivate your account are only possible within the retention "
+"period. Once this time limit has passed, all personal data will be "
+"permanently deleted, and the account cannot be recovered under any "
+"circumstances."
 
 #: Icarus/templates/account/confirm_login_code.html:20
 #: Icarus/templates/account/confirm_login_code.html:99
@@ -404,6 +405,7 @@ msgid "ലോഗിൻ"
 msgstr "Login"
 
 #: Icarus/templates/includes/header.html:67
+#: home/templates/home/home_page.html:133
 msgid "വരിക്കാരാകൂ"
 msgstr "Subscribe"
 
@@ -703,6 +705,54 @@ msgstr "Topic"
 #: articles/templates/wagtailadmin/panels/most_read_topics.html:40
 msgid "ഇതുവരെ ട്രാക്കിംഗ് രേഖപ്പെടുത്തിയിട്ടില്ല."
 msgstr "No tracking recorded yet."
+
+#: home/templates/home/home_page.html:25
+msgid "വിശേഷലക്കം"
+msgstr "Featured Issue"
+
+#: home/templates/home/home_page.html:49
+msgid "ലക്കം പരിശോധിക്കാം"
+msgstr "Browse the Issue"
+
+#: home/templates/home/home_page.html:54
+msgid "ഈ ലക്കത്തില്‍..."
+msgstr "In this issue..."
+
+#: home/templates/home/home_page.html:87
+msgid "മറ്റുള്ള വിഷയങ്ങള്‍"
+msgstr "Other Topics"
+
+#: home/templates/home/home_page.html:120
+msgid "മറ്റ് വിഷയങ്ങളൊന്നുമില്ല."
+msgstr "No other topics."
+
+#: home/templates/home/home_page.html:137
+msgid "സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക"
+msgstr "Manage Subscription"
+
+#: home/templates/home/home_page.html:140
+msgid "ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ"
+msgstr "Subscribe Now"
+
+#: home/templates/home/home_page.html:149
+msgid "മുൻപത്തെ ലക്കങ്ങൾ"
+msgstr "Previous Issues"
+
+#: home/templates/home/home_page.html:183
+msgid "എല്ലാ ലക്കങ്ങളും കാണുക"
+msgstr "View All Issues"
+
+#: home/templates/home/home_page.html:192
+msgid "മറ്റുള്ള ലേഖനങ്ങള്‍"
+msgstr "Other Articles"
+
+#: home/templates/home/home_page.html:229
+msgid "ലേഖനങ്ങളൊന്നും പ്രസിദ്ധീകരിച്ചിട്ടില്ല."
+msgstr "No Articles published yet."
+
+#: home/templates/home/home_page.html:236
+msgid "കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക"
+msgstr "View More Articles"
 
 #: home/templates/home/partials/changelog_banner.html:106
 #: home/templates/home/partials/changelog_banner.html:113
@@ -3091,39 +3141,9 @@ msgstr ""
 msgid "മുൻ പേജ്"
 msgstr "Previous page"
 
-#~ msgid "വിശേഷലക്കം"
-#~ msgstr "Featured Issue"
-
-#~ msgid "ലക്കം പരിശോധിക്കാം"
-#~ msgstr "Browse the Issue"
-
-#~ msgid "ഈ ലക്കത്തില്‍..."
-#~ msgstr "In this issue..."
+#~ msgid "No articles published yet."
+#~ msgstr "ലേഖനങ്ങളൊന്നും പ്രസിദ്ധീകരിച്ചിട്ടില്ല"
 
 #, python-format
 #~ msgid "ലേഖനം %(n)s-ലേക്ക് പോകുക"
 #~ msgstr "Go to article %(n)s"
-
-#~ msgid "മറ്റുള്ള വിഷയങ്ങള്‍"
-#~ msgstr "Other Topics"
-
-#~ msgid "മറ്റ് വിഷയങ്ങളൊന്നുമില്ല."
-#~ msgstr "No other topics."
-
-#~ msgid "സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക"
-#~ msgstr "Manage Subscription"
-
-#~ msgid "ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ"
-#~ msgstr "Subscribe Now"
-
-#~ msgid "മുൻപത്തെ ലക്കങ്ങൾ"
-#~ msgstr "Previous Issues"
-
-#~ msgid "എല്ലാ ലക്കങ്ങളും കാണുക"
-#~ msgstr "View All Issues"
-
-#~ msgid "മറ്റുള്ള ലേഖനങ്ങള്‍"
-#~ msgstr "Other Articles"
-
-#~ msgid "കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക"
-#~ msgstr "View More Articles"
