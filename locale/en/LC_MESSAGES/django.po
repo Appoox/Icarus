@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Icarus (sasthragathy.org)\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 12:01+0530\n"
+"POT-Creation-Date: 2026-07-19 00:53+0530\n"
 "PO-Revision-Date: 2026-07-17 22:45+0530\n"
 "Last-Translator: Icarus i18n\n"
 "Language-Team: en\n"
@@ -17,19 +17,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: Icarus/templates/404.html:5 Icarus/templates/404.html:10
+#: Icarus/templates/404.html:7 Icarus/templates/404.html:137
 msgid "പേജ് കാണാനില്ല"
 msgstr "Page Not Found"
 
-#: Icarus/templates/404.html:12
+#: Icarus/templates/404.html:139
 msgid "ക്ഷമിക്കണം, ഈ പേജ് കണ്ടെത്താനായില്ല."
 msgstr "Sorry, this page could not be found."
 
-#: Icarus/templates/500.html:6 Icarus/templates/500.html:10
+#: Icarus/templates/404.html:142
+#: Icarus/templates/account/account_inactive.html:82
+#: Icarus/templates/under_construction.html:148
+msgid "ഹോം പേജിലേക്ക് മടങ്ങുക"
+msgstr "Return to Homepage"
+
+#: Icarus/templates/500.html:6 Icarus/templates/500.html:127
 msgid "സര്‍വ്വര്‍ തകരാറ്"
 msgstr "Server Error"
 
-#: Icarus/templates/500.html:12
+#: Icarus/templates/500.html:129
 msgid "ക്ഷമിക്കണം, ഒരു പിഴവുണ്ടായിരിക്കുന്നു. ദയവായി ഉടൻ വീണ്ടും ശ്രമിക്കുക."
 msgstr "Sorry, something went wrong. Please try again shortly."
 
@@ -66,10 +72,6 @@ msgstr ""
 #: Icarus/templates/account/account_inactive.html:76
 msgid "ഞങ്ങളുമായി ബന്ധപ്പെടുക"
 msgstr "Contact Support"
-
-#: Icarus/templates/account/account_inactive.html:82
-msgid "ഹോം പേജിലേക്ക് മടങ്ങുക"
-msgstr "Return to Homepage"
 
 #: Icarus/templates/account/account_inactive.html:88
 msgid ""
@@ -388,78 +390,78 @@ msgstr "Social media links"
 msgid "സൈറ്റ് ശീർഷകം"
 msgstr "Site title"
 
-#: Icarus/templates/includes/header.html:49
+#: Icarus/templates/includes/header.html:54
 msgid "തിരയാന്‍ തുറക്കുക"
 msgstr "Open search"
 
-#: Icarus/templates/includes/header.html:63
+#: Icarus/templates/includes/header.html:79
 msgid "പ്രൊഫൈൽ"
 msgstr "Profile"
 
-#: Icarus/templates/includes/header.html:64
+#: Icarus/templates/includes/header.html:80
 msgid "ലോഗൗട്ട്"
 msgstr "Logout"
 
-#: Icarus/templates/includes/header.html:66
+#: Icarus/templates/includes/header.html:82
 msgid "ലോഗിൻ"
 msgstr "Login"
 
-#: Icarus/templates/includes/header.html:67
+#: Icarus/templates/includes/header.html:83
 #: home/templates/home/home_page.html:133
 msgid "വരിക്കാരാകൂ"
 msgstr "Subscribe"
 
-#: Icarus/templates/includes/header.html:86
+#: Icarus/templates/includes/header.html:102
 msgid "തിരയൽ"
 msgstr "Search"
 
-#: Icarus/templates/includes/header.html:88
+#: Icarus/templates/includes/header.html:104
 msgid "തിരയൽ അടയ്ക്കുക"
 msgstr "Close search"
 
-#: Icarus/templates/includes/header.html:106
+#: Icarus/templates/includes/header.html:122
 msgid "ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുക..."
 msgstr "Search the archive, articles, and authors..."
 
-#: Icarus/templates/includes/header.html:118
+#: Icarus/templates/includes/header.html:134
 msgid "തിരയാൻ കുറഞ്ഞത് 2 അക്ഷരങ്ങൾ ടൈപ്പ് ചെയ്യുക..."
 msgstr "Type at least 2 characters to search..."
 
-#: Icarus/templates/includes/header.html:119
+#: Icarus/templates/includes/header.html:135
 msgid "ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുന്നു..."
 msgstr "Searching the archive, articles, and authors..."
 
-#: Icarus/templates/includes/header.html:120
+#: Icarus/templates/includes/header.html:136
 msgid "ഫലങ്ങൾ ലഭ്യമാക്കുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക."
 msgstr "Error fetching results. Please try again."
 
-#: Icarus/templates/includes/header.html:121
+#: Icarus/templates/includes/header.html:137
 msgid "ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല"
 msgstr "No results found"
 
-#: Icarus/templates/includes/header.html:122
+#: Icarus/templates/includes/header.html:138
 msgid "ഫലങ്ങൾ കണ്ടെത്തി"
 msgstr "Results found"
 
-#: Icarus/templates/includes/header.html:123
+#: Icarus/templates/includes/header.html:139
 #: the_librarian/templates/the_librarian/viewer.html:30
 msgid "പേജ്"
 msgstr "Page"
 
-#: Icarus/templates/includes/header.html:124
+#: Icarus/templates/includes/header.html:140
 msgid "പിഡിഎഫ്"
 msgstr "PDF"
 
-#: Icarus/templates/includes/header.html:125
+#: Icarus/templates/includes/header.html:141
 #: the_librarian/templates/the_librarian/search.html:77
 msgid "ലേഖനം"
 msgstr "Article"
 
-#: Icarus/templates/includes/header.html:126
+#: Icarus/templates/includes/header.html:142
 msgid "രചയിതാവ്"
 msgstr "Author"
 
-#: Icarus/templates/includes/header.html:128
+#: Icarus/templates/includes/header.html:144
 msgid "തിരയാൻ ടൈപ്പ് ചെയ്യുക..."
 msgstr "Type to search..."
 
@@ -504,6 +506,21 @@ msgstr "Next page"
 #: reader/templates/reader/profile.html:358
 msgid "അടുത്തത്"
 msgstr "Next"
+
+#: Icarus/templates/under_construction.html:6
+#: Icarus/templates/under_construction.html:143
+msgid "ഈ പേജ് നിർമ്മാണത്തിലാണ്"
+msgstr "Page Under Construction"
+
+#: Icarus/templates/under_construction.html:140
+msgid "ഉടൻ വരുന്നു"
+msgstr "Coming Soon"
+
+#: Icarus/templates/under_construction.html:145
+msgid ""
+"ഈ ഭാഗം ഇപ്പോൾ തയ്യാറാക്കിക്കൊണ്ടിരിക്കുകയാണ്. ഉടൻ തന്നെ ഇവിടെ പുതിയ ഉള്ളടക്കം ലഭ്യമാകും."
+msgstr ""
+"This part is currently being developed. New content will be available here soon."
 
 #: articles/templates/articles/article.html:69
 #: issue/templates/issue/issue.html:61
@@ -706,6 +723,10 @@ msgstr "Topic"
 msgid "ഇതുവരെ ട്രാക്കിംഗ് രേഖപ്പെടുത്തിയിട്ടില്ല."
 msgstr "No tracking recorded yet."
 
+#: home/templates/home/home_page.html:21
+msgid "Featured issue"
+msgstr ""
+
 #: home/templates/home/home_page.html:25
 msgid "വിശേഷലക്കം"
 msgstr "Featured Issue"
@@ -756,8 +777,8 @@ msgstr "View More Articles"
 
 #: home/templates/home/partials/changelog_banner.html:106
 #: home/templates/home/partials/changelog_banner.html:113
-msgid "പുതിയ മാറ്റങ്ങൾ"
-msgstr "New Changes"
+msgid "വെബ്സൈറ്റിലെ മാറ്റങ്ങൾ"
+msgstr "Chanhes on the website"
 
 #: home/templates/home/userbar/custom.html:4
 msgid "ശാസ്ത്രഗതി അഡ്മിന്‍"
@@ -3140,6 +3161,9 @@ msgstr ""
 #: the_librarian/templates/the_librarian/viewer.html:49
 msgid "മുൻ പേജ്"
 msgstr "Previous page"
+
+#~ msgid "പുതിയ മാറ്റങ്ങൾ"
+#~ msgstr "New Changes"
 
 #~ msgid "No articles published yet."
 #~ msgstr "ലേഖനങ്ങളൊന്നും പ്രസിദ്ധീകരിച്ചിട്ടില്ല"
