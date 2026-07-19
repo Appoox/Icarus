@@ -1,6 +1,9 @@
 from django.db import models
 from django import forms
 from django.utils.functional import cached_property
+from django.utils.html import strip_tags
+from django.utils.text import Truncator
+from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from wagtail.contrib.routable_page.models import RoutablePageMixin, route
@@ -731,6 +734,89 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
             if block.block_type in ['paragraph', 'text', 'rich_text']:
                 return block.value
         return ""
+
+    @property
+    def meta_description(self):
+        """
+        Description used for <meta name="description"> and social cards.
+
+        Prefers the editor-supplied `search_description`; otherwise derives a
+        clean, truncated snippet from the first prose block so pages never ship
+        with an empty description (which lets search engines invent one from
+        arbitrary page text, often the paywall CTA copy).
+        """
+        if self.search_description:
+            return self.search_description
+        for block in self.body:
+            if block.block_type in ('paragraph', 'rich_text', 'text'):
+                text = strip_tags(str(block.value)).strip()
+                if text:
+                    return Truncator(text).chars(158)
+        return ''
+
+    def ld_json(self):
+        """
+        schema.org Article JSON-LD for rich results (article carousels, author
+        bylines, publish dates). Built in Python so values are escaped safely
+        rather than assembled by hand in a template.
+        """
+        site_root = "https://sasthragathy.org"
+
+        published = self.date or self.first_published_at
+        modified = self.last_published_at or self.first_published_at or self.date
+
+        authors = []
+        for rel in self.article_authors.all():
+            author = rel.author
+            author_url = author.url
+            authors.append({
+                "@type": "Person",
+                "name": author.title,
+                "url": (site_root + author_url) if author_url else site_root,
+            })
+
+        data = {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": self.seo_title or self.title,
+            "inLanguage": "ml",
+            "mainEntityOfPage": self.full_url,
+            "author": authors,
+            "publisher": {
+                "@type": "Organization",
+                "name": "ശാസ്ത്രഗതി",
+                "url": site_root,
+            },
+            # Paywall signalling: tells Google the truncation is a subscription
+            # gate, not thin content, which avoids quality penalties on the
+            # lead-in that anonymous crawlers see.
+            "isAccessibleForFree": False,
+            "hasPart": {
+                "@type": "WebPageElement",
+                "isAccessibleForFree": False,
+                "cssSelector": ".paywall-wrapper",
+            },
+        }
+
+        if published is not None:
+            data["datePublished"] = published.isoformat()
+        if modified is not None:
+            data["dateModified"] = modified.isoformat()
+
+        if self.meta_description:
+            data["description"] = self.meta_description
+
+        if self.cover_image:
+            try:
+                rendition = self.cover_image.get_rendition('fill-1200x675|format-jpeg')
+                data["image"] = [rendition.full_url]
+            except Exception:
+                pass
+
+        # `<`-escape prevents `</script>` injection via a title or description.
+        return mark_safe(
+            json.dumps(data, ensure_ascii=False).replace('<', '\\u003c')
+        )
 
 
 SORT_CHOICES = [

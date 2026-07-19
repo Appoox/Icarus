@@ -3,6 +3,10 @@
 
 {% block body_class %}homepage{% endblock %}
 
+{# Homepage is the masthead itself — no "Home | …" prefix, no suffix. #}
+{% block title %}ശാസ്ത്രഗതി{% endblock %}
+{% block title_suffix %}{% endblock %}
+
 {% block extra_css %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,6 +18,16 @@
 {% endblock extra_css %}
 
 {% block content %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ശാസ്ത്രഗതി",
+  "alternateName": "Sasthragathy",
+  "url": "https://sasthragathy.org",
+  "logo": "https://sasthragathy.org{% static 'images/favicon.png' %}"
+}
+</script>
 <div class="sg-page">
 
   {# ── FEATURED ISSUE + ARTICLES ── #}
@@ -71,7 +85,7 @@
         <div class="sg-issue-thumbnail" data-index="{{ forloop.counter0 }}" aria-label="Go to article {{ forloop.counter }}">
           {% if article.cover_image %}
             {% image article.cover_image fill-150x150 as thumb_img %}
-            <img src="{{ thumb_img.url }}" alt="{{ article.title }}" width="48" height="48">
+            <img src="{{ thumb_img.url }}" alt="{{ article.title }}" width="48" height="48" loading="lazy" decoding="async">
           {% else %}
             <div class="sg-issue-thumbnail__placeholder">
               <span>{{ article.title|slice:":1" }}</span> {# Fallback letter if no image #}
@@ -93,7 +107,7 @@
             {% if article.cover_image %}
             <a href="{{ article.url }}" class="sg-issue-small-card__image-wrap" aria-hidden="true" tabindex="-1">
               {% image article.cover_image fill-200x125 as art_img %}
-              <img src="{{ art_img.url }}" alt="{{ article.title }}">
+              <img src="{{ art_img.url }}" alt="{{ article.title }}" width="200" height="125" loading="lazy" decoding="async">
             </a>
             {% endif %}
             {% if article.topic %}
@@ -156,7 +170,7 @@
       {% if issue.cover_image %}
       <a href="{{ issue.url }}" class="sg-issue-card-simple__image-wrap" aria-hidden="true" tabindex="-1">
         {% image issue.cover_image fill-300x400 as cover_img %}
-        <img src="{{ cover_img.url }}" alt="{{ issue.title }}">
+        <img src="{{ cover_img.url }}" alt="{{ issue.title }}" width="300" height="400" loading="lazy" decoding="async">
       </a>
       {% endif %}
       
@@ -199,7 +213,7 @@
       {% if article.cover_image %}
       <a href="{{ article.url }}" class="sg-article-card__image-wrap" aria-hidden="true" tabindex="-1">
         {% image article.cover_image fill-440x280 as art_img %}
-        <img src="{{ art_img.url }}" alt="{{ article.title }}">
+        <img src="{{ art_img.url }}" alt="{{ article.title }}" width="440" height="280" loading="lazy" decoding="async">
       </a>
       {% endif %}
       

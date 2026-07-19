@@ -1,5 +1,17 @@
 {% load wagtailcore_tags %}
 {% if page and page.get_ancestors and page.depth > 2 %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+{% for ancestor in page.get_ancestors|slice:"1:" %}
+    {"@type": "ListItem", "position": {{ forloop.counter }}, "name": "{{ ancestor.title|escapejs }}", "item": "{{ ancestor.full_url|default:'' }}"},
+{% endfor %}
+    {"@type": "ListItem", "position": {{ page.depth|add:'-1' }}, "name": "{{ page.title|escapejs }}"}
+  ]
+}
+</script>
 <nav aria-label="Breadcrumb" class="site-breadcrumbs">
     <ol>
         {% if page.content_type.model == 'article' and page.specific.main_issue %}

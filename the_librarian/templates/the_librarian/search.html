@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static i18n %}
 
-{% block title %}ശാസ്ത്രഗതി | {% translate "ആർക്കൈവ് തിരയൽ" %}{% endblock %}
+{% block title %}{% translate "ആർക്കൈവ് തിരയൽ" %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/Icarus.css' %}">
@@ -121,6 +121,4 @@
             {% endif %}
         {% endif %}
     </div>
-</body>
-</html>
 {% endblock %}

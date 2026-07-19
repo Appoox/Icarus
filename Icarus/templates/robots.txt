@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /django-admin/
+Disallow: /accounts/
+Disallow: /internal/
+Disallow: /reader/
+Disallow: /librarian/
+Disallow: /documents/
+
+Sitemap: https://sasthragathy.org/sitemap.xml

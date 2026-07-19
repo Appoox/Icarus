@@ -276,8 +276,19 @@ WAGTAILSEARCH_BACKENDS = {
 }
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
-# e.g. in notification emails. Don't include '/admin' or a trailing slash
-WAGTAILADMIN_BASE_URL = "http://example.com"
+# e.g. in notification emails, sitemap URLs, and image rendition `full_url`s
+# (used by Open Graph / structured-data tags). Defined once near the top of
+# this file as https://sasthragathy.org; the historical example.com default
+# is intentionally left out so it cannot win the assignment race.
+
+# Transparently serve modern image formats. Every rendition whose source is a
+# JPEG or PNG is emitted as WebP, cutting cover-image / thumbnail payloads and
+# improving LCP. Renditions that explicitly request a format (e.g. the
+# `format-jpeg` OG image below) are unaffected.
+WAGTAILIMAGES_FORMAT_CONVERSIONS = {
+    "jpeg": "webp",
+    "png": "webp",
+}
 
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk

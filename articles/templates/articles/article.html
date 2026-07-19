@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content %}
+<script type="application/ld+json">{{ page.ld_json }}</script>
 <div class="article-container">
 
   {# ── HEADER ─────────────────────────────────── #}
@@ -111,7 +112,10 @@
   {% endif %}
 
   <figure class="hero-image">
-    <img src="{{ hero.url }}" alt="{{ hero.alt|default:page.title }}">
+    {# Cover is the LCP element: load eagerly with high priority, never lazy. #}
+    <img src="{{ hero.url }}" alt="{{ hero.alt|default:page.title }}"
+         width="{{ hero.width }}" height="{{ hero.height }}"
+         fetchpriority="high" decoding="async">
     {% if page.cover_image_caption %}
     <figcaption>{{ page.cover_image_caption }}</figcaption>
     {% endif %}
@@ -474,7 +478,8 @@
         <div class="author-card">
           {% if author.profile_image %}
           {% image author.profile_image fill-120x120 as bio_avatar %}
-          <img src="{{ bio_avatar.url }}" alt="{{ author.title }}" class="author-avatar-large">
+          <img src="{{ bio_avatar.url }}" alt="{{ author.title }}" class="author-avatar-large"
+               width="120" height="120" loading="lazy" decoding="async">
           {% endif %}
           
           <div class="author-details">
@@ -524,7 +529,8 @@
         {% if article.cover_image %}
         {% image article.cover_image fill-600x400 as thumb %}
         <div class="related-card__img">
-          <img src="{{ thumb.url }}" alt="{{ thumb.alt }}">
+          <img src="{{ thumb.url }}" alt="{% firstof thumb.alt article.title %}"
+               width="600" height="400" loading="lazy" decoding="async">
         </div>
         {% endif %}
 

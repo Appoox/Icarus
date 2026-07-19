@@ -1,0 +1,63 @@
+{% load wagtailcore_tags wagtailimages_tags static %}
+{% comment %}
+Open Graph + Twitter card metadata for link-preview cards (WhatsApp, Facebook,
+Telegram, X, LinkedIn). Absolute URLs are required — relative paths are ignored
+by every platform — so image `full_url`s depend on WAGTAILADMIN_BASE_URL being
+correct. `page.meta_description` is the Article property (empty for non-article
+pages, which fall through gracefully).
+{% endcomment %}
+
+{# Homepage's page.title is "Home"; everywhere else use the real title. #}
+{% if page and page.title == 'Home' %}{% firstof page.seo_title 'ശാസ്ത്രഗതി' as social_title %}{% else %}{% firstof page.seo_title page.title topic.name 'ശാസ്ത്രഗതി' as social_title %}{% endif %}
+
+{# ── Open Graph ─────────────────────────────── #}
+<meta property="og:site_name" content="ശാസ്ത്രഗതി">
+<meta property="og:locale" content="ml_IN">
+<meta property="og:title" content="{{ social_title }}">
+{% if page.meta_description %}
+<meta property="og:description" content="{{ page.meta_description }}">
+{% elif page.search_description %}
+<meta property="og:description" content="{{ page.search_description }}">
+{% endif %}
+{% if page %}
+<meta property="og:url" content="{{ page.full_url }}">
+{% endif %}
+
+{% if page.cover_image %}
+  {% image page.cover_image fill-1200x630 format-jpeg as og_img %}
+  <meta property="og:image" content="{{ og_img.full_url }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{% firstof og_img.alt page.title %}">
+{% else %}
+  {# Fallback for pages without a cover (home, topic, author). Points at the  #}
+  {# committed brand logo; replace with a designed 1200x630 masthead card     #}
+  {# (add images/og-default.png and repoint here + declare its dimensions).   #}
+  <meta property="og:image" content="https://sasthragathy.org{% static 'images/favicon.png' %}">
+{% endif %}
+
+{# ── Article-specific ───────────────────────── #}
+{% if page.date %}
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="{{ page.date|date:'c' }}">
+{% if page.last_published_at %}
+<meta property="article:modified_time" content="{{ page.last_published_at|date:'c' }}">
+{% endif %}
+{% if page.topic %}
+<meta property="article:section" content="{{ page.topic.name }}">
+{% endif %}
+{% for tag in page.tags.all %}
+<meta property="article:tag" content="{{ tag.name }}">
+{% endfor %}
+{% else %}
+<meta property="og:type" content="website">
+{% endif %}
+
+{# ── Twitter / X ────────────────────────────── #}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ social_title }}">
+{% if page.meta_description %}
+<meta name="twitter:description" content="{{ page.meta_description }}">
+{% elif page.search_description %}
+<meta name="twitter:description" content="{{ page.search_description }}">
+{% endif %}

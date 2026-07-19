@@ -25,7 +25,7 @@
                 {% if article.cover_image %}
                 <a href="{{ article.url }}" class="topic-card__image-wrap">
                     {% image article.cover_image fill-600x375 as img %}
-                    <img src="{{ img.url }}" alt="{{ article.title }}">
+                    <img src="{{ img.url }}" alt="{{ article.title }}" width="600" height="375" loading="lazy" decoding="async">
                 </a>
                 {% endif %}
                 <div class="topic-card__meta">{{ article.date|date:"F j, Y" }}</div>
@@ -46,7 +46,7 @@
                 {% if issue.cover_image %}
                 <a href="{{ issue.url }}" class="topic-card__image-wrap">
                     {% image issue.cover_image fill-600x375 as img %}
-                    <img src="{{ img.url }}" alt="{{ issue.title }}">
+                    <img src="{{ img.url }}" alt="{{ issue.title }}" width="600" height="375" loading="lazy" decoding="async">
                 </a>
                 {% endif %}
                 <div class="topic-card__meta">{{ issue.date_of_publishing|date:"F j, Y" }}</div>
