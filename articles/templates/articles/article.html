@@ -399,9 +399,9 @@
   {% else %}
   
   {# ── FULL ACCESS ── #}
-  {# Verified crawlers get the full body wrapped in .paywall-wrapper so the
-     Article JSON-LD hasPart selector still matches and isAccessibleForFree:false
-     stays accurate for the crawler render. Real users never hit this branch. #}
+  {# Verified crawlers get the full body wrapped in .paywall-wrapper so the   #}
+  {# Article JSON-LD hasPart selector still matches and isAccessibleForFree:false #}
+  {# stays accurate for the crawler render. Real users never hit this branch.    #}
   {% if crawler_full_access %}<div class="paywall-wrapper">{% endif %}
   <main class="article-body">
 
