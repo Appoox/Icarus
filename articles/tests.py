@@ -1,13 +1,14 @@
 from datetime import date
 from unittest.mock import patch
 
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, RequestFactory, override_settings
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from wagtail.models import Page, Site
 from wagtail.test.utils import WagtailPageTestCase
 
 from articles.models import Article, ArticleIndexPage, ArticleForm
+from articles import crawler_utils
 from issue.models import Issue, IssueIndexPage, Volume
 from home.models import HomePage
 
@@ -227,6 +228,70 @@ class ArticleModelAndPaywallTests(WagtailPageTestCase):
         request.session["free_reads"] = [101, 102, 103]  # already read 3 articles
         context = self.article.get_context(request)
         self.assertTrue(context["show_paywall"])
+
+    # ── Verified-crawler flexible sampling ─────────────────────────────
+    def _crawler_request(self, ua="Googlebot/2.1 (+http://www.google.com/bot.html)", ip="66.249.66.1"):
+        request = self.factory.get(self.article.url, HTTP_USER_AGENT=ua)
+        request.META["HTTP_X_REAL_IP"] = ip
+        request.user = AnonymousUser()
+        request.session = MockSession()
+        return request
+
+    @override_settings(FREE_ARTICLE_LIMIT=0)
+    @patch("articles.crawler_utils.is_verified_crawler", return_value=True)
+    def test_verified_crawler_gets_full_body_at_zero_free(self, _mock):
+        """A verified crawler bypasses the paywall even at 0 free articles,
+        without consuming a metered read or writing the session (no Set-Cookie)."""
+        request = self._crawler_request()
+        context = self.article.get_context(request)
+        self.assertFalse(context["show_paywall"])
+        self.assertTrue(context["crawler_full_access"])
+        self.assertNotIn("free_reads", request.session)
+
+    @override_settings(FREE_ARTICLE_LIMIT=0)
+    @patch("articles.crawler_utils.is_verified_crawler", return_value=False)
+    def test_unverified_anonymous_is_paywalled_at_zero_free(self, _mock):
+        """An ordinary (unverified) anonymous visitor is paywalled at 0 free."""
+        request = self._crawler_request(ua="Mozilla/5.0")
+        context = self.article.get_context(request)
+        self.assertTrue(context["show_paywall"])
+        self.assertFalse(context["crawler_full_access"])
+
+    def test_is_verified_crawler_true_for_genuine_googlebot(self):
+        """UA token + PTR ending in .googlebot.com + forward-confirm → verified."""
+        crawler_utils._verify_cache.clear()
+        request = self._crawler_request(ip="66.249.66.1")
+        with patch("articles.crawler_utils.socket.gethostbyaddr",
+                   return_value=("crawl-66-249-66-1.googlebot.com", [], ["66.249.66.1"])), \
+             patch("articles.crawler_utils.socket.getaddrinfo",
+                   return_value=[(2, 1, 6, "", ("66.249.66.1", 0))]):
+            self.assertTrue(crawler_utils.is_verified_crawler(request))
+
+    def test_is_verified_crawler_false_for_spoofed_ip(self):
+        """Crawler UA from an IP whose PTR is not a Google host → rejected."""
+        crawler_utils._verify_cache.clear()
+        request = self._crawler_request(ip="1.2.3.4")
+        with patch("articles.crawler_utils.socket.gethostbyaddr",
+                   return_value=("host.evil.example.com", [], ["1.2.3.4"])):
+            self.assertFalse(crawler_utils.is_verified_crawler(request))
+
+    def test_is_verified_crawler_false_when_forward_lookup_mismatches(self):
+        """PTR looks like a Bing host but forward DNS resolves elsewhere → rejected."""
+        crawler_utils._verify_cache.clear()
+        request = self._crawler_request(ua="bingbot/2.0", ip="5.6.7.8")
+        with patch("articles.crawler_utils.socket.gethostbyaddr",
+                   return_value=("foo.search.msn.com", [], ["5.6.7.8"])), \
+             patch("articles.crawler_utils.socket.getaddrinfo",
+                   return_value=[(2, 1, 6, "", ("9.9.9.9", 0))]):
+            self.assertFalse(crawler_utils.is_verified_crawler(request))
+
+    def test_is_verified_crawler_skips_dns_for_normal_ua(self):
+        """A non-crawler User-Agent never triggers a DNS lookup."""
+        crawler_utils._verify_cache.clear()
+        request = self._crawler_request(ua="Mozilla/5.0", ip="10.0.0.1")
+        with patch("articles.crawler_utils.socket.gethostbyaddr") as mock_ptr:
+            self.assertFalse(crawler_utils.is_verified_crawler(request))
+            mock_ptr.assert_not_called()
 
 
 class ArticleRoutablePdfTests(TestCase):

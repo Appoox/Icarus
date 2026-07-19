@@ -119,6 +119,11 @@ encode gzip
     # Everything else — app routes, the /documents/ serve_view, /reader/, the
     # Wagtail admin, websockets for Channels — goes to gunicorn/uvicorn.
     reverse_proxy web:8000 {
+        # Trusted client IP for verified-crawler paywall bypass. Caddy
+        # overwrites X-Real-IP with the true peer, so a client cannot forge it
+        # (unlike X-Forwarded-For). See articles/crawler_utils.py.
+        header_up X-Real-IP {remote_host}
+
         # Hold and retry requests while the upstream is down (e.g. during a
         # container restart) instead of immediately returning 502.
         lb_try_duration 60s

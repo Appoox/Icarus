@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static i18n %}
 
-{% block title %}{{ document.title }}{% endblock %}
+{% block title %}{{ document.filename }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/Icarus.css' %}">
