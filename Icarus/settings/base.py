@@ -303,6 +303,18 @@ WAGTAILDOCS_INLINE_CONTENT_TYPES = [
 
 # ── Reader / Paywall ──────────────────────────────────────────────────
 FREE_ARTICLE_LIMIT = env.int("FREE_ARTICLE_LIMIT", 3)  # Number of free articles for non-subscribed readers
+
+# ── Verified-crawler full-content serving (flexible sampling) ─────────
+# When True, DNS-verified search crawlers (Googlebot / Bingbot) receive the
+# full article body instead of the paywall preview, so paywalled content stays
+# indexable even at FREE_ARTICLE_LIMIT = 0. Verification is reverse+forward DNS
+# against the trusted Caddy-set X-Real-IP header (see articles/crawler_utils.py
+# and the `header_up X-Real-IP {remote_host}` line in the Caddyfile).
+SERVE_FULL_TO_VERIFIED_CRAWLERS = env.bool("SERVE_FULL_TO_VERIFIED_CRAWLERS", default=True)
+CRAWLER_TRUSTED_IP_HEADER = env.str("CRAWLER_TRUSTED_IP_HEADER", default="HTTP_X_REAL_IP")
+CRAWLER_DNS_TIMEOUT = env.float("CRAWLER_DNS_TIMEOUT", default=2.0)      # seconds
+CRAWLER_VERIFY_TTL = env.int("CRAWLER_VERIFY_TTL", default=604800)      # 7 days (verified)
+CRAWLER_VERIFY_NEG_TTL = env.int("CRAWLER_VERIFY_NEG_TTL", default=3600)  # 1 hour (unverified)
 LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')
 LOGIN_URL = env.str("LOGIN_URL", "account_login")
 # ACCOUNT_LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')

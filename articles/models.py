@@ -602,9 +602,19 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
         from django.conf import settings as django_settings
+        from .crawler_utils import is_verified_crawler
+
+        # A DNS-verified search crawler (Googlebot/Bingbot) gets the full body
+        # regardless of the paywall, so paywalled articles stay indexable at
+        # FREE_ARTICLE_LIMIT = 0 (flexible sampling).
+        is_crawler = (
+            getattr(django_settings, 'SERVE_FULL_TO_VERIFIED_CRAWLERS', True)
+            and is_verified_crawler(request)
+        )
 
         # ── Analytics: Increment Opened Count ──────────────────────────
-        if not (request.user.is_superuser or request.user.is_staff):
+        # Skip bots so verified crawlers don't inflate view counts.
+        if not (request.user.is_superuser or request.user.is_staff or is_crawler):
             hit_count = HitCount.objects.get_for_object(self)
             HitCountViewMixin().hit_count(request, hit_count)
 
@@ -639,7 +649,12 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
         # 2. Admin Exemption
         if request.user.is_superuser or request.user.is_staff:
             show_paywall = False
-        
+
+        # 2b. Verified search crawler → full body, without touching the session
+        #     or read counters (no Set-Cookie / metered-read consumption for bots).
+        elif is_crawler:
+            show_paywall = False
+
         # 3. Authenticated Reader Logic
         elif request.user.is_authenticated:
 
@@ -688,6 +703,7 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
 
         context['show_paywall'] = show_paywall
         context['reader'] = reader
+        context['crawler_full_access'] = is_crawler
 
         # Inject approved and active comments (top-level only, replies rendered recursively)
         context['comments'] = self.comments.filter(

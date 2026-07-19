@@ -30,9 +30,9 @@ pages, which fall through gracefully).
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="{% firstof og_img.alt page.title %}">
 {% else %}
-  {# Fallback for pages without a cover (home, topic, author). Points at the  #}
-  {# committed brand logo; replace with a designed 1200x630 masthead card     #}
-  {# (add images/og-default.png and repoint here + declare its dimensions).   #}
+  {# Fallback for pages without a cover (home, topic, author). Points at the
+     committed brand logo; replace with a designed 1200x630 masthead card
+     (add images/og-default.png and repoint here + declare its dimensions). #}
   <meta property="og:image" content="https://sasthragathy.org{% static 'images/favicon.png' %}">
 {% endif %}
 
