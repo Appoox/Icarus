@@ -948,3 +948,268 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   TITLE OVERLAYS — card text (topic pill, title, author, date) on a
+   semitransparent gradient over the cover image.
+
+   • Carousel + latest-article cards keep their ORIGINAL outer size:
+     the text block stays in flow and `margin-top: 62.5%` reserves the
+     old 16/10 image height, while the cover expands to fill the card.
+   • Other-topics small cards are LANDSCAPE tiles: the card is the
+     16/10 cover itself with the text overlaid on its lower part
+     (covers are almost always landscape — no more portrait cropping).
+   • The featured issue cover and the past-issues cards are NOT
+     overlaid — they keep the original presentation.
+═══════════════════════════════════════════════════════════════════ */
+
+/* Cards host an absolutely-filled image + keep a fallback backdrop
+   for articles without a cover */
+.sg-issue-card,
+.sg-issue-small-card,
+.sg-article-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-mid, #163059) 100%);
+}
+/* These two had a white padding frame; its space is folded into the
+   overlay padding so outer sizing stays consistent. */
+.sg-issue-card,
+.sg-issue-small-card {
+    padding: 0;
+}
+/* Grid rows stretch cards to equal height; pack the text block to the
+   card's bottom so any stretch slack opens up above the overlay
+   (more cover visible) instead of leaving a strip below it. */
+.sg-article-card {
+    justify-content: flex-end;
+}
+
+/* Cover image fills the whole card behind the text */
+.sg-issue-card__image-wrap,
+.sg-issue-small-card__image-wrap,
+.sg-article-card__image-wrap {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    aspect-ratio: auto;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Text block: over the image, on a gradient */
+.sg-issue-card__overlay,
+.sg-issue-small-card__overlay,
+.sg-article-card__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(to top,
+        rgba(11, 31, 58, .94) 0%,
+        rgba(11, 31, 58, .86) 55%,
+        rgba(11, 31, 58, .55) 85%,
+        rgba(11, 31, 58, .28) 100%);
+}
+/* Soft fade continuing above the text block */
+.sg-issue-card__overlay::before,
+.sg-issue-small-card__overlay::before,
+.sg-article-card__content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 2.6rem;
+    background: linear-gradient(to top, rgba(11, 31, 58, .28), rgba(11, 31, 58, 0));
+    pointer-events: none;
+}
+
+/* Carousel + article cards: reserve the original image height so the
+   card's outer size is unchanged */
+.sg-issue-card__overlay {
+    margin-top: 62.5%;              /* old 16/10 image */
+    padding: .75rem 1rem 1rem;      /* old card frame + image gap */
+}
+.sg-article-card__content {
+    margin-top: 62.5%;              /* old 16/10 image */
+    flex: none;                     /* keeps its original 1.25rem/1.5rem padding */
+}
+
+/* ── Other-topics small card: landscape 16/10 tile ── */
+.sg-issue-small-card {
+    aspect-ratio: 16 / 10;
+    border-radius: 4px;
+}
+.sg-issue-small-card__overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1.6rem .8rem .55rem;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__category {
+    font-size: .75rem;
+    padding: 1px 8px;
+    margin-bottom: .25rem;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__title {
+    font-size: 1.02rem;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.sg-issue-small-card__overlay .sg-card-author {
+    font-size: .8rem;
+    margin-bottom: .05rem;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__date {
+    font-size: .68rem;
+    margin-top: 0;
+}
+
+/* Other-topics column: snap + smooth scrolling with edge fades hinting
+   at clipped cards (desktop vertical scroll only — mobile keeps its
+   own horizontal snap defined earlier). */
+@media (min-width: 901px) {
+    .sg-issue-other-topics__scroll-wrapper {
+        scroll-snap-type: y proximity;
+        scroll-behavior: smooth;
+        -webkit-mask-image: linear-gradient(to bottom,
+            transparent 0, #000 1.1rem, #000 calc(100% - 1.8rem), transparent 100%);
+        mask-image: linear-gradient(to bottom,
+            transparent 0, #000 1.1rem, #000 calc(100% - 1.8rem), transparent 100%);
+        padding-top: .35rem;
+        padding-bottom: .5rem;
+    }
+    .sg-issue-other-topics__grid .sg-issue-small-card {
+        scroll-snap-align: start;
+    }
+}
+
+/* White text on the navy gradient */
+.sg-issue-card__overlay .sg-issue-card__title,
+.sg-issue-card__overlay .sg-issue-card__title a,
+.sg-issue-small-card__overlay .sg-issue-small-card__title,
+.sg-issue-small-card__overlay .sg-issue-small-card__title a,
+.sg-article-card__content .sg-article-card__title,
+.sg-article-card__content .sg-article-card__title a {
+    color: #fff;
+    text-shadow: 0 1px 8px rgba(6, 12, 24, .45);
+}
+.sg-issue-card__overlay .sg-issue-card__title a:hover,
+.sg-issue-small-card__overlay .sg-issue-small-card__title a:hover,
+.sg-article-card__content .sg-article-card__title a:hover {
+    color: #ff8fa0;
+}
+.sg-issue-card__overlay .sg-card-author,
+.sg-issue-small-card__overlay .sg-card-author,
+.sg-article-card__content .sg-card-author {
+    color: rgba(255, 255, 255, .78);
+}
+.sg-issue-card__overlay .sg-issue-card__date,
+.sg-issue-small-card__overlay .sg-issue-small-card__date,
+.sg-article-card__content .sg-article-card__date {
+    color: rgba(255, 255, 255, .62);
+}
+
+/* ── Author links ── */
+.sg-card-author a {
+    color: inherit;
+    text-decoration: none;
+}
+.sg-card-author a:hover {
+    color: var(--red);
+    text-decoration: underline;
+}
+.sg-issue-card__overlay .sg-card-author a:hover,
+.sg-issue-small-card__overlay .sg-card-author a:hover,
+.sg-article-card__content .sg-card-author a:hover {
+    color: #ff8fa0;
+}
+
+/* ── Hover float (3D) — deeper shadow while a card is tilted ── */
+.sg-issue-cover.is-floating,
+.sg-issue-card.is-floating,
+.sg-issue-small-card.is-floating,
+.sg-article-card.is-floating {
+    box-shadow: 0 18px 42px -14px rgba(11, 31, 58, .38);
+    z-index: 5;
+}
+.sg-issue-card-simple.is-floating {
+    z-index: 5; /* tilt only — this card is transparent, shadow stays on its image */
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FLOATING SPECKS — brand-coloured dots behind the content. The layer
+   spans the whole document (not the viewport), so specks scroll with
+   the page. They wander slowly on their own (JS) and each one also
+   reacts individually to the pointer: parallax + local repulsion.
+═══════════════════════════════════════════════════════════════════ */
+body.homepage {
+    position: relative; /* containing block for the document-spanning layer */
+}
+.sg-specks {
+    position: absolute;
+    inset: 0;
+    z-index: -1; /* above the body background, below all content */
+    pointer-events: none;
+    overflow: hidden;
+}
+.sg-speck {
+    position: absolute;
+    border-radius: 50%;
+    will-change: transform;
+}
+
+/* ── Hover polish ── */
+/* No cover zoom on hover — it fights the 3D card tilt */
+.sg-issue-cover__image-wrap:hover img,
+.sg-issue-card__image-wrap:hover img,
+.sg-issue-small-card__image-wrap:hover img,
+.sg-article-card__image-wrap:hover img {
+    transform: none;
+}
+
+/* Carousel cards: slightly shorter cover area so the whole card —
+   including the publishing date — always fits inside the carousel
+   viewport (the date used to sit just below the fold until the hover
+   lift nudged it into view). */
+.sg-issue-card__overlay {
+    margin-top: 50%;
+    padding-bottom: .8rem;
+}
+
+/* ── Other-topics small card: reveal more of the cover ──
+   Slimmer overlay band + shorter fades so more of the landscape cover
+   shows through (the text used to cover ~3/4 of the tile). */
+.sg-issue-small-card__overlay {
+    padding: .6rem .8rem .5rem;
+    background: linear-gradient(to top,
+        rgba(11, 31, 58, .95) 0%,
+        rgba(11, 31, 58, .80) 48%,
+        rgba(11, 31, 58, .28) 86%,
+        rgba(11, 31, 58, 0) 100%);
+}
+/* Drop the extra top fade on these tiles — the overlay's own gradient
+   already softens its top, and this reveals more of the cover. */
+.sg-issue-small-card__overlay::before {
+    display: none;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__category {
+    font-size: .72rem;
+    margin-bottom: .16rem;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__title {
+    font-size: .92rem;
+    line-height: 1.2;
+}
+.sg-issue-small-card__overlay .sg-card-author {
+    font-size: .72rem;
+    margin-bottom: 0;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__date {
+    font-size: .66rem;
+}

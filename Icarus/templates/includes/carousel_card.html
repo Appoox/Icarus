@@ -6,23 +6,25 @@
     <img src="{{ art_img.url }}" alt="{{ article.title }}">
   </a>
   {% endif %}
-  {% if article.topic %}
-  <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-card__category"
-    style="background-color: {{ article.topic.color|default:'#c8102e' }};">
-    {{ article.topic.name }}
-  </a>
-  {% endif %}
-  <h3 class="sg-issue-card__title">
-    <a href="{{ article.url }}">{{ article.title }}</a>
-  </h3>
-  
-  {% if article.article_authors.all %}
-  <span class="sg-card-author">
-    {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
-  </span>
-  {% endif %}
+  <div class="sg-issue-card__overlay">
+    {% if article.topic %}
+    <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-card__category"
+      style="background-color: {{ article.topic.color|default:'#c8102e' }};">
+      {{ article.topic.name }}
+    </a>
+    {% endif %}
+    <h3 class="sg-issue-card__title">
+      <a href="{{ article.url }}">{{ article.title }}</a>
+    </h3>
 
-  <time class="sg-issue-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
-    {{ article.date|date:"F j, Y" }}
-  </time>
+    {% if article.article_authors.all %}
+    <span class="sg-card-author">
+      {% for rel in article.article_authors.all %}{% if rel.author.url %}<a href="{{ rel.author.url }}">{{ rel.author.title }}</a>{% else %}{{ rel.author.title }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </span>
+    {% endif %}
+
+    <time class="sg-issue-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+      {{ article.date|date:"F j, Y" }}
+    </time>
+  </div>
 </article>
