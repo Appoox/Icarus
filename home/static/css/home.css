@@ -1181,3 +1181,35 @@ body.homepage {
     margin-top: 50%;
     padding-bottom: .8rem;
 }
+
+/* ── Other-topics small card: reveal more of the cover ──
+   Slimmer overlay band + shorter fades so more of the landscape cover
+   shows through (the text used to cover ~3/4 of the tile). */
+.sg-issue-small-card__overlay {
+    padding: .6rem .8rem .5rem;
+    background: linear-gradient(to top,
+        rgba(11, 31, 58, .95) 0%,
+        rgba(11, 31, 58, .80) 48%,
+        rgba(11, 31, 58, .28) 86%,
+        rgba(11, 31, 58, 0) 100%);
+}
+/* Drop the extra top fade on these tiles — the overlay's own gradient
+   already softens its top, and this reveals more of the cover. */
+.sg-issue-small-card__overlay::before {
+    display: none;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__category {
+    font-size: .72rem;
+    margin-bottom: .16rem;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__title {
+    font-size: .92rem;
+    line-height: 1.2;
+}
+.sg-issue-small-card__overlay .sg-card-author {
+    font-size: .72rem;
+    margin-bottom: 0;
+}
+.sg-issue-small-card__overlay .sg-issue-small-card__date {
+    font-size: .66rem;
+}
