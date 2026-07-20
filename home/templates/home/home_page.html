@@ -28,6 +28,8 @@
   "logo": "https://sasthragathy.org{% static 'images/favicon.png' %}"
 }
 </script>
+{# Interactive floating specks behind the page content (populated by home.js) #}
+<div class="sg-specks" aria-hidden="true"></div>
 <div class="sg-page">
 
   {# ── FEATURED ISSUE + ARTICLES ── #}
@@ -110,25 +112,27 @@
               <img src="{{ art_img.url }}" alt="{{ article.title }}" width="200" height="125" loading="lazy" decoding="async">
             </a>
             {% endif %}
-            {% if article.topic %}
-            <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-small-card__category"
-              style="background-color: {{ article.topic.color|default:'#6b6659' }};">
-              {{ article.topic.name }}
-            </a>
-            {% endif %}
-            <h3 class="sg-issue-small-card__title">
-              <a href="{{ article.url }}">{{ article.title }}</a>
-            </h3>
+            <div class="sg-issue-small-card__overlay">
+              {% if article.topic %}
+              <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-small-card__category"
+                style="background-color: {{ article.topic.color|default:'#6b6659' }};">
+                {{ article.topic.name }}
+              </a>
+              {% endif %}
+              <h3 class="sg-issue-small-card__title">
+                <a href="{{ article.url }}">{{ article.title }}</a>
+              </h3>
 
-            {% if article.article_authors.all %}
-            <span class="sg-card-author">
-              {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
-            </span>
-            {% endif %}
+              {% if article.article_authors.all %}
+              <span class="sg-card-author">
+                {% for rel in article.article_authors.all %}{% if rel.author.url %}<a href="{{ rel.author.url }}">{{ rel.author.title }}</a>{% else %}{{ rel.author.title }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
+              </span>
+              {% endif %}
 
-            <time class="sg-issue-small-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
-              {{ article.date|date:"F j, Y" }}
-            </time>
+              <time class="sg-issue-small-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
+                {{ article.date|date:"F j, Y" }}
+              </time>
+            </div>
           </article>
           {% empty %}
           <p class="sg-empty">{% translate "മറ്റ് വിഷയങ്ങളൊന്നുമില്ല." %}</p>
@@ -230,7 +234,7 @@
 
         {% if article.article_authors.all %}
         <span class="sg-card-author">
-          {% for rel in article.article_authors.all %}{{ rel.author.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          {% for rel in article.article_authors.all %}{% if rel.author.url %}<a href="{{ rel.author.url }}">{{ rel.author.title }}</a>{% else %}{{ rel.author.title }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
         </span>
         {% endif %}
 
