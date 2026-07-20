@@ -22,14 +22,14 @@
     width: 150px;
     height: 150px;
     object-fit: cover;
-    border: 1px solid #eee;
+    border: 1px solid var(--rule-soft);
 }
 
 .role-label {
     font-size: 1rem;
     font-weight: bold;
-    
-    color: #666;
+
+    color: var(--muted);
     display: block;
     margin-bottom: 10px;
 }
@@ -37,18 +37,18 @@
 .profile-text h1 {
     font-size: 2rem;
     margin: 0 0 15px 0;
-    color: #000;
+    color: var(--ink);
 }
 
 .author-bio {
     font-size: 1.1rem;
     line-height: 1.6;
-    color: #333;
+    color: var(--ink);
 }
 
 .section-divider {
     border: 0;
-    border-top: 4px solid #000;
+    border-top: 4px solid var(--ink);
     margin: 40px 0;
 }
 
@@ -59,7 +59,7 @@
     gap: 25px;
     margin-bottom: 40px;
     padding-bottom: 30px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--rule-soft);
 }
 
 .card-image img {
@@ -68,7 +68,7 @@
 
 .card-date {
     font-size: 0.8rem;
-    color: #888;
+    color: var(--caption);
     display: block;
     margin-bottom: 5px;
 }
@@ -79,13 +79,12 @@
 }
 
 .card-body h3 a {
-    color: #000;
+    color: var(--ink);
     text-decoration: none;
 }
 
 .card-body h3 a:hover {
-    color: #c00;
-    /* Editorial red highlight */
+    color: var(--red);
 }
 
 @media (max-width: 600px) {
@@ -116,23 +115,23 @@
     flex-wrap: wrap;
     gap: 20px;
     font-size: 0.95rem;
-    color: #555;
+    color: var(--muted);
 }
 
 .contact-link {
-    color: #555;
+    color: var(--muted);
     text-decoration: none;
     transition: color 0.2s;
 }
 
 .contact-link:hover {
-    color: #000;
+    color: var(--ink);
 }
 
 .contact-item i,
 .contact-link i {
     width: 20px;
-    color: #888;
+    color: var(--caption);
 }
 
 .social-links {
@@ -147,8 +146,8 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #f5f5f5;
-    color: #444;
+    background: var(--surface-2);
+    color: var(--muted);
     text-decoration: none;
     transition: all 0.3s ease;
     font-size: 1.1rem;
@@ -158,6 +157,10 @@
     background: #000;
     color: #fff;
     transform: translateY(-3px);
+}
+
+html[data-theme^="d"] .social-icon:hover {
+    background: var(--navy);
 }
 
 .author-interests {
@@ -189,7 +192,7 @@
 
 .author-tags .section-title {
     font-size: 0.9rem;
-    color: #888;
+    color: var(--caption);
         
     margin-bottom: 12px;
 }

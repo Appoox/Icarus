@@ -41,11 +41,11 @@
   padding: 0 0.75rem;
   border: 1.5px solid var(--rule, #ddd);
   border-radius: 3px;
-  background: #fff;
+  background: var(--surface, #fff);
   font-family: var(--label, sans-serif);
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--navy, #1a2b4a);
+  color: var(--link, #1a2b4a);
   text-decoration: none;
   
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;

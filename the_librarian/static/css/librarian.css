@@ -39,7 +39,7 @@
   font-family: var(--font-ui);
   font-size: 1rem;
   color: var(--ink);
-  background: #fff;
+  background: var(--surface);
   border: 1.5px solid var(--rule);
   border-radius: 6px;
   outline: none;
@@ -98,7 +98,7 @@
   font-family: var(--font-ui);
   font-size: .88rem;
   color: var(--ink);
-  background: #fff;
+  background: var(--surface);
   border: 1.5px solid var(--rule);
   border-radius: 6px;
   cursor: pointer;
@@ -123,7 +123,7 @@
 
 /* Result cards */
 .result-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 8px;
   padding: 1.2rem 1.35rem;
@@ -159,7 +159,7 @@
 .result-doc {
   font-family: var(--serif);
   font-weight: 700;
-  color: var(--navy);
+  color: var(--link);
   font-size: 1rem;
 }
 
@@ -226,7 +226,7 @@
 
 .badge-hybrid {
   background: color-mix(in srgb, var(--navy) 12%, transparent);
-  color: var(--navy);
+  color: var(--link);
 }
 
 .badge-similarity {
@@ -419,7 +419,7 @@
   font-family: var(--font-ui);
   font-size: .88rem;
   color: var(--ink);
-  background: #fff
+  background: var(--surface)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b6659' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")
     no-repeat right .6rem center;
   border: 1.5px solid var(--rule);
@@ -433,6 +433,10 @@
 .filter-select:focus {
   outline: none;
   border-color: var(--navy);
+}
+
+html[data-theme^="d"] .filter-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a89f8d' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
 }
 
 .filter-clear {
@@ -672,7 +676,7 @@
 
 .issue-btn--download {
   background: transparent;
-  color: var(--navy);
+  color: var(--link);
   border: 1.5px solid var(--navy);
   flex: 1;
 }

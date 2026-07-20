@@ -30,6 +30,19 @@
   --footer-col-min:     150px;
 }
 
+/* In the dark themes the charcoal footer would look lighter than the
+   page; deepen it so it blends, and match the brightened brand red. */
+html[data-theme^="d"] {
+  --footer-bg:          #1d1913;
+  --footer-border:      #332e26;
+  --footer-accent:      #e35d6a;
+}
+
+html[data-theme="dark"] {
+  --footer-bg:          #000000;
+  --footer-border:      #26221c;
+}
+
 /* ── Shell ──────────────────────────────────────────────────────── */
 .site-footer {
   background-color: var(--footer-bg);

@@ -294,7 +294,7 @@
 }
 
 .audio-card {
-    background: #f8f9fa;
+    background: var(--surface-2);
     padding: 24px;
     border-radius: 16px;
     border: 1px solid var(--rule);
@@ -348,7 +348,7 @@
 .progress-wrapper {
     position: relative;
     height: 6px;
-    background: #eef0f2;
+    background: var(--rule-soft);
     border-radius: 3px;
     cursor: pointer;
 }
@@ -380,7 +380,7 @@
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    color: #95a5a6;
+    color: var(--caption);
     font-weight: 600;
     font-family: sans-serif;
 }
@@ -563,7 +563,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    color: var(--navy);
+    color: var(--link);
     padding-bottom: .65rem;
     border-bottom: 2px solid var(--navy);
     margin-bottom: 1.5rem;
@@ -683,7 +683,7 @@
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 800;
-    color: var(--navy);
+    color: var(--link);
     padding-bottom: .65rem;
     border-bottom: 2px solid var(--navy);
     margin-bottom: 1.5rem;
@@ -706,7 +706,7 @@
 
 .editorial-board-btn:hover,
 .editorial-board-btn[aria-expanded="true"] {
-    color: var(--navy);
+    color: var(--link);
     border-color: var(--red);
 }
 
@@ -749,7 +749,7 @@
 }
 
 .issue-editorial-board-close-btn:hover {
-    color: var(--navy);
+    color: var(--link);
 }
 
 .editorial-board-inner {
@@ -770,7 +770,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-        color: var(--navy);
+        color: var(--link);
     border-bottom: 1px solid var(--rule);
     padding-bottom: 0.5rem;
     margin: 1.5rem auto 0.5rem;
@@ -804,7 +804,7 @@
 .board-member:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    background: #fff;
+    background: var(--surface);
 }
 
 .board-member__photo img,
@@ -960,7 +960,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-        color: var(--navy);
+        color: var(--link);
     white-space: nowrap;
     margin: 0;
 }
@@ -983,7 +983,7 @@
 .sg-article-card {
   flex: 1 1 340px;
   max-width: 380px;
-  background: #fff;
+  background: var(--surface);
   border-radius: 4px;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -1119,7 +1119,7 @@
     font-size: 1.25rem;
     font-weight: 800;
     
-        color: var(--navy);
+        color: var(--link);
     border-bottom: 2px solid var(--navy);
     padding-bottom: 0.75rem;
     margin-bottom: 2rem;
@@ -1310,4 +1310,13 @@
 
 .issue-page-header.header-contrast--dark-bg .favorite-btn:hover {
     color: #ff4d73; /* Vibrates back to red on hover */
+}
+
+/* ── DARK THEME OVERRIDES ── */
+html[data-theme^="d"] .board-member__photo-placeholder {
+    background: linear-gradient(135deg, var(--rule), #4a4438);
+}
+
+html[data-theme^="d"] .show-more-banner {
+    background: linear-gradient(to bottom, rgba(22, 19, 14, 0), var(--paper) 85%);
 }

@@ -9,7 +9,7 @@
 .author-index-header {
     text-align: center;
     margin-bottom: 60px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--rule-soft);
     padding-bottom: 30px;
 }
 
@@ -20,8 +20,8 @@
 }
 
 .author-card {
-    background: #fff;
-    border: 1px solid #efefef;
+    background: var(--surface);
+    border: 1px solid var(--rule-soft);
     padding: 20px;
     text-align: center;
     transition: transform 0.2s;
@@ -43,7 +43,7 @@
 .photo-placeholder {
     width: 120px;
     height: 120px;
-    background: #f0f0f0;
+    background: var(--surface-2);
     border-radius: 50%;
     margin: 0 auto 15px;
 }
@@ -52,7 +52,7 @@
     display: block;
         font-size: 0.75rem;
     
-    color: #003366; /* Your SciAm Blue */
+    color: var(--link);
     font-weight: bold;
     margin-bottom: 8px;
 }
@@ -63,13 +63,13 @@
 }
 
 .author-info h2 a {
-    color: #111;
+    color: var(--ink);
     text-decoration: none;
 }
 
 .author-info p {
     font-size: 0.95rem;
-    color: #666;
+    color: var(--muted);
     line-height: 1.5;
     margin-bottom: 15px;
 }
@@ -78,6 +78,6 @@
     font-size: 0.85rem;
     font-weight: bold;
     text-decoration: none;
-    color: #000;
-    border-bottom: 2px solid #000;
+    color: var(--ink);
+    border-bottom: 2px solid var(--ink);
 }

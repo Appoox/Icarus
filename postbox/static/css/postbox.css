@@ -70,7 +70,7 @@
 
 /* ── Form card ──────────────────────────────────────────────── */
 .fb-card {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--rule);
     border-radius: 8px;
     padding: 2rem 2rem 1.75rem;
@@ -173,7 +173,7 @@
     font-family: var(--body-serif);
     font-size: .95rem;
     color: var(--ink);
-    background: #fff;
+    background: var(--surface);
     border: 1.5px solid var(--rule);
     border-radius: 4px;
     resize: vertical;
@@ -233,8 +233,8 @@
 }
 
 .fb-file-input::file-selector-button:hover {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    background: var(--surface-2);
+    border-color: var(--rule);
 }
 
 /* ── Character counter ──────────────────────────────────────── */
@@ -323,7 +323,7 @@
 }
 
 .fb-history-item {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--rule);
     border-left: 4px solid var(--rule);
     border-radius: 0 6px 6px 0;
@@ -337,7 +337,7 @@
 .fb-history-item--general    { border-left-color: #6b7280; }
 
 .fb-history-item--reviewed {
-    background: #f9fafb;
+    background: var(--surface-2);
     opacity: .85;
 }
 
@@ -382,6 +382,15 @@
     background: #dcfce7;
     border-radius: 20px;
     padding: 1px 8px;
+}
+
+html[data-theme^="d"] .fb-history-item__reviewed {
+    color: #7fd18a;
+    background: #1b2e1e;
+}
+
+html[data-theme^="d"] .fb-context-note {
+    background: rgba(255, 255, 255, .05);
 }
 
 .fb-history-item__message {

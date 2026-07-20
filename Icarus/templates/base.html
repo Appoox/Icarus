@@ -25,6 +25,25 @@
     {% include "includes/seo_meta.html" %}
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#fafaf8" />
+
+    {# Apply the saved (or OS-preferred) theme before stylesheets load, so #}
+    {# dark-mode readers never see a white flash. Kept inline on purpose.  #}
+    {# Themes: light, dusk (warm dark), dark (true black for OLED).       #}
+    <script>
+        (function () {
+            var colors = { light: '#fafaf8', dusk: '#16130e', dark: '#000000' };
+            try {
+                var theme = localStorage.getItem('theme');
+                if (!colors.hasOwnProperty(theme)) {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dusk' : 'light';
+                }
+                document.documentElement.setAttribute('data-theme', theme);
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.setAttribute('content', colors[theme]);
+            } catch (e) { /* storage unavailable — default light */ }
+        })();
+    </script>
 
     {# Force all links in the live preview panel to be opened in a new tab #}
     {% if request.in_preview_panel %}

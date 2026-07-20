@@ -15,7 +15,7 @@
     font-family: var(--font-display);
     font-size: 32px;
     font-weight: 900;
-    color: var(--navy);
+    color: var(--link);
     margin-bottom: 8px;
     text-align: center;
 }
@@ -57,7 +57,7 @@
     font-size: 15px;
     border: 1px solid var(--rule);
     border-radius: 4px;
-    background: var(--white);
+    background: var(--surface);
     color: var(--ink);
     transition: border-color 0.15s;
 }
@@ -143,6 +143,9 @@
     color: var(--red);
 }
 
+html[data-theme^="d"] .messages li { background: #1b2e1e; color: #7fd18a; }
+html[data-theme^="d"] .messages li.error { background: #331b1e; }
+
 /* Fieldset Styling (Signup / Password Reset) */
 .form-fieldset {
     border: 1px solid var(--rule);
@@ -184,7 +187,7 @@
     font-size: 15px;
     border: 1px solid var(--rule);
     border-radius: 4px;
-    background: var(--white);
+    background: var(--surface);
     color: var(--ink);
     transition: border-color 0.15s;
 }
@@ -196,7 +199,7 @@
 
 /* Success States */
 .success-card {
-    background: var(--white);
+    background: var(--surface);
     padding: 40px 32px;
     border: 1px solid var(--rule);
     border-radius: 8px;
@@ -205,7 +208,7 @@
 
 .success-icon {
     font-size: 48px;
-    color: #2e7d32;
+    color: var(--success);
     margin-bottom: 20px;
 }
 
@@ -230,7 +233,7 @@
 
 /* Auth Card (Logout / generic) */
 .auth-card {
-    background: var(--white);
+    background: var(--surface);
     padding: 40px 32px;
     border: 1px solid var(--rule);
     border-radius: 8px;
@@ -270,14 +273,14 @@
 }
 
 .link--forgot:hover {
-    color: var(--navy);
+    color: var(--link);
 }
 
 .helptext, .help-text {
     display: block;
     font-family: var(--font-ui);
     font-size: 12px;
-    color: #888070;
+    color: var(--caption);
     margin-top: 6px;
     line-height: 1.4;
 }
@@ -288,6 +291,10 @@ select.form-input {
     background-repeat: no-repeat;
     background-position: right 12px center;
     padding-right: 32px;
+}
+
+html[data-theme^="d"] select.form-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a89f8d' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
 }
 
 /* ── Password show/hide positioning rules ─────────────────────────── */
@@ -309,7 +316,7 @@ select.form-input {
     border: none;
     cursor: pointer;
     padding: 4px;
-    color: #888;
+    color: var(--caption);
     display: flex;
     align-items: center;
     line-height: 1;
@@ -318,7 +325,7 @@ select.form-input {
 }
 
 .password-toggle:hover {
-    color: #333;
+    color: var(--ink);
 }
 
 /* ── Failed-attempts security banner states ──────────────────────── */
@@ -348,6 +355,13 @@ select.form-input {
 .login-attempts-warning.lockout p {
     color: #721c24;
 }
+
+html[data-theme^="d"] .login-attempts-warning p { color: #e6a23c; }
+html[data-theme^="d"] .login-attempts-warning.lockout {
+    background: #331b1e;
+    border-color: #4a2a2e;
+}
+html[data-theme^="d"] .login-attempts-warning.lockout p { color: #f28b94; }
 
 /* Checkbox alignment correction formatting */
 .form-group--checkbox {
@@ -562,7 +576,7 @@ kbd.confirm-keyword {
     margin: 0 auto 24px;
     border-radius: 50%;
     /* Muted neutral background — deliberately not red; the decision is done */
-    background: #f0f0ed;
+    background: var(--surface-2);
     color: var(--muted);
     display: flex;
     align-items: center;
@@ -627,14 +641,14 @@ kbd.confirm-keyword {
 /* Ghost: outlined, no fill — secondary hierarchy */
 .inactive-btn--ghost {
     background: transparent;
-    color: var(--navy);
+    color: var(--link);
     border: 1px solid var(--rule);
 }
 
 .inactive-btn--ghost:hover {
     border-color: var(--navy);
     background: rgba(11, 31, 58, 0.04);
-    color: var(--navy);
+    color: var(--link);
 }
 
 /* Small footnote about the retention window */
@@ -677,7 +691,7 @@ kbd.confirm-keyword {
     font-size: 24px;
     font-weight: 700;
     color: var(--ink);
-    background: var(--white);
+    background: var(--surface);
     border: 2px solid var(--rule);
     border-radius: 8px;
     padding: 0;
@@ -696,6 +710,17 @@ kbd.confirm-keyword {
 .otp-digit--filled {
     border-color: var(--navy-mid);
     background: #f0f4f8;
+}
+
+html[data-theme^="d"] .otp-digit--filled {
+    background: #232a34;
+}
+
+html[data-theme^="d"] .consequence-icon { background: #331b1e; }
+html[data-theme^="d"] kbd.confirm-keyword {
+    background: #331b1e;
+    color: #f28b94;
+    border-color: #4a2a2e;
 }
 
 /* Dash separator between the two triplets */
