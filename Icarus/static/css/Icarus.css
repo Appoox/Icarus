@@ -5,6 +5,8 @@
 
 /* ── Design Tokens ──────────────────────────────── */
 :root {
+    color-scheme: light;
+
     --navy: #0b1f3a;
     --navy-mid: #163059;
     --red: #c8102e;
@@ -19,17 +21,95 @@
     --caption: #888070;
     --success: #2e7d32;
     --warning: #e65100;
-    
+
+    /* Role tokens — light values match the hexes they replaced,
+       so light-mode rendering is unchanged. */
+    --surface: #ffffff;      /* cards, panels */
+    --surface-2: #f4f2ee;    /* subtle fills */
+    --rule-soft: #e7e4dd;    /* hairline borders */
+    --link: #0b1f3a;         /* navy used as text */
+    --bg-light: #f4f2ee;
+    --bg: #fdfdfc;           /* issue.css card/panel fallback */
+
+    /* Tokens referenced by article.css but never defined — the rules
+       using them silently fell back to inherited/none (missing .meta
+       borders, transparent paywall card). Aliases restore the intended
+       design and inherit dark values automatically. */
+    --black: var(--ink);
+    --gray-dark: #4a453c;
+    --gray-mid: var(--muted);
+    --gray-light: var(--rule-soft);
+    --gray-bg: var(--surface-2);
+    --font-body: var(--body-serif);
+    --border-color: var(--rule);
+    --color-muted: var(--muted);
+    --color-primary: var(--red);
+
     --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
     --body-serif: 'Source Serif 4', Georgia, serif;
     --label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
     --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
     --font-ui: 'Source Sans 3', Helvetica, sans-serif;
-    
+
     --col-gap: 2.5rem;
     --max-width: 1421px;
     --article-col: 1000px;
 }
+
+/* ── Dark Themes: dusk + dark ───────────────────── */
+/* Two dark-family themes share one palette:
+     data-theme="dusk"  — warm near-black, matches the print brand
+     data-theme="dark"  — true #000 for OLED displays
+   `[data-theme^="d"]` matches both; `[data-theme="dark"]` further
+   down re-pins the surfaces to pure black.
+   --white deliberately stays white: it is only used for text on
+   coloured fills, which keep their fills in dark themes. */
+html[data-theme^="d"] {
+    color-scheme: dark;
+
+    --navy: #234a7c;
+    --navy-mid: #2e5a94;
+    --red: #e35d6a;
+    --red-hover: #ef7d88;
+    --red-dark: #ef7d88;
+    --sky: #58a6ff;
+    --paper: #16130e;
+    --rule: #3b352b;
+    --muted: #a89f8d;
+    --ink: #ece7dd;
+    --caption: #948b7a;
+    --success: #5dbb63;
+    --warning: #ffa040;
+
+    --surface: #201c16;
+    --surface-2: #2a251e;
+    --rule-soft: #2e2921;
+    --link: #a3c0e8;
+    --bg-light: #2a251e;
+    --bg: #201c16;
+
+    --gray-dark: #d8d2c6;
+}
+
+/* True black: page pixels fully off on OLED, surfaces barely lifted */
+html[data-theme="dark"] {
+    --paper: #000000;
+    --surface: #0b0a08;
+    --surface-2: #16140f;
+    --rule: #332d24;
+    --rule-soft: #211e18;
+    --bg-light: #16140f;
+    --bg: #0b0a08;
+}
+
+
+/* ── Theme-dependent images ─────────────────────── */
+/* Elements marked themed-img--light render only in the light theme;
+   themed-img--dark only in the dark themes (dusk and dark). Used by
+   the header for CMS-uploaded logo variants. */
+html[data-theme^="d"] .themed-img--light { display: none !important; }
+.themed-img--dark { display: none !important; }
+html[data-theme^="d"] .themed-img--dark { display: block !important; }
 
 
 /* ── Global Resets ──────────────────────────────── */
@@ -139,6 +219,11 @@ img {
 .message--info    { background: #e3f2fd; color: #1565c0; border-left: 4px solid #1565c0; }
 .message--warning { background: #fff3e0; color: #e65100; border-left: 4px solid #e65100; }
 
+html[data-theme^="d"] .message--success { background: #1b2e1e; color: #7fd18a; border-left-color: #5dbb63; }
+html[data-theme^="d"] .message--error   { background: #331b1e; color: #f28b94; border-left-color: #e35d6a; }
+html[data-theme^="d"] .message--info    { background: #16263a; color: #7fb5f0; border-left-color: #58a6ff; }
+html[data-theme^="d"] .message--warning { background: #332413; color: #ffb74d; border-left-color: #ffa040; }
+
 .message__close {
     background: none;
     border: none;
@@ -166,9 +251,9 @@ img {
 .audio-block, .video-block {
     margin: 2.5rem 0;
     padding: 1.5rem;
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 16px;
-    border: 1px solid #eef0f2;
+    border: 1px solid var(--rule-soft);
     box-shadow: 0 4px 20px rgba(0,0,0,0.04);
 }
 
@@ -218,7 +303,7 @@ img {
 .progress-wrapper {
     position: relative;
     height: 6px;
-    background: #eef0f2;
+    background: var(--rule-soft);
     border-radius: 3px;
     cursor: pointer;
 }
@@ -470,7 +555,7 @@ img {
     align-items: center;
 }
 .site-breadcrumbs a {
-    color: var(--navy);
+    color: var(--link);
     text-decoration: none;
     font-weight: 500;
 }

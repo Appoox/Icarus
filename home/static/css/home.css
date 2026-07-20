@@ -47,7 +47,7 @@
 .sg-issue-cover {
     display: flex;
     flex-direction: column;
-    background: #fff;
+    background: var(--surface);
     padding: 1.5rem; /* Reduced for a tighter look */
     border-radius: 4px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); /* Softened shadow */
@@ -59,7 +59,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-        color: var(--navy);
+        color: var(--link);
     padding-bottom: .75rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.5rem;
@@ -174,7 +174,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-        color: var(--navy);
+        color: var(--link);
     padding-bottom: .6rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 3rem; /* INCREASED from 1.25rem: pushes carousel down toward vertical centre (Fix 4) */
@@ -216,7 +216,7 @@
 .sg-issue-card {
     display: flex;
     flex-direction: column;
-    background: #fff;
+    background: var(--surface);
     padding: 1rem;
     border-radius: 4px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08); /* Softened shadow */
@@ -319,7 +319,7 @@
     font-size: 1rem;
     font-weight: 800;
     
-        color: var(--navy);
+        color: var(--link);
     padding-bottom: .6rem;
     /* border-bottom: 2px solid var(--navy); Slimmer border */
     margin-bottom: 1.25rem;
@@ -402,7 +402,7 @@
 .sg-issue-small-card {
     display: flex;
     flex-direction: column;
-    background: #fff;
+    background: var(--surface);
     padding: 1rem;
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -566,7 +566,7 @@
     font-size: 1.05rem;
     font-weight: 800;
     
-        color: var(--navy);
+        color: var(--link);
     white-space: nowrap;
 }
 
@@ -584,7 +584,7 @@
 }
 
 .sg-article-card {
-    background: #fff;
+    background: var(--surface);
     border-radius: 4px;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -923,7 +923,7 @@
     gap: 0.6rem;
     background: transparent;
     border: 2px solid var(--navy);
-    color: var(--navy);
+    color: var(--link);
     font-family: var(--label);
     font-size: 1rem;
     font-weight: 700;

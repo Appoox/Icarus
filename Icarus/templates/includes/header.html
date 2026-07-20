@@ -17,7 +17,12 @@
             {% if header.logo %}
             {% image header.logo height-60 as logo_img %}
             <img src="{{ logo_img.url }}" alt="{{ header.logo_alt_text|default:default_logo_alt }}"
-                class="site-header__logo-img">
+                class="site-header__logo-img{% if header.logo_dark %} themed-img--light{% endif %}">
+            {% if header.logo_dark %}
+            {% image header.logo_dark height-60 as logo_img_dark %}
+            <img src="{{ logo_img_dark.url }}" alt="{{ header.logo_alt_text|default:default_logo_alt }}"
+                class="site-header__logo-img themed-img--dark">
+            {% endif %}
             {% else %}
             <span class="site-header__logo-placeholder">&#9632;</span>
             {% endif %}
@@ -36,7 +41,13 @@
         <a href="{{ header.site_title_url|default:home_url }}">
             {% if header.site_title_image %}
                 {% image header.site_title_image height-60 as title_img %}
-                <img src="{{ title_img.url }}" alt="{{ header.site_title|default:default_title_alt }}" class="site-header__title-img">
+                <img src="{{ title_img.url }}" alt="{{ header.site_title|default:default_title_alt }}"
+                    class="site-header__title-img{% if header.site_title_image_dark %} themed-img--light{% endif %}">
+                {% if header.site_title_image_dark %}
+                {% image header.site_title_image_dark height-60 as title_img_dark %}
+                <img src="{{ title_img_dark.url }}" alt="{{ header.site_title|default:default_title_alt }}"
+                    class="site-header__title-img themed-img--dark">
+                {% endif %}
             {% else %}
                 {{ header.site_title }}
             {% endif %}
@@ -62,6 +73,19 @@
                 </svg>
             </button>
         </div>
+
+        <!-- Theme toggle: cycles light → dusk → dark (true black) -->
+        <button
+            class="search-icon-btn theme-toggle-btn"
+            id="themeToggle"
+            aria-label="{% translate 'തീം മാറ്റുക' %}"
+            title="{% translate 'തീം മാറ്റുക' %}"
+            type="button"
+        >
+            <i class="fas fa-sun" aria-hidden="true"></i>
+            <i class="fas fa-cloud-moon" aria-hidden="true"></i>
+            <i class="fas fa-moon" aria-hidden="true"></i>
+        </button>
 
         <!-- Language switcher: labels intentionally NOT translate-wrapped — -->
         <!-- a switcher names the target language in its own script so the  -->
@@ -91,7 +115,13 @@
     <a href="{{ header.site_title_url|default:home_url }}">
         {% if header.site_title_image %}
             {% image header.site_title_image height-50 as title_img_mob %}
-            <img src="{{ title_img_mob.url }}" alt="{{ header.site_title|default:default_title_alt }}">
+            <img src="{{ title_img_mob.url }}" alt="{{ header.site_title|default:default_title_alt }}"
+                {% if header.site_title_image_dark %}class="themed-img--light"{% endif %}>
+            {% if header.site_title_image_dark %}
+            {% image header.site_title_image_dark height-50 as title_img_mob_dark %}
+            <img src="{{ title_img_mob_dark.url }}" alt="{{ header.site_title|default:default_title_alt }}"
+                class="themed-img--dark">
+            {% endif %}
         {% else %}
             {{ header.site_title }}
         {% endif %}

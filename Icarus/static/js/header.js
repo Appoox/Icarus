@@ -1,3 +1,39 @@
+/* ── Theme toggle ─────────────────────────────────
+   The current theme is applied by an inline script in base.html
+   before CSS loads; this only handles switching. Clicking cycles
+   light → dusk (warm dark) → dark (true black for OLED) → light.
+   Kept in its own IIFE so it still runs when the search markup
+   is absent. */
+(function () {
+    const btn = document.getElementById('themeToggle');
+    const THEMES = ['light', 'dusk', 'dark'];
+    const THEME_COLORS = { light: '#fafaf8', dusk: '#16130e', dark: '#000000' };
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', THEME_COLORS[theme]);
+    }
+
+    if (btn) {
+        btn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
+            applyTheme(next);
+            try { localStorage.setItem('theme', next); } catch (e) { /* private mode */ }
+        });
+    }
+
+    // Follow OS-level changes, but only while the reader hasn't chosen explicitly.
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        let stored = null;
+        try { stored = localStorage.getItem('theme'); } catch (err) { /* ignore */ }
+        if (!THEMES.includes(stored)) {
+            applyTheme(e.matches ? 'dusk' : 'light');
+        }
+    });
+})();
+
 (function () {
     const toggle   = document.getElementById('searchToggle');
     const overlay  = document.getElementById('searchOverlay');

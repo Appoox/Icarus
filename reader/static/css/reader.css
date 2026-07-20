@@ -26,7 +26,7 @@ h1 {
     font-family: var(--font-display);
     font-size: 32px;
     font-weight: 900;
-    color: var(--navy);
+    color: var(--link);
     margin-bottom: 8px;
 }
 
@@ -50,7 +50,7 @@ h1 {
 }
 
 .payment-form, .auth-form {
-    background: var(--white);
+    background: var(--surface);
 }
 
 /* Labels & Headers */
@@ -107,6 +107,10 @@ h1 {
     background: #fce4ec;
 }
 
+html[data-theme^="d"] .btn-cancel:hover {
+    background: #331b1e;
+}
+
 .btn-renew {
     display: inline-block;
     font-family: var(--font-ui);
@@ -124,8 +128,8 @@ h1 {
 }
 
 .btn-renew:hover {
-    background: #143560;
-    border-color: #143560;
+    background: var(--navy-mid);
+    border-color: var(--navy-mid);
 }
 
 .checkout-submit, .auth-submit {
@@ -157,7 +161,7 @@ h1 {
     font-size: 15px;
     border: 1px solid var(--rule);
     border-radius: 4px;
-    background: var(--white);
+    background: var(--surface);
     color: var(--ink);
     transition: all 0.2s ease;
 }
@@ -201,6 +205,10 @@ select.form-input {
     padding-right: 32px;
 }
 
+html[data-theme^="d"] select.form-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a89f8d' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+}
+
 /* ─────────────────────────────────────────────
    Specific Views Logic
  ───────────────────────────────────────────── */
@@ -230,6 +238,10 @@ select.form-input {
     color: var(--red);
 }
 
+html[data-theme^="d"] .method-option.active {
+    background: #331b1e;
+}
+
 .method-option input {
     display: none;
 }
@@ -239,7 +251,7 @@ select.form-input {
    (Added to make the summary details stand out)
  ───────────────────────────────────────────── */
 .summary-box {
-    background: var(--white);
+    background: var(--surface);
     border: 2px solid var(--navy); /* Thicker, bolder border to draw attention */
     box-shadow: 0 8px 24px rgba(11, 31, 58, 0.08); /* Lift effect */
     transform: translateY(-2px);
@@ -247,7 +259,7 @@ select.form-input {
 
 .summary-box h2 {
     font-size: 14px; /* Increased font size */
-    color: var(--navy);
+    color: var(--link);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 1px solid var(--rule);
@@ -289,7 +301,7 @@ select.form-input {
 
 .read-list li {
     padding: 14px 0;
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid var(--rule-soft);
 }
 
 .read-list li:last-child { border-bottom: none; }
@@ -298,7 +310,7 @@ select.form-input {
     font-family: var(--font-display);
     font-size: 18px;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--link);
     text-decoration: none;
     transition: color 0.15s;
 }
@@ -353,6 +365,18 @@ select.form-input {
     color: #1565c0;
 }
 
+html[data-theme^="d"] .grace-banner {
+    background: #332413;
+    border-color: #7a5a24;
+    color: #ffb74d;
+}
+
+html[data-theme^="d"] .notice-banner {
+    background: #16263a;
+    border-color: #2c4a6e;
+    color: #7fb5f0;
+}
+
 /* Plans Grid */
 .plans-grid {
     display: grid;
@@ -362,7 +386,7 @@ select.form-input {
 }
 
 .plan-option {
-    background: var(--white);
+    background: var(--surface);
     border: 2px solid var(--rule);
     border-radius: 8px;
     padding: 20px;
@@ -381,7 +405,7 @@ select.form-input {
     font-family: var(--font-ui);
     font-size: 15px;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--link);
     margin-bottom: 4px;
 }
 
@@ -432,7 +456,7 @@ select.form-input {
     text-transform: none;
     
     color: var(--ink);
-    background: var(--white);
+    background: var(--surface);
     border: 1px solid var(--rule);
     border-radius: 20px;
     padding: 6px 14px;
@@ -451,7 +475,7 @@ select.form-input {
 .helptext {
     font-family: var(--font-ui);
     font-size: 12px;
-    color: #888070;
+    color: var(--caption);
     margin-top: 4px;
     display: block;
 }
@@ -508,7 +532,7 @@ select.form-input {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: #e8e8e8;
+    background: var(--surface-2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -575,7 +599,7 @@ select.form-input {
     font-family: var(--font-ui);
     font-size: 13px;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--link);
     text-decoration: none;
 }
 
@@ -600,6 +624,11 @@ select.form-input {
 .comment-badge--pending  { background: #fff8e1; color: #f57f17; }
 .comment-badge--removed  { background: #fce4ec; color: var(--red); }
 .comment-badge--reply    { background: #e8eaf6; color: #3949ab; }
+
+html[data-theme^="d"] .comment-badge--approved { background: #1b2e1e; color: #7fd18a; }
+html[data-theme^="d"] .comment-badge--pending  { background: #332413; color: #ffb74d; }
+html[data-theme^="d"] .comment-badge--removed  { background: #331b1e; }
+html[data-theme^="d"] .comment-badge--reply    { background: #1e2338; color: #9fa8da; }
 
 .comment-item__body-wrap {
     position: relative;
@@ -670,6 +699,10 @@ select.form-input {
 
 .page-btn:hover {
     background: #fce4ec;
+}
+
+html[data-theme^="d"] .page-btn:hover {
+    background: #331b1e;
 }
 
 .page-btn--disabled {

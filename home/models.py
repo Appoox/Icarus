@@ -44,6 +44,14 @@ class SiteHeader(models.Model):
         related_name="+",
         help_text="Logo displayed on the left side of the header.",
     )
+    logo_dark = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Optional logo variant for the dark themes; the regular logo is used when empty.",
+    )
     logo_alt_text = models.CharField(
         max_length=100,
         blank=True,
@@ -74,13 +82,23 @@ class SiteHeader(models.Model):
         related_name="+",
         help_text="Image displayed in the centre of the header (replaces site_title text if set).",
     )
+    site_title_image_dark = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Optional site-title image variant for the dark themes; the regular image is used when empty.",
+    )
 
     panels = [
         FieldPanel("logo"),
+        FieldPanel("logo_dark"),
         FieldPanel("logo_alt_text"),
         FieldPanel("organization_title"),
         FieldPanel("site_title"),
         FieldPanel("site_title_image"),
+        FieldPanel("site_title_image_dark"),
         FieldPanel("site_title_url"),
     ]
 

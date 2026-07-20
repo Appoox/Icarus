@@ -30,7 +30,7 @@
     grid-template-columns: 300px 1fr;
     gap: 30px;
     margin-bottom: 40px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--rule-soft);
     padding-bottom: 40px;
 }
 
@@ -50,21 +50,22 @@
     font-size: 1.8rem;
     line-height: 1.2;
     font-family: 'Manjari', sans-serif;
+    color: var(--ink);
 }
 
 .feed-content h2 a {
-    color: #111;
+    color: var(--ink);
     text-decoration: none;
 }
 
-.feed-content h2 a:hover { 
-    text-decoration: underline; 
-    color: #003366; 
+.feed-content h2 a:hover {
+    text-decoration: underline;
+    color: var(--link);
 }
 
 .meta-date {
     font-size: 0.85rem;
-    color: #666;
+    color: var(--muted);
     display: block;
     margin-bottom: 5px;
     font-family: sans-serif;
@@ -72,13 +73,13 @@
 
 .meta-author {
     font-size: 0.9rem;
-    color: #444;
+    color: var(--muted);
     margin-bottom: 10px;
     font-weight: bold;
 }
 
 .excerpt {
-    color: #333;
+    color: var(--ink);
     font-size: 1.1rem;
     line-height: 1.6;
 }
