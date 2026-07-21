@@ -5,6 +5,36 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
+    // ── LAZY EDITORIAL REVEAL ──
+    // The editorial starts hidden behind a shimmer skeleton (via the
+    // `js-lazy-body` class set in the template). On reveal we wrap its text in
+    // words that cascade in (see window.lazyRevealWords in Icarus.js). Wrapping
+    // is inline-span only, so it doesn't change the content height the show-more
+    // logic measures; we still fire a resize afterwards to re-run that logic
+    // against the now-settled content so the "read more" clip/banner is correct.
+    if (document.documentElement.classList.contains('js-lazy-body')) {
+        const editorialCol = document.querySelector('.editorial-content-col');
+        if (editorialCol) {
+            const revealEditorial = () => {
+                const body = editorialCol.querySelector('.editorial-body');
+                if (body && window.lazyRevealWords) window.lazyRevealWords(body);
+                editorialCol.classList.add('body-loaded');
+                window.dispatchEvent(new Event('resize'));
+                // Safety: expanding "read more" reveals any words still below the fold
+                // that the wave hasn't reached yet, so nothing expands in blank.
+                const banner = editorialCol.querySelector('.show-more-banner');
+                if (banner) banner.addEventListener('click', () => {
+                    editorialCol.querySelectorAll('.lazy-word').forEach(w => w.classList.add('lazy-word--in'));
+                }, { once: true });
+            };
+            if (document.readyState === 'complete') {
+                setTimeout(revealEditorial, 250);
+            } else {
+                window.addEventListener('load', () => setTimeout(revealEditorial, 150));
+            }
+        }
+    }
+
     // ── AUTOMATIC HEADER CONTRAST ANALYSIS ──
     // This function analyzes the issue cover image to determine if it is predominantly dark.
     // If the image is dark, it applies a contrast-boosting dark class to the parent header container.

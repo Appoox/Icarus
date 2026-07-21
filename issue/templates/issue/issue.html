@@ -4,6 +4,10 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/issue.css' %}">
 <link rel="stylesheet" href="{% static 'css/comments.css' %}">
+{# Flag JS so the editorial starts hidden behind a skeleton and fades in (see #}
+{# issue.js). Set before paint to avoid a flash; crawlers/no-JS skip it and    #}
+{# get the fully rendered editorial. Mirrors the theme script in base.html.    #}
+<script>document.documentElement.classList.add('js-lazy-body');</script>
 {% endblock %}
 
 {% block content %}
@@ -386,6 +390,7 @@
 
             {% if page.editorial %}
             <div class="expandable-wrapper" data-expand-height="400">
+                {% include "includes/body_skeleton.html" %}
                 <div class="expandable-content">
                     <div class="editorial-body">
                         {% for block in page.editorial %}

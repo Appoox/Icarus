@@ -5,6 +5,10 @@
 <link rel="stylesheet" href="{% static 'css/article.css' %}">
 <link rel="stylesheet" href="{% static 'css/comments.css' %}">
 <meta name="article-id" content="{{ page.id }}">
+{# Flag JS so the body starts hidden behind a skeleton and fades in (see #}
+{# article.js). Set before paint to avoid a flash; crawlers/no-JS skip it #}
+{# and get the fully rendered body. Mirrors the theme script in base.html. #}
+<script>document.documentElement.classList.add('js-lazy-body');</script>
 {% endblock %}
 
 {% block content %}
@@ -404,6 +408,8 @@
   {# stays accurate for the crawler render. Real users never hit this branch.    #}
   {% if crawler_full_access %}<div class="paywall-wrapper">{% endif %}
   <main class="article-body">
+
+    {% include "includes/body_skeleton.html" %}
 
     <div id="body-ml" class="lang-content active" data-lang="ml">
       <div class="article-content">

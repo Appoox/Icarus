@@ -1320,3 +1320,34 @@ html[data-theme^="d"] .board-member__photo-placeholder {
 html[data-theme^="d"] .show-more-banner {
     background: linear-gradient(to bottom, rgba(22, 19, 14, 0), var(--paper) 85%);
 }
+/* ─────────────────────────────────────────────
+   Lazy editorial reveal
+   Editorial ships in the HTML (SEO-safe); when JS is present it starts hidden
+   behind the skeleton and fades in once issue.js adds `.body-loaded`. The
+   skeleton is an absolute overlay so it stays out of the .expandable-content
+   flow and doesn't perturb the scrollHeight math in issue.js (show-more/TOC).
+───────────────────────────────────────────── */
+.js-lazy-body .editorial-content-col .expandable-wrapper {
+    position: relative;
+}
+.js-lazy-body .editorial-content-col .expandable-content {
+    opacity: 0;
+}
+.js-lazy-body .editorial-content-col .expandable-wrapper > .body-skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+}
+/* Keep the "show more" banner out of sight until the editorial is revealed. */
+/* !important beats the inline display issue.js sets via checkOverflow.       */
+.js-lazy-body .editorial-content-col:not(.body-loaded) .show-more-banner {
+    display: none !important;
+}
+.js-lazy-body .editorial-content-col.body-loaded .expandable-content {
+    opacity: 1; /* block shown instantly; individual words cascade in (Icarus.js/.css) */
+}
+.js-lazy-body .editorial-content-col.body-loaded .body-skeleton {
+    display: none;
+}
