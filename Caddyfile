@@ -128,6 +128,27 @@ encode gzip
         # container restart) instead of immediately returning 502.
         lb_try_duration 60s
         lb_try_interval 500ms
+
+        # Bound how long Caddy waits on the upstream so a slow or stuck boot
+        # falls through to the maintenance page below instead of hanging forever.
+        #
+        # lb_try_duration only rescues CONNECTION failures: while :8000 is not
+        # yet bound Caddy gets "connection refused", retries, and finally emits a
+        # 502 that handle_errors turns into rebooting.html. But gunicorn's master
+        # binds :8000 BEFORE its workers can serve, so a slow-booting or
+        # crash-looping web container leaves the socket accepting TCP while no
+        # worker ever answers. With no response timeout Caddy completes the
+        # connection and then waits indefinitely for response headers that never
+        # arrive — no 5xx is produced, handle_errors never fires, and the reader
+        # is stranded on a blank tab instead of the rebooting page.
+        # response_header_timeout converts that hang into a 504, which the
+        # handle_errors block below renders as the maintenance page. 60s sits far
+        # above normal sub-second responses (and the on-the-fly article PDF
+        # render), so it only ever trips on a genuinely stuck boot.
+        transport http {
+            dial_timeout 10s
+            response_header_timeout 60s
+        }
     }
 
     # ── MAINTENANCE FALLBACK ─────────────────────────────────────────────
@@ -151,7 +172,7 @@ encode gzip
         file_server {
             status {err.status_code}
         }
-        # Keep in sync with the meta refresh interval in maintenance.html.
+        # Keep in sync with the meta refresh interval in rebooting.html.
         header Retry-After "15"
     }
 
