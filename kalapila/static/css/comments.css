@@ -258,6 +258,26 @@ html[data-theme^="d"] .comment-section__notice--info {
     margin-bottom: 12px;
 }
 
+/* Deleted (tombstone) placeholder — shown in place of a removed comment that still
+   has replies, so the thread stays intact. */
+.comment-card--deleted > .comment-card__main {
+    background: var(--surface-2);
+    border-style: dashed;
+}
+
+.comment-avatar-placeholder--deleted {
+    background: var(--surface-2);
+    color: var(--muted);
+    border-color: var(--rule-soft);
+    font-size: 0.85rem;
+}
+
+.comment-card__body--deleted {
+    font-style: italic;
+    color: var(--muted);
+    margin-bottom: 0;
+}
+
 /* Actions */
 .comment-card__actions {
     display: flex;

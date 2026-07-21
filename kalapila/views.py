@@ -180,8 +180,8 @@ def delete_comment(request, pk):
             "message": "You do not have permission to delete this comment."
         }, status=403)
 
-    if request.user == comment.user:
-        comment._deleted_by_author = True
+    deleted_by_author = request.user == comment.user
+    comment.deleted_by_author = deleted_by_author
 
     comment.is_removed = True
     comment.save()
@@ -191,13 +191,15 @@ def delete_comment(request, pk):
         f'page_comments_{comment.page_id}',
         {
             'type': 'delete_comment',
-            'comment_id': comment.id
+            'comment_id': comment.id,
+            'deleted_by_author': deleted_by_author
         }
     )
-    
+
     return JsonResponse({
         "status": "success",
-        "message": "Comment was successfully removed."
+        "message": "Comment was successfully removed.",
+        "deleted_by_author": deleted_by_author
     })
 
 @login_required

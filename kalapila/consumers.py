@@ -59,5 +59,6 @@ class PageCommentConsumer(AsyncWebsocketConsumer):
         comment_id = event['comment_id']
         await self.send(text_data=json.dumps({
             'type': 'delete_comment',
-            'comment_id': comment_id
+            'comment_id': comment_id,
+            'deleted_by_author': event.get('deleted_by_author', False)
         }))
