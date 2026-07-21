@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Icarus (sasthragathy.org)\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-21 16:41+0530\n"
+"POT-Creation-Date: 2026-07-21 16:55+0530\n"
 "PO-Revision-Date: 2026-07-17 22:45+0530\n"
 "Last-Translator: Icarus i18n\n"
 "Language-Team: en\n"
@@ -149,25 +149,23 @@ msgstr "Back to the sign-in page"
 msgid "രക്ഷിതാവിന്റെ അക്കൗണ്ട്"
 msgstr "Guardian Account"
 
-#: Icarus/templates/account/guardian_signup.html:175
-#, fuzzy
-#| msgid ""
-#| "18 വയസ്സ് തികയാത്തവർക്ക് അക്കൗണ്ട് സൃഷ്ടിക്കാനാവില്ല; രക്ഷിതാവിന് കുടുംബത്തിനായി അക്കൗണ്ട് "
-#| "എടുക്കാം."
+#: Icarus/templates/account/guardian_signup.html:188
 msgid ""
 "ഇന്ത്യൻ ഡാറ്റാ പ്രൊട്ടക്ഷൻ ആക്റ്റ് (DPDP 2023) പ്രകാരം, 18 വയസ്സിന് താഴെയുള്ളവർക്ക് വരിസംഖ്യ "
 "നൽകി വരിക്കാരാകാന്‍ ബുദ്ധിമുട്ടാണ്."
 msgstr ""
-"Under the Indian Data Protection Act (DPDP 2023), it is difficult for those under 18 to subscribe "
-"by paying a subscription fee."
+"Under the Indian Data Protection Act (DPDP 2023), it is difficult for those "
+"under 18 to subscribe by paying a subscription fee."
 
-#: Icarus/templates/account/guardian_signup.html:177
+#: Icarus/templates/account/guardian_signup.html:190
 msgid ""
 "അതിനാല്‍ ശാസ്ത്രഗതി ഡിജിറ്റല്‍ പോര്‍ട്ടലില്‍ 18 വയസ്സിൽ താഴെയുള്ളവർക്ക് സ്വന്തമായി അക്കൗണ്ട് "
 "സൃഷ്ടിക്കാനാവില്ല."
-msgstr "Hence, sasthragathy digital portal does not allow those under 18 to create an account."
+msgstr ""
+"Hence, sasthragathy digital portal does not allow those under 18 to create "
+"an account."
 
-#: Icarus/templates/account/guardian_signup.html:180
+#: Icarus/templates/account/guardian_signup.html:193
 msgid ""
 "പകരം, രക്ഷിതാവിനോ മാതാപിതാക്കൾക്കോ കുടുംബത്തിനായി ഒരു അക്കൗണ്ട് എടുക്കാം — ആ അക്കൗണ്ടിലൂടെ "
 "വീട്ടിലുള്ള എല്ലാവർക്കും വായിക്കാം."
@@ -175,15 +173,15 @@ msgstr ""
 "Instead, a guardian or parent can open an account for the household — "
 "everyone at home can read on that account."
 
-#: Icarus/templates/account/guardian_signup.html:185
+#: Icarus/templates/account/guardian_signup.html:198
 msgid "സൈൻഅപ്പിൽ നൽകിയ വിവരങ്ങളൊന്നും ഞങ്ങൾ സൂക്ഷിച്ചിട്ടില്ല."
 msgstr "Nothing you entered at signup has been stored."
 
-#: Icarus/templates/account/guardian_signup.html:189
+#: Icarus/templates/account/guardian_signup.html:202
 msgid "രക്ഷിതാവാണോ? അക്കൗണ്ട് സൃഷ്ടിക്കുക"
 msgstr "Are you a guardian? Create an account"
 
-#: Icarus/templates/account/guardian_signup.html:190
+#: Icarus/templates/account/guardian_signup.html:203
 msgid "ഹോംപേജിലേക്ക് മടങ്ങുക"
 msgstr "Return to the homepage"
 
