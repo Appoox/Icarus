@@ -1,63 +1,81 @@
 {% load static wagtailimages_tags i18n %}
 
-<div class="comment-card" id="comment-{{ comment.id }}" data-comment-id="{{ comment.id }}" data-author-id="{{ comment.user.id }}">
+<div class="comment-card{% if not comment.is_visible %} comment-card--deleted{% endif %}" id="comment-{{ comment.id }}" data-comment-id="{{ comment.id }}"{% if comment.is_visible %} data-author-id="{{ comment.user.id }}"{% endif %}>
     <div class="comment-card__main">
-        <!-- Avatar Section -->
-        <div class="comment-card__avatar">
-            {% if comment.user.profile_image %}
-                {% image comment.user.profile_image fill-32x32 class="comment-avatar-img" %}
-            {% else %}
-                <div class="comment-avatar-placeholder">
-                    {{ comment.user_display|first|upper }}
+        {% if comment.is_visible %}
+            <!-- Avatar Section -->
+            <div class="comment-card__avatar">
+                {% if comment.user.profile_image %}
+                    {% image comment.user.profile_image fill-32x32 class="comment-avatar-img" %}
+                {% else %}
+                    <div class="comment-avatar-placeholder">
+                        {{ comment.user_display|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Content Section -->
+            <div class="comment-card__content">
+                <div class="comment-card__header">
+                    <span class="comment-card__author">{{ comment.user_display }}</span>
+                    <span class="comment-card__date" title="{{ comment.created_at|date:'Y-m-d H:i:s' }}">
+                        {{ comment.created_at|date:"F j, Y, g:i a" }}
+                    </span>
                 </div>
-            {% endif %}
-        </div>
 
-        <!-- Content Section -->
-        <div class="comment-card__content">
-            <div class="comment-card__header">
-                <span class="comment-card__author">{{ comment.user_display }}</span>
-                <span class="comment-card__date" title="{{ comment.created_at|date:'Y-m-d H:i:s' }}">
-                    {{ comment.created_at|date:"F j, Y, g:i a" }}
-                </span>
-            </div>
-            
-            <div class="comment-card__body">
-                {{ comment.body|linebreaksbr }}
-            </div>
+                <div class="comment-card__body">
+                    {{ comment.body|linebreaksbr }}
+                </div>
 
-            <!-- Action buttons -->
-            <div class="comment-card__actions">
-                {% if user.is_authenticated and user.can_comment %}
-                    <button class="comment-action-btn reply-trigger-btn">
-                        <i class="fas fa-reply"></i> {% translate "മറുപടി" %}
-                    </button>
-                {% endif %}
-
-                {% if user.is_authenticated %}
-                    {% if user == comment.user or user.is_staff or user.is_superuser %}
-                        <button class="comment-action-btn delete-comment-btn" data-url="{% url 'kalapila:delete_comment' comment.id %}">
-                            <i class="far fa-trash-alt"></i> {% translate "ഒഴിവാക്കുക" %}
+                <!-- Action buttons -->
+                <div class="comment-card__actions">
+                    {% if user.is_authenticated and user.can_comment %}
+                        <button class="comment-action-btn reply-trigger-btn">
+                            <i class="fas fa-reply"></i> {% translate "മറുപടി" %}
                         </button>
                     {% endif %}
 
-                    {% if user != comment.user %}
-                        <button class="comment-action-btn report-comment-btn" data-url="{% url 'kalapila:report_comment' comment.id %}">
-                            <i class="far fa-flag"></i>{% translate "റിപ്പോർട്ട് ചെയ്യുക" %}
-                        </button>
-                    {% endif %}
-                {% endif %}
-            </div>
+                    {% if user.is_authenticated %}
+                        {% if user == comment.user or user.is_staff or user.is_superuser %}
+                            <button class="comment-action-btn delete-comment-btn" data-url="{% url 'kalapila:delete_comment' comment.id %}">
+                                <i class="far fa-trash-alt"></i> {% translate "ഒഴിവാക്കുക" %}
+                            </button>
+                        {% endif %}
 
-            <!-- Inline reply form container -->
-            <div class="reply-form-container"></div>
-        </div>
+                        {% if user != comment.user %}
+                            <button class="comment-action-btn report-comment-btn" data-url="{% url 'kalapila:report_comment' comment.id %}">
+                                <i class="far fa-flag"></i>{% translate "റിപ്പോർട്ട് ചെയ്യുക" %}
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- Inline reply form container -->
+                <div class="reply-form-container"></div>
+            </div>
+        {% else %}
+            <!-- Deleted placeholder (thread kept alive because replies remain) -->
+            <div class="comment-card__avatar">
+                <div class="comment-avatar-placeholder comment-avatar-placeholder--deleted">
+                    <i class="far fa-trash-alt"></i>
+                </div>
+            </div>
+            <div class="comment-card__content">
+                <div class="comment-card__body comment-card__body--deleted">
+                    {% if comment.deleted_by_author %}
+                        {% translate "ഈ അഭിപ്രായം ഉപയോക്താവ് ഒഴിവാക്കി" %}
+                    {% else %}
+                        {% translate "ഈ അഭിപ്രായം മോഡറേറ്റർ ഒഴിവാക്കി" %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Recursive Nested Replies -->
     <div class="replies-list">
         {% for reply in comment.replies.all %}
-            {% if reply.is_approved and not reply.is_removed %}
+            {% if reply.should_render %}
                 {% include "kalapila/comment_single.html" with comment=reply %}
             {% endif %}
         {% endfor %}

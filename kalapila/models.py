@@ -15,14 +15,23 @@ class Comment(models.Model):
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                              related_name='comments')
+    # SET_NULL (not CASCADE): if a comment is ever hard-deleted — e.g. an admin deletes
+    # a ReaderUser, cascading to that user's own comments — its replies must survive
+    # instead of being silently destroyed along with other users' replies. Orphaned
+    # replies get parent=NULL and surface as top-level comments. Note the normal account
+    # flow anonymizes rather than deletes users, so this is a safety net for hard deletes;
+    # ordinary soft deletes (is_removed) keep the row and never trigger this.
     parent = models.ForeignKey('self', null=True, blank=True,
-                               on_delete=models.CASCADE, related_name='replies')
+                               on_delete=models.SET_NULL, related_name='replies')
     body = models.TextField(max_length=3000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_approved = models.BooleanField(default=True)
     is_removed = models.BooleanField(default=False)
     removal_reason = models.CharField(max_length=255, blank=True)
+    # True when the comment's own author removed it (vs. a moderator/staff removal).
+    # Persisted so the "deleted by user" placeholder shows the correct label after reload.
+    deleted_by_author = models.BooleanField(default=False)
 
     # Full change history — queryable via comment.history.all()
     history = AuditlogHistoryField()
@@ -36,6 +45,7 @@ class Comment(models.Model):
         FieldPanel('is_approved'),
         FieldPanel('is_removed'),
         FieldPanel('removal_reason'),
+        FieldPanel('deleted_by_author', read_only=True),
     ]
 
     class Meta:
@@ -68,6 +78,30 @@ class Comment(models.Model):
     @property
     def report_count(self):
         return self.reports.count()
+
+    @property
+    def is_visible(self):
+        """A comment that should be shown with its real content."""
+        return self.is_approved and not self.is_removed
+
+    @property
+    def _has_renderable_descendants(self):
+        return any(reply.should_render for reply in self.replies.all())
+
+    @property
+    def should_render(self):
+        """Whether this comment appears in the thread at all.
+
+        Visible comments always render. A removed comment renders as a "deleted"
+        placeholder only while it still has a renderable descendant, so a deleted
+        parent keeps its reply thread alive but self-heals once every reply below
+        it is gone. Unapproved (pending) comments stay hidden as before.
+        """
+        if self.is_visible:
+            return True
+        if self.is_removed:
+            return self._has_renderable_descendants
+        return False
 
     def save(self, *args, **kwargs):
         # Automatically look up and populate the issue if it isn't set yet
@@ -103,7 +137,7 @@ class Comment(models.Model):
                 )
             # 2. Removed notification: transition from False -> True
             if not old_is_removed and self.is_removed:
-                if not getattr(self, '_deleted_by_author', False):
+                if not self.deleted_by_author:
                     UserNotification.objects.get_or_create(
                         user=self.user,
                         message=f"നിങ്ങളുടെ അഭിപ്രായം '{self.page_display}'  എന്ന പേജിൽ നിന്ന് '{self.removal_reason}' എന്ന് കാരണത്താൽ ഒഴിവാക്കി."

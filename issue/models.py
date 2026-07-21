@@ -433,10 +433,13 @@ class Issue(RoutablePageMixin, Page):
                 reader = None
         context['reader'] = reader
 
-        # Inject approved and active comments (top-level only, replies rendered recursively)
-        context['comments'] = self.comments.filter(
-            is_approved=True, is_removed=False, parent__isnull=True
+        # Inject approved comments (top-level only, replies rendered recursively).
+        # Removed comments are kept when they still have renderable replies so the
+        # thread survives as a "deleted" placeholder; should_render filters the rest.
+        top_level_comments = self.comments.filter(
+            is_approved=True, parent__isnull=True
         ).prefetch_related('replies', 'user', 'user__profile_image')
+        context['comments'] = [c for c in top_level_comments if c.should_render]
         context['comment_count'] = self.comments.filter(is_approved=True, is_removed=False).count()
 
         return context

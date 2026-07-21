@@ -26,6 +26,73 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // Builds the inner markup of a "deleted" placeholder card (mirrors the tombstone
+    // branch of comment_single.html) so a deleted comment with replies keeps its thread.
+    function buildDeletedPlaceholderMain(deletedByAuthor) {
+        const label = deletedByAuthor ? T.i18nDeletedUser : T.i18nDeletedMod;
+        return `
+            <div class="comment-card__avatar">
+                <div class="comment-avatar-placeholder comment-avatar-placeholder--deleted">
+                    <i class="far fa-trash-alt"></i>
+                </div>
+            </div>
+            <div class="comment-card__content">
+                <div class="comment-card__body comment-card__body--deleted">${label}</div>
+            </div>
+        `;
+    }
+
+    // After removing a leaf comment, prune any ancestor placeholder cards that no longer
+    // have visible replies (keeps the DOM in sync with the server's should_render logic).
+    function pruneDanglingPlaceholders(parentCard) {
+        while (parentCard && parentCard.classList.contains("comment-card--deleted")) {
+            const repliesList = parentCard.querySelector(":scope > .replies-list");
+            if (repliesList && repliesList.querySelector(".comment-card")) break;
+            const grandParent = parentCard.parentElement
+                ? parentCard.parentElement.closest(".comment-card")
+                : null;
+            parentCard.remove();
+            parentCard = grandParent;
+        }
+    }
+
+    // Shared delete handler used by both the AJAX response and the WebSocket broadcast.
+    // The acting client receives its own WS broadcast on top of the AJAX response, so
+    // this must be idempotent for a given comment id.
+    function handleCommentDeletion(commentId, deletedByAuthor) {
+        const commentCard = document.getElementById(`comment-${commentId}`);
+        if (!commentCard || commentCard.dataset.deletionHandled ||
+            commentCard.classList.contains("comment-card--deleted")) return;
+        commentCard.dataset.deletionHandled = "1";
+
+        const repliesList = commentCard.querySelector(":scope > .replies-list");
+        const hasRenderedReplies = repliesList && repliesList.querySelector(".comment-card");
+
+        if (hasRenderedReplies) {
+            // Keep the thread alive: turn this card into a deleted placeholder in place.
+            const main = commentCard.querySelector(":scope > .comment-card__main");
+            if (main) main.innerHTML = buildDeletedPlaceholderMain(deletedByAuthor);
+            commentCard.classList.add("comment-card--deleted");
+            commentCard.removeAttribute("data-author-id");
+        } else {
+            // No replies left: fade the card out, then prune now-empty ancestor placeholders.
+            const parentCard = commentCard.parentElement
+                ? commentCard.parentElement.closest(".comment-card")
+                : null;
+            commentCard.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+            commentCard.style.opacity = "0";
+            commentCard.style.transform = "translateY(5px)";
+            setTimeout(() => {
+                commentCard.remove();
+                pruneDanglingPlaceholders(parentCard);
+                if (commentsList.children.length === 0 && emptyState) {
+                    emptyState.style.display = "block";
+                }
+            }, 300);
+        }
+        updateCommentCount(-1);
+    }
+
     // Client-Side Permission Corrector: Adjusts button states for WebSocket-injected comments
     function adjustCommentButtons(commentCard) {
         if (!commentCard) return;
@@ -163,19 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Update comment count is handled strictly by the WebSocket now to avoid double counting
                     updateCommentCount(1);
                 } else if (data.type === 'delete_comment') {
-                    const commentCard = document.getElementById(`comment-${data.comment_id}`);
-                    if (commentCard) {
-                        commentCard.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-                        commentCard.style.opacity = "0";
-                        commentCard.style.transform = "translateY(5px)";
-                        setTimeout(() => {
-                            commentCard.remove();
-                            if (commentsList.children.length === 0 && emptyState) {
-                                emptyState.style.display = "block";
-                            }
-                        }, 300);
-                        updateCommentCount(-1);
-                    }
+                    handleCommentDeletion(data.comment_id, data.deleted_by_author);
                 }
             } catch (err) {
                 console.error('Error parsing WebSocket message:', err);
@@ -326,6 +381,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const btn = e.target.classList.contains("delete-comment-btn") ? e.target : e.target.closest(".delete-comment-btn");
             const url = btn.getAttribute("data-url");
             const commentCard = btn.closest(".comment-card");
+            const commentId = commentCard.getAttribute("data-comment-id");
 
             if (confirm(T.i18nConfirmDelete)) {
                 fetch(url, {
@@ -337,18 +393,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "success") {
-                        // Fade out and remove element from DOM
-                        commentCard.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-                        commentCard.style.opacity = "0";
-                        commentCard.style.transform = "translateY(5px)";
-                        setTimeout(() => {
-                            commentCard.remove();
-                            // Check if comments list is empty
-                            if (commentsList.children.length === 0 && emptyState) {
-                                emptyState.style.display = "block";
-                            }
-                        }, 300);
-                        updateCommentCount(-1);
+                        // Either removes the card or converts it to a "deleted" placeholder
+                        // when it still has replies (keeping the thread intact).
+                        handleCommentDeletion(commentId, data.deleted_by_author);
                     } else {
                         alert(data.message);
                     }
