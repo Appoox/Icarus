@@ -1,4 +1,4 @@
-{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
+{% load i18n header_tags wagtailimages_tags %}{% get_current_language as LANGUAGE_CODE %}{% get_site_header as header %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" dir="ltr">
 <head>
@@ -50,6 +50,14 @@
     line-height: 1;
     color: #0f172a;
     letter-spacing: 0.01em;
+  }
+
+  /* Site title image (site_title_image) — mirrors the header's height-60 slot */
+  .wordmark-img {
+    height: 60px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
   }
 
   /* Age-restriction pill — a policy, calmly stated, not an incident */
@@ -164,7 +172,12 @@
   <div class="card">
 
     <div class="logo-container">
-      <span class="wordmark">ശാസ്ത്രഗതി</span>
+      {% if header.site_title_image %}
+        {% image header.site_title_image height-60 as title_img %}
+        <img src="{{ title_img.url }}" alt="{{ header.site_title|default:'ശാസ്ത്രഗതി' }}" class="wordmark-img">
+      {% else %}
+        <span class="wordmark">ശാസ്ത്രഗതി</span>
+      {% endif %}
     </div>
 
     <div class="status-indicator">
