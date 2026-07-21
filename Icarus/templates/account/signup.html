@@ -58,9 +58,9 @@
 
         {% for field in form %}
         {# Dynamically apply the checkbox layout class when dealing with consent fields #}
-        <div class="form-group {% if field.name == 'is_above_18' or field.name == 'accept_terms' or field.name == 'read_history_consent' %}checkbox-group{% endif %}">
-            
-            {% if field.name == 'is_above_18' or field.name == 'accept_terms' or field.name == 'read_history_consent' %}
+        <div class="form-group {% if field.name == 'accept_terms' or field.name == 'read_history_consent' %}checkbox-group{% endif %}">
+
+            {% if field.name == 'accept_terms' or field.name == 'read_history_consent' %}
                 {# Render input first for checkboxes so it displays left of the text label #}
                 {{ field }}
                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -94,6 +94,7 @@
             {% endif %}
 
             {% if field.help_text %}<span class="helptext" style="display: block; margin-top: 4px;">{{ field.help_text }}</span>{% endif %}
+            {% if field.name == 'birth_year' %}<a href="{% url 'guardian_account_info' %}" class="helptext" style="display: block; margin-top: 2px; font-size: 12px;">{% trans "എന്തിനാണ് ഇത് ചോദിക്കുന്നത്?" %}</a>{% endif %}
             {% if field.errors %}<div class="form-errors">{{ field.errors }}</div>{% endif %}
         </div>
         {% endfor %}

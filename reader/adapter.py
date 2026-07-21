@@ -20,8 +20,12 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         user.accepted_privacy_at = timezone.now()
         user.privacy_version = ReaderUser.CURRENT_PRIVACY_VERSION
         
-        # Capture 18+ age declaration from signup form
-        if form.cleaned_data.get('is_above_18'):
+        # Capture the 18+ age declaration from the signup form.
+        # The form's clean() has already refused any under-18 birth year before
+        # this runs, so a user reaching save_user() has passed the age gate.
+        # Record the declaration only; the birth year itself is never stored —
+        # it was collected solely to verify age (age verification only).
+        if form.cleaned_data.get('birth_year'):
             user.is_above_18 = True
             user.age_declaration_at = timezone.now()
             

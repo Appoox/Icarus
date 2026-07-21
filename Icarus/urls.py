@@ -10,6 +10,7 @@ from wagtail.documents import urls as wagtaildocs_urls
 from wagtail.contrib.sitemaps.views import sitemap
 from Icarus import protected_media as protected_media_views
 from Icarus import views as core_views
+from reader import views as reader_views
 
 # ── Never language-prefixed: infra, admin, machine endpoints ──────────
 urlpatterns = [
@@ -37,8 +38,11 @@ if settings.DEBUG:
 
 # ── Language-prefixed public site (ml unprefixed, en at /en/) ─────────
 urlpatterns += i18n_patterns(
+    # Redirects to guardian page if under 18 (see CustomSignupForm in forms.py).
+    # This is the full-screen explainer shown when a minor tries to sign up.
+    path("accounts/signup/", reader_views.ReaderSignupView.as_view(), name="account_signup"),
+    path("accounts/guardian/", reader_views.guardian_account_info, name="guardian_account_info"),
     path("accounts/", include("allauth.urls")),
-    # path("search/", search_views.search, name="search"),
     path("reader/", include("reader.urls")),
     path("issues/", include("issue.urls")),
     path("articles/", include("articles.urls")),

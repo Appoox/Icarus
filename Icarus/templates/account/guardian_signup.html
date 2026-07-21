@@ -1,0 +1,208 @@
+{% load i18n header_tags wagtailimages_tags %}{% get_current_language as LANGUAGE_CODE %}{% get_site_header as header %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ശാസ്ത്രഗതി | {% trans "രക്ഷിതാവിന്റെ അക്കൗണ്ട്" %}</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* Same soft editorial gradient as the 404 / maintenance family */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f6f2 0%, #e8e2d9 100%);
+    color: #0f172a;
+    /* Jakarta carries Latin; Malayalam glyphs fall through to Manjari */
+    font-family: "Plus Jakarta Sans", "Manjari", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    text-align: center;
+    padding: 3.5rem 3rem;
+    max-width: 37rem;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
+    border: 1px solid rgba(15, 23, 42, 0.04);
+  }
+
+  .logo-container {
+    height: 60px;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wordmark {
+    font-family: "Manjari", sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: #0f172a;
+    letter-spacing: 0.01em;
+  }
+
+  /* Site title image (site_title_image) — mirrors the header's height-60 slot */
+  .wordmark-img {
+    height: 60px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  /* Age-restriction pill — a policy, calmly stated, not an incident */
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    padding: 0.45rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1.25rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .status-indicator svg {
+    width: 13px;
+    height: 13px;
+    color: #64748b;
+  }
+
+  .status-text {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-left: 0.5rem;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 0 auto 1.75rem auto;
+    max-width: 30rem;
+    color: #0f172a;
+  }
+
+  .card p {
+    font-size: 1.02rem;
+    line-height: 1.75;
+    color: #475569;
+    margin: 0 auto 1rem auto;
+    max-width: 30rem;
+  }
+
+  /* Guardian action, set apart in a soft well */
+  .highlight {
+    background: #f8fafc;
+    border: 1px solid #eef1f5;
+    border-radius: 16px;
+    padding: 1.5rem 1.75rem;
+    margin: 1.75rem 0 0 0;
+  }
+
+  .highlight p { margin-bottom: 0; color: #334155; }
+
+  .privacy-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.82rem !important;
+    color: #94a3b8 !important;
+    margin-top: 1.5rem !important;
+  }
+
+  .privacy-note svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  .actions {
+    margin-top: 2.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .primary-btn {
+    display: inline-block;
+    padding: 0.8rem 1.9rem;
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .primary-btn:hover { background: #1e293b; }
+  .primary-btn:focus-visible { outline: 2px solid #0f172a; outline-offset: 3px; }
+
+  .secondary-link {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #64748b;
+    text-decoration: none;
+  }
+
+  .secondary-link:hover { color: #0f172a; text-decoration: underline; }
+
+  @media (max-width: 768px) {
+    .card {
+      padding: 2.5rem 1.5rem;
+      margin: 1.5rem;
+    }
+    h1 { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="logo-container">
+      {% if header.site_title_image %}
+        {% image header.site_title_image height-60 as title_img %}
+        <img src="{{ title_img.url }}" alt="{{ header.site_title|default:'ശാസ്ത്രഗതി' }}" class="wordmark-img">
+      {% else %}
+        <span class="wordmark">ശാസ്ത്രഗതി</span>
+      {% endif %}
+    </div>
+
+    <div class="status-indicator">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span class="status-text">18+</span>
+    </div>
+
+    <h1>{% trans "ഇന്ത്യൻ ഡാറ്റാ പ്രൊട്ടക്ഷൻ ആക്റ്റ് (DPDP 2023) പ്രകാരം, 18 വയസ്സിന് താഴെയുള്ളവർക്ക് വരിസംഖ്യ നൽകി വരിക്കാരാകാന്‍ ബുദ്ധിമുട്ടാണ്." %}</h1>
+
+    <p>{% trans "അതിനാല്‍ ശാസ്ത്രഗതി ഡിജിറ്റല്‍ പോര്‍ട്ടലില്‍ 18 വയസ്സിൽ താഴെയുള്ളവർക്ക് സ്വന്തമായി അക്കൗണ്ട് സൃഷ്ടിക്കാനാവില്ല." %}</p>
+
+    <div class="highlight">
+      <p>{% trans "പകരം, രക്ഷിതാവിനോ മാതാപിതാക്കൾക്കോ കുടുംബത്തിനായി ഒരു അക്കൗണ്ട് എടുക്കാം — ആ അക്കൗണ്ടിലൂടെ വീട്ടിലുള്ള എല്ലാവർക്കും വായിക്കാം." %}</p>
+    </div>
+
+    <p class="privacy-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      {% trans "സൈൻഅപ്പിൽ നൽകിയ വിവരങ്ങളൊന്നും ഞങ്ങൾ സൂക്ഷിച്ചിട്ടില്ല." %}
+    </p>
+
+    <div class="actions">
+      <a href="{% url 'account_signup' %}" class="primary-btn">{% trans "രക്ഷിതാവാണോ? അക്കൗണ്ട് സൃഷ്ടിക്കുക" %}</a>
+      <a href="{% url 'wagtail_serve' '' %}" class="secondary-link">{% trans "ഹോംപേജിലേക്ക് മടങ്ങുക" %}</a>
+    </div>
+
+  </div>
+</body>
+</html>
