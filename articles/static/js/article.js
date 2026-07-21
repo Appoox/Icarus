@@ -4,7 +4,28 @@
 ───────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', function() {
-    
+
+    // ── LAZY BODY REVEAL ──
+    // The body starts hidden behind a shimmer skeleton (via the `js-lazy-body`
+    // class set in the template). On reveal we wrap the text in words and let
+    // them cascade in block-by-block as they scroll into view (see
+    // window.lazyRevealWords in Icarus.js). Content is already in the DOM, so
+    // media players and the language switcher below need no re-initialization.
+    if (document.documentElement.classList.contains('js-lazy-body')) {
+        const bodies = document.querySelectorAll('.article-body');
+        const revealBodies = () => bodies.forEach(b => {
+            b.querySelectorAll('.article-content').forEach(c => {
+                if (window.lazyRevealWords) window.lazyRevealWords(c);
+            });
+            b.classList.add('body-loaded');
+        });
+        if (document.readyState === 'complete') {
+            setTimeout(revealBodies, 250);
+        } else {
+            window.addEventListener('load', () => setTimeout(revealBodies, 150));
+        }
+    }
+
     // ── LANGUAGE SLIDER ──
     const slider = document.querySelector('.lang-slider');
     if (slider) {

@@ -926,3 +926,31 @@ html[data-theme="dark"] .paywall-fade {
         gap: 6px;
     }
 }
+/* ─────────────────────────────────────────────
+   Lazy body reveal
+   Body ships in the HTML (SEO-safe); when JS is present it starts hidden
+   behind the skeleton (see includes/body_skeleton.html + Icarus.css) and
+   fades in once article.js adds `.body-loaded`. Applies to the full body
+   and the paywalled/truncated preview (both use .article-body).
+───────────────────────────────────────────── */
+.js-lazy-body .article-body {
+    position: relative;
+}
+.js-lazy-body .article-body .article-content {
+    opacity: 0;
+}
+/* Overlay the skeleton so the (invisible) body still reserves its real height */
+/* and removing the skeleton on reveal causes no layout shift.                 */
+.js-lazy-body .article-body > .body-skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+}
+.js-lazy-body .article-body.body-loaded .article-content {
+    opacity: 1; /* block shown instantly; individual words cascade in (Icarus.js/.css) */
+}
+.js-lazy-body .article-body.body-loaded .body-skeleton {
+    display: none;
+}
