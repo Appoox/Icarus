@@ -14,6 +14,41 @@ from .models import ReaderUser, PaymentDetails, PLANS
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+from allauth.account.views import SignupView
+
+
+class ReaderSignupView(SignupView):
+    """
+    allauth's SignupView with one extra behaviour: an under-18 refusal from
+    CustomSignupForm.clean() (ValidationError code='underage') redirects to
+    the full-screen guardian explainer page instead of re-rendering the form
+    with an inline error.
+
+    Privacy property: the redirect discards the refused POST entirely — the
+    minor's birth year is neither echoed in the URL nor stored anywhere,
+    preserving the "persist nothing from a refused signup" guarantee.
+
+    Wired in Icarus/urls.py as a path("accounts/signup/") entry placed BEFORE
+    include("allauth.urls"), which shadows allauth's own signup route.
+    """
+
+    def form_invalid(self, form):
+        if any(e.code == 'underage' for e in form.non_field_errors().as_data()):
+            return redirect('guardian_account_info')
+        return super().form_invalid(form)
+
+
+def guardian_account_info(request):
+    """
+    Full-screen explainer shown when an under-18 birth year is entered at
+    signup: minors should not create their own account; a guardian or parent
+    can open a household account everyone at home reads on.  Served as 200 —
+    real, linkable content (also linked from the signup form's help text),
+    deliberately unlike the under_construction soft-404.
+    """
+    return render(request, 'account/guardian_signup.html')
+
+
 @login_required(login_url=settings.LOGIN_URL)
 def reader_profile(request):
     """Display reader profile with reading history and subscription info."""

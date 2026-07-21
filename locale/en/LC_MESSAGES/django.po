@@ -1782,19 +1782,67 @@ msgstr "24 hours"
 msgid "പൂർണ്ണ നാമം"
 msgstr "Full Name"
 
-#: reader/auth_forms.py:180
-msgid "എനിക്ക് 18 വയസ്സോ അതിൽ കൂടുതലോ പ്രായമുണ്ടെന്ന് ഞാൻ സ്ഥിരീകരിക്കുന്നു."
-msgstr "I confirm that I am 18 years of age or older."
+#: reader/auth_forms.py:195
+msgid "നിങ്ങളുടെ പ്രായം ഉറപ്പാക്കാൻ മാത്രം; ഈ വിവരം സൂക്ഷിക്കില്ല."
+msgstr "Only to confirm your age; this information is not stored."
 
-#: reader/auth_forms.py:182
-msgid "DPDP നിയമപ്രകാരം നിയമപരമായ സമ്മതത്തിന് ആവശ്യമാണ്."
-msgstr "Required for legal consent under the DPDP Act."
+#: reader/auth_forms.py:244
+msgid ""
+"18 വയസ്സ് തികയാത്തവർക്ക് അക്കൗണ്ട് സൃഷ്ടിക്കാനാവില്ല; രക്ഷിതാവിന് കുടുംബത്തിനായി അക്കൗണ്ട് "
+"എടുക്കാം."
+msgstr ""
+"Those under 18 cannot create an account; a guardian can open an account for "
+"the household."
 
-#: reader/auth_forms.py:188
+#: reader/auth_forms.py:305
+msgid "ജനന വർഷം തിരഞ്ഞെടുക്കുക"
+msgstr "Select your birth year"
+
+#: Icarus/templates/account/signup.html:98
+msgid "എന്തിനാണ് ഇത് ചോദിക്കുന്നത്?"
+msgstr "Why do we ask this?"
+
+#: Icarus/templates/account/guardian_signup.html:4
+msgid "രക്ഷിതാവിന്റെ അക്കൗണ്ട്"
+msgstr "Guardian Account"
+
+#: Icarus/templates/account/guardian_signup.html:26
+msgid "അക്കൗണ്ട് എടുക്കാൻ 18 വയസ്സ് തികഞ്ഞിരിക്കണം"
+msgstr "You must be 18 or older to create an account"
+
+#: Icarus/templates/account/guardian_signup.html:29
+msgid "18 വയസ്സിൽ താഴെയുള്ളവർക്ക് സ്വന്തമായി അക്കൗണ്ട് സൃഷ്ടിക്കാനാവില്ല."
+msgstr "Those under 18 cannot create their own account."
+
+#: Icarus/templates/account/guardian_signup.html:30
+msgid ""
+"പകരം, രക്ഷിതാവിനോ മാതാപിതാക്കൾക്കോ കുടുംബത്തിനായി ഒരു അക്കൗണ്ട് എടുക്കാം — ആ "
+"അക്കൗണ്ടിലൂടെ വീട്ടിലുള്ള എല്ലാവർക്കും വായിക്കാം."
+msgstr ""
+"Instead, a guardian or parent can open an account for the household — "
+"everyone at home can read on that account."
+
+#: Icarus/templates/account/guardian_signup.html:31
+msgid "ചില ലേഖനങ്ങൾ അക്കൗണ്ട് ഇല്ലാതെയും വായിക്കാം."
+msgstr "Some articles can be read without an account."
+
+#: Icarus/templates/account/guardian_signup.html:32
+msgid "സൈൻഅപ്പിൽ നൽകിയ വിവരങ്ങളൊന്നും ഞങ്ങൾ സൂക്ഷിച്ചിട്ടില്ല."
+msgstr "Nothing you entered at signup has been stored."
+
+#: Icarus/templates/account/guardian_signup.html:34
+msgid "രക്ഷിതാവാണോ? അക്കൗണ്ട് സൃഷ്ടിക്കുക"
+msgstr "Are you a guardian? Create an account"
+
+#: Icarus/templates/account/guardian_signup.html:38
+msgid "ഹോംപേജിലേക്ക് മടങ്ങുക"
+msgstr "Return to the homepage"
+
+#: reader/auth_forms.py:201
 msgid "സേവന വ്യവസ്ഥകളും സ്വകാര്യതാ നയവും ഞാൻ അംഗീകരിക്കുന്നു."
 msgstr "I agree to the Terms of Service and Privacy Policy."
 
-#: reader/auth_forms.py:195
+#: reader/auth_forms.py:208
 msgid ""
 "വ്യക്തിഗത ശുപാർശകൾക്കായി എന്റെ വായനാ ചരിത്രം ട്രാക്ക് ചെയ്യുന്നതിന് ഞാൻ സമ്മതിക്കുന്നു. "
 "(Optional)"
@@ -1802,7 +1850,7 @@ msgstr ""
 "I consent to the tracking of my reading history for personalised "
 "recommendations. (Optional)"
 
-#: reader/auth_forms.py:197
+#: reader/auth_forms.py:210
 msgid "ശുപാർശകൾ വേണ്ടെങ്കിൽ ഇത് ചെക്ക് ചെയ്യാതെ വിടാം."
 msgstr ""
 "You can leave this unchecked if you prefer not to receive recommendations."
@@ -2595,7 +2643,7 @@ msgstr "A short bio"
 msgid "ലിംഗം"
 msgstr "Gender"
 
-#: reader/templates/reader/edit_profile.html:86
+#: reader/auth_forms.py:193 reader/templates/reader/edit_profile.html:86
 #: reader/templates/reader/profile.html:62
 msgid "ജനന വർഷം"
 msgstr "Birth Year"

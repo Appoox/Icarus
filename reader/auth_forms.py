@@ -174,12 +174,25 @@ class CustomSignupForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': _('പൂർണ്ണ നാമം'), 'class': 'form-input'}),
     )
     
-    # REQUIRED: Age confirmation check
-    is_above_18 = forms.BooleanField(
+    # REQUIRED: Age assurance via a neutral birth-year question.
+    #
+    # This replaces the old "I am 18+" checkbox.  A checkbox labelled with the
+    # passing answer tells every child exactly what to tick; asking "what year
+    # were you born?" instead does not display the passing answer.  clean()
+    # computes the age from this value and refuses under-18 signups (the view
+    # turns that refusal into a redirect to the guardian explainer page).  The
+    # birth year is used only to verify age and is NEVER persisted — see
+    # clean() and signup() — so a refused signup leaves nothing behind.
+    #
+    # Year choices are populated in __init__ (the current year moves), which
+    # also makes TypedChoiceField reject any tampered out-of-range value as a
+    # plain field error without a hand-rolled range check.
+    birth_year = forms.TypedChoiceField(
         required=True,
-        label=_("എനിക്ക് 18 വയസ്സോ അതിൽ കൂടുതലോ പ്രായമുണ്ടെന്ന് ഞാൻ സ്ഥിരീകരിക്കുന്നു."),
-        widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
-        help_text=_("DPDP നിയമപ്രകാരം നിയമപരമായ സമ്മതത്തിന് ആവശ്യമാണ്."),
+        coerce=int,
+        label=_("ജനന വർഷം"),
+        widget=forms.Select(attrs={'class': 'form-input'}),
+        help_text=_("നിങ്ങളുടെ പ്രായം ഉറപ്പാക്കാൻ മാത്രം; ഈ വിവരം സൂക്ഷിക്കില്ല."),
     )
     
     # REQUIRED: Terms of Service agreement check
@@ -196,6 +209,42 @@ class CustomSignupForm(forms.Form):
         widget=forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
         help_text=_("ശുപാർശകൾ വേണ്ടെങ്കിൽ ഇത് ചെക്ക് ചെയ്യാതെ വിടാം.")
     )
+
+    def clean(self):
+        """
+        Age assurance without retaining the answer.
+
+        The birth year is asked as a neutral question and used here, transiently,
+        only to compute age:
+          * 18+  → the signup proceeds; the year is discarded (it is never
+                   written to the user model — see signup()).
+          * < 18 → the signup is refused and the view redirects to the
+                   full-screen guardian explainer page; because no user is
+                   ever created and the refused POST is discarded, nothing
+                   about the attempt is persisted.
+
+        Retaining the birth year of a refused signup would invert the data
+        minimisation logic: asking is permitted (age verification is a recognised
+        purpose), but keeping data from someone who never became a user is not.
+        """
+        cleaned_data = super().clean()
+        birth_year = cleaned_data.get('birth_year')
+        if birth_year is not None:
+            # Year-only assurance: (current year − birth year) is the coarsest
+            # honest age estimate a year-only field can yield, and the 18+ gate
+            # is applied against it.  Out-of-range/tampered values never reach
+            # here — TypedChoiceField already rejected them as a field error.
+            #
+            # code='underage' is load-bearing: ReaderSignupView.form_invalid()
+            # keys on it to redirect to the full-screen guardian explainer page
+            # instead of re-rendering the form.  The message below is only the
+            # non-redirect fallback rendering.
+            if timezone.now().year - birth_year < 18:
+                raise forms.ValidationError(
+                    _("18 വയസ്സ് തികയാത്തവർക്ക് അക്കൗണ്ട് സൃഷ്ടിക്കാനാവില്ല; രക്ഷിതാവിന് കുടുംബത്തിനായി അക്കൗണ്ട് എടുക്കാം."),
+                    code='underage',
+                )
+        return cleaned_data
 
     def signup(self, request, user):
         """
@@ -214,8 +263,16 @@ class CustomSignupForm(forms.Form):
         it is not a writable field and must never be assigned directly.
         """
         user.name = self.cleaned_data.get('name', '')
-        user.is_above_18 = self.cleaned_data.get('is_above_18', False)
-        if user.is_above_18:
+
+        # Age declaration: reaching signup() means clean() already confirmed 18+
+        # (an under-18 birth year raises ValidationError before any user is
+        # created), so record the declaration.  The birth year itself is
+        # deliberately NOT written to the user — it was collected solely to
+        # verify age and is discarded.  Users who want their birth year stored
+        # for demographic analytics add it later on the profile page, which
+        # gates it behind its own explicit birth_year_consent.
+        user.is_above_18 = True
+        if not user.age_declaration_at:
             user.age_declaration_at = timezone.now()
 
         # FIX (Bug 1): Handle read_history_consent here — not (only) in the adapter.
@@ -241,7 +298,15 @@ class CustomSignupForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # FIX: Dynamically inject the phone field into the dictionary using the adapter (just like CustomLoginForm) 
+        # Birth-year choices are built per-instance because the current year
+        # moves; a class-level list would go stale in a long-lived process.
+        current_year = timezone.now().year
+        self.fields['birth_year'].choices = (
+            [('', _("ജനന വർഷം തിരഞ്ഞെടുക്കുക"))]
+            + [(year, year) for year in range(current_year, 1899, -1)]
+        )
+
+        # FIX: Dynamically inject the phone field into the dictionary using the adapter (just like CustomLoginForm)
         # so it is correctly instantiated and passed onto the template.
         if 'phone' not in self.fields:
             self.fields['phone'] = get_adapter().phone_form_field(label=_("ഫോൺ നമ്പർ"))

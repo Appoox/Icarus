@@ -413,3 +413,148 @@ class SubscriptionHistoryAndGDPRTests(TestCase):
         # The user and history should now be permanently deleted
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
         self.assertFalse(SubscriptionHistory.objects.filter(id=history.id).exists())
+
+
+class SignupAgeGateTests(TestCase):
+    """
+    Age assurance on the signup form: a neutral birth-year dropdown replaces
+    the old "I am 18+" checkbox.  CustomSignupForm.clean() computes the age
+    and refuses under-18 signups with a non-field error carrying
+    code='underage' — the code ReaderSignupView keys on to redirect to the
+    full-screen guardian explainer page.  TypedChoiceField rejects any
+    tampered out-of-range year as a plain field error.
+
+    Other required fields (phone, email, password) are intentionally omitted:
+    those raise their own field errors, but the age gate must behave the same
+    regardless — so these tests assert only on the age-gate outcome.
+    """
+
+    def _form_with_birth_year(self, birth_year):
+        from reader.auth_forms import CustomSignupForm
+        return CustomSignupForm(data={
+            'name': 'Test Reader',
+            'birth_year': str(birth_year),   # dropdowns POST strings
+            'accept_terms': 'on',
+        })
+
+    def _form_for_age(self, age):
+        return self._form_with_birth_year(timezone.now().year - age)
+
+    def _error_codes(self, form):
+        form.is_valid()
+        return [e.code for e in form.non_field_errors().as_data()]
+
+    def test_under_18_birth_year_is_refused_with_underage_code(self):
+        """A 10-year-old's birth year yields the 'underage' non-field error."""
+        form = self._form_for_age(10)
+        self.assertFalse(form.is_valid())
+        self.assertIn('underage', self._error_codes(form))
+        # The refusal is routing, not a complaint about the field itself.
+        self.assertNotIn('birth_year', form.errors)
+
+    def test_exactly_18_passes_age_gate(self):
+        """Someone turning 18 this year clears the gate (>= 18)."""
+        form = self._form_for_age(18)
+        form.is_valid()  # invalid overall (phone/password missing)
+        self.assertNotIn('birth_year', form.errors)
+        self.assertFalse(form.non_field_errors())
+
+    def test_17_is_refused_but_18_is_not(self):
+        """The threshold sits exactly between 17 (refused) and 18 (allowed)."""
+        self.assertIn('underage', self._error_codes(self._form_for_age(17)))
+        self.assertNotIn('underage', self._error_codes(self._form_for_age(18)))
+
+    def test_adult_birth_year_passes_age_gate(self):
+        """A comfortably-adult birth year never produces an age error."""
+        form = self._form_for_age(30)
+        form.is_valid()
+        self.assertNotIn('birth_year', form.errors)
+        self.assertFalse(form.non_field_errors())
+
+    def test_out_of_range_year_is_a_field_error_not_a_pass(self):
+        """Years outside the dropdown (tampered POST) fail as field errors,
+        never as an age-gate pass or an underage redirect."""
+        for bad_year in (1500, timezone.now().year + 1):
+            form = self._form_with_birth_year(bad_year)
+            self.assertFalse(form.is_valid())
+            self.assertIn('birth_year', form.errors)
+            self.assertFalse(form.non_field_errors())
+
+    def test_signup_form_has_no_field_that_writes_birth_year(self):
+        """
+        The birth year is transient: it is computed in clean() and never saved.
+        Guard that invariant structurally — the form must expose birth_year for
+        the age question but must NOT declare it as a model-writing field, and
+        signup() must not assign user.birth_year.
+        """
+        import inspect
+        from reader.auth_forms import CustomSignupForm
+
+        form = CustomSignupForm()
+        self.assertIn('birth_year', form.fields)  # the question is asked
+        # signup() records the 18+ declaration but must not persist the raw year.
+        signup_src = inspect.getsource(CustomSignupForm.signup)
+        self.assertNotIn('user.birth_year', signup_src)
+        self.assertIn('user.is_above_18', signup_src)
+
+    def test_dropdown_offers_current_year_down_to_1900(self):
+        """The dropdown's selectable range is [1900, current year] plus the
+        empty prompt — nothing older, nothing in the future."""
+        from reader.auth_forms import CustomSignupForm
+        years = [c[0] for c in CustomSignupForm().fields['birth_year'].choices
+                 if c[0] != '']
+        self.assertEqual(years[0], timezone.now().year)
+        self.assertEqual(years[-1], 1900)
+
+
+class GuardianRedirectViewTests(TestCase):
+    """
+    View-level behaviour of the age gate: an under-18 signup POST redirects to
+    the full-screen guardian explainer page and creates no user, while the
+    page itself is real, linkable, 200 content.
+    """
+
+    def setUp(self):
+        # base.html needs a wagtail Site + home page to render.
+        Site.objects.all().delete()
+        for p in Page.objects.filter(slug='home'):
+            try:
+                p.delete()
+            except Exception:
+                pass
+        root = Page.get_first_root_node()
+        self.site = Site.objects.create(
+            hostname="testserver", root_page=root, is_default_site=True
+        )
+        self.home = HomePage(title="Home", slug="home")
+        root.add_child(instance=self.home)
+
+    def test_under_18_signup_post_redirects_to_guardian_page(self):
+        """An under-18 POST never re-renders the form: it redirects to the
+        guardian page, and the refused signup persists nothing."""
+        response = self.client.post(reverse('account_signup'), {
+            'name': 'Kid Reader',
+            'birth_year': str(timezone.now().year - 12),
+            'accept_terms': 'on',
+        })
+        self.assertRedirects(
+            response, reverse('guardian_account_info'),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(User.objects.count(), 0)
+
+    def test_adult_invalid_signup_rerenders_form(self):
+        """An adult year with other missing fields is a normal form error
+        (200 re-render), not a guardian redirect."""
+        response = self.client.post(reverse('account_signup'), {
+            'name': 'Adult Reader',
+            'birth_year': str(timezone.now().year - 30),
+            'accept_terms': 'on',
+        })
+        self.assertEqual(response.status_code, 200)
+
+    def test_guardian_page_renders(self):
+        """The explainer page is directly linkable and serves 200."""
+        response = self.client.get(reverse('guardian_account_info'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "അക്കൗണ്ട് എടുക്കാൻ 18 വയസ്സ് തികഞ്ഞിരിക്കണം")
