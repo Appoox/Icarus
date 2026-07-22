@@ -572,6 +572,24 @@ html[data-theme^="d"] .message--warning { background: #332413; color: #ffb74d; b
     font-weight: 600;
 }
 
+/* On mobile the 5rem desktop indent pushes the trail toward the middle of
+   the screen, reading as centred. Drop the indent so it sits hard-left, and
+   shrink it so it doesn't crowd the content below. */
+@media (max-width: 640px) {
+    .site-breadcrumbs {
+        margin-left: 0;
+        padding: 0 1rem;
+        font-size: 0.72rem;
+    }
+    .site-breadcrumbs ol {
+        justify-content: flex-start;
+        gap: 6px;
+    }
+    .site-breadcrumbs .separator {
+        margin: 0 1px;
+    }
+}
+
 /* ─────────────────────────────────────────────
    Lazy body skeleton
    Shimmering placeholder shown while an article/issue body fades in.

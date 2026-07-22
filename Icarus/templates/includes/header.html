@@ -74,6 +74,10 @@
             </button>
         </div>
 
+        {# Secondary controls (theme + language + auth). Grouped so that on   #}
+        {# mobile they drop to a second row while search stays in the top row. #}
+        <div class="site-header__controls">
+
         <!-- Theme toggle: cycles light → dusk → dark (true black) -->
         <button
             class="search-icon-btn theme-toggle-btn"
@@ -106,6 +110,7 @@
         <a href="{% url 'account_login' %}" class="header-link">{% translate "ലോഗിൻ" %}</a>
         <a href="{% url 'account_signup' %}" class="header-link header-link--cta">{% translate "വരിക്കാരാകൂ" %}</a>
         {% endif %}
+        </div>{# /.site-header__controls #}
     </div>
 
 </header>
