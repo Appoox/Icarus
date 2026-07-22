@@ -127,7 +127,17 @@
     {# ── Divider ─────────────────────────────────────────────────────── #}
     <hr class="site-footer__divider">
 
-    {# ── About paragraph ─────────────────────────────────────────────── #}
+    {# ── Brandmark: logo centred above the tagline (all devices) ─────── #}
+    {% if footer.footer_logo %}
+      {% image footer.footer_logo original as logo_img %}
+      <div class="site-footer__brandmark">
+        <img src="{{ logo_img.url }}"
+             alt="{{ footer.logo_alt_text|default:default_logo_alt }}"
+             class="site-footer__logo">
+      </div>
+    {% endif %}
+
+    {# ── About paragraph (tagline) ───────────────────────────────────── #}
     {% if footer.about_text %}
       <p class="site-footer__about">{{ footer.about_text }}</p>
     {% endif %}
@@ -142,13 +152,6 @@
       </div>
 
       <div class="site-footer__branding">
-
-        {% if footer.footer_logo %}
-          {% image footer.footer_logo original as logo_img %}
-          <img src="{{ logo_img.url }}"
-               alt="{{ footer.logo_alt_text|default:default_logo_alt }}"
-               class="site-footer__logo">
-        {% endif %}
 
         {# Social icons — only rendered when a URL is set in the snippet #}
         <div class="site-footer__social" aria-label="{% translate 'സോഷ്യൽ മീഡിയ ലിങ്കുകൾ' %}">

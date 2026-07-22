@@ -157,11 +157,20 @@ html[data-theme="dark"] {
   margin: 0 0 1.75rem;
 }
 
-/* ── About paragraph ────────────────────────────────────────────── */
-.site-footer__about {
-  font-size: 1.7rem;
+/* ── Brandmark: logo centred above the tagline (all devices) ──────── */
+.site-footer__brandmark {
   display: flex;
   justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+/* ── About paragraph ────────────────────────────────────────────── */
+/* text-align (not flex + justify-content) so that when the text wraps to
+   several lines each line is centred — a centred flex item only centres
+   the block, leaving multi-line text ragged-left. */
+.site-footer__about {
+  font-size: 1.7rem;
+  text-align: center;
   line-height: 1.7;
   color: var(--footer-muted);
 }
@@ -247,6 +256,11 @@ html[data-theme="dark"] {
     padding: 3rem 2rem 1.75rem;
   }
 
+  /* Scale the large statement down so it doesn't wrap into a wall of text */
+  .site-footer__about {
+    font-size: 1.35rem;
+  }
+
   /* Collapse multi-column section bodies to single column on tablet */
   .site-footer__section-body {
     flex-wrap: wrap;
@@ -273,6 +287,11 @@ html[data-theme="dark"] {
 
   .site-footer__inner {
     padding: 2.5rem 1.25rem 1.5rem;
+  }
+
+  .site-footer__about {
+    font-size: 1.15rem;
+    line-height: 1.55;
   }
 
   /* Full-width sections, stacked */

@@ -34,6 +34,9 @@
 
 /* ── Right ── */
 .site-header__right { display: flex; align-items: center; gap: 10px; flex: 1 1 0; min-width: 0; justify-content: flex-end; }
+/* Theme + language + auth grouped together. On desktop this is just an inline
+   flex row inside __right; on mobile it breaks onto its own second row. */
+.site-header__controls { display: flex; align-items: center; gap: 10px; }
 .header-link { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-decoration: none; color: inherit; white-space: nowrap; }
 .header-link--cta { background: var(--red); color: #fff !important; padding: 5px 12px; border-radius: 4px; }
 
@@ -301,42 +304,68 @@ html[data-theme^="d"] mark {
 }
 
 @media (max-width: 640px) {
-    /* Shorter header row */
+    /* Two-row mobile header:
+         Row 1 — org icon (logo) · site title · search
+         Row 2 — theme · language · login / signup
+       Keeps the top strip to just brand + search; every other control drops
+       to a second row so nothing is cramped or overlapping. */
     .site-header {
-        height: 56px;
-        padding: 0 0.75rem;
-        gap: 0.5rem;
+        height: auto;
+        min-height: 56px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 6px 0.7rem;
+        gap: 0;
+        column-gap: 0.5rem;
     }
 
-    /* Hide the centred title inside the header row */
-    .site-header__title { display: none; }
+    /* Unwrap __right so its search button and the controls group become
+       direct header flex items — that lets search stay on row 1 while the
+       controls group moves to row 2. */
+    .site-header__right { display: contents; }
 
-    /* Smaller logo */
-    .site-header__logo-img { height: 36px; }
+    .site-header__logo { order: 1; flex: 0 0 auto; gap: 8px; }
+    .site-header__logo-img { height: 34px; }
 
-    /* Slightly smaller org name */
-    .site-header__org-name { font-size: 0.68rem; }
+    /* Site title moves up into the top row (was a separate bar below). */
+    .site-header__title {
+        order: 2;
+        display: flex;
+        flex: 1 1 auto;
+        min-width: 0;
+        justify-content: center;
+    }
+    .site-header__title img,
+    .site-header__title-img { height: 30px; width: auto; max-width: 100%; }
+
+    .search-wrapper { order: 3; flex: 0 0 auto; }
+
+    /* Row 2 — full width, centred, separated from the top row by a hairline. */
+    .site-header__controls {
+        order: 4;
+        flex: 0 0 100%;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 6px;
+        padding-top: 7px;
+        border-top: 1px solid var(--rule-soft);
+    }
+
+    /* Drop the organisation name on mobile: the logo carries the brand. */
+    .site-header__org-name { display: none; }
 
     /* Compact auth */
-    .header-link { font-size: 0.72rem; }
-    .header-link--cta { font-size: 0.72rem; padding: 5px 10px; }
+    .header-link { font-size: 0.75rem; }
+    .header-link--cta { font-size: 0.75rem; padding: 5px 10px; }
 
-    /* Tighter language switcher */
-    .header-link--lang { padding-left: 8px; }
+    /* Tighter, smaller icon buttons */
+    .search-icon-btn { padding: 5px; }
 
-    /* Show the mobile title bar BELOW the header */
-    .site-header__mobile-title {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 4px 0.75rem 8px;
-        border-bottom: 1px solid var(--rule-soft);
-    }
+    /* Language switcher keeps its hairline divider from the auth links */
+    .header-link--lang { padding-left: 12px; }
 
-    .site-header__mobile-title img {
-        height: 40px;
-        width: auto;
-    }
+    /* Title now shows in the top row, so the separate title bar is dropped. */
+    .site-header__mobile-title { display: none; }
 
     .search-overlay { padding-top: 60px; }
     .search-overlay__input { font-size: 1.25rem; }

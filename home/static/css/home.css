@@ -467,7 +467,12 @@
 .sg-subscribe {
     background: var(--navy);
     color: #fff;
-    margin: 3rem -2rem;
+    /* Full-bleed to the page gutters. The negative margin must match
+       .sg-page's 1rem padding — a larger value (was -2rem) pushes the
+       banner past the viewport edge on any screen narrower than the
+       page's max-width, causing horizontal overflow and leaving the
+       full-width header/footer short of the right edge. */
+    margin: 3rem -1rem;
     padding: 2.75rem 3rem;
     display: flex;
     align-items: center;
@@ -667,7 +672,11 @@
 }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 900px) {
+/* The featured-issue grid needs ~1020px for its 400 / 300 / 280 columns,
+   so it must reflow to the stacked layout well before 900px — otherwise
+   the 901–1051px band (common tablet-landscape widths) overflows the
+   viewport horizontally. Reflow the featured section at ≤1080px. */
+@media (max-width: 1080px) {
     .sg-featured-issue {
       grid-template-columns: 1fr;
       min-width: 0; /* Prevent horizontal expansion from children */
@@ -767,16 +776,20 @@
       scroll-snap-align: center;
     }
 
+    .sg-subscribe {
+      margin: 2rem -1rem;
+      padding: 2rem 1.5rem;
+    }
+}
+
+/* Article grid keeps its full 3-column layout on tablet-landscape and only
+   drops to a trimmed 2-up at ≤900px, independent of the featured reflow. */
+@media (max-width: 900px) {
     .sg-article-grid {
       grid-template-columns: repeat(2, 1fr);
     }
     .sg-article-grid .sg-article-card:nth-child(n+4) {
       display: none;
-    }
-
-    .sg-subscribe {
-      margin: 2rem -1rem;
-      padding: 2rem 1.5rem;
     }
 }
 
