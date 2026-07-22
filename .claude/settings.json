@@ -1,0 +1,22 @@
+{
+  // Runtime permissions for the Claude Code execution environment
+  "permissions": {
+    // Hard deny list: Commands listed here are blocked at the engine level
+    "deny": [
+      // Prevent any staging of files
+      "Bash(git add*)",
+      // Prevent local git commits (including amended commits and subshells)
+      "Bash(git commit*)",
+      // Prevent remote git pushes to any branch or upstream
+      "Bash(git push*)",
+      // Prevent branch creation/switching that could alter git history
+      "Bash(git checkout -b*)",
+      "Bash(git switch*)",
+      // Prevent merging or rebasing operations
+      "Bash(git merge*)",
+      "Bash(git rebase*)",
+      // Prevent cherry-picking commits
+      "Bash(git cherry-pick*)"
+    ]
+  }
+}
