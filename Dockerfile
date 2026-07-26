@@ -52,8 +52,8 @@ COPY --chown=wagtail:wagtail . .
 # BEFORE dropping privileges. On a freshly-created (empty) named volume, Docker
 # copies this ownership onto the volume; an already-existing root-owned volume
 # must be chowned once out-of-band (see deploy notes).
-RUN mkdir -p /Icarus/static /Icarus/media \
-    && chown -R wagtail:wagtail /Icarus/static /Icarus/media
+RUN mkdir -p /Icarus/static /Icarus/media /Icarus/geoip \
+    && chown -R wagtail:wagtail /Icarus/static /Icarus/media /Icarus/geoip
 
 USER wagtail
 
@@ -64,6 +64,8 @@ CMD set -e; \
     python manage.py compilemessages -l en; \
     python manage.py migrate --noinput; \
     python manage.py setup_page_lock_schedule; \
+    python manage.py setup_geoip_schedule; \
+    python manage.py update_geoip || true; \
     gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker -w 2 --preload
 
 EXPOSE 8000

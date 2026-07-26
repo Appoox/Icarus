@@ -289,3 +289,4 @@ pyrightconfig.json
 usermodel-migration-implementation_plan.md
 icarus_dumpfile*
 *.patch
+geoip/

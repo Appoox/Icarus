@@ -613,8 +613,10 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
         )
 
         # ── Analytics: Increment Opened Count ──────────────────────────
-        # Skip bots so verified crawlers don't inflate view counts.
-        if not (request.user.is_superuser or request.user.is_staff or is_crawler):
+        # Skip bots so they don't inflate view counts: staff, DNS-verified
+        # crawlers, and (via is_countable_human) any bot-UA or datacenter IP.
+        from home.hit_filters import is_countable_human
+        if not is_crawler and is_countable_human(request):
             hit_count = HitCount.objects.get_for_object(self)
             HitCountViewMixin().hit_count(request, hit_count)
 

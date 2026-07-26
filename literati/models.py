@@ -133,8 +133,9 @@ class Literati(Page, HitCountMixin):
             self.email if self.show_email else None
         )
 
-        # Hit count — only track for non-staff visitors.
-        if not (request.user.is_superuser or request.user.is_staff):
+        # Hit count — skip staff, bot user-agents, and datacenter IPs.
+        from home.hit_filters import is_countable_human
+        if is_countable_human(request):
             hit_count = HitCount.objects.get_for_object(self)
             HitCountViewMixin().hit_count(request, hit_count)
 

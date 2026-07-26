@@ -538,7 +538,8 @@ class HomePage(Page, HitCountMixin):
     def get_context(self, request):
         context = super().get_context(request)
 
-        if not (request.user.is_superuser or request.user.is_staff):
+        from home.hit_filters import is_countable_human
+        if is_countable_human(request):
             hit_count = HitCount.objects.get_for_object(self)
             HitCountViewMixin().hit_count(request, hit_count)
 
