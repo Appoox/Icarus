@@ -412,11 +412,14 @@ class Issue(RoutablePageMixin, Page):
         and record user view tracking metrics via django-hitcount.
         """
         from hitcount.views import HitCountMixin as HitCountViewProcessor
-        
-        # Safely attempt to record an analytics hit without disrupting page delivery if it fails
+        from home.hit_filters import is_countable_human
+
+        # Safely attempt to record an analytics hit without disrupting page delivery if it fails.
+        # is_countable_human skips staff, bot user-agents, and datacenter IPs.
         try:
-            hit_count_obj = get_hitcount_model().objects.get_for_object(self)
-            HitCountViewProcessor.hit_count(request, hit_count_obj)
+            if is_countable_human(request):
+                hit_count_obj = get_hitcount_model().objects.get_for_object(self)
+                HitCountViewProcessor.hit_count(request, hit_count_obj)
         except Exception:
             # Silence background analytics exceptions to ensure the end-user always receives the page
             pass

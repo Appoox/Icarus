@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from django.db.models import Q
 from django.urls import reverse, path
 from django.core.paginator import Paginator
@@ -19,6 +20,8 @@ from auditlog import get_logentry_model
 LogEntry = get_logentry_model()
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 ACTION_LABELS = {0: 'Created', 1: 'Updated', 2: 'Deleted'}
 
@@ -498,7 +501,7 @@ def analytics_view(request):
                     .values('period').annotate(count=Count('id')).order_by('period')
                 hp_hits_yearly = [{'label': entry['period'].strftime('%Y') if entry['period'] else '', 'count': entry['count']} for entry in yearly_qs]
     except Exception as e:
-        print(f"DEBUG: Error fetching hits: {e}")
+        logger.warning("Analytics: homepage hit trend computation failed: %s", e)
 
     # ── 2 & 3. Gender & Age-Bracket Hits / Read Fully ─────────────────────
     # We join HitCount data with users who have given consent
@@ -720,12 +723,15 @@ def analytics_view(request):
     # Users with non-null last_login_ip — group by /24 subnet prefix
     ip_sharing_suspects = []
     try:
+        from home import geoip_utils
+        geo_on = geoip_utils.geoip_available()
         ip_data = (
             ReaderUser.objects
             .filter(last_login_ip__isnull=False, is_active=True)
             .values('last_login_ip')
         )
         subnet_counts = {}
+        subnet_sample = {}
         for row in ip_data:
             ip = row['last_login_ip']
             # Take the first 3 octets as the /24 subnet
@@ -733,9 +739,14 @@ def analytics_view(request):
             if len(parts) >= 3:
                 subnet = '.'.join(parts[:3]) + '.0/24'
                 subnet_counts[subnet] = subnet_counts.get(subnet, 0) + 1
+                subnet_sample.setdefault(subnet, ip)
+        rows = []
+        for k, v in subnet_counts.items():
+            if v > 1:
+                country = geoip_utils.lookup_ip(subnet_sample[k])['country'] if geo_on else ''
+                rows.append({'subnet': k, 'count': v, 'country': country})
         ip_sharing_suspects = sorted(
-            [{'subnet': k, 'count': v} for k, v in subnet_counts.items() if v > 1],
-            key=lambda x: x['count'], reverse=True
+            rows, key=lambda x: x['count'], reverse=True
         )[:10]
     except Exception:
         pass
@@ -744,21 +755,29 @@ def analytics_view(request):
     # Group registration IPs by /24 subnet — multiple accounts from same subnet = risk signal
     stuffing_suspects = []
     try:
+        from home import geoip_utils
+        geo_on = geoip_utils.geoip_available()
         reg_ip_data = (
             ReaderUser.objects
             .filter(registration_ip__isnull=False)
             .values('registration_ip')
         )
         reg_subnet_counts = {}
+        reg_subnet_sample = {}
         for row in reg_ip_data:
             ip = row['registration_ip']
             parts = str(ip).split('.')
             if len(parts) >= 3:
                 subnet = '.'.join(parts[:3]) + '.0/24'
                 reg_subnet_counts[subnet] = reg_subnet_counts.get(subnet, 0) + 1
+                reg_subnet_sample.setdefault(subnet, ip)
+        rows = []
+        for k, v in reg_subnet_counts.items():
+            if v > 2:
+                country = geoip_utils.lookup_ip(reg_subnet_sample[k])['country'] if geo_on else ''
+                rows.append({'subnet': k, 'count': v, 'country': country})
         stuffing_suspects = sorted(
-            [{'subnet': k, 'count': v} for k, v in reg_subnet_counts.items() if v > 2],
-            key=lambda x: x['count'], reverse=True
+            rows, key=lambda x: x['count'], reverse=True
         )[:10]
     except Exception:
         pass
@@ -846,6 +865,167 @@ def analytics_view(request):
     retention_with_bm = round(with_bm_subscribed / max(with_bm_total, 1) * 100, 1)
     retention_without_bm = round(without_bm_subscribed / max(without_bm_total, 1) * 100, 1)
 
+    # ── 21. Hit sources, visitor locations & suspected-bot detection ──────
+    # django-hitcount records `ip` and `user_agent` on every Hit row but the
+    # dashboard never reads them. Classify the UA, geolocate the IP, and — via
+    # the ASN database — flag browser-UA hits from datacenter/hosting networks as
+    # suspected bots (a scraper forging a browser UA can't be caught by UA alone).
+    hit_source_counts = {}   # category -> count
+    top_bots = []            # [{'name', 'count'}]
+    country_rows = []        # [{'country', 'count'}]
+    city_rows = []           # [{'city', 'country', 'count'}]
+    network_rows = []        # [{'org', 'count', 'datacenter'}]
+    noisy_ips = []           # [{'ip', 'count', 'org', 'country', 'datacenter'}]
+    recent_hits = []         # detail rows for the table
+    hits_30d_total = 0
+    geoip_ready = False
+    asn_ready = False
+    try:
+        from hitcount.models import Hit
+        from home import ua_utils, geoip_utils
+
+        geoip_ready = geoip_utils.geoip_available()
+        asn_ready = geoip_utils.asn_available()
+        for cat in ua_utils.CATEGORY_ORDER:
+            hit_source_counts[cat] = 0
+
+        # -- Per-IP pass: geo + ASN org + datacenter set + noisy IPs (1 lookup/IP) --
+        ip_info = {}
+        datacenter_ips = set()
+        country_counts = {}
+        city_counts = {}
+        org_counts = {}
+        ip_qs = (
+            Hit.objects.filter(created__gte=thirty_days_ago)
+            .exclude(ip__isnull=True).exclude(ip='')
+            .values('ip').annotate(count=Count('id'))
+        )
+        for row in ip_qs:
+            ip = row['ip']
+            c = row['count']
+            loc = geoip_utils.lookup_ip(ip) if geoip_ready else {'country': '', 'city': ''}
+            org = geoip_utils.lookup_asn(ip)['org'] if asn_ready else ''
+            dc = geoip_utils.is_datacenter_org(org) if asn_ready else False
+            if dc:
+                datacenter_ips.add(ip)
+            ip_info[ip] = {
+                'count': c, 'org': org, 'datacenter': dc,
+                'country': loc.get('country', ''), 'city': loc.get('city', ''),
+            }
+            if geoip_ready:
+                country_counts[loc['country']] = country_counts.get(loc['country'], 0) + c
+                if loc['city']:
+                    key = (loc['city'], loc['country'])
+                    city_counts[key] = city_counts.get(key, 0) + c
+            if org:
+                org_counts[org] = org_counts.get(org, 0) + c
+
+        country_rows = sorted(
+            [{'country': k, 'count': v} for k, v in country_counts.items()],
+            key=lambda x: x['count'], reverse=True)[:15]
+        city_rows = sorted(
+            [{'city': k[0], 'country': k[1], 'count': v} for k, v in city_counts.items()],
+            key=lambda x: x['count'], reverse=True)[:10]
+        network_rows = sorted(
+            [{'org': k, 'count': v, 'datacenter': geoip_utils.is_datacenter_org(k)}
+             for k, v in org_counts.items()],
+            key=lambda x: x['count'], reverse=True)[:12]
+        noisy_ips = sorted(
+            [{'ip': k, 'count': v['count'], 'org': v['org'],
+              'country': v['country'], 'datacenter': v['datacenter']}
+             for k, v in ip_info.items()],
+            key=lambda x: x['count'], reverse=True)[:12]
+
+        # -- Per-(UA, IP) pass: category breakdown, reclassifying datacenter IPs --
+        bot_name_counts = {}
+        pair_qs = (
+            Hit.objects.filter(created__gte=thirty_days_ago)
+            .values('user_agent', 'ip').annotate(count=Count('id'))
+        )
+        for row in pair_qs:
+            info = ua_utils.classify_user_agent(row['user_agent'])
+            cat = info['category']
+            if (cat in (ua_utils.CATEGORY_HUMAN, ua_utils.CATEGORY_UNKNOWN)
+                    and row['ip'] in datacenter_ips):
+                cat = ua_utils.CATEGORY_SUSPECTED
+            c = row['count']
+            hit_source_counts[cat] = hit_source_counts.get(cat, 0) + c
+            hits_30d_total += c
+            if info['bot_name']:
+                bot_name_counts[info['bot_name']] = bot_name_counts.get(info['bot_name'], 0) + c
+        top_bots = sorted(
+            [{'name': k, 'count': v} for k, v in bot_name_counts.items()],
+            key=lambda x: x['count'], reverse=True)[:12]
+
+        # -- Recent hits detail table (latest 60 within the window) --
+        recent_qs = (
+            Hit.objects.filter(created__gte=thirty_days_ago)
+            .select_related('hitcount').order_by('-created')[:60]
+        )
+        for hit in recent_qs:
+            info = ua_utils.classify_user_agent(hit.user_agent)
+            meta = ip_info.get(hit.ip, {})
+            cat = info['category']
+            if (cat in (ua_utils.CATEGORY_HUMAN, ua_utils.CATEGORY_UNKNOWN)
+                    and hit.ip in datacenter_ips):
+                cat = ua_utils.CATEGORY_SUSPECTED
+            page_title = ''
+            try:
+                obj = hit.hitcount.content_object
+                page_title = getattr(obj, 'title', '') or (str(obj) if obj else '')
+            except Exception:
+                page_title = ''
+            city = meta.get('city')
+            country = meta.get('country')
+            location = f"{city}, {country}" if (city and country) else (country or '')
+            device = ' · '.join(p for p in (info['device'], info['browser'], info['os']) if p)
+            recent_hits.append({
+                'time': hit.created.strftime('%b %d, %H:%M') if hit.created else '',
+                'page': page_title[:48],
+                'category': cat,
+                'category_label': ua_utils.CATEGORY_LABELS.get(cat, cat),
+                'bot_name': info['bot_name'],
+                'device': device,
+                'location': location,
+                'network': (meta.get('org') or '')[:32],
+                'datacenter': meta.get('datacenter', False),
+                'ip': hit.ip or '',
+            })
+    except Exception as e:
+        logger.warning("Analytics: hit-source/geo computation failed: %s", e)
+
+    human_hits = hit_source_counts.get('human', 0)
+    suspected_hits = hit_source_counts.get('suspected_bot', 0)
+    scraper_hits = hit_source_counts.get('scraper', 0)
+    ai_hits = hit_source_counts.get('ai_bot', 0)
+    bot_hits = (
+        hit_source_counts.get('suspected_bot', 0) + hit_source_counts.get('search_bot', 0)
+        + hit_source_counts.get('ai_bot', 0) + hit_source_counts.get('scraper', 0)
+        + hit_source_counts.get('social', 0) + hit_source_counts.get('feed', 0)
+    )
+    human_pct = round(human_hits / max(hits_30d_total, 1) * 100, 1)
+    bot_pct = round(bot_hits / max(hits_30d_total, 1) * 100, 1)
+    # Order must match the doughnut labels/colours in analytics.html.
+    hit_source_values = [
+        hit_source_counts.get('human', 0),
+        hit_source_counts.get('suspected_bot', 0),
+        hit_source_counts.get('search_bot', 0),
+        hit_source_counts.get('ai_bot', 0),
+        hit_source_counts.get('scraper', 0),
+        hit_source_counts.get('social', 0),
+        hit_source_counts.get('feed', 0),
+        hit_source_counts.get('unknown', 0),
+    ]
+
+    # Best-effort count of AI crawlers blocked by the middleware (see
+    # home.ai_crawler_middleware). Process-local cache — informational only.
+    ai_blocked_total = 0
+    try:
+        from django.core.cache import cache
+        ai_blocked_total = cache.get('ai_crawler_blocked_total', 0) or 0
+    except Exception:
+        ai_blocked_total = 0
+
     context = {
         # Stat cards
         'total_users': total_users,
@@ -911,6 +1091,27 @@ def analytics_view(request):
         # Security
         'ip_sharing_suspects': ip_sharing_suspects,
         'stuffing_suspects': stuffing_suspects,
+
+        # Hit sources (human / bot / scraper) & visitor locations
+        'hits_30d_total': hits_30d_total,
+        'human_hits': human_hits,
+        'bot_hits': bot_hits,
+        'scraper_hits': scraper_hits,
+        'ai_hits': ai_hits,
+        'suspected_hits': suspected_hits,
+        'ai_blocked_total': ai_blocked_total,
+        'human_pct': human_pct,
+        'bot_pct': bot_pct,
+        'asn_ready': asn_ready,
+        'network_rows': network_rows,
+        'noisy_ips': noisy_ips,
+        'hit_source_values_json': json.dumps(hit_source_values),
+        'top_bots': top_bots,
+        'country_rows': country_rows,
+        'country_rows_json': json.dumps(country_rows),
+        'city_rows': city_rows,
+        'recent_hits': recent_hits,
+        'geoip_ready': geoip_ready,
 
         # Community health
         'total_comments': total_comments,

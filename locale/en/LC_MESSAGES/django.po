@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Icarus (sasthragathy.org)\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-21 16:55+0530\n"
+"POT-Creation-Date: 2026-07-25 21:35+0530\n"
 "PO-Revision-Date: 2026-07-17 22:45+0530\n"
 "Last-Translator: Icarus i18n\n"
 "Language-Team: en\n"
@@ -426,7 +426,7 @@ msgstr "Editorial Board"
 msgid "അടയ്ക്കുക"
 msgstr "Close"
 
-#: Icarus/templates/includes/footer.html:154
+#: Icarus/templates/includes/footer.html:157
 msgid "സോഷ്യൽ മീഡിയ ലിങ്കുകൾ"
 msgstr "Social media links"
 
@@ -438,81 +438,80 @@ msgstr "Site title"
 msgid "തിരയാന്‍ തുറക്കുക"
 msgstr "Open search"
 
-#: Icarus/templates/includes/header.html:81
-#: Icarus/templates/includes/header.html:82
-#, fuzzy
-#| msgid "പാസ്‍വേഡ് മാറ്റുക"
+#: Icarus/templates/includes/header.html:85
+#: Icarus/templates/includes/header.html:86
 msgid "തീം മാറ്റുക"
-msgstr "Change Password"
+msgstr "Change Theme"
 
-#: Icarus/templates/includes/header.html:103
+#: Icarus/templates/includes/header.html:107
 msgid "പ്രൊഫൈൽ"
 msgstr "Profile"
 
-#: Icarus/templates/includes/header.html:104
+#: Icarus/templates/includes/header.html:108
 msgid "ലോഗൗട്ട്"
 msgstr "Logout"
 
-#: Icarus/templates/includes/header.html:106
+#: Icarus/templates/includes/header.html:110
 msgid "ലോഗിൻ"
 msgstr "Login"
 
-#: Icarus/templates/includes/header.html:107
+#: Icarus/templates/includes/header.html:111
 #: home/templates/home/home_page.html:151
 msgid "വരിക്കാരാകൂ"
 msgstr "Subscribe"
 
-#: Icarus/templates/includes/header.html:132
+#: Icarus/templates/includes/header.html:137
 msgid "തിരയൽ"
 msgstr "Search"
 
-#: Icarus/templates/includes/header.html:134
+#: Icarus/templates/includes/header.html:139
 msgid "തിരയൽ അടയ്ക്കുക"
 msgstr "Close search"
 
-#: Icarus/templates/includes/header.html:152
+#: Icarus/templates/includes/header.html:157
 msgid "ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുക..."
 msgstr "Search the archive, articles, and authors..."
 
-#: Icarus/templates/includes/header.html:164
+#: Icarus/templates/includes/header.html:169
 msgid "തിരയാൻ കുറഞ്ഞത് 2 അക്ഷരങ്ങൾ ടൈപ്പ് ചെയ്യുക..."
 msgstr "Type at least 2 characters to search..."
 
-#: Icarus/templates/includes/header.html:165
+#: Icarus/templates/includes/header.html:170
 msgid "ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുന്നു..."
 msgstr "Searching the archive, articles, and authors..."
 
-#: Icarus/templates/includes/header.html:166
+#: Icarus/templates/includes/header.html:171
 msgid "ഫലങ്ങൾ ലഭ്യമാക്കുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക."
 msgstr "Error fetching results. Please try again."
 
-#: Icarus/templates/includes/header.html:167
+#: Icarus/templates/includes/header.html:172
 msgid "ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല"
 msgstr "No results found"
 
-#: Icarus/templates/includes/header.html:168
+#: Icarus/templates/includes/header.html:173
 msgid "ഫലങ്ങൾ കണ്ടെത്തി"
 msgstr "Results found"
 
-#: Icarus/templates/includes/header.html:169
+#: Icarus/templates/includes/header.html:174
+#: home/templates/wagtailadmin/analytics.html:263
 #: the_librarian/templates/the_librarian/viewer.html:30
 msgid "പേജ്"
 msgstr "Page"
 
-#: Icarus/templates/includes/header.html:170
+#: Icarus/templates/includes/header.html:175
 msgid "പിഡിഎഫ്"
 msgstr "PDF"
 
-#: Icarus/templates/includes/header.html:171
+#: Icarus/templates/includes/header.html:176
 #: the_librarian/templates/the_librarian/search.html:77
 msgid "ലേഖനം"
 msgstr "Article"
 
-#: Icarus/templates/includes/header.html:172
+#: Icarus/templates/includes/header.html:177
 msgid "രചയിതാവ്"
 msgstr "Author"
 
-#: Icarus/templates/includes/header.html:174
+#: Icarus/templates/includes/header.html:179
 msgid "തിരയാൻ ടൈപ്പ് ചെയ്യുക..."
 msgstr "Type to search..."
 
@@ -894,7 +893,7 @@ msgid "Active delivery"
 msgstr "Active delivery"
 
 #: home/templates/wagtailadmin/analytics.html:117
-#: home/templates/wagtailadmin/analytics.html:298
+#: home/templates/wagtailadmin/analytics.html:504
 msgid "മോഡറേഷൻ ബാക്ക്‌ലോഗ്"
 msgstr "Moderation backlog"
 
@@ -927,15 +926,222 @@ msgstr "Monthly hits (last 12 months)"
 msgid "വർഷംതോറുമുള്ള ഹിറ്റുകൾ (കഴിഞ്ഞ 5 വർഷം)"
 msgstr "Yearly hits (last 5 years)"
 
-#: home/templates/wagtailadmin/analytics.html:158
+#: home/templates/wagtailadmin/analytics.html:157
+msgid "ഹിറ്റ് ഉറവിടങ്ങൾ — മനുഷ്യർ vs ബോട്ടുകൾ (കഴിഞ്ഞ 30 ദിവസം)"
+msgstr "Hit sources — humans vs bots (last 30 days)"
+
+#: home/templates/wagtailadmin/analytics.html:160
+msgid "ആകെ ഹിറ്റുകൾ (30 ദിവസം)"
+msgstr "Total hits (30 days)"
+
+#: home/templates/wagtailadmin/analytics.html:162
+msgid "എല്ലാ പേജുകളും"
+msgstr "All pages"
+
+#: home/templates/wagtailadmin/analytics.html:165
+msgid "മനുഷ്യ വായനക്കാർ (റെസിഡൻഷ്യൽ)"
+msgstr "Human readers (residential)"
+
+#: home/templates/wagtailadmin/analytics.html:170
+msgid "സംശയാസ്പദ ബോട്ട് (ഡാറ്റാസെന്റർ)"
+msgstr "Suspected bot (datacenter)"
+
+#: home/templates/wagtailadmin/analytics.html:172
+msgid "ബ്രൗസർ UA, പക്ഷേ ക്ലൗഡ്/ഹോസ്റ്റിംഗ് IP"
+msgstr "Browser UA, but cloud/hosting IP"
+
+#: home/templates/wagtailadmin/analytics.html:175
+msgid "ബോട്ടുകൾ / ക്രാളറുകൾ"
+msgstr "Bots / crawlers"
+
+#: home/templates/wagtailadmin/analytics.html:180
+msgid "AI സ്ക്രാപ്പറുകൾ"
+msgstr "AI scrapers"
+
+#: home/templates/wagtailadmin/analytics.html:185
+msgid "ബ്ലോക്ക് ചെയ്ത AI അഭ്യർത്ഥനകൾ"
+msgstr "Blocked AI requests"
+
+#: home/templates/wagtailadmin/analytics.html:187
+msgid "മിഡിൽവെയർ (റീസ്റ്റാർട്ട് മുതൽ, ഏകദേശം)"
+msgstr "Middleware (since restart, approx)"
+
+#: home/templates/wagtailadmin/analytics.html:190
+msgid "സ്ക്രാപ്പറുകൾ / ഓട്ടോമേഷൻ"
+msgstr "Scrapers / automation"
+
+#: home/templates/wagtailadmin/analytics.html:197
+msgid "സന്ദർശക തരം അനുസരിച്ചുള്ള വിഭജനം"
+msgstr "Visitor type classification"
+
+#: home/templates/wagtailadmin/analytics.html:201
+msgid "ഏറ്റവും സജീവമായ ബോട്ടുകൾ"
+msgstr "Most active bots"
+
+#: home/templates/wagtailadmin/analytics.html:204
+#: home/templates/wagtailadmin/analytics.html:265
+msgid "ബോട്ട്"
+msgstr "Bot"
+
+#: home/templates/wagtailadmin/analytics.html:204
+#: home/templates/wagtailadmin/analytics.html:230
+#: home/templates/wagtailadmin/analytics.html:315
+#: home/templates/wagtailadmin/analytics.html:334
+#: home/templates/wagtailadmin/analytics.html:758
+#: home/templates/wagtailadmin/analytics.html:765
+#: home/templates/wagtailadmin/analytics.html:772
+#: home/templates/wagtailadmin/analytics.html:779
+msgid "ഹിറ്റുകൾ"
+msgstr "Hits"
+
+#: home/templates/wagtailadmin/analytics.html:212
+msgid "ബോട്ട് ട്രാഫിക് ഒന്നും കണ്ടെത്തിയില്ല."
+msgstr "No bot traffic detected."
+
+#: home/templates/wagtailadmin/analytics.html:219
+msgid "സന്ദർശക സ്ഥാനങ്ങൾ (കഴിഞ്ഞ 30 ദിവസം)"
+msgstr "Visitor locations (last 30 days)"
+
+#: home/templates/wagtailadmin/analytics.html:223
+msgid "രാജ്യം അനുസരിച്ച് (ആദ്യ 15)"
+msgstr "By country (top 15)"
+
+#: home/templates/wagtailadmin/analytics.html:227
+msgid "നഗരം അനുസരിച്ച് (ആദ്യ 10)"
+msgstr "By city (top 10)"
+
+#: home/templates/wagtailadmin/analytics.html:230
+#: reader/templates/reader/edit_profile.html:132
+msgid "നഗരം"
+msgstr "City"
+
+#: home/templates/wagtailadmin/analytics.html:230
+#: home/templates/wagtailadmin/analytics.html:519
+#: home/templates/wagtailadmin/analytics.html:543
+msgid "രാജ്യം"
+msgstr "Country"
+
+#: home/templates/wagtailadmin/analytics.html:238
+msgid "നഗര ഡാറ്റ ലഭ്യമല്ല."
+msgstr "No city data available."
+
+#: home/templates/wagtailadmin/analytics.html:243
+msgid "IP ജിയോലൊക്കേഷൻ:"
+msgstr "IP geolocation:"
+
+#: home/templates/wagtailadmin/analytics.html:248
+msgid ""
+"GeoIP ഡാറ്റാബേസ് ഇൻസ്റ്റാൾ ചെയ്തിട്ടില്ല. സ്ഥാന ഡാറ്റ കാണാൻ ഈ കമാൻഡ് പ്രവർത്തിപ്പിക്കുക:"
+msgstr "GeoIP database not installed. Run this command to show location data:"
+
+#: home/templates/wagtailadmin/analytics.html:256
+msgid "സമീപകാല ഹിറ്റുകൾ (ഏറ്റവും പുതിയ 60)"
+msgstr "Recent hits (last 60)"
+
+#: home/templates/wagtailadmin/analytics.html:262
+#: reader/templates/reader/auditlog_panel.html:8
+msgid "സമയം"
+msgstr "Time"
+
+#: home/templates/wagtailadmin/analytics.html:264
+#: home/templates/wagtailadmin/analytics.html:315
+msgid "തരം"
+msgstr "Type"
+
+#: home/templates/wagtailadmin/analytics.html:266
+msgid "സ്ഥാനം"
+msgstr "Location"
+
+#: home/templates/wagtailadmin/analytics.html:267
+#: home/templates/wagtailadmin/analytics.html:334
+msgid "നെറ്റ്‌വർക്ക്"
+msgstr "Network"
+
+#: home/templates/wagtailadmin/analytics.html:268
+msgid "ഉപകരണം"
+msgstr "Device"
+
+#: home/templates/wagtailadmin/analytics.html:279
+#: home/templates/wagtailadmin/analytics.html:790
+msgid "മനുഷ്യൻ"
+msgstr "Human"
+
+#: home/templates/wagtailadmin/analytics.html:281
+msgid "സംശയാസ്പദം"
+msgstr "Suspecious"
+
+#: home/templates/wagtailadmin/analytics.html:283
+#: home/templates/wagtailadmin/analytics.html:790
+msgid "AI സ്ക്രാപ്പർ"
+msgstr "AI Scrapper"
+
+#: home/templates/wagtailadmin/analytics.html:285
+#: home/templates/wagtailadmin/analytics.html:790
+msgid "സ്ക്രാപ്പർ"
+msgstr "Scrapper"
+
+#: home/templates/wagtailadmin/analytics.html:287
+#: home/templates/wagtailadmin/analytics.html:790
+msgid "അജ്ഞാതം"
+msgstr "Unkown"
+
+#: home/templates/wagtailadmin/analytics.html:302
+msgid "സമീപകാല ഹിറ്റുകൾ ഒന്നും രേഖപ്പെടുത്തിയിട്ടില്ല."
+msgstr "No recent hits recorded."
+
+#: home/templates/wagtailadmin/analytics.html:308
+msgid "ഉറവിട നെറ്റ്‌വർക്കുകൾ & തിരക്കേറിയ IP-കൾ (കഴിഞ്ഞ 30 ദിവസം)"
+msgstr "Top Networks & Busy IPs (last 30 days)"
+
+#: home/templates/wagtailadmin/analytics.html:312
+msgid "മുൻനിര നെറ്റ്‌വർക്കുകൾ (ASN)"
+msgstr "Top Networks (ASN)"
+
+#: home/templates/wagtailadmin/analytics.html:315
+msgid "നെറ്റ്‌വർക്ക് / സ്ഥാപനം"
+msgstr "Network / Organization"
+
+#: home/templates/wagtailadmin/analytics.html:320
+msgid "ഡാറ്റാസെന്റർ"
+msgstr "Data Center"
+
+#: home/templates/wagtailadmin/analytics.html:327
+msgid "നെറ്റ്‌വർക്ക് ഡാറ്റ ലഭ്യമല്ല."
+msgstr "Network data not available"
+
+#: home/templates/wagtailadmin/analytics.html:331
+msgid "തിരക്കേറിയ IP-കൾ (ഏറ്റവും കൂടുതൽ ഹിറ്റുകൾ)"
+msgstr "Top Busy IPs (Most hits)"
+
+#: home/templates/wagtailadmin/analytics.html:346
+msgid "ഡാറ്റ ലഭ്യമല്ല."
+msgstr "No data available"
+
+#: home/templates/wagtailadmin/analytics.html:351
+msgid "നെറ്റ്‌വർക്ക് ഡാറ്റ:"
+msgstr "Network data"
+
+#: home/templates/wagtailadmin/analytics.html:351
+msgid ""
+"ഡാറ്റാസെന്റർ IP-കളിൽ നിന്നുള്ള ബ്രൗസർ ഹിറ്റുകൾ 'സംശയാസ്പദം' ആയി കണക്കാക്കുന്നു, എണ്ണുന്നില്ല."
+msgstr "Data center IP based browser hits are considered as 'suspicious' and not counted."
+
+#: home/templates/wagtailadmin/analytics.html:356
+msgid ""
+"ASN ഡാറ്റാബേസ് ഇൻസ്റ്റാൾ ചെയ്തിട്ടില്ല — ഡാറ്റാസെന്റർ/ബോട്ട് കണ്ടെത്തൽ പ്രവർത്തനക്ഷമമാക്കാൻ "
+"ഇത് പ്രവർത്തിപ്പിക്കുക:"
+msgstr ""
+"ASN database not installed - run this command to enable data center / bot detection:"
+
+#: home/templates/wagtailadmin/analytics.html:364
 msgid "സബ്‌സ്‌ക്രിപ്ഷൻ ആരോഗ്യം"
 msgstr "Subscription Health"
 
-#: home/templates/wagtailadmin/analytics.html:162
+#: home/templates/wagtailadmin/analytics.html:368
 msgid "കൊഴിഞ്ഞുപോക്ക് നിരക്ക് — റദ്ദാക്കിയവ vs സ്വയം പുതുക്കുന്നവ"
 msgstr "Churn — cancelled vs auto-renewing"
 
-#: home/templates/wagtailadmin/analytics.html:165
+#: home/templates/wagtailadmin/analytics.html:371
 #, python-format
 msgid ""
 "കൊഴിഞ്ഞുപോക്ക് നിരക്ക്: <strong style=\"color:var(--an-"
@@ -946,11 +1152,11 @@ msgstr ""
 "strong> of active subscribers have cancelled but are still within their "
 "access period."
 
-#: home/templates/wagtailadmin/analytics.html:170
+#: home/templates/wagtailadmin/analytics.html:376
 msgid "ഗ്രേസ് പീരിയഡ് റിക്കവറി (കഴിഞ്ഞ 33 ദിവസം)"
 msgstr "Grace-period recovery (last 33 days)"
 
-#: home/templates/wagtailadmin/analytics.html:173
+#: home/templates/wagtailadmin/analytics.html:379
 #, python-format
 msgid ""
 "റിക്കവറി നിരക്ക്: <strong style=\"color:var(--an-"
@@ -962,11 +1168,11 @@ msgstr ""
 "success)\">%(grace_recovery_pct)s%%</strong> — %(recently_renewed)s of "
 "~%(users_in_grace)s who entered the grace period renewed."
 
-#: home/templates/wagtailadmin/analytics.html:179
+#: home/templates/wagtailadmin/analytics.html:385
 msgid "പേവാൾ കൺവേർഷൻ (കഴിഞ്ഞ 30 ദിവസം)"
 msgstr "Paywall conversion (last 30 days)"
 
-#: home/templates/wagtailadmin/analytics.html:182
+#: home/templates/wagtailadmin/analytics.html:388
 #, python-format
 msgid ""
 "%(new_registrations_30d)s പുതിയ രജിസ്ട്രേഷനുകളിൽ %(new_subscribers_30d)s എണ്ണം "
@@ -976,11 +1182,11 @@ msgstr ""
 "%(new_subscribers_30d)s of %(new_registrations_30d)s new registrations "
 "became subscribers (<strong>%(paywall_conversion_pct)s%%</strong>)."
 
-#: home/templates/wagtailadmin/analytics.html:188
+#: home/templates/wagtailadmin/analytics.html:394
 msgid "നിലനിർത്തൽ: ബുക്ക്മാർക്ക് ചെയ്യുന്നവർ vs ചെയ്യാത്തവർ"
 msgstr "Retention: bookmarkers vs non-bookmarkers"
 
-#: home/templates/wagtailadmin/analytics.html:191
+#: home/templates/wagtailadmin/analytics.html:397
 #, python-format
 msgid ""
 "ബുക്ക്മാർക്ക് ചെയ്യുന്നവർ: <strong style=\"color:var(--an-"
@@ -993,24 +1199,24 @@ msgstr ""
 "<strong style=\"color:var(--an-warn)\">%(retention_without_bm)s%%</strong> "
 "active."
 
-#: home/templates/wagtailadmin/analytics.html:200
+#: home/templates/wagtailadmin/analytics.html:406
 msgid "എന്‍ഗേജ്മെന്റ്"
 msgstr "Engagement"
 
-#: home/templates/wagtailadmin/analytics.html:204
+#: home/templates/wagtailadmin/analytics.html:410
 #, python-format
 msgid "ശ്രദ്ധാ സ്കോർ — മികച്ച ലേഖനങ്ങൾ (പൂർണ്ണമായി വായിക്കപ്പെട്ടവ %%)"
 msgstr "Attention score — top articles (%% read fully)"
 
-#: home/templates/wagtailadmin/analytics.html:209
+#: home/templates/wagtailadmin/analytics.html:415
 msgid "ഭാഷാ ലഭ്യത (വിവർത്തന കവറേജ്)"
 msgstr "Language availability (translation coverage)"
 
-#: home/templates/wagtailadmin/analytics.html:214
+#: home/templates/wagtailadmin/analytics.html:420
 msgid "നിഷ്ക്രിയ vs സജീവ വായന"
 msgstr "Passive vs active reading"
 
-#: home/templates/wagtailadmin/analytics.html:217
+#: home/templates/wagtailadmin/analytics.html:423
 #, python-format
 msgid ""
 "നിഷ്ക്രിയം (വായനകൾ): <strong>%(passive_total)s</strong> &nbsp;|&nbsp;\n"
@@ -1019,213 +1225,222 @@ msgstr ""
 "Passive (reads): <strong>%(passive_total)s</strong> &nbsp;|&nbsp; Active "
 "(bookmarks): <strong>%(active_total)s</strong>"
 
-#: home/templates/wagtailadmin/analytics.html:223
+#: home/templates/wagtailadmin/analytics.html:429
 msgid "ഏറ്റവും കൂടുതൽ പ്രിയപ്പെട്ടതാക്കിയ ലേഖനങ്ങൾ"
 msgstr "Most favorited articles"
 
-#: home/templates/wagtailadmin/analytics.html:231
+#: home/templates/wagtailadmin/analytics.html:437
 msgid "സംഖ്യാവിവരങ്ങൾ (സമ്മതം നൽകിയ ഉപയോക്താക്കൾ മാത്രം)"
 msgstr "Demographics (consenting users only)"
 
-#: home/templates/wagtailadmin/analytics.html:234
+#: home/templates/wagtailadmin/analytics.html:440
 msgid "ലിംഗഭേദം — സന്ദർശിച്ച ലേഖനങ്ങൾ vs പൂർണ്ണമായി വായിച്ചവ"
 msgstr "Gender — articles visited vs read fully"
 
-#: home/templates/wagtailadmin/analytics.html:238
+#: home/templates/wagtailadmin/analytics.html:444
 msgid "പ്രായമനുസരിച്ച് — സന്ദർശിച്ച ലേഖനങ്ങൾ vs പൂർണ്ണമായി വായിച്ചവ"
 msgstr "By age — articles visited vs read fully"
 
-#: home/templates/wagtailadmin/analytics.html:245
+#: home/templates/wagtailadmin/analytics.html:451
 msgid "ഭൂമിശാസ്ത്രം അനുസരിച്ച് പ്രിന്റ് വരിക്കാർ"
 msgstr "Print subscribers by geography"
 
-#: home/templates/wagtailadmin/analytics.html:248
+#: home/templates/wagtailadmin/analytics.html:454
 msgid "സംസ്ഥാനം അനുസരിച്ച് (ആദ്യ 15)"
 msgstr "By state (top 15)"
 
-#: home/templates/wagtailadmin/analytics.html:252
+#: home/templates/wagtailadmin/analytics.html:458
 msgid "ജില്ല അനുസരിച്ച് (ആദ്യ 10)"
 msgstr "By district (top 10)"
 
-#: home/templates/wagtailadmin/analytics.html:259
+#: home/templates/wagtailadmin/analytics.html:465
 msgid "അനുവർത്തനവും സമ്മതവും"
 msgstr "Compliance & Consent"
 
-#: home/templates/wagtailadmin/analytics.html:262
+#: home/templates/wagtailadmin/analytics.html:468
 msgid "ഡാറ്റ ഓപ്റ്റ്-ഇൻ നിരക്കുകൾ"
 msgstr "Data opt-in rates"
 
-#: home/templates/wagtailadmin/analytics.html:266
+#: home/templates/wagtailadmin/analytics.html:472
 msgid "ഓൺബോർഡിംഗ് ഫ്രിക്ഷൻ — ശൂന്യമായ ഫീൽഡ് നിരക്കുകൾ"
 msgstr "Onboarding friction — blank field rates"
 
-#: home/templates/wagtailadmin/analytics.html:273
+#: home/templates/wagtailadmin/analytics.html:479
 msgid "പേയ്‌മെന്റ് ഗേറ്റ്‌വേ പ്രകടനം"
 msgstr "Payment Gateway Performance"
 
-#: home/templates/wagtailadmin/analytics.html:276
+#: home/templates/wagtailadmin/analytics.html:482
 msgid "ഗേറ്റ്‌വേ അനുസരിച്ച് ഇടപാട് പരാജയ നിരക്ക്"
 msgstr "Transaction failure rate by gateway"
 
-#: home/templates/wagtailadmin/analytics.html:280
+#: home/templates/wagtailadmin/analytics.html:486
 msgid "ഇതുവരെ ഗേറ്റ്‌വേ പേയ്‌മെന്റ് ഡാറ്റ രേഖപ്പെടുത്തിയിട്ടില്ല."
 msgstr "No gateway payment data recorded yet."
 
-#: home/templates/wagtailadmin/analytics.html:285
+#: home/templates/wagtailadmin/analytics.html:491
 msgid "കമ്മ്യൂണിറ്റി മോഡറേഷൻ"
 msgstr "Community Moderation"
 
-#: home/templates/wagtailadmin/analytics.html:288
+#: home/templates/wagtailadmin/analytics.html:494
 msgid "കമ്മ്യൂണിറ്റി ഹെൽത്ത് ഇൻഡെക്സ്"
 msgstr "Community health index"
 
-#: home/templates/wagtailadmin/analytics.html:290
+#: home/templates/wagtailadmin/analytics.html:496
 #, python-format
 msgid "ആകെ %(total_comments)s ൽ %(removed_comments)s നീക്കം ചെയ്തു"
 msgstr "%(removed_comments)s removed out of %(total_comments)s total"
 
-#: home/templates/wagtailadmin/analytics.html:293
+#: home/templates/wagtailadmin/analytics.html:499
 msgid "അംഗീകരിച്ച അഭിപ്രായങ്ങൾ"
 msgstr "Approved comments"
 
-#: home/templates/wagtailadmin/analytics.html:295
+#: home/templates/wagtailadmin/analytics.html:501
 msgid "വായനക്കാർക്ക് കാണാൻ കഴിയുന്നത്"
 msgstr "Visible to readers"
 
-#: home/templates/wagtailadmin/analytics.html:300
+#: home/templates/wagtailadmin/analytics.html:506
 msgid "അംഗീകാരത്തിനായി കാത്തിരിക്കുന്നു"
 msgstr "Awaiting approval"
 
-#: home/templates/wagtailadmin/analytics.html:306
+#: home/templates/wagtailadmin/analytics.html:512
 msgid "സുരക്ഷാ സിഗ്നലുകൾ"
 msgstr "Security Signals"
 
-#: home/templates/wagtailadmin/analytics.html:310
+#: home/templates/wagtailadmin/analytics.html:516
 msgid "അക്കൗണ്ട് പങ്കിടൽ സാധ്യത - പങ്കിട്ട ലോഗിൻ ഐപി(കൾ) (/24 സബ്നെറ്റുകൾ)"
 msgstr "Possible account sharing — shared login IP(s) (/24 subnets)"
 
-#: home/templates/wagtailadmin/analytics.html:313
-#: home/templates/wagtailadmin/analytics.html:336
+#: home/templates/wagtailadmin/analytics.html:519
+#: home/templates/wagtailadmin/analytics.html:543
 msgid "സബ്‌നെറ്റ്"
 msgstr "Subnet"
 
-#: home/templates/wagtailadmin/analytics.html:313
+#: home/templates/wagtailadmin/analytics.html:519
 msgid "അക്കൗണ്ടുകൾ"
 msgstr "Accounts"
 
-#: home/templates/wagtailadmin/analytics.html:328
+#: home/templates/wagtailadmin/analytics.html:535
 msgid "പങ്കിട്ട ലോഗിൻ ഐപികൾ ഒന്നും കണ്ടെത്തിയില്ല."
 msgstr "No shared login IPs found."
 
-#: home/templates/wagtailadmin/analytics.html:333
+#: home/templates/wagtailadmin/analytics.html:540
 msgid "ക്രെഡൻഷ്യൽ സ്റ്റഫിംഗ് — ഒന്നിലധികം അക്കൗണ്ട് രജിസ്ട്രേഷൻ IP-കൾ (/24)"
 msgstr "Credential stuffing — multi-account registration IPs (/24)"
 
-#: home/templates/wagtailadmin/analytics.html:336
+#: home/templates/wagtailadmin/analytics.html:543
 msgid "രജിസ്ട്രേഷനുകൾ"
 msgstr "Registrations"
 
-#: home/templates/wagtailadmin/analytics.html:351
+#: home/templates/wagtailadmin/analytics.html:559
 msgid "സംശയാസ്പദമായ രജിസ്ട്രേഷൻ ക്ലസ്റ്ററുകളൊന്നും കണ്ടെത്തിയില്ല."
 msgstr "No suspicious registration clusters found."
 
-#: home/templates/wagtailadmin/analytics.html:430
+#: home/templates/wagtailadmin/analytics.html:638
 msgid "സ്വയമേവ പുതുക്കുന്നവ"
 msgstr "Auto-renewing"
 
-#: home/templates/wagtailadmin/analytics.html:430
+#: home/templates/wagtailadmin/analytics.html:638
 msgid "റദ്ദാക്കി (സജീവം)"
 msgstr "Cancelled (active)"
 
-#: home/templates/wagtailadmin/analytics.html:437
+#: home/templates/wagtailadmin/analytics.html:645
 msgid "പുതുക്കി"
 msgstr "Updated"
 
-#: home/templates/wagtailadmin/analytics.html:437
+#: home/templates/wagtailadmin/analytics.html:645
 msgid "പുതുക്കിയില്ല"
 msgstr "Did not renew"
 
-#: home/templates/wagtailadmin/analytics.html:444
+#: home/templates/wagtailadmin/analytics.html:652
 msgid "സബ്‌സ്‌ക്രൈബർ ആയി മാറിയവർ"
 msgstr "Became subscribers"
 
-#: home/templates/wagtailadmin/analytics.html:444
+#: home/templates/wagtailadmin/analytics.html:652
 msgid "രജിസ്റ്റർ മാത്രം ചെയ്തവർ"
 msgstr "Registered only"
 
-#: home/templates/wagtailadmin/analytics.html:452
+#: home/templates/wagtailadmin/analytics.html:660
 #, python-format
 msgid "ബുക്ക്മാർക്കുകളോടെ (%(with_bm_total)s)"
 msgstr "With bookmarks (%(with_bm_total)s)"
 
-#: home/templates/wagtailadmin/analytics.html:453
+#: home/templates/wagtailadmin/analytics.html:661
 #, python-format
 msgid "ബുക്ക്മാർക്കുകളില്ലാതെ (%(without_bm_total)s)"
 msgstr "Without bookmarks (%(without_bm_total)s)"
 
-#: home/templates/wagtailadmin/analytics.html:455
+#: home/templates/wagtailadmin/analytics.html:663
 #, python-format
 msgid "സജീവ സബ്സ്ക്രിപ്ഷൻ %%"
 msgstr "Active subscription %%"
 
-#: home/templates/wagtailadmin/analytics.html:487
+#: home/templates/wagtailadmin/analytics.html:695
 msgid "ഇതുവരെ സമ്മതം നൽകിയ ലിംഗഭേദ ഡാറ്റ ലഭ്യമല്ല."
 msgstr "No consented gender data available yet."
 
-#: home/templates/wagtailadmin/analytics.html:490
-#: home/templates/wagtailadmin/analytics.html:502
+#: home/templates/wagtailadmin/analytics.html:698
+#: home/templates/wagtailadmin/analytics.html:710
 msgid "സന്ദർശിക്കപ്പെട്ട ലേഖനങ്ങൾ"
 msgstr "Articles visited"
 
-#: home/templates/wagtailadmin/analytics.html:491
-#: home/templates/wagtailadmin/analytics.html:503
+#: home/templates/wagtailadmin/analytics.html:699
+#: home/templates/wagtailadmin/analytics.html:711
 msgid "പൂർണ്ണമായി വായിച്ചവ"
 msgstr "Read fully"
 
-#: home/templates/wagtailadmin/analytics.html:525
+#: home/templates/wagtailadmin/analytics.html:733
 #, python-format
 msgid "ഓപ്റ്റ്-ഇൻ %%"
 msgstr "Opt-in %%"
 
-#: home/templates/wagtailadmin/analytics.html:531
+#: home/templates/wagtailadmin/analytics.html:739
 #, python-format
 msgid "ശൂന്യമായ ഫീൽഡ് %%"
 msgstr "Blank field %%"
 
-#: home/templates/wagtailadmin/analytics.html:539 reader/models.py:1008
+#: home/templates/wagtailadmin/analytics.html:747 reader/models.py:1008
 msgid "പൂർത്തിയായി"
 msgstr "Completed"
 
-#: home/templates/wagtailadmin/analytics.html:540 reader/models.py:1009
+#: home/templates/wagtailadmin/analytics.html:748 reader/models.py:1009
 msgid "പരാജയപ്പെട്ടു"
 msgstr "Failed"
 
-#: home/templates/wagtailadmin/analytics.html:541
+#: home/templates/wagtailadmin/analytics.html:749
 msgid "തീർച്ചപ്പെടാത്തത്"
 msgstr "Pending"
 
-#: home/templates/wagtailadmin/analytics.html:550
-#: home/templates/wagtailadmin/analytics.html:557
-#: home/templates/wagtailadmin/analytics.html:564
-#: home/templates/wagtailadmin/analytics.html:571
-msgid "ഹിറ്റുകൾ"
-msgstr "Hits"
-
-#: home/templates/wagtailadmin/analytics.html:552
+#: home/templates/wagtailadmin/analytics.html:760
 msgid "ഇതുവരെ ദിവസേനയുള്ള ഡാറ്റ ലഭ്യമല്ല."
 msgstr "No daily data available yet."
 
-#: home/templates/wagtailadmin/analytics.html:559
+#: home/templates/wagtailadmin/analytics.html:767
 msgid "ഇതുവരെ ആഴ്ചതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല."
 msgstr "No weekly data available yet."
 
-#: home/templates/wagtailadmin/analytics.html:566
+#: home/templates/wagtailadmin/analytics.html:774
 msgid "ഇതുവരെ മാസംതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല."
 msgstr "No monthly data available yet."
 
-#: home/templates/wagtailadmin/analytics.html:573
+#: home/templates/wagtailadmin/analytics.html:781
 msgid "ഇതുവരെ വർഷംതോറുമുള്ള ഡാറ്റ ലഭ്യമല്ല."
 msgstr "No yearly data available yet."
+
+#: home/templates/wagtailadmin/analytics.html:790
+msgid "സംശയാസ്പദം (ഡാറ്റാസെന്റർ)"
+msgstr "Suspicious (Data center)"
+
+#: home/templates/wagtailadmin/analytics.html:790
+msgid "സെർച്ച് ബോട്ട്"
+msgstr "Search Bot"
+
+#: home/templates/wagtailadmin/analytics.html:790
+msgid "സോഷ്യൽ"
+msgstr "Social"
+
+#: home/templates/wagtailadmin/analytics.html:790
+msgid "ഫീഡ്"
+msgstr "Feed"
 
 #: home/templates/wagtailadmin/audit_log.html:4
 #: home/templates/wagtailadmin/audit_log.html:12
@@ -2547,10 +2762,6 @@ msgstr "Display error"
 msgid "സമീപകാല പ്രവർത്തനം (ഓഡിറ്റ് ലോഗ്)"
 msgstr "Recent Activity (Audit Log)"
 
-#: reader/templates/reader/auditlog_panel.html:8
-msgid "സമയം"
-msgstr "Time"
-
 #: reader/templates/reader/auditlog_panel.html:11
 msgid "മോഡലും മാറ്റങ്ങളും"
 msgstr "Model & Changes"
@@ -2663,10 +2874,6 @@ msgstr "Address Line 1"
 #: reader/templates/reader/edit_profile.html:125
 msgid "വിലാസ വരി 2"
 msgstr "Address Line 2"
-
-#: reader/templates/reader/edit_profile.html:132
-msgid "നഗരം"
-msgstr "City"
 
 #: reader/templates/reader/edit_profile.html:137
 msgid "സംസ്ഥാനം"

@@ -125,6 +125,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Reject known AI/LLM scraper user-agents with 403 early, before any view
+    # runs. Search crawlers are a separate category and are never blocked.
+    "home.ai_crawler_middleware.BlockAICrawlersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -315,6 +318,32 @@ CRAWLER_TRUSTED_IP_HEADER = env.str("CRAWLER_TRUSTED_IP_HEADER", default="HTTP_X
 CRAWLER_DNS_TIMEOUT = env.float("CRAWLER_DNS_TIMEOUT", default=2.0)      # seconds
 CRAWLER_VERIFY_TTL = env.int("CRAWLER_VERIFY_TTL", default=604800)      # 7 days (verified)
 CRAWLER_VERIFY_NEG_TTL = env.int("CRAWLER_VERIFY_NEG_TTL", default=3600)  # 1 hour (unverified)
+
+# ── GeoIP (offline IP geolocation for the analytics dashboard) ────────
+# Resolves hit / login / registration IPs to a country + city using a local
+# MaxMind-format database (read via the ``geoip2`` package), so no visitor IP
+# is ever sent to a third-party service. The DB file is not committed — run
+# ``python manage.py update_geoip`` to fetch the free DB-IP City Lite build.
+# The analytics page degrades gracefully when the file is absent (see
+# home/geoip_utils.py).
+GEOIP_PATH = env.path("GEOIP_PATH", BASE_DIR / "geoip")
+GEOIP_DB_FILENAME = env.str("GEOIP_DB_FILENAME", default="dbip-city-lite.mmdb")
+# Separate ASN database (also fetched by update_geoip) used to tell datacenter /
+# hosting IPs apart from residential ISPs — a browser-UA hit from a datacenter is
+# treated as a suspected bot and is not counted (see home/hit_filters.py).
+GEOIP_ASN_DB_FILENAME = env.str("GEOIP_ASN_DB_FILENAME", default="dbip-asn-lite.mmdb")
+
+# ── AI crawler blocking ───────────────────────────────────────────────
+# robots.txt asks AI/LLM data-collection crawlers to stay out, but that is only
+# advisory. When enabled, home.ai_crawler_middleware returns 403 to any request
+# whose User-Agent matches a known AI crawler (home.ua_utils._AI_BOTS). Genuine
+# search crawlers (Googlebot / Bingbot) are a separate category and are never
+# blocked, so search indexing / SEO is unaffected. Add UA substrings to the
+# allowlist to permit specific AI agents (e.g. "ChatGPT-User" for
+# user-initiated fetches) while still blocking the bulk trainers.
+AI_CRAWLER_BLOCK_ENABLED = env.bool("AI_CRAWLER_BLOCK_ENABLED", default=True)
+AI_CRAWLER_ALLOWLIST = env.list("AI_CRAWLER_ALLOWLIST", default=[])
+
 LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')
 LOGIN_URL = env.str("LOGIN_URL", "account_login")
 # ACCOUNT_LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", '/')

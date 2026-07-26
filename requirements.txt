@@ -20,6 +20,9 @@ psycopg[binary]==3.2.5
 dj-database-url==2.3.0
 gunicorn==26.0.0
 django-hitcount==1.3.5
+# Offline IP geolocation for the analytics dashboard (manage.py update_geoip).
+# Reads a local MaxMind-format DB; no visitor IP leaves the server.
+geoip2==4.8.0
 django-allauth==65.16.1
 babel==2.18.0
 django-auditlog==3.4.1

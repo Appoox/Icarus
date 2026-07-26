@@ -57,10 +57,14 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@bouncer:5432/${POSTGRES_NAME}
       DB_HOST: bouncer
       DB_PORT: "5432"
+      # Offline GeoIP DB lives on a shared named volume (seeded at boot, refreshed
+      # monthly by qcluster). Keep this path in sync with the qcluster service.
+      GEOIP_PATH: /Icarus/geoip
     volumes:
       - static_volume:/Icarus/static
       - media_volume:/Icarus/media
       - model_volume:/Icarus/models
+      - geoip_volume:/Icarus/geoip
     depends_on:
       # bouncer starts after db is healthy; web starts after bouncer. If the
       # pool isn't accepting connections on the very first tick, the container
@@ -86,10 +90,13 @@ services:
       DB_HOST: bouncer
       DB_PORT: "5432"
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_CREDENTIALS_JSON}
+      # Same shared GeoIP volume as web; the monthly refresh schedule runs here.
+      GEOIP_PATH: /Icarus/geoip
     # Background tasks may write generated files (e.g. TTS audio) into media.
     volumes:
       - media_volume:/Icarus/media
       - model_volume:/Icarus/models
+      - geoip_volume:/Icarus/geoip
       - /opt/Icarus/shared:/opt/Icarus/shared:ro
     command: python manage.py qcluster
     depends_on:
@@ -129,5 +136,6 @@ volumes:
   static_volume:
   media_volume:
   model_volume:
+  geoip_volume:
   caddy_data:
   caddy_config:
