@@ -124,6 +124,34 @@ class _Resolver:
         self._doc = doc_map
         self._console = console
 
+    # ── Snippet natural keys ─────────────────────────────────────────────
+
+    def resolve_snippet(self, ref):
+        """
+        Resolve {"__ref": "snippet", "model": "issue.volume", "key": {...}}
+        to the destination PK. Snippets are upserted by natural key, so their
+        PKs differ from the source database.
+        """
+        label = ref.get('model', '')
+        key = ref.get('key') or {}
+        try:
+            app_label, model_name = label.split('.')
+            Model = django_apps.get_model(app_label, model_name)
+        except (LookupError, ValueError) as e:
+            self._console.warn(f'cannot resolve snippet model "{label}": {e}')
+            return None
+        try:
+            obj = Model.objects.filter(**key).first()
+        except Exception as e:
+            self._console.warn(f'snippet lookup {label} {key} failed: {e}')
+            return None
+        if obj is None:
+            self._console.warn(
+                f'snippet {label} {key} not found — foreign key left empty'
+            )
+            return None
+        return obj.pk
+
     # ── M2M lists ────────────────────────────────────────────────────────
 
     def resolve_m2m(self, ref_list):
@@ -143,6 +171,10 @@ class _Resolver:
                     out.append(new_pk)
             elif ref == 'document':
                 new_pk = self._doc.get(item['pk'])
+                if new_pk:
+                    out.append(new_pk)
+            elif ref == 'snippet':
+                new_pk = self.resolve_snippet(item)
                 if new_pk:
                     out.append(new_pk)
             else:
@@ -437,6 +469,9 @@ class _Applicator:
                     rm = field.related_model
                     if raw is None:
                         setattr(instance, field.attname, None)
+                    elif isinstance(raw, dict) and raw.get('__ref') == 'snippet':
+                        setattr(instance, field.attname,
+                                self._res.resolve_snippet(raw))
                     elif rm and issubclass(rm, Im):
                         new_pk = self._res._img.get(raw.get('pk')) if isinstance(raw, dict) else None
                         setattr(instance, field.attname, new_pk)
@@ -703,11 +738,20 @@ class _SnippetImporter:
 
 class _PageImporter:
     # Fields on wagtailcore_page that must never be set on the child table
+    # Mirrors _PAGE_BASE_EXCLUDE in export_content: owner / locked_by are FKs
+    # into the user table and latest_revision / live_revision point at Revision
+    # rows, so copying those source PKs here would raise IntegrityError.
+    # url_path is recomputed by Wagtail from the tree.
     _BASE_SKIP = frozenset({
         'id', 'path', 'depth', 'numchild',
         'content_type', 'content_type_id',
         'locale', 'locale_id',
         'translation_key', 'alias_of', 'alias_of_id',
+        'owner', 'owner_id',
+        'locked_by', 'locked_by_id',
+        'latest_revision', 'latest_revision_id',
+        'live_revision', 'live_revision_id',
+        'url_path',
     })
 
     def __init__(self, resolver, applicator, console: Console, stats, dry_run):

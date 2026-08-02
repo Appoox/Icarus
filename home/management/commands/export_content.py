@@ -86,11 +86,33 @@ _BASE_PAGE_NAMES: frozenset = frozenset(
     f.name for f in Page._meta.get_fields()
 ) | {'id', 'page_ptr', 'page_ptr_id'}
 
+#: Base-page fields that must never cross databases.  `owner` / `locked_by`
+#: are FKs into the user table and `latest_revision` / `live_revision` point at
+#: Revision rows — copying those PKs onto a fresh database raises IntegrityError
+#: because the referenced rows do not exist there.  `url_path` is derived from
+#: the page tree and is recomputed by Wagtail on add_child()/move().
+_UNSAFE_PAGE_FIELDS = {
+    'owner', 'owner_id',
+    'locked_by', 'locked_by_id',
+    'latest_revision', 'latest_revision_id',
+    'live_revision', 'live_revision_id',
+    'url_path',
+}
+
 _PAGE_BASE_EXCLUDE = {
     'id', 'path', 'depth', 'numchild',
     'content_type', 'content_type_id',
     'locale', 'locale_id',
     'translation_key', 'alias_of', 'alias_of_id',
+} | _UNSAFE_PAGE_FIELDS
+
+#: Snippet models the importer upserts by natural key.  A plain integer FK to
+#: one of these would point at the *source* row id, which is meaningless on the
+#: destination, so they are exported as a natural-key reference instead.
+SNIPPET_NATURAL_KEYS = {
+    'issue.volume': ('number',),
+    'issue.topic': ('slug',),
+    'literati.editorialboard': ('name',),
 }
 
 
@@ -317,7 +339,21 @@ class _Serialiser:
                     return {'__ref': 'page', 'slug_path': _slug_path(pg)}
                 except Page.DoesNotExist:
                     return None
-            return raw_id  # plain integer FK (Volume, Topic, etc.)
+            # Snippets upserted by natural key on import (Volume, Topic,
+            # EditorialBoard): the source PK is meaningless on the destination.
+            if rm is not None:
+                label = f'{rm._meta.app_label}.{rm._meta.model_name}'
+                keys = SNIPPET_NATURAL_KEYS.get(label)
+                if keys:
+                    obj = rm.objects.filter(pk=raw_id).first()
+                    if obj is None:
+                        return None
+                    return {
+                        '__ref': 'snippet',
+                        'model': label,
+                        'key': {k: getattr(obj, k, None) for k in keys},
+                    }
+            return raw_id  # plain integer FK with no natural key
 
         # ── ManyToMany ─── handled by serialize() separately ────────────
         if isinstance(field, dj_models.ManyToManyField):
