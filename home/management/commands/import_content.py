@@ -47,6 +47,7 @@ create.  FK pointers to those not-yet-created images resolve to None during the
 preview; that is expected and is discarded with the rollback.
 """
 
+import io
 import json
 import os
 import sys
@@ -328,6 +329,27 @@ class _MediaImporter:
         self.image_map = {}   # {original_pk -> new_pk}
         self.doc_map   = {}
 
+    @staticmethod
+    def _dimensions(entry, raw):
+        """
+        Resolve an image's pixel dimensions.
+
+        wagtailimages_image.width/height are NOT NULL and nothing on the model
+        populates them — Wagtail fills them in from its upload form, which an
+        import never goes through. The manifest records them; when it doesn't
+        (older archive), fall back to reading the bytes with Pillow, which
+        Wagtail already depends on.
+        """
+        width, height = entry.get('width'), entry.get('height')
+        if width and height:
+            return int(width), int(height)
+        try:
+            from PIL import Image as PILImage
+            with PILImage.open(io.BytesIO(raw)) as probe:
+                return probe.size
+        except Exception:
+            return None, None
+
     def _load(self, entry, kind):
         """Common lookup/extract step. Returns (title, file_path, raw|None)."""
         title = entry.get('title') or f'{kind}_{entry["pk"]}'
@@ -368,12 +390,35 @@ class _MediaImporter:
                     self._stats['images_created'] += 1
                     continue
 
+                width, height = self._dimensions(entry, raw)
+                if not width or not height:
+                    self._console.warn(
+                        f'image "{title}": cannot determine pixel dimensions '
+                        f'— skipped (width/height are NOT NULL)'
+                    )
+                    continue
+
                 img = Im(title=title)
                 for attr in ('focal_point_x', 'focal_point_y',
                              'focal_point_width', 'focal_point_height'):
                     if entry.get(attr) is not None:
                         setattr(img, attr, entry[attr])
-                img.file.save(os.path.basename(file_path), ContentFile(raw), save=True)
+
+                # Write the file first with save=False, then set the dimensions,
+                # then save once.  Assigning the file can reset width/height via
+                # Django's dimension-field hook, so our values must be applied
+                # after it and before the INSERT.
+                img.file.save(
+                    os.path.basename(file_path), ContentFile(raw), save=False
+                )
+                img.width, img.height = width, height
+                img.file_size = len(raw)
+                try:
+                    img._set_file_hash()
+                except Exception:
+                    pass          # optional metadata; never fail the import
+                img.save()
+
                 self.image_map[orig_pk] = img.pk
                 self._stats['images_created'] += 1
                 self._console.detail(f'    +  image "{title}" → pk={img.pk}')
@@ -409,7 +454,15 @@ class _MediaImporter:
                     continue
 
                 doc = Do(title=title)
-                doc.file.save(os.path.basename(file_path), ContentFile(raw), save=True)
+                doc.file.save(
+                    os.path.basename(file_path), ContentFile(raw), save=False
+                )
+                doc.file_size = len(raw)
+                try:
+                    doc._set_file_hash()
+                except Exception:
+                    pass          # optional metadata; never fail the import
+                doc.save()
                 self.doc_map[orig_pk] = doc.pk
                 self._stats['documents_created'] += 1
                 self._console.detail(f'    +  document "{title}" → pk={doc.pk}')
@@ -530,16 +583,30 @@ class _SnippetImporter:
     def _upsert(self, Model, lookup, data, extra_skip=None):
         skip = set(extra_skip or []) | set(lookup.keys())
         try:
-            obj, created = Model.objects.get_or_create(**lookup)
+            # NB: not get_or_create — that INSERTs with only the natural key
+            # set, which trips every NOT NULL column on the model (Volume has
+            # year_start). Build the row in memory, apply all fields, save once.
+            obj = Model.objects.filter(**lookup).first()
+            created = obj is None
+            if created:
+                obj = Model(**lookup)
+        except Exception as e:
+            self._console.warn(f'{Model.__name__} {lookup}: {e}')
+            return None
+
+        self._console.detail(f'    {"+" if created else "↻"}  {Model.__name__} {lookup}')
+        if self._dry:
+            self._stats['snippets_created' if created else 'snippets_updated'] += 1
+            return obj if not created else None
+
+        try:
+            self._app.apply(obj, data, skip_fields=skip)
+            obj.save()
+            self._app.apply_m2m(obj, data)
         except Exception as e:
             self._console.warn(f'{Model.__name__} {lookup}: {e}')
             return None
         self._stats['snippets_created' if created else 'snippets_updated'] += 1
-        self._console.detail(f'    {"+" if created else "↻"}  {Model.__name__} {lookup}')
-        if not self._dry:
-            self._app.apply(obj, data, skip_fields=skip)
-            obj.save()
-            self._app.apply_m2m(obj, data)
         return obj
 
     def import_volumes(self, rows):
@@ -626,6 +693,22 @@ class _SnippetImporter:
                             skip_fields=['id', 'column', 'column_id']
                         )
                         link.save()
+
+    def import_board_shells(self, rows):
+        """
+        Create the EditorialBoard rows only, before pages are imported.
+
+        Issue pages carry an editorial_board FK, so the boards have to exist
+        first; their *members* point at Literati pages, so those can only be
+        attached afterwards. Splitting the two breaks the circular dependency.
+        """
+        from literati.models import EditorialBoard
+        for bd in rows:
+            name = bd.get('name')
+            if not name:
+                continue
+            payload = {k: v for k, v in bd.items() if k != '_members'}
+            self._upsert(EditorialBoard, {'name': name}, payload)
 
     def import_editorial_boards(self, rows):
         from literati.models import EditorialBoard, EditorialBoardMember
@@ -754,12 +837,14 @@ class _PageImporter:
         'url_path',
     })
 
-    def __init__(self, resolver, applicator, console: Console, stats, dry_run):
+    def __init__(self, resolver, applicator, console: Console, stats, dry_run,
+                 strict=False):
         self._res = resolver
         self._app = applicator
         self._console = console
         self._stats = stats
         self._dry = dry_run
+        self._strict = strict
 
     def import_pages(self, page_rows):
         locale = (
@@ -815,7 +900,7 @@ class _PageImporter:
                         self._app.apply(
                             specific, specific_fields, skip_fields={'id'}
                         )
-                        specific.save()
+                        self._save_page(specific)
                         self._app.apply_m2m(specific, base_fields)
                         self._app.apply_m2m(specific, specific_fields)
                         target = specific
@@ -828,6 +913,12 @@ class _PageImporter:
                         self._app.apply(
                             page, specific_fields, skip_fields={'id'}
                         )
+                        if not self._strict:
+                            # treebeard's add_child() calls save() with no
+                            # kwargs, so Page.full_clean() runs and rejects rows
+                            # the source database already holds (e.g. a blank
+                            # required phone_number). Shadow it per-instance.
+                            page.full_clean = lambda *a, **kw: None
                         parent.add_child(instance=page)
                         self._app.apply_m2m(page, base_fields)
                         self._app.apply_m2m(page, specific_fields)
@@ -843,6 +934,72 @@ class _PageImporter:
             finally:
                 bar.advance(suffix=pr.get('slug', ''))
         bar.finish()
+
+    @staticmethod
+    def _has_deferred_ref(value):
+        """True if a serialised value points at a page or natural-key snippet."""
+        if isinstance(value, dict):
+            return value.get('__ref') in ('page', 'snippet')
+        if isinstance(value, list):
+            return any(
+                isinstance(v, dict) and v.get('__ref') in ('page', 'snippet')
+                for v in value
+            )
+        return False
+
+    def resolve_deferred(self, page_rows):
+        """
+        Second pass: re-apply page/snippet references now that every page and
+        snippet exists.
+
+        Pages are created in tree order, so a page whose FK points *forward* —
+        an Article referencing an Issue that sorts later — resolved to None on
+        the first pass. This re-applies only those fields, once.
+        """
+        pending = []
+        for pr in page_rows:
+            fields = {}
+            for source in (pr.get('base_fields', {}), pr.get('specific_fields', {})):
+                for name, value in source.items():
+                    if name != '__m2m' and self._has_deferred_ref(value):
+                        fields[name] = value
+                m2m = {
+                    k: v for k, v in (source.get('__m2m') or {}).items()
+                    if self._has_deferred_ref(v)
+                }
+                if m2m:
+                    fields.setdefault('__m2m', {}).update(m2m)
+            if fields:
+                pending.append((pr['slug_path'], fields))
+
+        if not pending:
+            return
+        bar = self._console.bar(len(pending), 'relink')
+        for slug_path, fields in pending:
+            try:
+                page = _get_page_by_slug_path(slug_path)
+                if page is None:
+                    continue
+                specific = page.specific
+                self._app.apply(specific, fields, skip_fields=self._BASE_SKIP - {'__m2m'})
+                self._save_page(specific)
+                self._app.apply_m2m(specific, fields)
+                self._stats['pages_relinked'] += 1
+            except Exception as e:
+                self._console.warn(f'relink {slug_path}: {e}')
+            finally:
+                bar.advance(suffix=slug_path)
+        bar.finish()
+
+    def _save_page(self, page):
+        """Save a page, bypassing full_clean() unless --strict-validation."""
+        if self._strict:
+            page.save()
+            return
+        try:
+            page.save(clean=False)
+        except TypeError:      # not a Wagtail Page (no clean kwarg)
+            page.save()
 
     def _publish(self, page):
         try:
@@ -902,6 +1059,12 @@ class Command(BaseCommand):
         parser.add_argument(
             '--yes', '-y', action='store_true',
             help='Skip the confirmation prompt',
+        )
+        parser.add_argument(
+            '--strict-validation', action='store_true',
+            help='Run model validation on imported pages. Off by default: an '
+                 'archive restores rows the source database already accepted, '
+                 'and validation added since then would reject them.',
         )
         parser.add_argument(
             '--no-progress', action='store_true',
@@ -1007,7 +1170,8 @@ class Command(BaseCommand):
                     resolver, applicator, console, stats, dry_run
                 )
                 pi = _PageImporter(
-                    resolver, applicator, console, stats, dry_run
+                    resolver, applicator, console, stats, dry_run,
+                    strict=options['strict_validation'],
                 )
                 snips = manifest.get('snippets', {})
 
@@ -1031,13 +1195,24 @@ class Command(BaseCommand):
                       lambda: si.import_site_footer(
                           snips.get('home.sitefooter', [])))
 
-                # 5 — pages (must precede editorial boards; Literati pages
-                #           must exist before member FKs can be resolved)
+                # 5a — board rows before pages: Issue pages carry an
+                #      editorial_board FK. Members are attached in step 6,
+                #      once the Literati pages they point at exist.
+                _step('Importing editorial boards…',
+                      lambda: si.import_board_shells(
+                          snips.get('literati.editorialboard', [])))
+
+                # 5b — pages (tree order — parents before children)
                 _step('Importing pages…',
                       lambda: pi.import_pages(manifest.get('pages', [])))
 
-                # 6 — editorial boards and history (depend on Literati pages)
-                _step('Importing editorial boards…',
+                # 5c — re-resolve forward references (an Article pointing at an
+                #      Issue that sorts later in the tree)
+                _step('Relinking page references…',
+                      lambda: pi.resolve_deferred(manifest.get('pages', [])))
+
+                # 6 — board members and history (depend on Literati pages)
+                _step('Attaching board members…',
                       lambda: si.import_editorial_boards(
                           snips.get('literati.editorialboard', [])))
                 _step('Importing membership history…',
@@ -1057,7 +1232,8 @@ class Command(BaseCommand):
             f'   documents : {stats["documents_created"]} created · '
             f'{stats["documents_reused"]} reused\n'
             f'   pages     : {stats["pages_created"]} created · '
-            f'{stats["pages_updated"]} updated · {stats["pages_skipped"]} skipped\n'
+            f'{stats["pages_updated"]} updated · {stats["pages_skipped"]} skipped · '
+            f'{stats["pages_relinked"]} relinked\n'
             f'   snippets  : {stats["snippets_created"]} created · '
             f'{stats["snippets_updated"]} updated'
         )
