@@ -1,0 +1,29 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+{% include "includes/sg_section_head.html" with heading=self.heading %}
+
+<div class="sg-card-grid sg-layout--{{ self.layout }}" style="--sg-cols: {{ self.columns }};">
+  {% for item in self.cards %}
+  {% firstof item.link_page.url item.link_url as card_href %}
+  <article class="sg-custom-card"{% if item.accent_colour %} style="--sg-accent: {{ item.accent_colour }};"{% endif %}>
+    {% if item.image %}
+    {% if card_href %}<a href="{{ card_href }}" class="sg-custom-card__image-wrap" aria-hidden="true" tabindex="-1">{% endif %}
+      {% image item.image fill-440x280 as card_img %}
+      <img src="{{ card_img.url }}" alt="{{ item.heading }}" width="440" height="280" loading="lazy" decoding="async">
+    {% if card_href %}</a>{% endif %}
+    {% endif %}
+
+    <div class="sg-custom-card__content">
+      {% if item.kicker %}<span class="sg-card-kicker">{{ item.kicker }}</span>{% endif %}
+      {% if item.heading %}
+      <h3 class="sg-custom-card__title">
+        {% if card_href %}<a href="{{ card_href }}">{{ item.heading }}</a>{% else %}{{ item.heading }}{% endif %}
+      </h3>
+      {% endif %}
+      {% if item.text %}<div class="sg-custom-card__text">{{ item.text|richtext }}</div>{% endif %}
+      {% if card_href and item.link_label %}
+      <a href="{{ card_href }}" class="sg-custom-card__link">{{ item.link_label }}</a>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>

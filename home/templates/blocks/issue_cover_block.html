@@ -1,0 +1,30 @@
+{% load wagtailcore_tags wagtailimages_tags i18n %}
+{% if issue %}
+<div class="sg-issue-cover">
+  <div class="sg-issue-cover__label">{% firstof self.label_text _("വിശേഷലക്കം") %}</div>
+
+  {% if issue.cover_image %}
+  <a href="{{ issue.url }}" class="sg-issue-cover__image-wrap" aria-hidden="true" tabindex="-1">
+    {% image issue.cover_image width-800 as cover_img %}
+    <img src="{{ cover_img.url }}" alt="{{ issue.title }}">
+  </a>
+  {% endif %}
+
+  <h2 class="sg-issue-cover__title">
+    <a href="{{ issue.url }}">{{ issue.title }}</a>
+  </h2>
+  <div class="sg-issue-cover__meta">
+    <span class="sg-issue-cover__date">{{ issue.date_of_publishing|date:"F j, Y" }}</span>
+
+    {% if issue.topic %}
+    <a href="{% url 'topic_detail' slug=issue.topic.slug %}" class="sg-issue-cover__topic"
+      style="background-color: {{ issue.topic.color|default:'#c8102e' }};">
+      {{ issue.topic.name }}
+    </a>
+    {% endif %}
+  </div>
+  {% if self.show_cta %}
+  <a href="{{ issue.url }}" class="sg-issue-cover__cta">{% firstof self.cta_label _("ലക്കം പരിശോധിക്കാം") %}</a>
+  {% endif %}
+</div>
+{% endif %}

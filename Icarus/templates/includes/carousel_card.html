@@ -1,30 +1,27 @@
 {% load wagtailcore_tags wagtailimages_tags %}
 <article class="sg-issue-card" {% if is_clone %}aria-hidden="true"{% endif %}>
-  {% if article.cover_image %}
-  <a href="{{ article.url }}" class="sg-issue-card__image-wrap" aria-hidden="true" tabindex="-1">
-    {% image article.cover_image fill-320x200 as art_img %}
-    <img src="{{ art_img.url }}" alt="{{ article.title }}">
+  {% if card.image %}
+  <a href="{{ card.url }}" class="sg-issue-card__image-wrap" aria-hidden="true" tabindex="-1">
+    {% image card.image fill-320x200 as art_img %}
+    <img src="{{ art_img.url }}" alt="{{ card.title }}">
   </a>
   {% endif %}
   <div class="sg-issue-card__overlay">
-    {% if article.topic %}
-    <a href="{% url 'topic_detail' slug=article.topic.slug %}" class="sg-issue-card__category"
-      style="background-color: {{ article.topic.color|default:'#c8102e' }};">
-      {{ article.topic.name }}
+    {% if card.kicker %}<span class="sg-card-kicker">{{ card.kicker }}</span>{% endif %}
+    {% if card.topic %}
+    <a href="{% url 'topic_detail' slug=card.topic.slug %}" class="sg-issue-card__category"
+      style="background-color: {{ card.accent }};">
+      {{ card.topic.name }}
     </a>
     {% endif %}
     <h3 class="sg-issue-card__title">
-      <a href="{{ article.url }}">{{ article.title }}</a>
+      <a href="{{ card.url }}">{{ card.title }}</a>
     </h3>
 
-    {% if article.article_authors.all %}
-    <span class="sg-card-author">
-      {% for rel in article.article_authors.all %}{% if rel.author.url %}<a href="{{ rel.author.url }}">{{ rel.author.title }}</a>{% else %}{{ rel.author.title }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
-    </span>
-    {% endif %}
+    {% include "includes/sg_byline.html" with card=card %}
 
-    <time class="sg-issue-card__date" datetime="{{ article.date|date:'Y-m-d' }}">
-      {{ article.date|date:"F j, Y" }}
+    <time class="sg-issue-card__date" datetime="{{ card.date|date:'Y-m-d' }}">
+      {{ card.date|date:"F j, Y" }}
     </time>
   </div>
 </article>

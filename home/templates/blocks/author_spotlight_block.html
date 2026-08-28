@@ -1,0 +1,23 @@
+{% load wagtailcore_tags wagtailimages_tags i18n %}
+{% include "includes/sg_section_head.html" with heading=self.heading %}
+
+<div class="sg-author-grid sg-layout--{{ self.layout }}" style="--sg-cols: {{ self.columns }};">
+  {% for card in cards %}
+  <article class="sg-author-card">
+    {% if card.image %}
+    <a href="{{ card.url }}" class="sg-author-card__image-wrap" aria-hidden="true" tabindex="-1">
+      {% image card.image fill-160x160 as author_img %}
+      <img src="{{ author_img.url }}" alt="{{ card.title }}" width="160" height="160" loading="lazy" decoding="async">
+    </a>
+    {% endif %}
+    <div class="sg-author-card__content">
+      {% if card.kicker %}<span class="sg-card-kicker">{{ card.kicker }}</span>{% endif %}
+      <h3 class="sg-author-card__name"><a href="{{ card.url }}">{{ card.title }}</a></h3>
+      {% if card.standfirst %}<p class="sg-card-standfirst">{{ card.standfirst }}</p>
+      {% elif card.page.role %}<p class="sg-author-card__role">{{ card.page.role }}</p>{% endif %}
+    </div>
+  </article>
+  {% empty %}
+  <p class="sg-empty">{% translate "ലേഖകരാരുമില്ല." %}</p>
+  {% endfor %}
+</div>

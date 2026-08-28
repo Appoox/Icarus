@@ -131,6 +131,14 @@ class _Serialiser:
 
     # ── StreamField scanning ────────────────────────────────────────────
 
+    # Chooser fields inside a StructBlock whose value is a bare image PK.
+    # The type-keyed branches below only catch blocks whose *type* is
+    # 'image'/'document'; the homepage section blocks instead carry images as
+    # named fields on a struct (custom_card.image, a curated pick's
+    # image_override), so those need a field-name sweep or their images never
+    # make it into the export bundle.
+    _IMAGE_FIELD_NAMES = frozenset({'image', 'image_override'})
+
     def _scan_stream(self, node):
         """Recursively note every image/document PK inside StreamField JSON."""
         if isinstance(node, list):
@@ -139,6 +147,14 @@ class _Serialiser:
         elif isinstance(node, dict):
             btype = node.get('type', '')
             val = node.get('value')
+
+            for name in self._IMAGE_FIELD_NAMES:
+                pk = node.get(name)
+                # Only bare integer PKs — a nested dict under the same key is
+                # handled by the recursion at the end of this method.
+                if isinstance(pk, int):
+                    self._media.note_image(pk)
+
             if btype == 'image' and isinstance(val, dict):
                 self._media.note_image(val.get('image'))
             elif btype == 'document' and isinstance(val, (int, str)):

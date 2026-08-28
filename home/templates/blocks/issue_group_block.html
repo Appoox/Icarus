@@ -1,0 +1,19 @@
+{% load wagtailcore_tags i18n %}
+{% include "includes/sg_section_head.html" with heading=self.heading %}
+
+<div class="sg-issue-grid sg-layout--{{ self.layout }}" style="--sg-cols: {{ self.columns }};">
+  {% for card in cards %}
+    {% include "includes/sg_issue_card_simple.html" with card=card %}
+  {% empty %}
+    <p class="sg-empty">{% translate "ലക്കങ്ങളൊന്നുമില്ല." %}</p>
+  {% endfor %}
+</div>
+
+{% if self.show_more_link and self.more_link_page %}
+<div class="sg-more-issues">
+  <a href="{{ self.more_link_page.url }}" class="sg-btn-secondary">
+    <span>{% firstof self.more_link_label _("എല്ലാ ലക്കങ്ങളും കാണുക") %}</span>
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+  </a>
+</div>
+{% endif %}

@@ -1226,3 +1226,439 @@ body.homepage {
 .sg-issue-small-card__overlay .sg-issue-small-card__date {
     font-size: .66rem;
 }
+
+/* ═══════════════════════════════════════════════
+   THE LAYOUT GRID
+   ───────────────────────────────────────────────
+   Sections are placed by editors on a 12-column grid from Wagtail admin →
+   Homepage Layout.  Each cell carries its placement as custom properties
+   written inline by home_page.html:
+
+       --c  --s  --r  --rs     desktop  (12 columns)
+       --tc --ts --tr --trs    tablet   (6 columns)
+       --mc --ms --mr --mrs    mobile   (1 column)
+
+   Only breakpoints an editor has actually touched emit their variables, so
+   the var() fallbacks below *are* the inheritance rule: an untouched tablet
+   or mobile simply reflows into fewer columns in reading order.  That is why
+   there is no second code path for "not placed at this breakpoint".
+
+   Row heights are a guide, not a measurement — real height comes from the
+   content.  --sg-row sets the floor a cell reserves; list-type sections
+   scroll inside their cell rather than blowing the row out.
+═══════════════════════════════════════════════ */
+
+.sg-grid {
+    --sg-row: 120px;
+    --sg-gap: 1.25rem;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--sg-gap);
+    align-items: stretch;
+}
+
+.sg-cell {
+    grid-column: var(--c, 1) / span var(--s, 12);
+    grid-row: var(--r, auto) / span var(--rs, 1);
+    min-height: calc(var(--sg-row) * var(--rs, 1));
+    min-width: 0;   /* let children with horizontal scroll actually shrink */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Cells in the same row stretch to the row's height on their own — this is
+   what replaced the JS that used to measure the cover card and copy its
+   height onto the other-topics column. */
+.sg-cell > * { min-width: 0; }
+
+.sg-cell--tint {
+    background: var(--surface-2, rgb(0 0 0 / 3%));
+    border-radius: 6px;
+}
+
+.sg-cell--bordered {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+}
+
+.sg-cell--pad-none { padding: 0; }
+.sg-cell--pad-sm { padding: .5rem; }
+.sg-cell--pad-md { padding: 1rem 0; }
+.sg-cell--pad-lg { padding: 2rem 1rem; }
+
+.sg-cell--tint.sg-cell--pad-md,
+.sg-cell--bordered.sg-cell--pad-md { padding: 1rem; }
+
+/* Sections that scroll inside their cell rather than growing the grid row.
+   ───────────────────────────────────────────────────────────────────────
+   Taking the section out of flow is the whole trick.  A grid row with
+   `auto` height is sized by its tallest item, so an other-topics column
+   holding twelve cards *becomes* the row height and the page stretches to
+   fit it.  Absolutely positioning the section means it contributes nothing
+   to that calculation: the row is sized by the cover and the carousel, the
+   cell stretches to it, and `inset: 0` gives the section a definite height
+   to scroll within.
+
+   That definite height is the part that matters.  An earlier version set
+   `max-height: 100%` here, which looks equivalent and is not — a
+   percentage height against a parent with no definite height resolves to
+   `none`, so the cap silently disappeared and the column laid itself out
+   full length.  It also out-specified the `max-height: 700px` fallback on
+   .sg-issue-other-topics, so there was nothing left to catch it.
+
+   This replaces the JS that used to measure the cover card and copy its
+   height across (the old "Fix 3" in home.js) — CSS can express it now that
+   the two are siblings in a real grid.
+
+   Scoped above 1080px on purpose: at or below that the rules further up
+   this file turn this column into a horizontal card strip with
+   `max-height: none`, and it must be left alone to do that. */
+@media (min-width: 1081px) {
+    .sg-cell--scrolls {
+        position: relative;
+    }
+
+    .sg-cell--scrolls > * {
+        position: absolute;
+        inset: 0;
+        /* The section's own fallback cap is redundant now the height is
+           definite, and would fight it at tall row spans. */
+        max-height: none;
+    }
+}
+
+@media (max-width: 1024px) {
+    .sg-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+    .sg-cell {
+        grid-column: var(--tc, 1) / span var(--ts, 6);
+        grid-row: var(--tr, auto) / span var(--trs, 1);
+        min-height: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .sg-grid { grid-template-columns: minmax(0, 1fr); }
+
+    .sg-cell {
+        grid-column: var(--mc, 1) / span var(--ms, 1);
+        grid-row: var(--mr, auto) / span var(--mrs, 1);
+        min-height: 0;
+    }
+}
+
+/* ── Per-section layout modes ─────────────────────────────────────────
+   `--sg-cols` is the editor's column count; the grid never drops below a
+   sensible minimum card width, so a 6-column setting on a narrow cell
+   degrades instead of producing slivers. */
+
+.sg-layout--grid {
+    display: grid;
+    grid-template-columns: repeat(var(--sg-cols, 3), minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.sg-layout--masonry {
+    columns: var(--sg-cols, 3);
+    column-gap: 1.25rem;
+    display: block;
+}
+
+.sg-layout--masonry > * {
+    break-inside: avoid;
+    margin-bottom: 1.25rem;
+}
+
+.sg-layout--row {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-bottom: .5rem;
+}
+
+.sg-layout--row > * {
+    flex: 0 0 clamp(220px, 28%, 320px);
+    scroll-snap-align: start;
+}
+
+.sg-layout--list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (max-width: 900px) {
+    .sg-layout--grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .sg-layout--masonry { columns: 2; }
+}
+
+@media (max-width: 560px) {
+    .sg-layout--grid { grid-template-columns: minmax(0, 1fr); }
+    .sg-layout--masonry { columns: 1; }
+}
+
+/* ═══════════════════════════════════════════════
+   NEW SECTION TYPES
+═══════════════════════════════════════════════ */
+
+/* ── Shared card furniture ── */
+
+.sg-card-kicker {
+    display: inline-block;
+    font-family: var(--label);
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: .35rem;
+}
+
+.sg-card-badge {
+    position: absolute;
+    top: .5rem;
+    inset-inline-end: .5rem;
+    z-index: 2;
+    font-size: .6rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .2rem .45rem;
+    border-radius: 3px;
+    background: var(--red);
+    color: #fff;
+}
+
+.sg-card-standfirst {
+    margin: .4rem 0 .5rem;
+    font-size: .85rem;
+    line-height: 1.5;
+    color: var(--ink-2, inherit);
+}
+
+/* ── Featured article ── */
+
+.sg-featured-article {
+    position: relative;
+    display: grid;
+    gap: 1.25rem;
+    height: 100%;
+}
+
+.sg-featured-article__image-wrap img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.sg-featured-article__title {
+    font-family: var(--display, inherit);
+    font-size: clamp(1.5rem, 3vw, 2.6rem);
+    line-height: 1.15;
+    margin: .3rem 0 .5rem;
+}
+
+.sg-featured-article__title a { color: inherit; text-decoration: none; }
+.sg-featured-article__title a:hover { text-decoration: underline; }
+
+.sg-featured-article__category {
+    display: inline-block;
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .2rem .5rem;
+    border-radius: 3px;
+    color: #fff;
+}
+
+.sg-featured-article__standfirst {
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 60ch;
+}
+
+.sg-featured-article__date {
+    display: block;
+    margin-top: .5rem;
+    font-size: .78rem;
+    color: var(--ink-3, inherit);
+    opacity: .75;
+}
+
+/* Hero — text sits over the image, so it needs its own stacking context. */
+.sg-featured-article--hero { position: relative; }
+
+.sg-featured-article--hero .sg-featured-article__image-wrap {
+    grid-area: 1 / 1;
+}
+
+.sg-featured-article--hero .sg-featured-article__body {
+    grid-area: 1 / 1;
+    align-self: end;
+    z-index: 1;
+    padding: 2rem 1.5rem 1.5rem;
+    color: #fff;
+    background: linear-gradient(to top, rgb(0 0 0 / 80%), rgb(0 0 0 / 0%));
+    border-radius: 0 0 4px 4px;
+}
+
+.sg-featured-article--hero .sg-featured-article__date { color: rgb(255 255 255 / 80%); }
+
+.sg-featured-article--split { grid-template-columns: 1.4fr 1fr; align-items: center; }
+.sg-featured-article--poster { grid-template-columns: minmax(0, 1fr); }
+
+@media (max-width: 700px) {
+    .sg-featured-article--split { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Author spotlight ── */
+
+.sg-author-card { text-align: center; }
+
+.sg-author-card__image-wrap img {
+    display: block;
+    width: 100%;
+    max-width: 160px;
+    margin: 0 auto .6rem;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.sg-author-card__name { font-size: 1rem; margin: 0 0 .25rem; }
+.sg-author-card__name a { color: inherit; text-decoration: none; }
+.sg-author-card__role { font-size: .8rem; opacity: .75; margin: 0; }
+
+/* ── Topic row ── */
+
+.sg-topic-row .sg-section-head--topic .sg-section-head__title a {
+    color: var(--sg-accent, var(--red));
+    text-decoration: none;
+}
+
+/* ── Most read ── */
+
+.sg-most-read {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: sg-rank;
+}
+
+.sg-most-read__item {
+    display: flex;
+    gap: .85rem;
+    align-items: baseline;
+    padding: .7rem 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.sg-most-read__item:last-child { border-bottom: 0; }
+
+.sg-most-read__rank {
+    font-family: var(--label);
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1;
+    min-width: 1.4em;
+    color: var(--red);
+    opacity: .55;
+    font-variant-numeric: tabular-nums;
+}
+
+.sg-most-read__title { font-size: .95rem; line-height: 1.35; margin: 0 0 .2rem; }
+.sg-most-read__title a { color: inherit; text-decoration: none; }
+.sg-most-read__title a:hover { text-decoration: underline; }
+
+.sg-most-read__category {
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+/* ── Custom cards ── */
+
+.sg-custom-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    overflow: hidden;
+    border-top: 3px solid var(--sg-accent, var(--red));
+}
+
+.sg-custom-card__image-wrap img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 11 / 7;
+    object-fit: cover;
+}
+
+.sg-custom-card__content { padding: .9rem 1rem 1.1rem; }
+.sg-custom-card__title { font-size: 1.05rem; line-height: 1.3; margin: 0 0 .4rem; }
+.sg-custom-card__title a { color: inherit; text-decoration: none; }
+.sg-custom-card__text { font-size: .85rem; line-height: 1.55; }
+
+.sg-custom-card__link {
+    display: inline-block;
+    margin-top: .6rem;
+    font-weight: 700;
+    font-size: .82rem;
+    color: var(--sg-accent, var(--red));
+}
+
+/* ── Image banner ── */
+
+.sg-image-banner { position: relative; border-radius: 5px; overflow: hidden; }
+.sg-image-banner img { display: block; width: 100%; height: auto; }
+.sg-image-banner__link { display: block; }
+
+.sg-image-banner__overlay {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    padding: 2rem 1.5rem 1.25rem;
+    color: #fff;
+    background: linear-gradient(to top, rgb(0 0 0 / 78%), rgb(0 0 0 / 0%));
+}
+
+.sg-image-banner__heading { margin: 0 0 .3rem; font-size: clamp(1.1rem, 2.4vw, 1.8rem); }
+.sg-image-banner__text { margin: 0; font-size: .9rem; opacity: .9; }
+
+/* ── Button ── */
+
+.sg-cta { display: flex; }
+.sg-cta--left { justify-content: flex-start; }
+.sg-cta--center { justify-content: center; }
+.sg-cta--right { justify-content: flex-end; }
+
+/* ── Pull quote ── */
+
+.sg-pull-quote {
+    margin: 0;
+    padding: 1.25rem 0 1.25rem 1.5rem;
+    border-inline-start: 4px solid var(--red);
+}
+
+.sg-pull-quote blockquote {
+    margin: 0;
+    font-family: var(--display, inherit);
+    font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+    line-height: 1.4;
+}
+
+.sg-pull-quote figcaption { margin-top: .6rem; font-size: .82rem; opacity: .75; }
+
+/* ── Rich text and spacers ── */
+
+.sg-rich-text { font-size: .95rem; line-height: 1.7; }
+.sg-rich-text > :first-child { margin-top: 0; }
+.sg-rich-text > :last-child { margin-bottom: 0; }
+
+.sg-spacer--sm { height: 1rem; }
+.sg-spacer--md { height: 2.5rem; }
+.sg-spacer--lg { height: 5rem; }

@@ -1,0 +1,14 @@
+{% load i18n %}
+{% if not self.hide_for_subscribers or not request.user.is_authenticated or not request.user.is_subscribed %}
+<div class="sg-subscribe" role="complementary" aria-label="Subscribe">
+  <div class="sg-subscribe__text">
+    <div class="sg-subscribe__kicker">{% firstof self.kicker _("വരിക്കാരാകൂ") %}</div>
+    {% if self.heading %}<h2 class="sg-subscribe__title">{{ self.heading }}</h2>{% endif %}
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'reader_profile' %}" class="sg-subscribe__cta">{% firstof self.subscriber_cta_label _("സബ്സ്ക്രിപ്ഷന്‍ മാനേജ് ചെയ്യുക") %}</a>
+    {% else %}
+    <a href="{% url 'account_signup' %}" class="sg-subscribe__cta">{% firstof self.cta_label _("ഇപ്പോള്‍തന്നെ വരിക്കാരാകൂ") %}</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

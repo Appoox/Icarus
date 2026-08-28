@@ -15,6 +15,7 @@ from django.utils.html import format_html, mark_safe
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from wagtail.admin.userbar import AddPageItem, AdminItem, ExplorePageItem
+from wagtail.admin.menu import MenuItem
 
 from auditlog import get_logentry_model
 LogEntry = get_logentry_model()
@@ -181,9 +182,23 @@ def audit_log_list(request):
 
 @hooks.register('register_admin_urls')
 def register_audit_log_url():
+    # Imported here rather than at module level: home.layout_views imports
+    # home.models, and home.models is still being set up when wagtail_hooks
+    # is first loaded.
+    from home import layout_views
+
     return [
         path('auditlog/', audit_log_list, name='icarus_audit_log'),
         path('analytics/', analytics_view, name='icarus_analytics'),
+        path('homepage-layout/',
+             layout_views.homepage_layout,
+             name='icarus_homepage_layout'),
+        path('homepage-layout/save/',
+             layout_views.homepage_layout_save,
+             name='icarus_homepage_layout_save'),
+        path('homepage-layout/search/',
+             layout_views.homepage_layout_search,
+             name='icarus_homepage_layout_search'),
     ]
 
 
@@ -1149,10 +1164,38 @@ def analytics_view(request):
 
 @hooks.register('register_admin_menu_item')
 def register_analytics_menu_item():
-    from wagtail.admin.menu import MenuItem
     return MenuItem(
         'Analytics',
         reverse('icarus_analytics'),
         icon_name='view',
         order=901,
+    )
+
+
+class _HomepageLayoutMenuItem(MenuItem):
+    """
+    Only shown to users who may actually edit the homepage.
+
+    Follows the same shape as the_librarian's _SuperuserOnlyMenuItem — a
+    sidebar link that leads to a 403 is worse than no link — but gates on
+    Wagtail's page permissions rather than a hardcoded group name, since
+    editing the layout is editing the page.
+    """
+
+    def is_shown(self, request):
+        from home.models import HomePage
+
+        page = HomePage.objects.live().first() or HomePage.objects.first()
+        if page is None:
+            return False
+        return page.permissions_for_user(request.user).can_edit()
+
+
+@hooks.register('register_admin_menu_item')
+def register_homepage_layout_menu_item():
+    return _HomepageLayoutMenuItem(
+        'Homepage Layout',
+        reverse('icarus_homepage_layout'),
+        icon_name='grip',
+        order=100,
     )

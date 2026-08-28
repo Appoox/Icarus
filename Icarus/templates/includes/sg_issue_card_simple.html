@@ -1,0 +1,25 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+<article class="sg-issue-card-simple">
+  {% if card.image %}
+  <a href="{{ card.url }}" class="sg-issue-card-simple__image-wrap" aria-hidden="true" tabindex="-1">
+    {% image card.image fill-300x400 as cover_img %}
+    <img src="{{ cover_img.url }}" alt="{{ card.title }}" width="300" height="400" loading="lazy" decoding="async">
+  </a>
+  {% endif %}
+
+  <div class="sg-issue-card-simple__content">
+    {% if card.kicker %}<span class="sg-card-kicker">{{ card.kicker }}</span>{% endif %}
+    {% if card.topic %}
+    <span class="sg-issue-card-simple__category" style="background-color: {{ card.accent }};">
+      {{ card.topic.name }}
+    </span>
+    {% endif %}
+    <h3 class="sg-issue-card-simple__title">
+      <a href="{{ card.url }}">{{ card.title }}</a>
+    </h3>
+    {% if card.standfirst %}<p class="sg-card-standfirst">{{ card.standfirst }}</p>{% endif %}
+    <time class="sg-issue-card-simple__date" datetime="{{ card.date|date:'Y-m-d' }}">
+      {{ card.date|date:"F Y" }}
+    </time>
+  </div>
+</article>

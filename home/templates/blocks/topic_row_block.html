@@ -1,0 +1,21 @@
+{% load wagtailcore_tags i18n %}
+{% if self.topic %}
+<div class="sg-topic-row" style="--sg-accent: {{ self.topic.color|default:'#c8102e' }};">
+  <div class="sg-section-head sg-section-head--topic">
+    <h2 class="sg-section-head__title">
+      {% if self.show_topic_link %}
+        <a href="{% url 'topic_detail' slug=self.topic.slug %}">{{ self.topic.name }}</a>
+      {% else %}{{ self.topic.name }}{% endif %}
+    </h2>
+    <span class="sg-section-head__rule" aria-hidden="true"></span>
+  </div>
+
+  <div class="sg-article-grid sg-layout--{{ self.layout }}">
+    {% for card in cards %}
+      {% include "includes/sg_article_card.html" with card=card %}
+    {% empty %}
+      <p class="sg-empty">{% translate "ഈ വിഷയത്തില്‍ ലേഖനങ്ങളില്ല." %}</p>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

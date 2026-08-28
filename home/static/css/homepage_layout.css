@@ -1,0 +1,450 @@
+/*
+ * homepage_layout.css — the Homepage Layout canvas.
+ *
+ * Loaded only by wagtailadmin/homepage_layout.html.  Colours come from
+ * Wagtail's own custom properties (--w-color-*), so the canvas follows the
+ * admin theme, including dark mode, without a second palette to maintain.
+ */
+
+.sg-canvas {
+    --sg-gutter: 8px;
+    --sg-canvas-cols: 12;
+    --sg-canvas-rows: 12;
+    --sg-row-px: 56px;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────── */
+
+.sg-canvas__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--w-color-border-furniture);
+}
+
+.sg-canvas__breakpoints {
+    display: inline-flex;
+    border: 1px solid var(--w-color-border-furniture);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.sg-bp {
+    border: 0;
+    background: transparent;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--w-color-text-label);
+}
+
+.sg-bp.is-active {
+    background: var(--w-color-surface-menus);
+    color: var(--w-color-text-button);
+}
+
+.sg-canvas__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sg-canvas__status {
+    min-height: 1.4em;
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    color: var(--w-color-text-meta);
+}
+
+.sg-canvas__status.is-ok { color: var(--w-color-positive-100); }
+.sg-canvas__status.is-warn { color: var(--w-color-warning-100); }
+.sg-canvas__status.is-error { color: var(--w-color-critical-100); }
+
+/* ── Add-section palette ─────────────────────────────────────────────── */
+
+.sg-add { position: relative; }
+
+.sg-add__menu {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 260px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 8px;
+    background: var(--w-color-surface-page);
+    border: 1px solid var(--w-color-border-furniture);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+
+.sg-add__menu h4 {
+    margin: 10px 6px 4px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--w-color-text-meta);
+}
+
+.sg-add__item {
+    display: block;
+    width: 100%;
+    text-align: start;
+    border: 0;
+    background: transparent;
+    padding: 7px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--w-color-text-context);
+}
+
+.sg-add__item:hover,
+.sg-add__item:focus-visible { background: var(--w-color-surface-field-inactive); }
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+
+.sg-canvas__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 24px;
+    margin-top: 18px;
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .sg-canvas__body { grid-template-columns: minmax(0, 1fr); }
+}
+
+.sg-canvas__hint {
+    margin: 10px 0 0;
+    font-size: 0.8rem;
+    color: var(--w-color-text-meta);
+}
+
+/* ── The grid ────────────────────────────────────────────────────────── */
+
+.sg-canvas__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--sg-canvas-cols), minmax(0, 1fr));
+    grid-auto-rows: var(--sg-row-px);
+    gap: var(--sg-gutter);
+    min-height: 320px;
+    padding: var(--sg-gutter);
+    border-radius: 6px;
+    background-color: var(--w-color-surface-field-inactive);
+    /* Column guides, so it is obvious what a drag is snapping to. */
+    background-image: repeating-linear-gradient(
+        to right,
+        transparent 0,
+        transparent calc((100% - (var(--sg-canvas-cols) - 1) * var(--sg-gutter)) / var(--sg-canvas-cols)),
+        var(--w-color-border-furniture) calc((100% - (var(--sg-canvas-cols) - 1) * var(--sg-gutter)) / var(--sg-canvas-cols)),
+        var(--w-color-border-furniture) calc((100% - (var(--sg-canvas-cols) - 1) * var(--sg-gutter)) / var(--sg-canvas-cols) + 1px)
+    );
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────── */
+
+.sg-card {
+    position: relative;
+    overflow: hidden;
+    padding: 8px 10px;
+    border: 1px solid var(--w-color-border-field-default);
+    border-radius: 5px;
+    background: var(--w-color-surface-page);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+}
+
+.sg-card:focus-visible {
+    outline: 2px solid var(--w-color-focus-outline);
+    outline-offset: 1px;
+}
+
+.sg-card.is-selected {
+    border-color: var(--w-color-secondary);
+    box-shadow: inset 0 0 0 1px var(--w-color-secondary);
+}
+
+.sg-card.is-dragging {
+    cursor: grabbing;
+    opacity: 0.85;
+    z-index: 5;
+}
+
+.sg-card.is-hidden {
+    opacity: 0.45;
+    border-style: dashed;
+}
+
+.sg-card__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.sg-card__label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--w-color-text-context);
+}
+
+.sg-card__size {
+    font-size: 0.7rem;
+    color: var(--w-color-text-meta);
+    font-variant-numeric: tabular-nums;
+}
+
+.sg-card__summary {
+    margin: 4px 0 0;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--w-color-text-meta);
+}
+
+/* Resize handles */
+.sg-card__handle {
+    position: absolute;
+    background: transparent;
+}
+
+.sg-card__handle--e { inset-inline-end: 0; top: 0; bottom: 8px; width: 8px; cursor: ew-resize; }
+.sg-card__handle--s { inset-inline-start: 0; bottom: 0; right: 8px; height: 8px; cursor: ns-resize; }
+.sg-card__handle--se { inset-inline-end: 0; bottom: 0; width: 12px; height: 12px; cursor: nwse-resize; }
+
+.sg-card__handle--se::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: 2px;
+    bottom: 2px;
+    width: 6px;
+    height: 6px;
+    border-inline-end: 2px solid var(--w-color-border-field-default);
+    border-bottom: 2px solid var(--w-color-border-field-default);
+}
+
+/* ── Inspector ───────────────────────────────────────────────────────── */
+
+.sg-canvas__inspector {
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding: 14px;
+    border: 1px solid var(--w-color-border-furniture);
+    border-radius: 6px;
+    background: var(--w-color-surface-page);
+}
+
+.sg-inspector__empty {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--w-color-text-meta);
+}
+
+.sg-inspector__title {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.sg-inspector__group { margin-bottom: 18px; }
+
+.sg-inspector__group > h3 {
+    margin: 0 0 8px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--w-color-text-meta);
+    border-bottom: 1px solid var(--w-color-border-furniture);
+    padding-bottom: 5px;
+}
+
+.sg-inspector__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--w-color-border-furniture);
+}
+
+/* ── Fields ──────────────────────────────────────────────────────────── */
+
+.sg-field {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.sg-field__label {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--w-color-text-label);
+}
+
+.sg-field input[type='text'],
+.sg-field input[type='number'],
+.sg-field input[type='search'],
+.sg-field select,
+.sg-field textarea,
+.sg-chooser__search {
+    width: 100%;
+    padding: 5px 7px;
+    font-size: 0.85rem;
+    border: 1px solid var(--w-color-border-field-default);
+    border-radius: 4px;
+    background: var(--w-color-surface-field);
+    color: var(--w-color-text-context);
+}
+
+.sg-field--check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sg-field--check .sg-field__label { margin: 0; order: 2; }
+
+.sg-field__help {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    color: var(--w-color-text-meta);
+}
+
+.sg-field__external {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    color: var(--w-color-text-meta);
+}
+
+.sg-subgroup {
+    margin: 8px 0;
+    padding: 8px;
+    border: 1px solid var(--w-color-border-furniture);
+    border-radius: 4px;
+}
+
+.sg-subgroup > h4 {
+    margin: 0 0 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ── Chooser ─────────────────────────────────────────────────────────── */
+
+.sg-chooser { margin-bottom: 12px; }
+
+.sg-chooser__current {
+    margin-bottom: 5px;
+    padding: 5px 7px;
+    font-size: 0.82rem;
+    border-radius: 4px;
+    background: var(--w-color-surface-field-inactive);
+}
+
+.sg-chooser__current.is-empty {
+    color: var(--w-color-text-meta);
+    font-style: italic;
+}
+
+.sg-chooser__results {
+    list-style: none;
+    margin: 4px 0 6px;
+    padding: 0;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.sg-chooser__results button {
+    display: block;
+    width: 100%;
+    text-align: start;
+    border: 0;
+    background: transparent;
+    padding: 5px 7px;
+    border-radius: 3px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: var(--w-color-text-context);
+}
+
+.sg-chooser__results button:hover,
+.sg-chooser__results button:focus-visible {
+    background: var(--w-color-surface-field-inactive);
+}
+
+/* ── Repeatable lists (hand-picked items) ────────────────────────────── */
+
+.sg-list { margin-bottom: 12px; }
+
+.sg-list__item {
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 1px solid var(--w-color-border-furniture);
+    border-radius: 4px;
+}
+
+.sg-list__bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.sg-list__n {
+    flex: 1;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--w-color-text-meta);
+}
+
+.sg-list__move,
+.sg-list__remove {
+    border: 1px solid var(--w-color-border-field-default);
+    background: transparent;
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--w-color-text-context);
+}
+
+.sg-list__remove { color: var(--w-color-critical-100); }
+
+/* ── Preview ─────────────────────────────────────────────────────────── */
+
+.sg-preview {
+    margin-top: 20px;
+    border: 1px solid var(--w-color-border-furniture);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.sg-preview__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    background: var(--w-color-surface-field-inactive);
+}
+
+.sg-preview__frame {
+    display: block;
+    width: 100%;
+    height: 70vh;
+    border: 0;
+    background: #fff;
+}

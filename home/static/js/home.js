@@ -1,46 +1,27 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ISSUE CAROUSEL — auto-advancing, infinitely looping article strip.
+
+   Scoped per instance.  Sections are placeable now, so an editor can
+   put two carousels on the homepage; the old code used
+   document.querySelector() and would have driven only the first while
+   the second sat dead.  Everything below resolves against `root`, and
+   each instance keeps its own timer, index and listeners.
+
+   Per-instance settings ride in on data-* attributes written by
+   blocks/issue_carousel_block.html, so autoplay and pause are editor
+   controls rather than constants.
+═══════════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-sg-carousel]').forEach(initCarousel);
+});
 
-    // ── Fix 3: sync right-column height to the left cover-card height ─────────
-    // Pure CSS cannot achieve this: overflow:hidden on a grid item prevents visual
-    // overflow but does NOT stop the browser from measuring the element's full
-    // content height when sizing the grid row.  The cover-image height is also
-    // dynamic (depends on the image's aspect ratio), so a fixed max-height would
-    // only match by coincidence.
-    //
-    // Solution: after the cover image has loaded (window 'load'), measure the left
-    // card's rendered height and apply it as max-height on the right column.
-    // A ResizeObserver keeps them in sync when the viewport is resized.
-    // ─────────────────────────────────────────────────────────────────────────
-    const syncRightColHeight = () => {
-        const leftCard = document.querySelector('.sg-issue-cover');
-        const rightCol = document.querySelector('.sg-issue-other-topics');
-        if (!leftCard || !rightCol) return;
-        const h = leftCard.getBoundingClientRect().height;
-        if (h > 0) rightCol.style.maxHeight = h + 'px';
-    };
-
-    // Fire after all sub-resources (including the cover image) have loaded so
-    // the card has its final rendered height.
-    if (document.readyState === 'complete') {
-        syncRightColHeight();
-    } else {
-        window.addEventListener('load', syncRightColHeight);
-    }
-
-    // Keep in sync when the window is resized (cover reflows → new height).
-    let heightSyncDebounce;
-    window.addEventListener('resize', () => {
-        clearTimeout(heightSyncDebounce);
-        heightSyncDebounce = setTimeout(syncRightColHeight, 150);
-    });
-    // ─────────────────────────────────────────────────────────────────────────
-
-    const wrapper = document.querySelector('.sg-issue-articles__scroll-wrapper');
-    const grid    = document.querySelector('.sg-issue-articles__grid');
+function initCarousel(root) {
+    const wrapper = root.querySelector('.sg-issue-articles__scroll-wrapper');
+    const grid    = root.querySelector('.sg-issue-articles__grid');
     if (!wrapper || !grid) return;
 
     const cards      = Array.from(grid.querySelectorAll('.sg-issue-card'));
-    const thumbs     = Array.from(document.querySelectorAll('.sg-issue-thumbnail'));
+    const thumbs     = Array.from(root.querySelectorAll('.sg-issue-thumbnail'));
     const totalCards = cards.length;
 
     // Need the three-part clone layout (clones | originals | clones)
@@ -49,7 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const numArticles = totalCards / 3; // cards per section
 
     // ── Tunables ────────────────────────────────────────────
-    const PAUSE_MS  = 4000; // how long to rest on each card
+    // Editor-controlled: see the data-* attributes on the block template.
+    const AUTOPLAY  = root.dataset.autoplay !== '0';
+    const PAUSE_MS  = parseInt(root.dataset.pause, 10) || 4000;
     const SLIDE_MS  = 600;  // smooth-scroll budget (matches CSS ease)
     // ────────────────────────────────────────────────────────
 
@@ -128,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Auto-advance timer ───────────────────────────────────
 
     const startAuto = () => {
+        if (!AUTOPLAY) return;
         clearInterval(autoTimer);
         autoTimer = setInterval(step, PAUSE_MS);
     };
@@ -187,15 +171,16 @@ document.addEventListener('DOMContentLoaded', () => {
         updateThumbs(0);
         startAuto();
     }, 80);
-});
+}
 /* ═══════════════════════════════════════════════════════════════════
    FLOATING SPECKS — background dots that are always in slow motion:
    each speck wanders on its own drift path (sin/cos with per-speck
    period, phase and amplitude), and additionally reacts to the
    pointer with individual parallax plus a local "push away from the
    cursor" force. Mouse and touch. Static under prefers-reduced-motion.
-   Self-contained: the carousel block above early-returns on pages
-   without its DOM, so this registers its own listener.
+   Self-contained: registers its own listener rather than sharing the
+   carousel's, so it runs on every homepage arrangement — including one
+   with no carousel section on it at all.
 ═══════════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
     const layer = document.querySelector('.sg-specks');
@@ -326,6 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '.sg-issue-small-card',
         '.sg-issue-card-simple',
         '.sg-article-card',
+        '.sg-author-card',
+        '.sg-custom-card',
     ].join(', ');
     const MAX_TILT = 3.5; // deg
     const LIFT = 6;       // px

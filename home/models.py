@@ -15,6 +15,9 @@ from wagtail.admin.panels import PageChooserPanel
 
 from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
 
+from home import layout as home_layout
+from home.blocks import HOMEPAGE_BLOCKS
+
 from hitcount.models import HitCountMixin, HitCount
 from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.views import HitCountMixin as HitCountViewMixin
@@ -527,6 +530,27 @@ class SiteFooter(ClusterableModel):
 
 
 class HomePage(Page, HitCountMixin):
+    """
+    The homepage.
+
+    Historically this page had no fields at all: the four sections and every
+    queryset behind them were hardcoded in home_page.html and in this class's
+    get_context().  Changing the homepage meant a code change and a deploy,
+    and nothing on it could be hand-picked.
+
+    Now it carries two fields, both edited from the Homepage Layout canvas
+    (Wagtail admin → Homepage Layout):
+
+        body    a StreamField of section blocks — *what* is on the page and
+                every content setting, including hand-picked items.
+        layout  a JSONField keyed by block UUID — *where* each section sits
+                on the 12-column grid, at each breakpoint.
+
+    Both are ordinary page fields, so drafts, publish, revision history and
+    rollback work exactly as they do for any other page.  See home/layout.py
+    for the placement schema and home/curation.py for how a section decides
+    which items it shows.
+    """
 
     hit_count_generic = GenericRelation(
         HitCount, object_id_field='object_pk',
@@ -534,6 +558,31 @@ class HomePage(Page, HitCountMixin):
     )
 
     max_count = 1
+
+    body = StreamField(
+        HOMEPAGE_BLOCKS,
+        blank=True,
+        verbose_name="Sections",
+        help_text=(
+            "The sections on the homepage. Arrange them on the grid from "
+            "Homepage Layout in the sidebar."
+        ),
+    )
+
+    layout = models.JSONField(
+        default=home_layout.empty_layout,
+        blank=True,
+        help_text="Grid placement per section, keyed by block ID. Edited by "
+                  "the Homepage Layout canvas — not meant to be hand-edited.",
+    )
+
+    content_panels = Page.content_panels + [
+        FieldPanel('body'),
+    ]
+
+    def layout_cells(self):
+        """Placed, visible sections in grid reading order (see home/layout.py)."""
+        return home_layout.cells(self.body, self.layout)
 
     def get_context(self, request):
         context = super().get_context(request)
@@ -543,52 +592,18 @@ class HomePage(Page, HitCountMixin):
             hit_count = HitCount.objects.get_for_object(self)
             HitCountViewMixin().hit_count(request, hit_count)
 
-        from articles.models import Article, ArticleIndexPage
-        from issue.models import Issue, Topic, IssueIndexPage
+        from home.curation import RenderContext
 
-        current_issue = Issue.objects.live().order_by('-date_of_publishing').first()
-        context['current_issue'] = current_issue
-
-        past_issues = Issue.objects.live()
-        if current_issue:
-            past_issues = past_issues.exclude(id=current_issue.id)
-
-        context['past_issues'] = past_issues.order_by('-date_of_publishing')[:4]
-        context['issue_index_page'] = IssueIndexPage.objects.live().first()
-
-        issue_article_ids = []
-        if current_issue:
-            issue_articles = current_issue.get_all_articles()
-            context['issue_articles'] = issue_articles
-
-            same_topic_articles = []
-            other_topic_articles = []
-            if current_issue.topic:
-                for a in issue_articles:
-                    if a.topic == current_issue.topic:
-                        same_topic_articles.append(a)
-                    else:
-                        other_topic_articles.append(a)
-            else:
-                same_topic_articles = issue_articles
-
-            context['same_topic_articles'] = same_topic_articles
-            context['other_topic_articles'] = other_topic_articles
-
-            issue_article_ids = [a.id for a in issue_articles]
-        else:
-            context['issue_articles'] = []
-            context['same_topic_articles'] = []
-            context['other_topic_articles'] = []
-
-        latest_articles = (
-            Article.objects.live()
-            .exclude(id__in=issue_article_ids)
-            .order_by('-first_published_at')[:6]
+        # One RenderContext is threaded through every block on the page.  It
+        # carries the "already shown above" set that `exclude_shown` reads,
+        # which is what stops the article feed repeating the current issue's
+        # articles — the job the old hardcoded exclude(id__in=…) did, but now
+        # working whatever order the sections are arranged in.
+        context['sg_render_ctx'] = RenderContext(request)
+        context['layout_cells'] = self.layout_cells()
+        context['grid_style'] = home_layout.grid_style(
+            home_layout.normalise(self.layout, [c.id for c in self.body])
         )
-        context['latest_articles'] = latest_articles
-        context['article_index_page'] = ArticleIndexPage.objects.live().first()
-
         return context
 
 

@@ -1,0 +1,41 @@
+{% load wagtailcore_tags wagtailimages_tags i18n %}
+{% if cards %}
+{# data-* attributes carry the per-instance settings.  home.js reads them   #}
+{# off each root, so two carousels on one page keep independent timers.     #}
+<div class="sg-issue-articles"
+     data-sg-carousel
+     data-autoplay="{{ self.autoplay|yesno:'1,0' }}"
+     data-pause="{{ self.pause_ms }}">
+  <div class="sg-issue-articles__heading">{% firstof self.heading _("ഈ ലക്കത്തില്‍...") %}</div>
+
+  <div class="sg-issue-articles__scroll-wrapper">
+    <div class="sg-issue-articles__grid">
+      {# 3 copies for infinite loop effect (Clones - Original - Clones) #}
+      {% if cards|length > 1 %}
+        {% for card in cards %}{% include "includes/carousel_card.html" with card=card is_clone=True %}{% endfor %}
+        {% for card in cards %}{% include "includes/carousel_card.html" with card=card is_clone=False %}{% endfor %}
+        {% for card in cards %}{% include "includes/carousel_card.html" with card=card is_clone=True %}{% endfor %}
+      {% else %}
+        {% for card in cards %}{% include "includes/carousel_card.html" with card=card is_clone=False %}{% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  {% if self.show_thumbnails %}
+  <div class="sg-issue-thumbnails">
+    {% for card in cards %}
+    <div class="sg-issue-thumbnail" data-index="{{ forloop.counter0 }}" aria-label="Go to article {{ forloop.counter }}">
+      {% if card.image %}
+        {% image card.image fill-150x150 as thumb_img %}
+        <img src="{{ thumb_img.url }}" alt="{{ card.title }}" width="48" height="48" loading="lazy" decoding="async">
+      {% else %}
+        <div class="sg-issue-thumbnail__placeholder">
+          <span>{{ card.title|slice:":1" }}</span> {# Fallback letter if no image #}
+        </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}

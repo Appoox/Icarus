@@ -5,7 +5,7 @@ from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField, StreamField
-from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
+from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel, PageChooserPanel
 from wagtail.admin.forms import WagtailAdminPageForm, WagtailAdminModelForm
 from wagtail.snippets.models import register_snippet
 from wagtail import blocks
@@ -170,6 +170,19 @@ class Issue(RoutablePageMixin, Page):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='+',
+    )
+
+    featured_article = models.ForeignKey(
+        'articles.Article',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        help_text=(
+            "The lead article for this issue. The homepage's Featured Article "
+            "section can be set to follow this, so setting it here is enough — "
+            "the homepage updates itself when the next issue publishes."
+        ),
     )
 
     topic = models.ForeignKey(
@@ -382,6 +395,7 @@ class Issue(RoutablePageMixin, Page):
         FieldPanel('topic'),
         FieldPanel('date_of_publishing'),
         FieldPanel('cover_image'),
+        PageChooserPanel('featured_article', 'articles.Article'),
         FieldPanel('PDF_file'),
         MultiFieldPanel([
             FieldPanel('audio_file'),
