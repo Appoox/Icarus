@@ -13,9 +13,11 @@ from literati.models import AuthorIndexPage
 from issue.models import IssueIndexPage
 from django.utils.html import format_html, mark_safe
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from wagtail.admin.userbar import AddPageItem, AdminItem, ExplorePageItem
 from wagtail.admin.menu import MenuItem
+
+from home.permissions import can_view_analytics, can_view_audit_log
 
 from auditlog import get_logentry_model
 LogEntry = get_logentry_model()
@@ -39,12 +41,7 @@ def get_model_color(model_name):
 
 def audit_log_list(request):
     """Paginated audit log view mounted inside the Wagtail admin."""
-    is_admin_user = (
-        request.user.is_staff or 
-        request.user.is_superuser or 
-        request.user.groups.filter(name__in=['Editors', 'Moderators']).exists()
-    )
-    if not is_admin_user:
+    if not can_view_audit_log(request.user):
         return HttpResponseForbidden()
 
     from zoneinfo import ZoneInfo
@@ -406,7 +403,10 @@ def register_log_actions(actions):
 @hooks.register("construct_homepage_panels")
 def add_create_page_panel(request, panels):
     panels.insert(0, CreatePagePanel())
-    panels.append(AuditLogDashboardPanel())
+    # The panel is a preview of the audit log, so it follows the same rule as
+    # the log itself — no point showing activity to someone the full view 403s.
+    if can_view_audit_log(request.user):
+        panels.append(AuditLogDashboardPanel())
 
 class CustomAdminItem(AdminItem):
     template_name = "home/userbar/custom.html"
@@ -442,12 +442,7 @@ def customize_wagtail_userbar(request, items, page):
 
 def analytics_view(request):
     """Comprehensive analytics dashboard view mounted inside the Wagtail admin."""
-    is_admin_user = (
-        request.user.is_staff or
-        request.user.is_superuser or
-        request.user.groups.filter(name__in=['Editors', 'Moderators']).exists()
-    )
-    if not is_admin_user:
+    if not can_view_analytics(request.user):
         return HttpResponseForbidden()
 
     import json
@@ -1162,13 +1157,35 @@ def analytics_view(request):
     return render(request, 'wagtailadmin/analytics.html', context)
 
 
+class _AnalyticsMenuItem(MenuItem):
+    """Hidden from users the analytics view would 403 — a sidebar link to a
+    dead end is worse than no link at all."""
+
+    def is_shown(self, request):
+        return can_view_analytics(request.user)
+
+
 @hooks.register('register_admin_menu_item')
 def register_analytics_menu_item():
-    return MenuItem(
+    return _AnalyticsMenuItem(
         'Analytics',
         reverse('icarus_analytics'),
         icon_name='view',
         order=901,
+    )
+
+
+@hooks.register('register_permissions')
+def register_admin_report_permissions():
+    """
+    Surface the audit-log and analytics permissions in Settings -> Groups.
+
+    Without this hook Wagtail filters them out of the group editor, and the
+    only way to grant them would be Django's own admin.
+    """
+    return Permission.objects.filter(
+        content_type__app_label='home',
+        codename__in=['view_auditlog', 'view_analytics'],
     )
 
 

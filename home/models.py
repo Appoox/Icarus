@@ -622,3 +622,27 @@ class CustomLogEntry(AbstractLogEntry):
     class Meta:
         verbose_name = 'Custom Log Entry'
         verbose_name_plural = 'Custom Log Entries'
+
+
+class AdminReportAccess(models.Model):
+    """
+    Permission carrier for the admin-only reporting pages.
+
+    It has no table (``managed = False``) and is never instantiated.  It
+    exists so the audit log and the analytics dashboard have real Django
+    permissions behind them, which Wagtail's Settings -> Groups screen can
+    then grant to any role — a Chief Editor group, for instance — instead of
+    the views hardcoding a list of group names.
+
+    The gate itself lives in ``home.permissions``.
+    """
+
+    class Meta:
+        managed = False
+        default_permissions = ()
+        permissions = [
+            ("view_auditlog", "Can view the audit log"),
+            ("view_analytics", "Can view the analytics dashboard"),
+        ]
+        verbose_name = "admin reports"
+        verbose_name_plural = "admin reports"

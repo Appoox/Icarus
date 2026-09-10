@@ -169,10 +169,26 @@ def ingest_worker_token_required(view_func):
 
 # ── Search views ──────────────────────────────────────────────────────────
 
+def _parse_top_k(request, default=5):
+    """
+    Read `top_k` off the querystring without trusting it.
+
+    A bare int() here turned any hand-edited or stale URL (`?top_k=`,
+    `?top_k=all`) into a 500 on a public page.
+    """
+    try:
+        top_k = int(request.GET.get("top_k", default))
+    except (TypeError, ValueError):
+        return default
+    # Keep it sane: the page offers 3-20, and an unbounded value would let a
+    # crafted URL ask the vector search for an arbitrarily large result set.
+    return max(1, min(top_k, 50))
+
+
 def search_view(request):
     """Render the search page with optional results."""
     query = request.GET.get("q", "").strip()
-    top_k = int(request.GET.get("top_k", 5))
+    top_k = _parse_top_k(request)
     mode = request.GET.get("mode", "hybrid").lower()
     results = []
 
@@ -197,7 +213,7 @@ def search_view(request):
 def search_api(request):
     """JSON API for hybrid / similarity / keyword search (used by the header AJAX)."""
     query = request.GET.get("q", "").strip()
-    top_k = int(request.GET.get("top_k", 5))
+    top_k = _parse_top_k(request)
     document = request.GET.get("document", "").strip()
 
     if not query:

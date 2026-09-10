@@ -6,12 +6,16 @@ from wagtail.snippets.views.snippets import SnippetViewSet, IndexView
 from wagtail.admin.widgets import HeaderButton
 from .models import ReaderUser, PaymentDetails, SubscriptionHistory
 from django.urls import path
+from django.http import HttpResponseForbidden
 from django.shortcuts import render
 from auditlog.models import LogEntry
 from wagtail.admin.menu import MenuItem
 from django.templatetags.static import static
 from django.utils.html import format_html, json_script
 from django.utils.translation import gettext_lazy as _
+
+from home.permissions import can_view_audit_log
+
 
 class ReaderFilterSet(django_filters.FilterSet):
     sub_status = django_filters.ChoiceFilter(
@@ -146,6 +150,12 @@ def register_reader_viewsets():
 
 # ── Audit Log Admin View ──────────────────────────────────────────────
 def auditlog_view(request):
+    # This view carried no check of its own, so every user who could reach the
+    # Wagtail admin could read the whole log. It now follows the same rule as
+    # the fuller log at `icarus_audit_log`.
+    if not can_view_audit_log(request.user):
+        return HttpResponseForbidden()
+
     entries = (
         LogEntry.objects
         .select_related("actor", "content_type")
@@ -172,9 +182,16 @@ def register_auditlog_url():
         path("purge-expired/", admin_trigger_purge_expired, name="admin_trigger_purge_expired"),
     ]
 
+class _AuditLogMenuItem(MenuItem):
+    """Hidden from users the audit-log view would 403."""
+
+    def is_shown(self, request):
+        return can_view_audit_log(request.user)
+
+
 @hooks.register("register_admin_menu_item")
 def register_auditlog_menu_item():
-    return MenuItem(
+    return _AuditLogMenuItem(
         _("ഓഡിറ്റ് ലോഗ്"),
         reverse("auditlog_view"),
         icon_name="list-ul",

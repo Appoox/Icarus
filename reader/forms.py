@@ -334,9 +334,19 @@ class CustomWagtailUserCreationForm(UserCreationForm):
     """
     name = forms.CharField(max_length=255, required=True, label=_("പൂർണ്ണ നാമം"))
 
-    class Meta:
+    class Meta(UserCreationForm.Meta):
         model = User
-        fields = {'phone_number_hash', 'name', 'email', 'is_active'}
+        # Inherit Wagtail's field set rather than replacing it: it carries the
+        # two fields the Roles tab is built from, `is_superuser` and `groups`.
+        # Listing only our extras dropped `groups` from the form altogether,
+        # so the tab rendered the literal text "None", and left the
+        # Administrator tick-box unsaved — a ModelForm only writes back the
+        # fields named here. Inheriting also keeps the parent's
+        # widgets={'groups': CheckboxSelectMultiple}, which is what makes the
+        # roles render as a checkbox list instead of a multi-select box.
+        fields = UserCreationForm.Meta.fields | {
+            'phone_number_hash', 'name', 'email', 'is_active',
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -375,14 +385,19 @@ class CustomWagtailUserEditForm(UserEditForm):
         widget=forms.DateInput(attrs={'type': 'date'}),
     )
 
-    class Meta:
+    class Meta(UserEditForm.Meta):
         model = User
-        fields = {
-            'phone_number_hash', 
+        # See CustomWagtailUserCreationForm.Meta — inheriting the parent's
+        # field set is what puts `groups` (the Roles tab) and `is_superuser`
+        # back on the form, and what makes the Administrator tick-box persist.
+        # It also restores `first_name` / `last_name`, so the split of `name`
+        # done in clean() below actually reaches the database.
+        fields = UserEditForm.Meta.fields | {
+            'phone_number_hash',
             'name', 'email', 'is_active', 'gender', 'birth_year',
             'subscription_plan',
             'print_delivery_status',
-            'pincode'
+            'pincode',
         }
 
     def __init__(self, *args, **kwargs):
