@@ -19,14 +19,17 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('archive', help='Path to the ZIP archive')
+        # NB: no '-v' short flag — Django's BaseCommand already owns -v/--verbosity
+        # and registering it again makes argparse raise before the command can run.
         parser.add_argument(
-            '--verbose', '-v', action='store_true',
-            help='Print every record title/slug rather than just counts',
+            '--verbose', action='store_true',
+            help='Print every record title/slug rather than just counts '
+                 '(equivalent to -v 2)',
         )
 
     def handle(self, *args, **options):
         archive_path = options['archive']
-        verbose      = options['verbose']
+        verbose      = options['verbose'] or int(options.get('verbosity') or 1) >= 2
 
         if not os.path.exists(archive_path):
             raise CommandError(f'Archive not found: {archive_path}')
@@ -43,12 +46,11 @@ class Command(BaseCommand):
         w = self.stdout.write
         ok = self.style.SUCCESS
         hd = self.style.MIGRATE_HEADING
-        mi = self.style.MIGRATE_LABEL   # dim / info
 
         w('')
         w(ok(f'  {os.path.basename(archive_path)}  ({size_mb:.1f} MB)'))
         w(f'  version  : {manifest.get("version", "?")}')
-        w(f'  created  : {manifest.get("created_at", "?")[:19]}')
+        w(f'  created  : {str(manifest.get("created_at", "?"))[:19]}')
         w(f'  wagtail  : {manifest.get("wagtail_version", "?")}')
         w(f'  scope    : {manifest.get("scope", "?")}')
         w(f'  zip files: {len(names)} entries')

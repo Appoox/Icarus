@@ -13,8 +13,11 @@ from literati.models import AuthorIndexPage
 from issue.models import IssueIndexPage
 from django.utils.html import format_html, mark_safe
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from wagtail.admin.userbar import AddPageItem, AdminItem, ExplorePageItem
+from wagtail.admin.menu import MenuItem
+
+from home.permissions import can_view_analytics, can_view_audit_log
 
 from auditlog import get_logentry_model
 LogEntry = get_logentry_model()
@@ -38,12 +41,7 @@ def get_model_color(model_name):
 
 def audit_log_list(request):
     """Paginated audit log view mounted inside the Wagtail admin."""
-    is_admin_user = (
-        request.user.is_staff or 
-        request.user.is_superuser or 
-        request.user.groups.filter(name__in=['Editors', 'Moderators']).exists()
-    )
-    if not is_admin_user:
+    if not can_view_audit_log(request.user):
         return HttpResponseForbidden()
 
     from zoneinfo import ZoneInfo
@@ -181,9 +179,23 @@ def audit_log_list(request):
 
 @hooks.register('register_admin_urls')
 def register_audit_log_url():
+    # Imported here rather than at module level: home.layout_views imports
+    # home.models, and home.models is still being set up when wagtail_hooks
+    # is first loaded.
+    from home import layout_views
+
     return [
         path('auditlog/', audit_log_list, name='icarus_audit_log'),
         path('analytics/', analytics_view, name='icarus_analytics'),
+        path('homepage-layout/',
+             layout_views.homepage_layout,
+             name='icarus_homepage_layout'),
+        path('homepage-layout/save/',
+             layout_views.homepage_layout_save,
+             name='icarus_homepage_layout_save'),
+        path('homepage-layout/search/',
+             layout_views.homepage_layout_search,
+             name='icarus_homepage_layout_search'),
     ]
 
 
@@ -391,7 +403,10 @@ def register_log_actions(actions):
 @hooks.register("construct_homepage_panels")
 def add_create_page_panel(request, panels):
     panels.insert(0, CreatePagePanel())
-    panels.append(AuditLogDashboardPanel())
+    # The panel is a preview of the audit log, so it follows the same rule as
+    # the log itself — no point showing activity to someone the full view 403s.
+    if can_view_audit_log(request.user):
+        panels.append(AuditLogDashboardPanel())
 
 class CustomAdminItem(AdminItem):
     template_name = "home/userbar/custom.html"
@@ -427,12 +442,7 @@ def customize_wagtail_userbar(request, items, page):
 
 def analytics_view(request):
     """Comprehensive analytics dashboard view mounted inside the Wagtail admin."""
-    is_admin_user = (
-        request.user.is_staff or
-        request.user.is_superuser or
-        request.user.groups.filter(name__in=['Editors', 'Moderators']).exists()
-    )
-    if not is_admin_user:
+    if not can_view_analytics(request.user):
         return HttpResponseForbidden()
 
     import json
@@ -1147,12 +1157,62 @@ def analytics_view(request):
     return render(request, 'wagtailadmin/analytics.html', context)
 
 
+class _AnalyticsMenuItem(MenuItem):
+    """Hidden from users the analytics view would 403 — a sidebar link to a
+    dead end is worse than no link at all."""
+
+    def is_shown(self, request):
+        return can_view_analytics(request.user)
+
+
 @hooks.register('register_admin_menu_item')
 def register_analytics_menu_item():
-    from wagtail.admin.menu import MenuItem
-    return MenuItem(
+    return _AnalyticsMenuItem(
         'Analytics',
         reverse('icarus_analytics'),
         icon_name='view',
         order=901,
+    )
+
+
+@hooks.register('register_permissions')
+def register_admin_report_permissions():
+    """
+    Surface the audit-log and analytics permissions in Settings -> Groups.
+
+    Without this hook Wagtail filters them out of the group editor, and the
+    only way to grant them would be Django's own admin.
+    """
+    return Permission.objects.filter(
+        content_type__app_label='home',
+        codename__in=['view_auditlog', 'view_analytics'],
+    )
+
+
+class _HomepageLayoutMenuItem(MenuItem):
+    """
+    Only shown to users who may actually edit the homepage.
+
+    Follows the same shape as the_librarian's _SuperuserOnlyMenuItem — a
+    sidebar link that leads to a 403 is worse than no link — but gates on
+    Wagtail's page permissions rather than a hardcoded group name, since
+    editing the layout is editing the page.
+    """
+
+    def is_shown(self, request):
+        from home.models import HomePage
+
+        page = HomePage.objects.live().first() or HomePage.objects.first()
+        if page is None:
+            return False
+        return page.permissions_for_user(request.user).can_edit()
+
+
+@hooks.register('register_admin_menu_item')
+def register_homepage_layout_menu_item():
+    return _HomepageLayoutMenuItem(
+        'Homepage Layout',
+        reverse('icarus_homepage_layout'),
+        icon_name='grip',
+        order=100,
     )

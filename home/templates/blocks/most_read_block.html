@@ -1,0 +1,20 @@
+{% load wagtailcore_tags wagtailimages_tags i18n %}
+{% include "includes/sg_section_head.html" with heading=self.heading %}
+
+<ol class="sg-most-read {% if self.numbered %}sg-most-read--numbered{% endif %}">
+  {% for card in cards %}
+  <li class="sg-most-read__item">
+    {% if self.numbered %}<span class="sg-most-read__rank" aria-hidden="true">{{ forloop.counter }}</span>{% endif %}
+    <div class="sg-most-read__body">
+      {% if card.topic %}
+      <a href="{% url 'topic_detail' slug=card.topic.slug %}" class="sg-most-read__category"
+         style="color: {{ card.accent }};">{{ card.topic.name }}</a>
+      {% endif %}
+      <h3 class="sg-most-read__title"><a href="{{ card.url }}">{{ card.title }}</a></h3>
+      {% include "includes/sg_byline.html" with card=card %}
+    </div>
+  </li>
+  {% empty %}
+  <li class="sg-empty">{% translate "വായനാ കണക്കുകള്‍ ലഭ്യമല്ല." %}</li>
+  {% endfor %}
+</ol>

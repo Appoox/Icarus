@@ -1,0 +1,30 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+<article class="sg-article-card sg-article-card--{{ card.size }}">
+  {% if card.image and card.size != 'text_only' %}
+  <a href="{{ card.url }}" class="sg-article-card__image-wrap" aria-hidden="true" tabindex="-1">
+    {% image card.image fill-440x280 as art_img %}
+    <img src="{{ art_img.url }}" alt="{{ card.title }}" width="440" height="280" loading="lazy" decoding="async">
+  </a>
+  {% endif %}
+
+  <div class="sg-article-card__content">
+    {% if card.badge %}<span class="sg-card-badge">{{ card.badge }}</span>{% endif %}
+    {% if card.kicker %}<span class="sg-card-kicker">{{ card.kicker }}</span>{% endif %}
+    {% if card.topic %}
+    <a href="{% url 'topic_detail' slug=card.topic.slug %}" class="sg-article-card__category"
+      style="background-color: {{ card.accent }};">
+      {{ card.topic.name }}
+    </a>
+    {% endif %}
+    <h3 class="sg-article-card__title">
+      <a href="{{ card.url }}">{{ card.title }}</a>
+    </h3>
+    {% if card.standfirst %}<p class="sg-card-standfirst">{{ card.standfirst }}</p>{% endif %}
+
+    {% include "includes/sg_byline.html" with card=card %}
+
+    <time class="sg-article-card__date" datetime="{{ card.date|date:'Y-m-d' }}">
+      {{ card.date|date:"F j, Y" }}
+    </time>
+  </div>
+</article>

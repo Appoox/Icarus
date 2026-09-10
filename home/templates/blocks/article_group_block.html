@@ -1,0 +1,19 @@
+{% load wagtailcore_tags i18n %}
+{% include "includes/sg_section_head.html" with heading=self.heading %}
+
+<div class="sg-article-grid sg-layout--{{ self.layout }}" style="--sg-cols: {{ self.columns }};">
+  {% for card in cards %}
+    {% include "includes/sg_article_card.html" with card=card %}
+  {% empty %}
+    <p class="sg-empty">{% translate "ലേഖനങ്ങളൊന്നും പ്രസിദ്ധീകരിച്ചിട്ടില്ല." %}</p>
+  {% endfor %}
+</div>
+
+{% if self.show_more_link and self.more_link_page %}
+<div class="sg-more-articles">
+  <a href="{{ self.more_link_page.url }}" class="sg-btn-more">
+    <span>{% firstof self.more_link_label _("കൂടുതല്‍ ലേഖനങ്ങള്‍ കാണുക") %}</span>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+  </a>
+</div>
+{% endif %}

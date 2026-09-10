@@ -1,0 +1,7 @@
+{# Author byline for a HomeCard.  Extracted from the three verbatim copies #}
+{# that used to live in home_page.html, so a change lands everywhere.      #}
+{% if card.authors %}
+<span class="sg-card-author">
+  {% for author in card.authors %}{% if author.url %}<a href="{{ author.url }}">{{ author.title }}</a>{% else %}{{ author.title }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
+</span>
+{% endif %}

@@ -1,0 +1,14 @@
+{% load wagtailcore_tags i18n %}
+<div class="sg-issue-other-topics">
+  <div class="sg-issue-other-topics__heading">{% firstof self.heading _("മറ്റുള്ള വിഷയങ്ങള്‍") %}</div>
+
+  <div class="sg-issue-other-topics__scroll-wrapper">
+    <div class="sg-issue-other-topics__grid">
+      {% for card in cards %}
+        {% include "includes/sg_small_card.html" with card=card %}
+      {% empty %}
+        <p class="sg-empty">{% translate "മറ്റ് വിഷയങ്ങളൊന്നുമില്ല." %}</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>

@@ -54,6 +54,16 @@ ln -sf "$ENV_SOURCE" "$PROJECT_DIR/.env"
 docker compose build web
 docker compose up -d
 
+# A bind mount added to an already-running service only takes effect when the
+# container is recreated. `up -d` above leaves caddy alone whenever its compose
+# spec is unchanged, so a caddy container created before the
+# ./docker/maintenance:/srv/maintenance mount was introduced keeps running
+# WITHOUT it — and the 502/503/504 handle_errors fallback then 404s instead of
+# serving rebooting.html (file_server can't find /srv/maintenance/rebooting.html).
+# Force-recreate caddy so it always reflects the current compose file, including
+# every bind mount. --no-deps keeps web/qcluster (and their migrate step) untouched.
+docker compose up -d --force-recreate --no-deps caddy
+
 # --- 3. Reload Caddy config ----------------------------------------------
 # The Caddyfile is a bind mount, and bind-mount CONTENTS are not part of
 # Compose's container config hash — so a commit that only edits the Caddyfile

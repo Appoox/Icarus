@@ -1,0 +1,75 @@
+{% extends "wagtailadmin/base.html" %}
+{% load static i18n %}
+
+{% block titletag %}{% translate "Homepage Layout" %}{% endblock %}
+
+{# Assets are loaded inside the content block rather than through an        #}
+{# extra_css/extra_js block, matching analytics.html — the one admin        #}
+{# full-page template this project already ships — so this screen does not  #}
+{# depend on which optional blocks the installed Wagtail base exposes.      #}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/homepage_layout.css' %}">
+
+<header class="w-slim-header">
+  <div class="left">
+    <div class="col">
+      <h1 class="w-header__title">{% translate "Homepage Layout" %}</h1>
+    </div>
+  </div>
+</header>
+
+<div class="nice-padding sg-canvas" data-sg-canvas>
+
+  {# Toolbar ─────────────────────────────────────────────────────────── #}
+  <div class="sg-canvas__toolbar">
+    <div class="sg-canvas__breakpoints" role="tablist" aria-label="{% translate 'Breakpoint' %}">
+      <button type="button" class="sg-bp is-active" data-bp="desktop" role="tab" aria-selected="true">{% translate "Desktop" %}</button>
+      <button type="button" class="sg-bp" data-bp="tablet" role="tab" aria-selected="false">{% translate "Tablet" %}</button>
+      <button type="button" class="sg-bp" data-bp="mobile" role="tab" aria-selected="false">{% translate "Mobile" %}</button>
+    </div>
+
+    <div class="sg-canvas__actions">
+      <div class="sg-add">
+        <button type="button" class="button button-small bicolor icon icon-plus" data-sg-add-toggle aria-expanded="false">
+          {% translate "Add section" %}
+        </button>
+        <div class="sg-add__menu" data-sg-add-menu hidden></div>
+      </div>
+      <a class="button button-small button-secondary" data-sg-history href="#">{% translate "Revisions" %}</a>
+      <button type="button" class="button button-small button-secondary" data-sg-preview>{% translate "Preview" %}</button>
+      <button type="button" class="button button-small button-secondary" data-sg-save="draft">{% translate "Save draft" %}</button>
+      <button type="button" class="button button-small" data-sg-save="publish">{% translate "Publish" %}</button>
+    </div>
+  </div>
+
+  <p class="sg-canvas__status" data-sg-status role="status" aria-live="polite"></p>
+
+  <div class="sg-canvas__body">
+
+    {# Grid ──────────────────────────────────────────────────────────── #}
+    <div class="sg-canvas__stage">
+      <div class="sg-canvas__grid" data-sg-grid></div>
+      <p class="sg-canvas__hint">
+        {% translate "Drag a section to move it. Drag its right or bottom edge to resize. Height is a guide — the real height comes from the content." %}
+      </p>
+    </div>
+
+    {# Inspector ─────────────────────────────────────────────────────── #}
+    <aside class="sg-canvas__inspector" data-sg-inspector>
+      <p class="sg-inspector__empty">{% translate "Select a section to edit it." %}</p>
+    </aside>
+  </div>
+
+  {# Preview ───────────────────────────────────────────────────────────── #}
+  <div class="sg-preview" data-sg-preview-panel hidden>
+    <div class="sg-preview__bar">
+      <span>{% translate "Preview of the current draft" %}</span>
+      <button type="button" class="button button-small button-secondary" data-sg-preview-close>{% translate "Close" %}</button>
+    </div>
+    <iframe class="sg-preview__frame" data-sg-preview-frame title="{% translate 'Homepage preview' %}"></iframe>
+  </div>
+</div>
+
+{{ canvas_data|json_script:"sg-canvas-data" }}
+<script src="{% static 'js/homepage_layout.js' %}" defer></script>
+{% endblock %}

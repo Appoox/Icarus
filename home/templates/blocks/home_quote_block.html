@@ -1,0 +1,6 @@
+{% if self.quote %}
+<figure class="sg-pull-quote">
+  <blockquote>{{ self.quote|linebreaksbr }}</blockquote>
+  {% if self.attribution %}<figcaption>— {{ self.attribution }}</figcaption>{% endif %}
+</figure>
+{% endif %}

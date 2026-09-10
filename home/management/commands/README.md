@@ -18,7 +18,7 @@ deployments without restoring a full `pg_dump`.
 ## Quick start
 
 ```bash
-# 1. On the source server — export structural content + all snippets
+# 1. On the source server — export everything (pages + snippets + media)
 python manage.py export_content --output prod_20260701.zip
 
 # 2. Transfer the ZIP to the target machine
@@ -37,15 +37,41 @@ python manage.py import_content prod_20260701.zip
 
 ```
 python manage.py export_content [--output FILE] [--scope SCOPE] [--no-media]
+                                [--no-progress] [-v 0|1|2]
 ```
+
+### Output verbosity
+
+| Flag | Effect |
+|---|---|
+| `-v 0` | Silent except errors |
+| `-v 1` | Headings, progress bars, summary *(default)* |
+| `-v 2` | Adds one line per record — use this to identify a problem record |
+| `--no-progress` | Disable progress bars (auto-disabled when output is piped) |
+
+Progress bars redraw in place on a terminal; when output is redirected to a
+file or CI log they collapse to a single start line and a single done line.
+
+The export never aborts on one bad record: failures are reported as
+`[!] <Model> pk=… — skipped` and the archive is still written. The summary
+prints the warning count.
+
+### `--output`
+
+Accepts a file path or a directory. Passing a directory (or a path ending in
+`/`) generates an auto-timestamped `icarus_content_YYYYmmdd_HHMMSS.zip` inside
+it. Missing parent directories are created.
 
 ### `--scope`
 
 | Value | What is exported |
 |---|---|
-| `structural` | HomePage + all index pages + all snippets + media  *(default)* |
+| `full`       | **Every page type in the tree** + all snippets + media  *(default)* |
+| `structural` | HomePage + index pages + all snippets + media (no articles/issues) |
 | `snippets`   | Snippets + media only (no pages) |
-| `full`       | Everything — index pages, Issues, Articles, Literati pages |
+
+`full` uses no model allow-list, so a page model added to the project later
+cannot silently drop out of a "full" export.
 
 ### `--no-media`
 
@@ -57,11 +83,16 @@ already exists at the destination via a shared volume or S3 sync.
 
 ```
 icarus_content.zip
-├── manifest.json          ← all serialised data
+├── manifest.json              ← all serialised data
 ├── media/
-│   ├── images/            ← original image files
-│   └── documents/         ← PDFs, MP3s, etc.
+│   ├── images/<pk>/<file>     ← original image files
+│   └── documents/<pk>/<file>  ← PDFs, MP3s, etc.
 ```
+
+Media sits under a per-PK directory so two files that share a basename
+(`logo.png` in different upload folders) cannot collide inside the archive.
+Already-compressed formats (JPEG, PNG, MP3, MP4 …) are stored verbatim rather
+than deflated, which speeds up export noticeably on media-heavy sites.
 
 ### What is serialised
 
@@ -73,6 +104,37 @@ icarus_content.zip
   so that `add_child` works during import
 - **Images** and **Documents**: metadata + file bytes
 - **Site record**: hostname, port, site name of the default site
+
+### Media discovery (rich text + StreamField)
+
+Media is collected from the content that is actually exported, from three
+places:
+
+1. **Model FK fields** — `cover_image`, `PDF_file`, …
+2. **StreamField values**, walked against the field's own *block definitions*
+   (`ImageChooserBlock`, `DocumentChooserBlock`, `RichTextBlock`, and anything
+   nested inside `StructBlock` / `ListBlock` / `StreamBlock`). Driving off the
+   definitions rather than block names means new or renamed blocks are picked
+   up with no change to the exporter.
+3. **Rich text markup**, where Wagtail stores references as PKs inside tags
+   rather than as model FKs:
+
+   ```html
+   <embed embedtype="image" id="42" format="fullwidth" alt="…"/>
+   <a linktype="document" id="7">the PDF</a>
+   ```
+
+   These are invisible to a field-level scan, so they are parsed explicitly —
+   in `RichTextField` model fields *and* in every `RichTextBlock` (including
+   image captions, blockquote text and `ListBlock` items). `import_content`
+   rewrites the same tags to the destination PKs.
+
+`<embed embedtype="media">` is an external oEmbed URL, not a stored file, so
+it is skipped. `<a linktype="page">` is left untouched.
+
+> **Scope matters for media.** Only exported content is scanned, so
+> `--scope structural` carries no article images. The command warns when pages
+> are excluded by the active scope.
 
 ### How FK references are stored
 
@@ -97,8 +159,20 @@ JSON round-trip.
 ## import_content
 
 ```
-python manage.py import_content ARCHIVE [--dry-run] [--tolerant] [--skip-existing-media]
+python manage.py import_content ARCHIVE [--dry-run] [--tolerant] [--yes]
+                                [--replace-existing-media] [--no-progress] [-v 0|1|2]
 ```
+
+Before writing, the command prints what the archive contains and asks for
+confirmation. Pass `--yes` to skip the prompt; it is skipped automatically
+when stdin is not a terminal (CI, cron) or with `--dry-run`.
+
+The manifest's format version and the Wagtail major version it was built on
+are checked on load — a mismatch is reported as a warning rather than a
+silent failure.
+
+The final summary reports created / reused / updated / skipped counts per
+category plus the warning count.
 
 ### Import order
 
@@ -130,6 +204,12 @@ Runs the full import logic inside an atomic block then calls
 `transaction.set_rollback(True)` before exit.  The output shows exactly
 what would be created or updated without writing a single row.
 
+Note that file-storage writes are *not* transactional, so a dry run also skips
+saving media files to disk — otherwise a "preview" would litter the media
+directory with orphans that the rollback cannot remove.  FK pointers to those
+not-yet-created images therefore resolve to `None` during a preview; that is
+expected and is discarded with the rollback.
+
 ### `--tolerant`
 
 Wraps each import step in a try/except.  A failure in one step (e.g. a
@@ -137,19 +217,25 @@ missing parent page) is logged as a warning and the command continues to
 the next step.  Without `--tolerant`, any error aborts the whole
 transaction.
 
-### `--skip-existing-media`
+### `--skip-existing-media` / `--replace-existing-media`
 
-Media that already matches by title is reused (same behaviour as
-idempotent re-runs).  Use this when media has been pre-synced via rsync
-or S3 and the files are already present on disk.
+Reusing media that already matches by title is the **default** behaviour, so
+`--skip-existing-media` is accepted for backwards compatibility but changes
+nothing.  Pass `--replace-existing-media` to force creation of new media
+objects even when a title matches — useful when the destination holds stale
+files that should be superseded.
 
 ---
 
 ## check_archive
 
 ```
-python manage.py check_archive ARCHIVE [--verbose]
+python manage.py check_archive ARCHIVE [--verbose | -v 2]
 ```
+
+`--verbose` and Django's `-v 2` are equivalent. Note there is no `-v` short
+flag for `--verbose`: `-v` belongs to Django's own `--verbosity` and
+re-registering it makes argparse raise before the command can start.
 
 Reads the ZIP manifest and prints a summary of what it contains — model
 counts, media presence, potential issues — without connecting to the DB
@@ -231,9 +317,9 @@ python manage.py update_index
 ### Adding a new page model
 
 No code changes needed — `export_pages` serialises all page models
-generically.  The only requirement is that the model label appears in
-`FULL_PAGE_MODELS` (or `STRUCTURAL_PAGE_MODELS`) in `export_content.py`
-if it should be included in a non-`full` scope.
+generically and the default `full` scope exports every page type.  Add the
+model label to `STRUCTURAL_PAGE_MODELS` in `export_content.py` only if it
+should also appear in the narrower `structural` scope.
 
 ### Adding a new StreamField block type
 

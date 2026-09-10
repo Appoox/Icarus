@@ -17,7 +17,7 @@
             <input type="text"
                    name="q"
                    class="search-input"
-                   placeholder="{% translate ആർക്കൈവിൽ തിരയൂ (ഉദാ. കാലാവസ്ഥാ വ്യതിയാനം, പരിസ്ഥിതി...)' %}"
+                   placeholder="{% translate 'ആർക്കൈവിൽ തിരയൂ (ഉദാ. കാലാവസ്ഥാ വ്യതിയാനം, പരിസ്ഥിതി...)' %}"
                    value="{{ query }}"
                    autofocus>
             <button type="submit" class="search-btn">{% translate "തിരയൂ" %}</button>
@@ -30,6 +30,7 @@
                     <option value="hybrid" {% if mode == 'hybrid' %}selected{% endif %}>{% translate "ഹൈബ്രിഡ് (Recomended)" %}</option>
                     <option value="similarity" {% if mode == 'similarity' %}selected{% endif %}>{% translate "അര്‍ത്ഥത്തിലെ സാമ്യത" %}</option>
                     <option value="keyword" {% if mode == 'keyword' %}selected{% endif %}>{% translate "വാക്കിലെ സാമ്യത" %}</option>
+                </select>
             </div>
             <div class="control-group">
                 <span class="control-label">{% translate "ഫലങ്ങൾ" %}</span>

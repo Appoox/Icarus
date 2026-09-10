@@ -1,0 +1,16 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+{% firstof self.link_page.url self.link_url as banner_href %}
+{% if self.image %}
+<div class="sg-image-banner">
+  {% if banner_href %}<a href="{{ banner_href }}" class="sg-image-banner__link">{% endif %}
+    {% image self.image width-1600 as banner_img %}
+    <img src="{{ banner_img.url }}" alt="{{ self.alt_text }}" loading="lazy" decoding="async">
+    {% if self.overlay_heading or self.overlay_text %}
+    <div class="sg-image-banner__overlay">
+      {% if self.overlay_heading %}<h2 class="sg-image-banner__heading">{{ self.overlay_heading }}</h2>{% endif %}
+      {% if self.overlay_text %}<p class="sg-image-banner__text">{{ self.overlay_text }}</p>{% endif %}
+    </div>
+    {% endif %}
+  {% if banner_href %}</a>{% endif %}
+</div>
+{% endif %}

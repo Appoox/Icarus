@@ -1,0 +1,10 @@
+{% load wagtailcore_tags %}
+{% firstof self.link_page.url self.link_url as cta_href %}
+{% if cta_href and self.label_text %}
+<div class="sg-cta sg-cta--{{ self.align }}">
+  <a href="{{ cta_href }}" class="{% if self.style == 'primary' %}sg-btn-more{% else %}sg-btn-secondary{% endif %}">
+    <span>{{ self.label_text }}</span>
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+  </a>
+</div>
+{% endif %}
