@@ -4,6 +4,10 @@ from django import forms
 from django.utils import timezone
 from reader.models import ReaderUser
 from phonenumber_field.formfields import SplitPhoneNumberField as BaseSplitPhoneNumberField
+
+import logging
+
+logger = logging.getLogger(__name__)
 # 'phone_verification' import removed — was imported but never used
 
 class CustomAccountAdapter(DefaultAccountAdapter):
@@ -97,8 +101,13 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         return None
 
     def send_verification_code_sms(self, request, phone_number: str, key: str, **kwargs) -> None:
-        # Log for dev, no-op for prod
-        print(f"[DEV] SMS code for {phone_number}: {key}")
+        # No SMS gateway yet. Never write the code (or the number) to logs
+        # in production; on a DEBUG dev box it is logged so the flow can be tried.
+        from django.conf import settings
+        if settings.DEBUG:
+            logger.info("[DEV] SMS verification code: %s", key)
+        else:
+            logger.warning("SMS verification requested but no SMS gateway is configured.")
 
     def is_phone_verified(self, request, user):
         """Trust phone numbers at registration — skip verification stage."""

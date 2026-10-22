@@ -1,3 +1,4 @@
+from datetime import date
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -11,13 +12,17 @@ User = get_user_model()
 
 class CommentSystemTests(TestCase):
     def setUp(self):
-        # Find or create root page and home page
-        self.root_page = Page.objects.get(id=1)
+        # Remove Wagtail's default "Welcome" page (slug "home") so ours can
+        # take its slug, then re-fetch the root so treebeard's numchild is fresh.
+        Site.objects.all().delete()
+        for child in Page.get_first_root_node().get_children():
+            child.delete()
+        self.root_page = Page.get_first_root_node()
         self.home_page = HomePage(title="Home", slug="home")
         self.root_page.add_child(instance=self.home_page)
         
         # Create article page
-        self.article_page = Article(title="Test Article", slug="test-article")
+        self.article_page = Article(title="Test Article", slug="test-article", date=date(2026, 1, 1))
         self.home_page.add_child(instance=self.article_page)
 
         # Setup site (required for Site.find_for_request)
@@ -66,7 +71,7 @@ class CommentSystemTests(TestCase):
         self.comment_settings.save()
 
     def test_post_comment_authenticated(self):
-        self.client.login(phone_number="+15555555555", password="readerpassword")
+        self.client.force_login(self.reader)
         url = reverse('kalapila:post_comment')
         
         response = self.client.post(url, {
@@ -93,7 +98,7 @@ class CommentSystemTests(TestCase):
         self.assertEqual(response.status_code, 302) # Redirect to login
 
     def test_post_comment_restricted_user_rejected(self):
-        self.client.login(phone_number="+15555555556", password="restrictedpassword")
+        self.client.force_login(self.restricted_reader)
         url = reverse('kalapila:post_comment')
         response = self.client.post(url, {
             'page_id': self.article_page.id,
@@ -103,7 +108,7 @@ class CommentSystemTests(TestCase):
         self.assertEqual(response.json()['status'], 'error')
 
     def test_post_comment_body_limit(self):
-        self.client.login(phone_number="+15555555555", password="readerpassword")
+        self.client.force_login(self.reader)
         url = reverse('kalapila:post_comment')
         long_body = 'a' * 3001
         response = self.client.post(url, {
@@ -114,7 +119,7 @@ class CommentSystemTests(TestCase):
         self.assertEqual(response.json()['status'], 'error')
 
     def test_post_comment_replies(self):
-        self.client.login(phone_number="+15555555555", password="readerpassword")
+        self.client.force_login(self.reader)
         # Pre-create parent comment
         parent = Comment.objects.create(
             page=self.article_page,
@@ -138,7 +143,7 @@ class CommentSystemTests(TestCase):
         self.comment_settings.global_premoderation = True
         self.comment_settings.save()
 
-        self.client.login(phone_number="+15555555555", password="readerpassword")
+        self.client.force_login(self.reader)
         url = reverse('kalapila:post_comment')
         response = self.client.post(url, {
             'page_id': self.article_page.id,
@@ -155,7 +160,7 @@ class CommentSystemTests(TestCase):
         self.comment_settings.premoderated_pages.add(self.article_page)
         self.comment_settings.save()
 
-        self.client.login(phone_number="+15555555555", password="readerpassword")
+        self.client.force_login(self.reader)
         url = reverse('kalapila:post_comment')
         response = self.client.post(url, {
             'page_id': self.article_page.id,
@@ -171,7 +176,7 @@ class CommentSystemTests(TestCase):
         # Clear outbox
         mail.outbox = []
 
-        self.client.login(phone_number="+15555555555", password="readerpassword")
+        self.client.force_login(self.reader)
         url = reverse('kalapila:post_comment')
         response = self.client.post(url, {
             'page_id': self.article_page.id,
@@ -195,7 +200,7 @@ class CommentSystemTests(TestCase):
             body="Reportable comment"
         )
         
-        self.client.login(phone_number="+15555555555", password="readerpassword")
+        self.client.force_login(self.reader)
         url = reverse('kalapila:report_comment', kwargs={'pk': comment.pk})
         response = self.client.post(url)
         
@@ -210,7 +215,7 @@ class CommentSystemTests(TestCase):
             user=self.reader,
             body="My own comment"
         )
-        self.client.login(phone_number="+15555555555", password="readerpassword")
+        self.client.force_login(self.reader)
         url = reverse('kalapila:delete_comment', kwargs={'pk': comment.pk})
         response = self.client.post(url)
         
@@ -225,7 +230,7 @@ class CommentSystemTests(TestCase):
             body="Reader comment"
         )
         # Login as staff_1 (admin)
-        self.client.login(phone_number="+15555555557", password="staffpassword")
+        self.client.force_login(self.staff_1)
         url = reverse('kalapila:delete_comment', kwargs={'pk': comment.pk})
         response = self.client.post(url)
         
@@ -240,7 +245,7 @@ class CommentSystemTests(TestCase):
             body="Reader comment"
         )
         # Login as restricted_reader (not author and not admin)
-        self.client.login(phone_number="+15555555556", password="restrictedpassword")
+        self.client.force_login(self.restricted_reader)
         url = reverse('kalapila:delete_comment', kwargs={'pk': comment.pk})
         response = self.client.post(url)
         
@@ -261,7 +266,7 @@ class CommentSystemTests(TestCase):
         )
 
         # Login as staff_1
-        self.client.login(phone_number="+15555555557", password="staffpassword")
+        self.client.force_login(self.staff_1)
         
         # Poll notifications
         poll_url = reverse('kalapila:admin_notifications')
@@ -281,13 +286,76 @@ class CommentSystemTests(TestCase):
 
     def test_toggle_notifications_preference(self):
         # Login as staff_1 (default preferences: none created -> will default to receiving notifications)
-        self.client.login(phone_number="+15555555557", password="staffpassword")
+        self.client.force_login(self.staff_1)
         
         toggle_url = reverse('toggle_comment_notifications')
-        response = self.client.get(toggle_url)
+        # GET must not change state (it would let any page flip it via <img>).
+        self.assertEqual(self.client.get(toggle_url).status_code, 405)
+        self.assertFalse(CommentNotificationPreference.objects.filter(user=self.staff_1).exists())
+
+        response = self.client.post(toggle_url)
         
         # Should redirect back to snippet list view
         self.assertEqual(response.status_code, 302)
         
         pref = CommentNotificationPreference.objects.get(user=self.staff_1)
         self.assertFalse(pref.receive_notifications)
+
+
+class StaffNotificationDeliveryTests(TestCase):
+    """
+    Each staff member listens on their own channel group. A shared group
+    meant every comment reached every admin once per colleague; and the same
+    reader re-flagging a comment notified and emailed all staff each time.
+    """
+
+    # Same fixture (pages, readers, two staff with staff_2 muted), without
+    # inheriting — and so re-running — every CommentSystemTests test.
+    setUp = CommentSystemTests.setUp
+
+    def _post_with_layer(self, url, data=None):
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        layer = MagicMock()
+        layer.group_send = AsyncMock()
+        with patch("kalapila.views.get_channel_layer", return_value=layer):
+            response = self.client.post(url, data or {})
+        groups = [c.args[0] for c in layer.group_send.call_args_list]
+        return response, groups
+
+    def test_each_staff_member_gets_one_toast_on_their_own_group(self):
+        self.client.force_login(self.reader)
+        response, groups = self._post_with_layer(
+            reverse('kalapila:post_comment'), {'page_id': self.article_page.id, 'body': 'Hello'}
+        )
+        self.assertEqual(response.status_code, 200)
+        admin_groups = [g for g in groups if g.startswith("admin_notifications")]
+        # staff_2 muted notifications; staff_1 gets exactly one.
+        self.assertEqual(admin_groups, [f"admin_notifications_{self.staff_1.pk}"])
+
+    def test_consumer_joins_its_own_group(self):
+        from kalapila.consumers import staff_notification_group
+
+        self.assertEqual(staff_notification_group(self.staff_1.pk), f"admin_notifications_{self.staff_1.pk}")
+
+    def test_repeat_report_by_the_same_reader_notifies_nobody(self):
+        comment = Comment.objects.create(page=self.article_page, user=self.staff_2, body="Flag me")
+        self.client.force_login(self.reader)
+        url = reverse('kalapila:report_comment', kwargs={'pk': comment.pk})
+
+        self._post_with_layer(url)
+        notes = DashboardNotification.objects.filter(comment=comment).count()
+        emails = len(mail.outbox)
+        self.assertEqual(notes, 1)
+
+        response, groups = self._post_with_layer(url)
+        self.assertEqual(response.json()['status'], 'success')
+        self.assertEqual(groups, [])
+        self.assertEqual(DashboardNotification.objects.filter(comment=comment).count(), notes)
+        self.assertEqual(len(mail.outbox), emails)
+
+    def test_notification_text_never_contains_the_phone_number(self):
+        self.client.force_login(self.reader)
+        self._post_with_layer(reverse('kalapila:post_comment'), {'page_id': self.article_page.id, 'body': 'Hi'})
+        for note in DashboardNotification.objects.all():
+            self.assertNotIn("+1555", note.message)

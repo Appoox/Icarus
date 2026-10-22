@@ -1,13 +1,19 @@
-{% load static wagtailcore_tags wagtailuserbar i18n %}
-{% block branding_favicon %}
-    <link rel="shortcut icon" href="{% static 'images/favicon.png' %}" />
-{% endblock %}
-
 <!DOCTYPE html>
-<html lang="ml">
+{% load static wagtailcore_tags wagtailuserbar i18n i18n_links %}{% get_current_language as LANGUAGE_CODE %}
+{# The doctype must be the very first thing in the document: a favicon <link> #}
+{# used to come before it, which put every page into quirks mode. #}
+<html lang="{{ LANGUAGE_CODE }}">
 
 <head>
     <meta charset="utf-8" />
+    {% block branding_favicon %}
+    <link rel="shortcut icon" href="{% static 'images/favicon.png' %}" />
+    {% endblock %}
+
+    {# The same page in each site language (Malayalam at /, English at /en/). #}
+    {% language_alternates as alternates %}
+    {% for code, url in alternates %}<link rel="alternate" hreflang="{{ code }}" href="{{ url }}">
+    {% endfor %}
     <title>{% block title %}{% firstof page.seo_title page.title topic.name %}{% endblock %}{% block title_suffix %} | ശാസ്ത്രഗതി{% endblock %}</title>
 
     {% if page.meta_description %}
@@ -61,7 +67,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/header.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/footer.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/pagination.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
 
     {% block extra_css %}
     {# Override this in templates to add extra stylesheets #}
@@ -84,7 +90,8 @@
     <div class="messages-container">
         {% for message in messages %}
         <div class="message message--{{ message.tags }}">
-            <span>{{ message|safe }}</span>
+            {# Escaped: messages can carry user input. A message built with mark_safe/format_html still renders as HTML. #}
+            <span>{{ message }}</span>
             <button class="message__close">×</button>
         </div>
         {% endfor %}

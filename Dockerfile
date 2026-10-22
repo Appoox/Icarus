@@ -63,8 +63,10 @@ CMD set -e; \
     python manage.py collectstatic --noinput; \
     python manage.py compilemessages -l en; \
     python manage.py migrate --noinput; \
+    python manage.py createcachetable; \
     python manage.py setup_page_lock_schedule; \
     python manage.py setup_geoip_schedule; \
+    python manage.py setup_retention_schedules; \
     python manage.py update_geoip || true; \
     gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker -w 2 --preload
 

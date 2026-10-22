@@ -1,0 +1,20 @@
+[run]
+source = .
+branch = False
+omit =
+    */migrations/*
+    */tests.py
+    */test_*.py
+    */tests/*
+    Icarus/settings/*
+    manage.py
+    */venv/*
+    */.venv/*
+
+[report]
+skip_empty = True
+show_missing = False
+precision = 1
+# Floor = coverage measured at the last wave, rounded down (Wave 0: 35.7%, 1: 38.4%, 2: 42.5%, 3: 44.0%, 4: 44.9%, 5: 47.6%, 6: 47.8%, 7: 57.9%).
+# Raise it as tests are added; never lower it.
+fail_under = 57

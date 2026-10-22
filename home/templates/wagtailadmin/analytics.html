@@ -73,7 +73,7 @@
   .an-bar-fill { height:100%; border-radius:4px; background:var(--an-accent); }
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <header class="an-header">
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--an-accent)" stroke-width="2">
@@ -82,6 +82,12 @@
   <div>
     <h1>{% translate "അനലിറ്റിക്സ്" %}</h1>
     <p>{% translate "ഉള്ളടക്കം, വായനക്കാർ, സബ്സ്ക്രിപ്ഷനുകൾ, മോഡറേഷൻ എന്നിവയിലുടനീളമുള്ള പ്ലാറ്റ്‌ഫോം-വ്യാപക അളവുകൾ." %}</p>
+    {% if generated_at %}
+    <p style="font-size:.85em;color:var(--w-color-text-meta);">
+      {% translate "കണക്കാക്കിയത്" %}: {{ generated_at|date:"d M Y, H:i" }} UTC ·
+      <a href="?refresh=1">{% translate "പുതുക്കുക" %}</a>
+    </p>
+    {% endif %}
   </div>
 </header>
 
@@ -565,6 +571,8 @@
 
 </div>
 
+{# Every *_json value below is built by _script_json() in home/wagtail_hooks.py, #}
+{# which escapes < > & so data can never close this <script>. Never pass raw json.dumps here. #}
 <script>
 (function () {
   'use strict';

@@ -1,6 +1,7 @@
 import django_filters
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.views.decorators.http import require_POST
 from django.urls import path, reverse
 from django.utils.html import format_html, json_script
 from django.utils.translation import gettext as _
@@ -61,6 +62,13 @@ class PostboxIndexView(IndexView):
                 url=reverse('toggle_postbox_notifications'),
                 icon_name='mail',
                 classname='button button-secondary',
+                # A state change: POST it (Wagtail's w-action builds the form
+                # with the CSRF token), so a link on another site can't flip it.
+                attrs={
+                    'data-controller': 'w-action',
+                    'data-action': 'w-action#post',
+                    'data-w-action-url-value': reverse('toggle_postbox_notifications'),
+                },
             ))
         return buttons
 
@@ -86,6 +94,7 @@ class PostboxSnippetViewSet(SnippetViewSet):
 
 # ── Notification preference toggle ────────────────────────────────────────
 
+@require_POST
 def toggle_postbox_notifications_view(request):
     if not (request.user.is_authenticated and request.user.is_staff):
         return redirect('/admin/')

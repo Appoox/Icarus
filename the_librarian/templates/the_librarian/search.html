@@ -86,6 +86,9 @@
                     </div>
                     <div class="result-score">{% blocktranslate with score=result.score %}പ്രസക്തി: {{ score }}{% endblocktranslate %}</div>
                     <p class="result-text">{{ result.chunk_text }}</p>
+                    {% if result.preview_only %}
+                        <p class="result-score">{% translate "മുഴുവൻ പാഠം വരിക്കാർക്ക് മാത്രം." %}</p>
+                    {% endif %}
                     
                     {% if result.type == 'pdf' %}
                         <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}"

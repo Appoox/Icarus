@@ -20,6 +20,26 @@ from wagtail.admin.menu import MenuItem
 from home.permissions import can_view_analytics, can_view_audit_log
 
 from auditlog import get_logentry_model
+
+
+def _script_json(value):
+    """
+    JSON for embedding inside a <script> block (the analytics template
+    writes these as `{{ x_json|safe }}`).
+
+    Plain json.dumps does not escape `</script>`, so a reader-controlled
+    string such as a district name could close the script tag and run its
+    own code in an admin's browser. This applies the same <, >, & escaping
+    as Django's json_script: still a valid JS literal, never markup.
+    """
+    import json
+
+    from django.core.serializers.json import DjangoJSONEncoder
+
+    return mark_safe(json.dumps(value, cls=DjangoJSONEncoder).translate(_SCRIPT_ESCAPES))
+
+
+_SCRIPT_ESCAPES = {ord("<"): "\\u003C", ord(">"): "\\u003E", ord("&"): "\\u0026"}
 LogEntry = get_logentry_model()
 
 User = get_user_model()
@@ -286,7 +306,9 @@ class AuditLogDashboardPanel(Component):
             ts = entry.timestamp.astimezone(ist).strftime('%b %d, %H:%M')
 
             if entry.actor:
-                actor = entry.actor.name or str(entry.actor.phone_number)
+                # (ReaderUser has no `phone_number` attribute: the old
+                # fallback raised AttributeError and broke the dashboard.)
+                actor = entry.actor.name or f"Reader #{entry.actor.pk}"
             else:
                 actor = 'System'
 
@@ -440,16 +462,34 @@ def customize_wagtail_userbar(request, items, page):
 
 # ── Analytics Page ─────────────────────────────────────────────────────────
 
+ANALYTICS_CACHE_KEY = "icarus:analytics:v1"
+ANALYTICS_CACHE_SECONDS = 600
+
+
 def analytics_view(request):
-    """Comprehensive analytics dashboard view mounted inside the Wagtail admin."""
+    """
+    Comprehensive analytics dashboard view mounted inside the Wagtail admin.
+
+    The figures are the same for every viewer and take dozens of queries
+    over the hit and reader tables, so they are cached for ten minutes in
+    the shared cache. ?refresh=1 recomputes them.
+    """
     if not can_view_analytics(request.user):
         return HttpResponseForbidden()
 
-    import json
+    from django.core.cache import cache
+
+    context = None if request.GET.get("refresh") else cache.get(ANALYTICS_CACHE_KEY)
+    if context is None:
+        context = _analytics_context()
+        cache.set(ANALYTICS_CACHE_KEY, context, ANALYTICS_CACHE_SECONDS)
+    return render(request, 'wagtailadmin/analytics.html', context)
+
+
+def _analytics_context():
     from django.utils import timezone
     from datetime import timedelta
-    from django.db.models import Count, Q, Sum
-    from django.db.models.functions import Coalesce
+    from django.db.models import Count, Q
     from django.apps import apps
 
     now = timezone.now()
@@ -522,35 +562,34 @@ def analytics_view(request):
     age_hits = []
     age_reads = []
     try:
-        from hitcount.models import HitCount, Hit
-        from django.contrib.contenttypes.models import ContentType
-        article_ct = ContentType.objects.get_for_model(Article)
+        from django.db.models import Case, CharField, Value, When
 
-        # Gender distribution of users with consent
-        gender_qs = (
-            ReaderUser.objects
-            .filter(gender_consent_at__isnull=False)
-            .exclude(gender='')
-            .values('gender')
-            .annotate(count=Count('id'))
-            .order_by('-count')
-        )
-        for row in gender_qs:
-            gender_labels.append(row['gender'])
-            # Articles read by users of this gender
-            hits_for_gender = Article.objects.filter(
-                readers__gender=row['gender'],
-                readers__gender_consent_at__isnull=False
-            ).distinct().count()
-            reads_for_gender = Article.objects.filter(
-                readers__gender=row['gender'],
-                readers__gender_consent_at__isnull=False,
-                read_fully_count__gt=0
-            ).distinct().count()
-            gender_hits.append(hits_for_gender)
-            gender_reads.append(reads_for_gender)
+        # One grouped query per chart over the reading-history join table
+        # (it used to be 2 queries per gender and 3 per age bracket).
+        History = ReaderUser.read_articles.through
+        distinct_articles = Count('article', distinct=True)
+        fully_read = Count('article', distinct=True, filter=Q(article__read_fully_count__gt=0))
 
-        # Age bracket distribution — birth year bounds derived dynamically from current year
+        gender_counts = {
+            row['gender']: row['count']
+            for row in ReaderUser.objects
+            .filter(gender_consent_at__isnull=False).exclude(gender='')
+            .values('gender').annotate(count=Count('id')).order_by()
+        }
+        gender_articles = {
+            row['readeruser__gender']: row
+            for row in History.objects
+            .filter(readeruser__gender_consent_at__isnull=False).exclude(readeruser__gender='')
+            .values('readeruser__gender')
+            .annotate(hits=distinct_articles, reads=fully_read).order_by()
+        }
+        for gender, _count in sorted(gender_counts.items(), key=lambda kv: -kv[1]):
+            row = gender_articles.get(gender, {})
+            gender_labels.append(gender)
+            gender_hits.append(row.get('hits', 0))
+            gender_reads.append(row.get('reads', 0))
+
+        # Age brackets — birth-year bounds derived from the current year
         current_year = now.year
         age_brackets = [
             ('18-24', current_year - 24, current_year - 18),
@@ -560,26 +599,33 @@ def analytics_view(request):
             ('55-64', current_year - 64, current_year - 55),
             ('65+',   current_year - 120, current_year - 65),
         ]
-        for label, birth_from, birth_to in age_brackets:
-            qs_bracket = ReaderUser.objects.filter(
-                birth_year_consent_at__isnull=False,
-                birth_year__gte=birth_from,
-                birth_year__lte=birth_to,
+
+        def bracket(prefix):
+            return Case(
+                *[When(**{f'{prefix}birth_year__gte': lo, f'{prefix}birth_year__lte': hi}, then=Value(label))
+                  for label, lo, hi in age_brackets],
+                default=Value(''), output_field=CharField(),
             )
-            count = qs_bracket.count()
-            if count > 0:
+
+        readers_per_bracket = {
+            row['bracket']: row['count']
+            for row in ReaderUser.objects.filter(birth_year_consent_at__isnull=False)
+            .annotate(bracket=bracket('')).values('bracket').annotate(count=Count('id')).order_by()
+        }
+        articles_per_bracket = {
+            row['bracket']: row
+            for row in History.objects.filter(readeruser__birth_year_consent_at__isnull=False)
+            .annotate(bracket=bracket('readeruser__')).values('bracket')
+            .annotate(hits=distinct_articles, reads=fully_read).order_by()
+        }
+        for label, _lo, _hi in age_brackets:
+            if readers_per_bracket.get(label):
+                row = articles_per_bracket.get(label, {})
                 age_labels.append(label)
-                articles_in_bracket = Article.objects.filter(
-                    readers__in=qs_bracket
-                ).distinct().count()
-                reads_in_bracket = Article.objects.filter(
-                    readers__in=qs_bracket,
-                    read_fully_count__gt=0
-                ).distinct().count()
-                age_hits.append(articles_in_bracket)
-                age_reads.append(reads_in_bracket)
+                age_hits.append(row.get('hits', 0))
+                age_reads.append(row.get('reads', 0))
     except Exception:
-        pass
+        logger.exception("Analytics: gender/age computation failed")
 
     # ── 4. Active Churn Rate ───────────────────────────────────────────────
     active_subscribers = ReaderUser.objects.filter(
@@ -600,12 +646,8 @@ def analytics_view(request):
         subscription_end__gte=grace_window_start,
         subscription_end__lt=now,
     ).count()
-    recovered_from_grace = ReaderUser.objects.filter(
-        subscription_end__gte=grace_window_start,
-        subscription_end__lt=now,
-        is_cancelled=False,
-    ).filter(subscription_end__gt=now - timedelta(days=GRACE_DAYS)).count()
-    # Simpler: active users who renewed in last 30+3 days
+    # (A second "recovered from grace" count was computed here and never
+    # used; removed.) Proxy: users who renewed in the last 30+3 days.
     recently_renewed = ReaderUser.objects.filter(
         subscription_start__gte=grace_window_start,
         subscription_plan__in=['1_month', '3_months', '6_months', '1_year', '3_years', '5_years'],
@@ -619,29 +661,30 @@ def analytics_view(request):
         from hitcount.models import HitCount
         from django.contrib.contenttypes.models import ContentType
         article_ct = ContentType.objects.get_for_model(Article)
-        articles_with_hits = Article.objects.live().filter(
-            read_fully_count__gt=0
-        ).select_related()
-        for art in articles_with_hits[:20]:
-            try:
-                hc = HitCount.objects.filter(
-                    content_type=article_ct, object_pk=str(art.pk)
-                ).first()
-                hits = hc.hits if hc else 0
-                if hits > 0:
-                    score = round((art.read_fully_count / hits) * 100, 1)
-                    attention_data.append({
-                        'title': art.title[:40],
-                        'score': score,
-                        'hits': hits,
-                        'reads': art.read_fully_count,
-                    })
-            except Exception:
-                pass
+        # Two queries in total (it was one HitCount lookup per article), and
+        # over every article with full reads, not an arbitrary first 20.
+        read_articles = {
+            str(pk): (title, reads)
+            for pk, title, reads in Article.objects.live()
+            .filter(read_fully_count__gt=0)
+            .values_list('pk', 'title', 'read_fully_count')
+        }
+        hits_by_pk = dict(
+            HitCount.objects.filter(content_type=article_ct, object_pk__in=list(read_articles), hits__gt=0)
+            .values_list('object_pk', 'hits')
+        )
+        for pk, hits in hits_by_pk.items():
+            title, reads = read_articles[pk]
+            attention_data.append({
+                'title': title[:40],
+                'score': round((reads / hits) * 100, 1),
+                'hits': hits,
+                'reads': reads,
+            })
         attention_data.sort(key=lambda x: x['score'], reverse=True)
         attention_data = attention_data[:10]
     except Exception:
-        pass
+        logger.exception("Analytics: attention score computation failed")
 
     # ── 7. Paywall Conversion Efficiency ──────────────────────────────────
     # Registered users in last 30 days vs all users
@@ -856,12 +899,15 @@ def analytics_view(request):
 
     # ── 20. Retention Correlation ─────────────────────────────────────────
     # Users with bookmarks who renew vs those without
-    users_with_bookmarks = ReaderUser.objects.annotate(
-        fav_count=Count('favorite_articles') + Count('favorite_issues')
-    ).filter(fav_count__gt=0)
-    users_without_bookmarks = ReaderUser.objects.annotate(
-        fav_count=Count('favorite_articles') + Count('favorite_issues')
-    ).filter(fav_count=0)
+    # EXISTS instead of Count(a) + Count(b): joining both M2M tables at once
+    # multiplies their rows per reader before counting.
+    from django.db.models import Exists, OuterRef
+    has_bookmark = (
+        Exists(ReaderUser.favorite_articles.through.objects.filter(readeruser=OuterRef('pk')))
+        | Exists(ReaderUser.favorite_issues.through.objects.filter(readeruser=OuterRef('pk')))
+    )
+    users_with_bookmarks = ReaderUser.objects.filter(has_bookmark)
+    users_without_bookmarks = ReaderUser.objects.exclude(has_bookmark)
 
     with_bm_subscribed = users_with_bookmarks.filter(
         subscription_end__gt=now
@@ -970,7 +1016,11 @@ def analytics_view(request):
         # -- Recent hits detail table (latest 60 within the window) --
         recent_qs = (
             Hit.objects.filter(created__gte=thirty_days_ago)
-            .select_related('hitcount').order_by('-created')[:60]
+            .select_related('hitcount')
+            # One query per content type, instead of one per hit, for the
+            # page each hit points at (HitCount.content_object is generic).
+            .prefetch_related('hitcount__content_object')
+            .order_by('-created')[:60]
         )
         for hit in recent_qs:
             info = ua_utils.classify_user_agent(hit.user_agent)
@@ -1051,18 +1101,18 @@ def analytics_view(request):
         'homepage_hits_total': homepage_hits_total,
         'homepage_hits_30d': homepage_hits_30d,
         
-        'hp_hits_daily_json': json.dumps(hp_hits_daily),
-        'hp_hits_weekly_json': json.dumps(hp_hits_weekly),
-        'hp_hits_monthly_json': json.dumps(hp_hits_monthly),
-        'hp_hits_yearly_json': json.dumps(hp_hits_yearly),
+        'hp_hits_daily_json': _script_json(hp_hits_daily),
+        'hp_hits_weekly_json': _script_json(hp_hits_weekly),
+        'hp_hits_monthly_json': _script_json(hp_hits_monthly),
+        'hp_hits_yearly_json': _script_json(hp_hits_yearly),
 
         # Gender & Age (as JSON for Chart.js)
-        'gender_labels_json': json.dumps(gender_labels),
-        'gender_hits_json': json.dumps(gender_hits),
-        'gender_reads_json': json.dumps(gender_reads),
-        'age_labels_json': json.dumps(age_labels),
-        'age_hits_json': json.dumps(age_hits),
-        'age_reads_json': json.dumps(age_reads),
+        'gender_labels_json': _script_json(gender_labels),
+        'gender_hits_json': _script_json(gender_hits),
+        'gender_reads_json': _script_json(gender_reads),
+        'age_labels_json': _script_json(age_labels),
+        'age_hits_json': _script_json(age_hits),
+        'age_reads_json': _script_json(age_reads),
 
         # Churn
         'cancelled_but_active': cancelled_but_active,
@@ -1075,7 +1125,7 @@ def analytics_view(request):
         'users_in_grace': users_in_grace,
 
         # Attention Score
-        'attention_data_json': json.dumps(attention_data),
+        'attention_data_json': _script_json(attention_data),
 
         # Paywall conversion
         'new_registrations_30d': new_registrations_30d,
@@ -1083,20 +1133,20 @@ def analytics_view(request):
         'paywall_conversion_pct': paywall_conversion_pct,
 
         # Print subscribers
-        'print_by_state_json': json.dumps([{'state': r['state'], 'count': r['count']} for r in print_by_state]),
-        'print_by_district_json': json.dumps([{'district': r['district'], 'count': r['count']} for r in print_by_district]),
+        'print_by_state_json': _script_json([{'state': r['state'], 'count': r['count']} for r in print_by_state]),
+        'print_by_district_json': _script_json([{'district': r['district'], 'count': r['count']} for r in print_by_district]),
         'total_print_subscribers': ReaderUser.objects.filter(is_print_subscriber=True).count(),
 
         # Opt-In rates
-        'optin_labels_json': json.dumps(optin_labels),
-        'optin_pcts_json': json.dumps(optin_pcts),
-        'optin_counts_json': json.dumps(optin_counts),
+        'optin_labels_json': _script_json(optin_labels),
+        'optin_pcts_json': _script_json(optin_pcts),
+        'optin_counts_json': _script_json(optin_counts),
 
         # Payments
-        'gateway_names_json': json.dumps(gateway_names),
-        'gateway_completed_json': json.dumps(gateway_completed),
-        'gateway_failed_json': json.dumps(gateway_failed),
-        'gateway_pending_json': json.dumps(gateway_pending),
+        'gateway_names_json': _script_json(gateway_names),
+        'gateway_completed_json': _script_json(gateway_completed),
+        'gateway_failed_json': _script_json(gateway_failed),
+        'gateway_pending_json': _script_json(gateway_pending),
 
         # Security
         'ip_sharing_suspects': ip_sharing_suspects,
@@ -1115,33 +1165,32 @@ def analytics_view(request):
         'asn_ready': asn_ready,
         'network_rows': network_rows,
         'noisy_ips': noisy_ips,
-        'hit_source_values_json': json.dumps(hit_source_values),
+        'hit_source_values_json': _script_json(hit_source_values),
         'top_bots': top_bots,
         'country_rows': country_rows,
-        'country_rows_json': json.dumps(country_rows),
+        'country_rows_json': _script_json(country_rows),
         'city_rows': city_rows,
         'recent_hits': recent_hits,
         'geoip_ready': geoip_ready,
 
-        # Community health
-        'total_comments': total_comments,
+        # Community health (total_comments is set with the stat cards above)
         'removed_comments': removed_comments,
         'approved_comments': approved_comments,
         'community_health_pct': community_health_pct,
 
         # Language
-        'lang_labels_json': json.dumps(lang_labels),
-        'lang_counts_json': json.dumps(lang_counts),
+        'lang_labels_json': _script_json(lang_labels),
+        'lang_counts_json': _script_json(lang_counts),
 
         # Favorites
-        'most_favorited_articles_json': json.dumps([
+        'most_favorited_articles_json': _script_json([
             {'title': a['title'][:35], 'count': a['fav_count']}
             for a in most_favorited_articles
         ]),
 
         # Onboarding friction
-        'friction_labels_json': json.dumps(friction_labels),
-        'friction_pcts_json': json.dumps(friction_pcts),
+        'friction_labels_json': _script_json(friction_labels),
+        'friction_pcts_json': _script_json(friction_pcts),
 
         # Passive vs active
         'passive_total': passive_total,
@@ -1152,9 +1201,10 @@ def analytics_view(request):
         'retention_without_bm': retention_without_bm,
         'with_bm_total': with_bm_total,
         'without_bm_total': without_bm_total,
+        'generated_at': now,
     }
 
-    return render(request, 'wagtailadmin/analytics.html', context)
+    return context
 
 
 class _AnalyticsMenuItem(MenuItem):

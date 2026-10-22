@@ -10,9 +10,49 @@ from wagtail.models import Page, Site
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import Comment, CommentReport, CommentSettings, DashboardNotification, CommentNotificationPreference, UserNotification
-from django.utils.html import escape
 
 User = get_user_model()
+
+
+def _display_name(user):
+    """Never the phone number: these names go into staff notifications and emails."""
+    return user.name or f"Reader #{user.pk}"
+
+
+def _notification_recipients():
+    """Staff who haven't muted comment notifications."""
+    opted_out_ids = CommentNotificationPreference.objects.filter(
+        receive_notifications=False
+    ).values_list('user_id', flat=True)
+    return User.objects.filter(is_staff=True).exclude(id__in=opted_out_ids)
+
+
+def _push_dashboard_notifications(recipients, comment, message):
+    """One stored notification per staff member, pushed to that member only."""
+    from .consumers import staff_notification_group
+
+    channel_layer = get_channel_layer()
+    page_url = f"{comment.page.url}#comment-{comment.pk}" if comment.page else "#"
+    # DashboardNotification.message is varchar(255); a long title or name
+    # would otherwise turn the reader's comment post into a 500.
+    message = message if len(message) <= 255 else message[:254] + "…"
+    for staff in recipients:
+        notification = DashboardNotification.objects.create(
+            user=staff, comment=comment, message=message,
+        )
+        async_to_sync(channel_layer.group_send)(
+            staff_notification_group(staff.pk),
+            {
+                "type": "send_notification",
+                "notification": {
+                    "id": notification.id,
+                    "message": notification.message,
+                    "url": f"/admin/comments/edit/{comment.pk}/",
+                    "page_url": page_url,
+                },
+            },
+        )
+
 
 @login_required
 def post_comment(request):
@@ -72,42 +112,15 @@ def post_comment(request):
         is_approved=is_approved
     )
 
-    # Trigger notifications for staff
-    # Query all staff/superuser accounts
-    staff_users = User.objects.filter(is_staff=True)
-    # Exclude those who turned off notifications
-    opted_out_ids = CommentNotificationPreference.objects.filter(
-        receive_notifications=False
-    ).values_list('user_id', flat=True)
-    
-    notified_staff = staff_users.exclude(id__in=opted_out_ids)
+    # Trigger notifications for staff (who haven't muted them)
+    notified_staff = _notification_recipients()
 
-    # 1. Create Dashboard Notifications
-    commenter_name = escape(request.user.name or str(request.user.phone_number_encrypted))
-    
-    channel_layer = get_channel_layer()
-
-    for staff in notified_staff:
-        notification = DashboardNotification.objects.create(
-            user=staff,
-            comment=comment,
-            message=f"New comment by {commenter_name} on '{page.title}'"
-        )
-        
-        page_url = f"{page.url}#comment-{comment.pk}" if page else "#"
-
-        async_to_sync(channel_layer.group_send)(
-            "admin_notifications",
-            {
-                "type": "send_notification",
-                "notification": {
-                    "id": notification.id,
-                    "message": notification.message,
-                    "url": f"/admin/comments/edit/{comment.pk}/",
-                    "page_url": page_url
-                }
-            }
-        )
+    # 1. Dashboard notifications. Plain text: the toast and the admin list
+    # both escape on display (escaping here too showed "&amp;" to admins).
+    commenter_name = _display_name(request.user)
+    _push_dashboard_notifications(
+        notified_staff, comment, f"New comment by {commenter_name} on '{page.title}'"
+    )
 
     # 2. Send Emails
     recipient_emails = [staff.email for staff in notified_staff if staff.email]
@@ -214,38 +227,25 @@ def report_comment(request, pk):
         comment=comment,
         user=request.user
     )
+    if not created:
+        # The same reader flagging the same comment again: already reported,
+        # don't notify (and email) every staff member a second time.
+        return JsonResponse({
+            "status": "success",
+            "message": "Comment has been reported."
+        })
 
     # Trigger admin notifications when a comment is flagged
-    staff_users = User.objects.filter(is_staff=True)
-    opted_out_ids = CommentNotificationPreference.objects.filter(
-        receive_notifications=False
-    ).values_list('user_id', flat=True)
-    notified_staff = staff_users.exclude(id__in=opted_out_ids)
+    notified_staff = _notification_recipients()
 
-    reporter_name = request.user.name or str(request.user.phone_number_encrypted)
-    comment_author = comment.user.name or str(comment.user.phone_number_encrypted)
+    reporter_name = _display_name(request.user)
+    comment_author = _display_name(comment.user)
 
     # 1. Create Dashboard Notification
-    channel_layer = get_channel_layer()
-    for staff in notified_staff:
-        notification = DashboardNotification.objects.create(
-            user=staff,
-            comment=comment,
-            message=f"Comment by {comment_author} on '{comment.page.title}' was flagged by {reporter_name}!"
-        )
-        page_url = f"{comment.page.url}#comment-{comment.pk}" if comment.page else "#"
-        async_to_sync(channel_layer.group_send)(
-            "admin_notifications",
-            {
-                "type": "send_notification",
-                "notification": {
-                    "id": notification.id,
-                    "message": notification.message,
-                    "url": f"/admin/comments/edit/{comment.pk}/",
-                    "page_url": page_url
-                }
-            }
-        )
+    _push_dashboard_notifications(
+        notified_staff, comment,
+        f"Comment by {comment_author} on '{comment.page.title}' was flagged by {reporter_name}!",
+    )
 
     # 2. Send email notification
     recipient_emails = [staff.email for staff in notified_staff if staff.email]

@@ -199,9 +199,11 @@ class DashboardNotification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        # Polled by every open admin tab ("my unread notifications").
+        indexes = [models.Index(fields=['user', 'is_read'])]
 
     def __str__(self):
-        user_display = self.user.name or str(self.user.phone_number_encrypted)
+        user_display = self.user.name or f"Reader #{self.user_id}"
         return f"Notification for {user_display} - Read: {self.is_read}"
 
 class UserNotification(models.Model):
@@ -214,7 +216,9 @@ class UserNotification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        # Queried by kalapila.middleware on every request from a signed-in reader.
+        indexes = [models.Index(fields=['user', 'is_read'])]
 
     def __str__(self):
-        user_display = self.user.name or str(self.user.phone_number_encrypted)
+        user_display = self.user.name or f"Reader #{self.user_id}"
         return f"User Notification for {user_display} - Read: {self.is_read}"

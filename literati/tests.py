@@ -114,7 +114,14 @@ class LiteratiModelAndContextTests(WagtailPageTestCase):
 
     def test_literati_get_context_anonymous_user_increments_hitcount(self):
         """Anonymous user visits trigger hit count increments."""
-        request = self.factory.get(self.literati.url)
+        # Without a browser User-Agent the hit filter treats the request as a bot.
+        request = self.factory.get(
+            self.literati.url,
+            HTTP_USER_AGENT=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+            ),
+        )
         request.user = AnonymousUser()  # Anonymous representation
         request.session = MockSession()
 
@@ -189,6 +196,7 @@ class EditorialBoardTests(TestCase):
 
 from django.core.exceptions import ValidationError
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.sessions.backends.db import SessionStore
 from literati.wagtail_hooks import after_create_literati
 
 class LiteratiAutoCreationAndValidationTests(TestCase):
@@ -215,8 +223,9 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
             email="nophone@example.com"
         )
         # Note: blank=False is validated by Django's full_clean()
-        with self.assertRaises(ValidationError):
-            lit.full_clean()
+        with self.assertRaises(ValidationError) as cm:
+            lit.full_clean(exclude=['path', 'depth'])
+        self.assertIn('phone_number', cm.exception.message_dict)
 
     def test_phone_shared_with_reader_does_not_block_create(self):
         """
@@ -232,9 +241,10 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
             slug="new-literati",
             phone_number=phone,
         )
-        # Should pass cleanly — the hook, not validation, handles the merge
+        # Should pass cleanly — save(), not validation, handles the merge.
+        # path/depth are excluded: an unsaved page has no tree position yet.
         try:
-            lit.full_clean()
+            lit.full_clean(exclude=['path', 'depth'])
         except ValidationError as e:
             self.fail(f"full_clean() raised ValidationError unexpectedly: {e}")
 
@@ -255,8 +265,9 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         )
         # We don't need to add_child, just clean to verify
         lit2.parent = self.author_index
-        with self.assertRaises(ValidationError):
-            lit2.full_clean()
+        with self.assertRaises(ValidationError) as cm:
+            lit2.full_clean(exclude=['path', 'depth'])
+        self.assertIn('phone_number', cm.exception.message_dict)
 
     def test_validation_email_taken_by_reader_user(self):
         """Validation fails if email is already registered in ReaderUser."""
@@ -269,8 +280,9 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
             phone_number="+919999999999",
             email=email
         )
-        with self.assertRaises(ValidationError):
-            lit.full_clean()
+        with self.assertRaises(ValidationError) as cm:
+            lit.full_clean(exclude=['path', 'depth'])
+        self.assertIn('email', cm.exception.message_dict)
 
     def test_validation_email_taken_by_another_literati(self):
         """Validation fails if email is already registered on another Literati page."""
@@ -290,11 +302,15 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
             email=email
         )
         lit2.parent = self.author_index
-        with self.assertRaises(ValidationError):
-            lit2.full_clean()
+        with self.assertRaises(ValidationError) as cm:
+            lit2.full_clean(exclude=['path', 'depth'])
+        self.assertIn('email', cm.exception.message_dict)
 
-    def test_after_create_hook_creates_reader_user(self):
-        """Wagtail hook automatically creates a ReaderUser and links it to the Literati."""
+    def test_save_creates_linked_reader_user(self):
+        """
+        Literati.save() creates a ReaderUser carrying the page's contact
+        details, and the after_create_page hook does not create a second one.
+        """
         phone = "+919999999999"
         lit = Literati(
             title="Jane Doe",
@@ -311,16 +327,17 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         )
         self.author_index.add_child(instance=lit)
 
-        self.assertIsNone(lit.reader_user)
+        self.assertIsNotNone(lit.reader_user)
+        user_pk = lit.reader_user.pk
 
         request = self.factory.get("/")
+        request.session = SessionStore()
         setattr(request, '_messages', FallbackStorage(request))
         after_create_literati(request, lit)
 
         lit.refresh_from_db()
-        self.assertIsNotNone(lit.reader_user)
-
         user = lit.reader_user
+        self.assertEqual(user.pk, user_pk)
         # phone_number_encrypted is the decrypted display value (Fernet decrypts on access)
         self.assertEqual(user.phone_number_encrypted, phone)
         self.assertEqual(user.name, "Jane Doe")
@@ -332,10 +349,8 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         self.assertEqual(user.pincode, "682025")
         self.assertEqual(user.district, "Ernakulam")
         self.assertEqual(user.state, "Kerala")
-
-        # Password follows the pattern: stripped E.164 number + "123"
-        clean_phone = phone.replace(' ', '').replace('-', '')
-        self.assertTrue(user.check_password(f"{clean_phone}123"))
+        # No guessable password: the author sets one through password reset.
+        self.assertFalse(user.has_usable_password())
 
     def test_auto_link_existing_reader_on_literati_create(self):
         """
@@ -357,6 +372,7 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         self.author_index.add_child(instance=lit)
 
         request = self.factory.get("/")
+        request.session = SessionStore()
         setattr(request, '_messages', FallbackStorage(request))
         after_create_literati(request, lit)
 
@@ -389,20 +405,10 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         )
         self.author_index.add_child(instance=lit)
 
-        user = User.objects.create_user(
-            phone_number=phone,
-            name="Original Name",
-            email="orig@example.com",
-            address_line_1="Original Address 1",
-            address_line_2="Original Address 2",
-            city="Original City",
-            post_office="Original PO",
-            pincode="682025",
-            district="Original District",
-            state="Kerala"
-        )
-        lit.reader_user = user
-        lit.save()
+        # save() created and linked the reader account.
+        user = lit.reader_user
+        self.assertIsNotNone(user)
+        self.assertEqual(user.email, "orig@example.com")
 
         # Update all Literati fields
         lit.title          = "Updated Name"
@@ -429,3 +435,148 @@ class LiteratiAutoCreationAndValidationTests(TestCase):
         self.assertEqual(user.pincode,           "682001")
         self.assertEqual(user.district,          "Updated District")
         self.assertEqual(user.state,             "Tamil Nadu")
+
+
+class AuthorAccountPasswordTests(TestCase):
+    """
+    Author pages used to give their reader account the password
+    "<phone>123" and broadcast it (email, log, admin message). Now no
+    password is ever generated: the author gets a one-time set-password
+    link, and reset_author_passwords disables the old guessable ones.
+    """
+
+    def setUp(self):
+        from django.core import mail  # noqa: F401  (outbox is reset per test)
+
+        Site.objects.all().delete()
+        for child in Page.get_first_root_node().get_children():
+            child.delete()
+        root = Page.get_first_root_node()
+        self.home = HomePage(title="Home", slug="home")
+        root.add_child(instance=self.home)
+        Site.objects.create(hostname="testserver", root_page=self.home, is_default_site=True)
+        self.author_index = AuthorIndexPage(title="Authors", slug="authors")
+        self.home.add_child(instance=self.author_index)
+        self.factory = RequestFactory()
+
+    def _request(self):
+        request = self.factory.get("/")
+        request.session = SessionStore()
+        setattr(request, "_messages", FallbackStorage(request))
+        return request
+
+    def _author(self, phone, email="", slug=None):
+        lit = Literati(title="Asha Author", slug=slug or f"a{phone[-4:]}", phone_number=phone, email=email)
+        self.author_index.add_child(instance=lit)
+        return lit
+
+    def test_new_author_is_emailed_a_set_password_link(self):
+        from django.core import mail
+
+        lit = self._author("+919811100001", email="asha@example.com")
+        request = self._request()
+        after_create_literati(request, lit)
+
+        self.assertEqual(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertEqual(mail.outbox[0].to, ["asha@example.com"])
+        self.assertIn("/accounts/password/reset/key/", body)
+        self.assertNotIn("+919811100001", body)
+        self.assertNotIn("123", body.split("/accounts/")[0])  # no password in the text
+
+        # Admin message carries no credentials either.
+        shown = [str(m) for m in request._messages]
+        self.assertTrue(shown)
+        self.assertFalse(any("+919811100001" in m or "Password" in m for m in shown))
+
+        lit.reader_user.refresh_from_db()
+        self.assertFalse(lit.reader_user.has_usable_password())
+
+    def test_set_password_link_opens_the_reset_form(self):
+        from django.core import mail
+
+        lit = self._author("+919811100002", email="b@example.com")
+        after_create_literati(self._request(), lit)
+        link = next(line for line in mail.outbox[0].body.splitlines() if "/password/reset/key/" in line)
+        path = link.split("testserver", 1)[1]
+
+        response = self.client.get(path)
+        # allauth moves the token into the session and redirects to the form.
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("set-password", response.url)
+        self.assertEqual(self.client.get(response.url).status_code, 200)
+
+    def test_author_without_email_gets_no_mail(self):
+        from django.core import mail
+
+        lit = self._author("+919811100003")
+        after_create_literati(self._request(), lit)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_existing_reader_with_password_is_left_alone(self):
+        from django.core import mail
+
+        User.objects.create_user(phone_number="+919811100004", name="Reader", password="own-choice", email="r@example.com")
+        lit = self._author("+919811100004", email="r@example.com")
+        after_create_literati(self._request(), lit)
+        self.assertEqual(len(mail.outbox), 0)
+        lit.reader_user.refresh_from_db()
+        self.assertTrue(lit.reader_user.check_password("own-choice"))
+
+    def test_reset_author_passwords_disables_only_guessable_ones(self):
+        from io import StringIO
+
+        from django.core import mail
+        from django.core.management import call_command
+
+        weak = self._author("+919811100005", email="weak@example.com")
+        weak.reader_user.set_password("+919811100005123")
+        weak.reader_user.save()
+        strong = self._author("+919811100006", email="strong@example.com")
+        strong.reader_user.set_password("a-real-passphrase")
+        strong.reader_user.save()
+
+        out = StringIO()
+        call_command("reset_author_passwords", "--dry-run", stdout=out)
+        self.assertIn("1 author account(s)", out.getvalue())
+        weak.reader_user.refresh_from_db()
+        self.assertTrue(weak.reader_user.has_usable_password())
+
+        out = StringIO()
+        call_command("reset_author_passwords", "--email", stdout=out)
+        weak.reader_user.refresh_from_db()
+        strong.reader_user.refresh_from_db()
+        self.assertFalse(weak.reader_user.has_usable_password())
+        self.assertTrue(strong.reader_user.check_password("a-real-passphrase"))
+        self.assertEqual([m.to for m in mail.outbox], [["weak@example.com"]])
+        self.assertNotIn("+91", out.getvalue())
+
+
+class LiteratiAuditPrivacyTests(TestCase):
+    def test_author_contact_details_stay_out_of_the_audit_log(self):
+        import json
+
+        from auditlog import get_logentry_model
+        from django.contrib.contenttypes.models import ContentType
+
+        from literati.apps import LITERATI_AUDIT_EXCLUDED_FIELDS
+
+        root = Page.get_first_root_node()
+        index = AuthorIndexPage(title="Authors", slug="authors-audit")
+        root.add_child(instance=index)
+        lit = Literati(title="Audited", slug="audited", phone_number="+919811200001", email="a@example.com")
+        index.add_child(instance=lit)
+        lit.city = "Hidden City"
+        lit.role = "Columnist"
+        lit.save()
+
+        LogEntry = get_logentry_model()
+        rows = LogEntry.objects.filter(content_type=ContentType.objects.get_for_model(Literati), object_id=lit.pk)
+        changes = rows.order_by("-pk").first().changes
+        changes = changes if isinstance(changes, dict) else json.loads(changes)
+        self.assertIn("role", changes)
+        for field in LITERATI_AUDIT_EXCLUDED_FIELDS:
+            self.assertNotIn(field, changes)
+        dumped = json.dumps(list(rows.values("changes")), default=str)
+        self.assertNotIn("+919811200001", dumped)
+        self.assertNotIn("Hidden City", dumped)

@@ -1,13 +1,25 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.core.paginator import Paginator
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST   
+from django.http import Http404, JsonResponse
+from django.db import IntegrityError, transaction
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.utils import timezone                       
-import uuid                                            
-from the_librarian.views import superuser_required 
+import logging
+import uuid
+from the_librarian.views import superuser_required
+
+logger = logging.getLogger(__name__)
+
+# Session key holding {idempotency_key: plan_type} for checkouts this browser
+# session has opened. A payment is only accepted for a key issued here, so a
+# client can neither omit the key nor invent one.
+_CHECKOUT_KEYS = 'checkout_idempotency_keys'
+_MAX_OPEN_CHECKOUTS = 5
 
 from .forms import ReaderProfileEditForm, UpdateInterestsForm
 from .models import ReaderUser, PaymentDetails, PLANS
@@ -96,6 +108,32 @@ def edit_profile(request):
     return render(request, 'reader/edit_profile.html', {'form': form})
 
 
+@csrf_exempt  # mail clients' one-click POST carries no CSRF token; the signed token is the credential
+def newsletter_unsubscribe(request, token):
+    """
+    One-click newsletter unsubscribe from the link in every newsletter.
+
+    GET shows a confirmation button (link scanners and previews only GET,
+    so they can't unsubscribe anyone); POST unsubscribes. Mail clients that
+    support RFC 8058 POST here directly via the List-Unsubscribe header.
+    No login needed: the URL carries a signed reader id.
+    """
+    from .newsletter import reader_pk_from_token
+
+    reader_pk = reader_pk_from_token(token)
+    reader = ReaderUser.objects.filter(pk=reader_pk).first() if reader_pk else None
+    if reader is None:
+        raise Http404()
+
+    done = False
+    if request.method == 'POST':
+        if reader.newsletter_opt_in:
+            reader.newsletter_opt_in = False
+            reader.save(update_fields=['newsletter_opt_in', 'newsletter_opt_in_at'])
+        done = True
+    return render(request, 'reader/newsletter_unsubscribe.html', {'done': done})
+
+
 @login_required(login_url=settings.LOGIN_URL)
 def reader_checkout(request, plan_type):
     """Render the checkout page for a specific plan."""
@@ -104,18 +142,36 @@ def reader_checkout(request, plan_type):
         messages.error(request, _("തിരഞ്ഞെടുത്ത വരിസംഖ്യ പ്ലാൻ അസാധുവാണ്."))
         return redirect('reader_profile')
 
-    return render(request, 'reader/checkout.html', {
+    context = {
         'plan_type': plan_type,
         'plan_name': plan['name'],
         'price': plan['price'],
-        'idempotency_key': f'IK_{uuid.uuid4().hex}', # Generate a key for this specific session
-    })
+        'payments_enabled': settings.MOCK_PAYMENTS_ENABLED,
+    }
+    if settings.MOCK_PAYMENTS_ENABLED:
+        key = f'IK_{uuid.uuid4().hex}'
+        keys = dict(request.session.get(_CHECKOUT_KEYS, {}))
+        keys[key] = plan_type
+        # Keep only the most recent few open checkouts (dicts keep insertion order).
+        request.session[_CHECKOUT_KEYS] = dict(list(keys.items())[-_MAX_OPEN_CHECKOUTS:])
+        context['idempotency_key'] = key
+    return render(request, 'reader/checkout.html', context)
 
 
 @login_required(login_url=settings.LOGIN_URL)
 @require_POST   # ✅ Blocks GET requests entirely — no more silent redirect fallback
 def process_payment(request):
-    """Simulate payment gateway callback and activate subscription."""
+    """
+    Simulated payment gateway callback: records a completed MockGateway
+    payment and activates the plan.
+
+    It grants a paid plan without taking any money, so it only exists when
+    MOCK_PAYMENTS_ENABLED is on (never on a public site). Replace with a
+    real gateway's verified callback before enabling paid plans.
+    """
+    if not settings.MOCK_PAYMENTS_ENABLED:
+        raise Http404()
+
     plan_type = request.POST.get('plan_type')
     method = request.POST.get('payment_method', 'card')
 
@@ -126,37 +182,50 @@ def process_payment(request):
         return redirect('reader_profile')
 
     amount = plan['price']
-    idempotency_key = request.POST.get('idempotency_key')
+    idempotency_key = request.POST.get('idempotency_key') or ''
+    already_processed = _("നിങ്ങളുടെ പേയ്‌മെന്റ് ഇതിനകം പ്രോസസ്സ് ചെയ്യപ്പെടുന്നു.")
 
-    # ✅ IDEMPOTENCY CHECK: If this key has already been processed, skip creation
-    existing_payment = PaymentDetails.objects.filter(idempotency_key=idempotency_key).first()
-    if existing_payment:
-        messages.info(request, _("നിങ്ങളുടെ പേയ്‌മെന്റ് ഇതിനകം പ്രോസസ്സ് ചെയ്യപ്പെടുന്നു."))
+    # A double-submit of a checkout that already went through.
+    if idempotency_key and PaymentDetails.objects.filter(idempotency_key=idempotency_key).exists():
+        messages.info(request, already_processed)
         return redirect('reader_profile')
 
-    # ✅ Use uuid for transaction IDs instead of timestamp (unique, not guessable)
-    payment = PaymentDetails.objects.create(
-        gateway_name='MockGateway',
-        gateway_transaction_id=f'TXN_{uuid.uuid4().hex}',
-        gateway_order_id=f'ORD_{uuid.uuid4().hex}',
-        idempotency_key=idempotency_key,
-        payment_method=method,
-        amount=amount,
-        status='completed',
-    )
+    # Only keys this session's checkout page issued, for the plan it showed.
+    open_checkouts = dict(request.session.get(_CHECKOUT_KEYS, {}))
+    if open_checkouts.get(idempotency_key) != plan_type:
+        messages.error(request, _("ചെക്ക്ഔട്ട് കാലഹരണപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക."))
+        return redirect('reader_checkout', plan_type=plan_type)
 
     try:
-        reader = request.user
-        reader.payment_details = payment
-        reader.save(update_fields=['payment_details'])
-        reader.activate_subscription(plan_type)
-        messages.success(
-            request,
-            _("%(plan)s പ്ലാനിലേക്ക് വിജയകരമായി വരിചേർന്നു!") % {'plan': plan['name']}
-        )
-    except Exception as e:
-        messages.error(request, _("പിശക്: %(err)s") % {'err': e})
+        with transaction.atomic():
+            payment = PaymentDetails.objects.create(
+                gateway_name='MockGateway',
+                gateway_transaction_id=f'TXN_{uuid.uuid4().hex}',
+                gateway_order_id=f'ORD_{uuid.uuid4().hex}',
+                idempotency_key=idempotency_key,
+                payment_method=method,
+                amount=amount,
+                status='completed',
+            )
+            reader = request.user
+            reader.payment_details = payment
+            reader.save(update_fields=['payment_details'])
+            reader.activate_subscription(plan_type)
+    except IntegrityError:
+        # Two concurrent submits of the same checkout: the other one won.
+        messages.info(request, already_processed)
+        return redirect('reader_profile')
+    except Exception:
+        logger.exception("Mock payment failed for reader %s", request.user.pk)
+        messages.error(request, _("പേയ്‌മെന്റ് പൂർത്തിയാക്കാനായില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."))
+        return redirect('reader_profile')
 
+    open_checkouts.pop(idempotency_key, None)
+    request.session[_CHECKOUT_KEYS] = open_checkouts
+    messages.success(
+        request,
+        _("%(plan)s പ്ലാനിലേക്ക് വിജയകരമായി വരിചേർന്നു!") % {'plan': plan['name']}
+    )
     return redirect('reader_profile')
 
 
@@ -291,6 +360,16 @@ def deactivate_account(request):
 import csv
 from django.http import HttpResponse
 
+# A cell starting with one of these is run as a formula by Excel, Sheets and
+# LibreOffice ("CSV injection"), and every value here is typed by a reader.
+_CSV_FORMULA_PREFIXES = ('=', '+', '-', '@', '\t', '\r')
+
+
+def _csv_cell(value):
+    text = '' if value is None else str(value)
+    return f"'{text}" if text.startswith(_CSV_FORMULA_PREFIXES) else text
+
+
 @superuser_required
 def export_mailing_list(request):
     """
@@ -317,49 +396,68 @@ def export_mailing_list(request):
 
     for reader in active_print_readers:
         writer.writerow([
-            reader.name,
-            # phone_number_encrypted is the decrypted display value — Fernet decrypts on access.
+            _csv_cell(reader.name),
+            # phone_number_encrypted is the decrypted display value — Fernet
+            # decrypts on access. A validated E.164 number ("+" and digits)
+            # can't carry a formula, so it is written as-is.
             reader.phone_number_encrypted,
-            reader.address_line_1,
-            reader.address_line_2,
-            reader.post_office,
-            reader.city,
-            reader.district,
-            reader.state,
-            reader.pincode,
-            reader.delivery_notes
+            _csv_cell(reader.address_line_1),
+            _csv_cell(reader.address_line_2),
+            _csv_cell(reader.post_office),
+            _csv_cell(reader.city),
+            _csv_cell(reader.district),
+            _csv_cell(reader.state),
+            _csv_cell(reader.pincode),
+            _csv_cell(reader.delivery_notes),
         ])
 
     return response
 
 
-from django.core.management import call_command
+def _confirm_then_queue(request, *, command, title, description, action_label, done_message, list_url_name):
+    """
+    GET shows a confirmation page; only POST queues the management command.
+    The purges are irreversible, so a link (or a crawler, or a forged
+    <img src>) must never be able to start one. Always returns to a fixed
+    admin page — never to the Referer.
+    """
+    list_url = reverse(list_url_name)
+    if request.method != 'POST':
+        return render(request, 'reader/admin/confirm_command.html', {
+            'title': title,
+            'description': description,
+            'action_label': action_label,
+            'cancel_url': list_url,
+        })
+    from django_q.tasks import async_task
+    async_task('django.core.management.call_command', command)
+    messages.success(request, done_message)
+    return redirect(list_url)
+
 
 @superuser_required
 def admin_trigger_purge_deactivated(request):
-    """Admin-only view to trigger the anonymize deactivation command."""
-    try:
-        call_command('purge_deactivated_users')
-        messages.success(request, _("അജ്ഞാതവൽക്കരണ കമാൻഡ് വിജയകരമായി നടപ്പാക്കി."))
-    except Exception as e:
-        messages.error(request, _("കമാൻഡ് പ്രവർത്തിപ്പിക്കുന്നതിൽ പരാജയപ്പെട്ടു: %(err)s") % {'err': e})
-    
-    referer = request.META.get('HTTP_REFERER')
-    if referer:
-        return redirect(referer)
-    return redirect('wagtailadmin_home')
+    """Admin-only: anonymise deactivated readers past their grace period."""
+    return _confirm_then_queue(
+        request,
+        command='purge_deactivated_users',
+        title=_("നിർജ്ജീവമാക്കിയ അക്കൗണ്ടുകൾ അജ്ഞാതമാക്കുക"),
+        description=_("ഗ്രേസ് കാലയളവ് കഴിഞ്ഞ എല്ലാ നിർജ്ജീവ അക്കൗണ്ടുകളിലെയും വ്യക്തിവിവരങ്ങൾ ശാശ്വതമായി നീക്കം ചെയ്യും. ഇത് പഴയപടിയാക്കാനാവില്ല."),
+        action_label=_("അജ്ഞാതമാക്കൽ തുടങ്ങുക"),
+        done_message=_("അജ്ഞാതവൽക്കരണ കമാൻഡ് പശ്ചാത്തലത്തിൽ പ്രവർത്തിക്കാൻ ക്രമീകരിച്ചു."),
+        list_url_name='wagtailsnippets_reader_readeruser:list',
+    )
 
 
 @superuser_required
 def admin_trigger_purge_expired(request):
-    """Admin-only view to trigger the 8-year purge expired data command."""
-    try:
-        call_command('purge_expired_data')
-        messages.success(request, _("കാലഹരണപ്പെട്ട ഡാറ്റയുടെ 8-വർഷ ശാശ്വത നീക്കംചെയ്യൽ വിജയകരമായി നടപ്പാക്കി."))
-    except Exception as e:
-        messages.error(request, _("കമാൻഡ് പ്രവർത്തിപ്പിക്കുന്നതിൽ പരാജയപ്പെട്ടു: %(err)s") % {'err': e})
-    
-    referer = request.META.get('HTTP_REFERER')
-    if referer:
-        return redirect(referer)
-    return redirect('wagtailadmin_home')
+    """Admin-only: permanently delete data past the 8-year retention period."""
+    return _confirm_then_queue(
+        request,
+        command='purge_expired_data',
+        title=_("കാലഹരണപ്പെട്ട ഡാറ്റ ശാശ്വതമായി നീക്കുക"),
+        description=_("8 വർഷത്തെ സൂക്ഷിപ്പുകാലം കഴിഞ്ഞ അക്കൗണ്ടുകളും വരിസംഖ്യ ചരിത്രവും ശാശ്വതമായി ഇല്ലാതാക്കും. ഇത് പഴയപടിയാക്കാനാവില്ല."),
+        action_label=_("ശാശ്വതമായി നീക്കുക"),
+        done_message=_("8-വർഷ നീക്കംചെയ്യൽ കമാൻഡ് പശ്ചാത്തലത്തിൽ പ്രവർത്തിക്കാൻ ക്രമീകരിച്ചു."),
+        list_url_name='wagtailsnippets_reader_subscriptionhistory:list',
+    )

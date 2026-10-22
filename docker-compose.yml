@@ -65,6 +65,18 @@ services:
       - media_volume:/Icarus/media
       - model_volume:/Icarus/models
       - geoip_volume:/Icarus/geoip
+    # /healthz answers 200 only when Django and the database both respond
+    # (Icarus/health.py). start_period covers the boot steps in the
+    # Dockerfile CMD (collectstatic, migrate, GeoIP download).
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+    # A runaway request (e.g. a huge PDF render) gets this container killed
+    # and restarted instead of starving the database. Override in .env.
+    mem_limit: ${WEB_MEM_LIMIT:-3g}
     depends_on:
       # bouncer starts after db is healthy; web starts after bouncer. If the
       # pool isn't accepting connections on the very first tick, the container
@@ -99,6 +111,9 @@ services:
       - geoip_volume:/Icarus/geoip
       - /opt/Icarus/shared:/opt/Icarus/shared:ro
     command: python manage.py qcluster
+    # TTS, PDF rendering and embedding run here; cap them so they can't
+    # starve the database. Override in .env.
+    mem_limit: ${QCLUSTER_MEM_LIMIT:-4g}
     depends_on:
       bouncer:
         condition: service_started

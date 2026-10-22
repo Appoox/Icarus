@@ -22,6 +22,7 @@ from urllib.parse import unquote
 from django.conf import settings
 from django.http import HttpResponse
 
+from Icarus.access import may_read_archive
 from postbox.models import Postbox
 
 logger = logging.getLogger(__name__)
@@ -81,15 +82,8 @@ def archive_authz(request):
     reach this endpoint — the Caddyfile handles them with a more-specific rule
     evaluated first.)
     """
-    # 1. Require a subscriber or admin
-    user = request.user
-    if not user.is_authenticated:
-        return HttpResponse(status=403)
-
-    is_privileged = user.is_staff or user.is_superuser
-    is_subscribed = getattr(user, "is_subscribed", False)
-
-    if not (is_privileged or is_subscribed):
+    # 1. Require a subscriber or admin (the same rule as every archive view)
+    if not may_read_archive(request.user):
         return HttpResponse(status=403)
 
     # 2. Validate the target path
@@ -186,14 +180,7 @@ def page_cache_authz(request):
     requests.  If you later need to differentiate, store a source_key→pdf_path
     mapping in the DB or a fast cache (e.g. Redis/memcached).
     """
-    user = request.user
-    if not user.is_authenticated:
-        return HttpResponse(status=403)
-
-    is_privileged = user.is_staff or user.is_superuser
-    is_subscribed = getattr(user, "is_subscribed", False)
-
-    if not (is_privileged or is_subscribed):
+    if not may_read_archive(request.user):
         return HttpResponse(status=403)
 
     # Validate the target path — a missing file is a genuine 404 (bug upstream)

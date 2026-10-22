@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "വാർത്താക്കുറിപ്പ്" %}{% endblock %}
+
+{% block content %}
+<div class="checkout-page">
+    <div class="checkout-header">
+        {% if done %}
+            <h1>{% translate "നിങ്ങൾ വാർത്താക്കുറിപ്പിൽ നിന്ന് ഒഴിവായി." %}</h1>
+            <p>{% translate "ഇനി പുതിയ ലക്കങ്ങളുടെ ഇമെയിലുകൾ ലഭിക്കില്ല. പ്രൊഫൈലിൽ നിന്ന് എപ്പോൾ വേണമെങ്കിലും വീണ്ടും ചേരാം." %}</p>
+        {% else %}
+            <h1>{% translate "വാർത്താക്കുറിപ്പിൽ നിന്ന് ഒഴിവാകണോ?" %}</h1>
+            <form method="post">
+                <button type="submit" class="checkout-submit">{% translate "ഒഴിവാകുക" %}</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

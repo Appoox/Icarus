@@ -23,9 +23,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        from django.utils import timezone
+
         from issue.models import Issue
         from reader.models import ReaderUser
-        from reader.newsletter import send_new_issue_newsletter
+        from reader.newsletter import newsletter_recipients, send_new_issue_newsletter
 
         # ── Resolve issue ─────────────────────────────────────────────────
         issue_id = options['issue_id']
@@ -48,8 +50,13 @@ class Command(BaseCommand):
             is_active=True,
             is_anonymized=False,
         )
-        with_email    = opted_in.filter(email__isnull=False).exclude(email='')
+        with_email    = newsletter_recipients()
         without_email = opted_in.count() - with_email.count()
+        if issue.newsletter_sent_at:
+            self.stdout.write(self.style.WARNING(
+                f"Note: this issue's newsletter already went out on {issue.newsletter_sent_at:%Y-%m-%d %H:%M} UTC. "
+                f"Running this sends it again."
+            ))
 
         self.stdout.write(f"Recipients (with email)    : {with_email.count()}")
         if without_email:
@@ -72,6 +79,10 @@ class Command(BaseCommand):
         # ── Live send ─────────────────────────────────────────────────────
         self.stdout.write("\nSending…")
         sent, failed = send_new_issue_newsletter(issue)
+        # Record it, so publishing the issue later doesn't send it a second time.
+        Issue.objects.filter(pk=issue.pk, newsletter_sent_at__isnull=True).update(
+            newsletter_sent_at=timezone.now()
+        )
 
         if failed:
             self.stdout.write(

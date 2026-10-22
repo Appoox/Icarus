@@ -53,6 +53,13 @@ class Command(BaseCommand):
         w(f'  created  : {str(manifest.get("created_at", "?"))[:19]}')
         w(f'  wagtail  : {manifest.get("wagtail_version", "?")}')
         w(f'  scope    : {manifest.get("scope", "?")}')
+        if manifest.get('personal_data'):
+            w(self.style.WARNING(
+                "  personal : YES — authors' phone numbers, email and postal "
+                'addresses are in this file. Keep it private and delete it after use.'
+            ))
+        else:
+            w("  personal : no (authors' contact details left out)")
         w(f'  zip files: {len(names)} entries')
 
         # ── Site ──────────────────────────────────────────────────────────
@@ -127,6 +134,17 @@ class Command(BaseCommand):
 
         # ── Potential issues ─────────────────────────────────────────────
         issues = []
+        from .import_content import SUPPORTED_VERSIONS
+        if str(manifest.get('version')) not in SUPPORTED_VERSIONS:
+            issues.append(
+                f'format {manifest.get("version")!r} cannot be imported by this release '
+                f'(supported: {", ".join(SUPPORTED_VERSIONS)})'
+            )
+        elif str(manifest.get('version')) == '1.0':
+            issues.append(
+                'format 1.0: no author credits, tags or page-link tables — '
+                're-export with this release for a complete copy'
+            )
         for img in images:
             if img.get('file') and img['file'] not in names:
                 issues.append(f'image "{img.get("title")}" file missing from ZIP')
