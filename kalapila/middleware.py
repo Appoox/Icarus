@@ -17,12 +17,17 @@ class UserNotificationMiddleware(MiddlewareMixin):
         # ── Check 2: Administrative Dashboard & Asset Protection ───────────
         # Halts frontend reader alerts from executing on admin backend paths,
         # static assets, media paths, or background AJAX/Websocket requests.
+        # /internal/ is Caddy's access check for protected media (one request
+        # per archive page image): its path is /internal/…, not /media/…, and
+        # Caddy throws its response away, so notifications marked read there
+        # were never seen — and each image paid for a query and a session write.
         path = request.path
         if (
             path.startswith('/admin/') or 
             path.startswith('/django-admin/') or
             path.startswith('/static/') or 
             path.startswith('/media/') or
+            path.startswith('/internal/') or
             request.headers.get('x-requested-with') == 'XMLHttpRequest' or
             request.headers.get('upgrade', '').lower() == 'websocket'
         ):

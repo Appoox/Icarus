@@ -245,6 +245,7 @@
     <div class="lang-content active" data-lang="ml">
       <div style="position: relative;">
         <main class="article-body article-body--truncated">
+          {% include "includes/body_skeleton.html" %}
           <div class="article-content">
             {% for block in truncated_body %}
               {% if block.block_type == 'heading' %}
@@ -284,6 +285,7 @@
     <div class="lang-content" data-lang="en">
       <div style="position: relative;">
         <main class="article-body article-body--truncated">
+          {% include "includes/body_skeleton.html" %}
           <div class="article-content">
             {% for block in truncated_body_en %}
               {% if block.block_type == 'heading' %}
@@ -324,6 +326,7 @@
     <div class="lang-content" data-lang="hi">
       <div style="position: relative;">
         <main class="article-body article-body--truncated">
+          {% include "includes/body_skeleton.html" %}
           <div class="article-content">
             {% for block in truncated_body_hi %}
               {% if block.block_type == 'heading' %}
@@ -364,6 +367,7 @@
     <div class="lang-content" data-lang="ta">
       <div style="position: relative;">
         <main class="article-body article-body--truncated">
+          {% include "includes/body_skeleton.html" %}
           <div class="article-content">
             {% for block in truncated_body_ta %}
               {% if block.block_type == 'heading' %}

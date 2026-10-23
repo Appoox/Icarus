@@ -5,33 +5,32 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ── LAZY EDITORIAL REVEAL ──
+    // ── EDITORIAL REVEAL ──
     // The editorial starts hidden behind a shimmer skeleton (via the
-    // `js-lazy-body` class set in the template). On reveal we wrap its text in
-    // words that cascade in (see window.lazyRevealWords in Icarus.js). Wrapping
-    // is inline-span only, so it doesn't change the content height the show-more
-    // logic measures; we still fire a resize afterwards to re-run that logic
-    // against the now-settled content so the "read more" clip/banner is correct.
+    // `js-lazy-body` class set in the template). Reveal it now, as soon as the
+    // DOM is ready — not on the window `load` event, which also waits for every
+    // image, font and video embed on the page. The words on screen fade in (see
+    // window.lazyRevealWords in Icarus.js). Wrapping is inline-span only, so it
+    // doesn't change the content height the show-more logic below measures.
     if (document.documentElement.classList.contains('js-lazy-body')) {
         const editorialCol = document.querySelector('.editorial-content-col');
         if (editorialCol) {
-            const revealEditorial = () => {
-                const body = editorialCol.querySelector('.editorial-body');
-                if (body && window.lazyRevealWords) window.lazyRevealWords(body);
-                editorialCol.classList.add('body-loaded');
-                window.dispatchEvent(new Event('resize'));
-                // Safety: expanding "read more" reveals any words still below the fold
-                // that the wave hasn't reached yet, so nothing expands in blank.
-                const banner = editorialCol.querySelector('.show-more-banner');
-                if (banner) banner.addEventListener('click', () => {
-                    editorialCol.querySelectorAll('.lazy-word').forEach(w => w.classList.add('lazy-word--in'));
-                }, { once: true });
-            };
-            if (document.readyState === 'complete') {
-                setTimeout(revealEditorial, 250);
-            } else {
-                window.addEventListener('load', () => setTimeout(revealEditorial, 150));
-            }
+            const body = editorialCol.querySelector('.editorial-body');
+            const content = editorialCol.querySelector('.expandable-content');
+            // Already showing means the CSS failsafe in issue.css got there
+            // first (this script ran late); don't hide it again.
+            const alreadyShown = content && parseFloat(getComputedStyle(content).opacity) > 0;
+            if (body && !alreadyShown && window.lazyRevealWords) window.lazyRevealWords(body);
+            editorialCol.classList.add('body-loaded');
+            // Safety: expanding "read more" reveals any words the wave hasn't
+            // reached yet, so nothing expands in blank.
+            const banner = editorialCol.querySelector('.show-more-banner');
+            if (banner) banner.addEventListener('click', () => {
+                editorialCol.querySelectorAll('.lazy-word').forEach(w => w.classList.add('lazy-word--in'));
+            }, { once: true });
+            // Images in the editorial change its height as they arrive: re-run
+            // the show-more / table-of-contents sizing once they have.
+            window.addEventListener('load', () => window.dispatchEvent(new Event('resize')));
         }
     }
 
@@ -227,6 +226,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (id) {
             const iframe = document.createElement('iframe');
             iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;';
+            // Lazy: don't download YouTube's player until the video is near
+            // the screen.
+            iframe.loading = 'lazy';
             iframe.src = `https://www.youtube.com/embed/${id}`;
             iframe.title = 'YouTube video player';
             iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';

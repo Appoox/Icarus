@@ -441,7 +441,7 @@
       {% if article.cover_image %}
       <a href="{{ article.url }}" class="sg-article-card__image-wrap" aria-hidden="true" tabindex="-1">
         {% image article.cover_image fill-440x280 as art_img %}
-        <img src="{{ art_img.url }}" alt="{{ article.title }}">
+        <img src="{{ art_img.url }}" alt="{{ article.title }}" loading="lazy" decoding="async">
       </a>
       {% endif %}
       

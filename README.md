@@ -91,6 +91,12 @@ The live site must run `Icarus.settings.production`. Secrets come from
    passwords older author accounts were given.
 5. `/reader/process-payment/` is now off (404): the mock gateway handed out
    paid plans for free. Readers can't buy plans until a real gateway is added.
+6. `python manage.py wagtail_update_image_renditions` — remakes every resized
+   image. Wagtail only uses `WAGTAILIMAGES_FORMAT_CONVERSIONS` (WebP) for new
+   renditions, so the ones made before it was set are still PNG or JPEG, some
+   of them CMYK with a 544 KB print colour profile, often 10–40× the size of
+   the WebP version. Run it once, at a quiet time: it takes a while and uses a
+   lot of CPU.
 
 Run automatically at container start: `migrate`, `createcachetable`,
 `setup_page_lock_schedule`, `setup_geoip_schedule`, `setup_retention_schedules`.

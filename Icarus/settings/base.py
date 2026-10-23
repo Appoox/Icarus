@@ -461,7 +461,16 @@ CACHES = {
         "LOCATION": "icarus_cache",
         "TIMEOUT": 300,
         "OPTIONS": {"MAX_ENTRIES": 20000},
-    }
+    },
+    # Wagtail caches image renditions in "renditions", falling back to
+    # "default". On the database cache above every {% image %} tag cost six
+    # queries, one of them a write, even when cached. With no cache Wagtail
+    # reads the rendition table directly: one indexed SELECT. (A per-process
+    # memory cache would be faster, but other workers would keep serving
+    # renditions that were deleted, e.g. by wagtail_update_image_renditions.)
+    "renditions": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+    },
 }
 
 # ── Logging ───────────────────────────────────────────────────────────
