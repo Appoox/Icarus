@@ -660,21 +660,24 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
         # 3. Authenticated Reader Logic
         elif request.user.is_authenticated:
 
+            # The meter (metered_articles) runs the paywall; the reading
+            # history (read_articles) is personal data and is only written
+            # through record_read_article(), which checks consent.
             if reader and reader.is_subscribed:
-                # Subscribed reader → full access, track the read
+                # Subscribed reader → full access
                 show_paywall = False
-                reader.read_articles.add(self)
+                reader.record_read_article(self)
             elif reader:
                 # Logged-in but not subscribed
-                if reader.read_articles.filter(pk=self.pk).exists():
+                if reader.metered_articles.filter(pk=self.pk).exists():
                     show_paywall = False
+                    reader.record_read_article(self)
+                elif reader.metered_articles.count() < free_limit:
+                    show_paywall = False
+                    reader.metered_articles.add(self)
+                    reader.record_read_article(self)
                 else:
-                    read_count = reader.read_articles.count()
-                    if read_count < free_limit:
-                        show_paywall = False
-                        reader.read_articles.add(self)
-                    else:
-                        show_paywall = True
+                    show_paywall = True
             else:
                 # Authenticated but no reader profile (shouldn't happen with signals but as fallback)
                 show_paywall = True
@@ -720,11 +723,9 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
 
     @route(r'^pdf/$')
     def serve_pdf(self, request):
-        # 1. Permission Check
-        is_subscribed = request.user.is_authenticated and request.user.is_subscribed
-        is_admin = request.user.is_superuser or request.user.is_staff
-        
-        if not (is_subscribed or is_admin):
+        # 1. Permission Check — the same rule as every other archive path
+        from Icarus.access import may_read_archive
+        if not may_read_archive(request.user):
             return redirect(self.url)
 
         context = self.get_context(request)

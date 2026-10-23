@@ -15,6 +15,7 @@ Improvements applied
 """
 import logging
 
+from django.db import DatabaseError, connection, transaction
 from django.db.models import F, Q
 from django.contrib.postgres.search import SearchQuery, SearchRank
 from pgvector.django import CosineDistance
@@ -23,6 +24,35 @@ from the_librarian.models import DocumentChunk
 from the_librarian.services.embedder import embed_query
 
 logger = logging.getLogger(__name__)
+
+
+def _nearest(queryset, top_k):
+    """
+    Evaluate a distance-ordered queryset through the HNSW index without
+    coming back short.
+
+    HNSW hands back at most `hnsw.ef_search` candidates (default 40), and the
+    WHERE filters (live articles, one document, min_score) run only on those.
+    So "top 20" over an archive where most near chunks are filtered out
+    could return 3 results, or none. For this query only (SET LOCAL via
+    set_config(..., true)) we raise ef_search and, on pgvector >= 0.8, let
+    the index keep scanning until enough rows survive the filters.
+    """
+    if connection.vendor != "postgresql":
+        return list(queryset[:top_k])
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT set_config('hnsw.ef_search', %s, true)", [str(min(1000, max(100, top_k * 10)))])
+            try:
+                with transaction.atomic():  # savepoint: older pgvector has no iterative scans
+                    cursor.execute("SELECT set_config('hnsw.iterative_scan', 'relaxed_order', true)")
+            except DatabaseError:
+                pass
+        rows = list(queryset[:top_k])
+    # relaxed_order may return neighbours slightly out of order.
+    rows.sort(key=lambda chunk: chunk.distance)
+    return rows
 
 
 def _format_chunk_result(chunk, score=None, search_type=None):
@@ -107,11 +137,11 @@ def search_similar(query_text: str, top_k: int = 5, min_score: float = 0.0):
         .filter(distance__lte=1.0 - min_score)
         .filter(Q(article__isnull=True) | Q(article__live=True))
         .order_by("distance")
-        .select_related("document", "article", "author", "issue", "topic")[:top_k]
+        .select_related("document", "article", "author", "issue", "topic")
     )
 
     output = []
-    for chunk in results:
+    for chunk in _nearest(results, top_k):
         score = round(1 - chunk.distance, 4)
         output.append(_format_chunk_result(chunk, score=score, search_type="similarity"))
     return output
@@ -208,11 +238,11 @@ def search_by_document(
         .annotate(distance=CosineDistance("embedding", query_embedding))
         .filter(distance__lte=1.0 - min_score)
         .order_by("distance")
-        .select_related("document", "article", "author", "issue", "topic")[:top_k]
+        .select_related("document", "article", "author", "issue", "topic")
     )
 
     output = []
-    for chunk in results:
+    for chunk in _nearest(results, top_k):
         score = round(1 - chunk.distance, 4)
         output.append(_format_chunk_result(chunk, score=score, search_type="similarity"))
     return output

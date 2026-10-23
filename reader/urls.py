@@ -18,6 +18,7 @@ urlpatterns = [
     path('admin/print-subscribers/', views.print_subscribers, name='print_subscribers'),
     path('admin/export-mailing-list/', views.export_mailing_list, name='export_mailing_list'),
     path('deactivate/',      views.deactivate_account,  name='deactivate_account'),
+    path('newsletter/unsubscribe/<str:token>/', views.newsletter_unsubscribe, name='newsletter_unsubscribe'),
 
 #     path(
 #         'login/',

@@ -30,10 +30,14 @@
             </div>
         </div>
 
+        {% if not payments_enabled %}
+        <div class="payment-form">
+            <p>{% translate "ഓൺലൈൻ പേയ്‌മെന്റ് ഇപ്പോൾ ലഭ്യമല്ല. വരിസംഖ്യയ്ക്കായി ഞങ്ങളെ ബന്ധപ്പെടുക." %}</p>
+        </div>
+        {% else %}
         <form action="{% url 'process_payment' %}" method="post" class="payment-form">
             {% csrf_token %}
             <input type="hidden" name="plan_type" value="{{ plan_type }}">
-            <input type="hidden" name="amount" value="{{ price }}">
             <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
 
             <div class="form-group">
@@ -80,6 +84,7 @@
                 {% translate "* ഇതൊരു സിമുലേറ്റഡ് ചെക്ക്ഔട്ട് ആണ്. യഥാർത്ഥ പേയ്‌മെന്റ് നടക്കില്ല." %}
             </p>
         </form>
+        {% endif %}
     </div>
 </div>
 

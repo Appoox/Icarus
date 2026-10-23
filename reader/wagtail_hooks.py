@@ -6,9 +6,6 @@ from wagtail.snippets.views.snippets import SnippetViewSet, IndexView
 from wagtail.admin.widgets import HeaderButton
 from .models import ReaderUser, PaymentDetails, SubscriptionHistory
 from django.urls import path
-from django.http import HttpResponseForbidden
-from django.shortcuts import render
-from auditlog.models import LogEntry
 from wagtail.admin.menu import MenuItem
 from django.templatetags.static import static
 from django.utils.html import format_html, json_script
@@ -148,40 +145,18 @@ def register_reader_viewsets():
         SubscriptionHistorySnippetViewSet(),
     ]
 
-# ── Audit Log Admin View ──────────────────────────────────────────────
-def auditlog_view(request):
-    # This view carried no check of its own, so every user who could reach the
-    # Wagtail admin could read the whole log. It now follows the same rule as
-    # the fuller log at `icarus_audit_log`.
-    if not can_view_audit_log(request.user):
-        return HttpResponseForbidden()
-
-    entries = (
-        LogEntry.objects
-        .select_related("actor", "content_type")
-        .order_by("-timestamp")[:200]
-    )
-    
-    # Pre-process entries to safely get changes_display_dict
-    safe_entries = []
-    for entry in entries:
-        try:
-            entry.safe_changes = entry.changes_display_dict
-        except Exception:
-            entry.safe_changes = None
-        safe_entries.append(entry)
-
-    return render(request, "reader/auditlog_admin.html", {"entries": safe_entries})
-
 @hooks.register("register_admin_urls")
-def register_auditlog_url():
+def register_reader_admin_urls():
     from reader.views import admin_trigger_purge_deactivated, admin_trigger_purge_expired
     return [
-        path("auditlog/", auditlog_view, name="auditlog_view"),
         path("purge-deactivated/", admin_trigger_purge_deactivated, name="admin_trigger_purge_deactivated"),
         path("purge-expired/", admin_trigger_purge_expired, name="admin_trigger_purge_expired"),
     ]
 
+
+# The audit log itself is home.wagtail_hooks.audit_log_list at admin/auditlog/.
+# (A second, older view here was registered at the same URL and could never
+# be reached; it has been removed along with its templates.)
 class _AuditLogMenuItem(MenuItem):
     """Hidden from users the audit-log view would 403."""
 
@@ -193,7 +168,7 @@ class _AuditLogMenuItem(MenuItem):
 def register_auditlog_menu_item():
     return _AuditLogMenuItem(
         _("ഓഡിറ്റ് ലോഗ്"),
-        reverse("auditlog_view"),
+        reverse("icarus_audit_log"),
         icon_name="list-ul",
         order=900,
     )
@@ -232,13 +207,9 @@ def global_admin_js():
     MutationObserver so it is watching before Wagtail's own Stimulus
     controllers initialise.  The external file contains the full logic.
     """
-    js_url = static('js/admin_toasts.js') + '?v=' + str(int(timezone.now().timestamp()))
+    # No cache-buster: in production ManifestStaticFilesStorage already puts a
+    # content hash in the URL (the old "?v=<current second>" made every admin
+    # page load re-download the script).
+    js_url = static('js/admin_toasts.js')
     labels = json_script({'dismiss': str(_("നീക്കം ചെയ്യുക"))}, 'toast-i18n')
-    return labels + format_html(
-        # Inline bootstrap: confirm hook is alive, then load the full script
-        '<script>'
-        'console.log("[admin_toasts] hook injected");'
-        '</script>'
-        '<script src="{}" defer></script>',
-        js_url,
-    )
+    return labels + format_html('<script src="{}" defer></script>', js_url)

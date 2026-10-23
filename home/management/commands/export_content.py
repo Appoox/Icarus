@@ -21,6 +21,9 @@ Usage
     # Skip embedding media files (manifest only — import will skip missing files)
     python manage.py export_content --no-media
 
+    # Full restore only: include authors' phone/email/address (keep it private)
+    python manage.py export_content --include-personal-data
+
     # Output control
     python manage.py export_content -v 2        # one line per record
     python manage.py export_content --no-progress
@@ -41,8 +44,18 @@ FK pointers that must survive PK remapping on import are stored as dicts:
     Image    → {"__ref": "image",    "pk": <original pk>}
     Document → {"__ref": "document", "pk": <original pk>}
     Page     → {"__ref": "page",     "slug_path": "home/issues"}
+    Snippet  → {"__ref": "snippet",  "model": "issue.topic", "key": {"slug": …}}
+Any other FK (user accounts above all) is written as null.
+
+Ids inside StreamField choosers and rich text are mapped on import through
+the manifest's page_paths / snippet_keys tables (format 1.1).
 
 StreamField JSON is stored parsed (list), not as a string.
+
+Personal data
+-------------
+Authors' contact details are left out unless --include-personal-data is
+given (see PERSONAL_DATA_FIELDS).
 """
 
 import json
@@ -55,6 +68,7 @@ from pathlib import Path
 import wagtail
 from django.core.management.base import BaseCommand
 from django.db import models as dj_models
+from taggit.managers import TaggableManager
 from wagtail.fields import RichTextField, StreamField
 from wagtail.images import get_image_model
 from wagtail.documents import get_document_model
@@ -64,6 +78,7 @@ from ._console import (
     Console, PRECOMPRESSED_SUFFIXES, human_bytes, human_duration,
 )
 from ._richtext import iter_richtext_refs
+from ._streamwalk import IMAGE_FIELD_NAMES, RefMapper, map_generic, map_stream
 
 # ---------------------------------------------------------------------------
 # Page model sets
@@ -116,6 +131,21 @@ SNIPPET_NATURAL_KEYS = {
 }
 
 
+def _personal_data_fields():
+    # Same list the audit log excludes (literati.apps), so there is one
+    # definition of "an author's contact details".
+    from literati.apps import LITERATI_AUDIT_EXCLUDED_FIELDS
+    return {'literati.literati': frozenset(LITERATI_AUDIT_EXCLUDED_FIELDS)}
+
+
+#: Page fields left out of an archive unless --include-personal-data is given.
+PERSONAL_DATA_FIELDS = _personal_data_fields()
+
+#: Archive format. 1.1 adds page/snippet lookup tables, child rows, tags,
+#: media hashes, and leaves user FKs and (by default) personal data out.
+ARCHIVE_VERSION = '1.1'
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -128,6 +158,23 @@ def _slug_path(page: Page) -> str:
     """
     ancestors = list(page.get_ancestors())[1:]   # skip depth-1 root
     return '/'.join([a.slug for a in ancestors] + [page.slug])
+
+
+def _file_hash(obj) -> str:
+    """
+    The media file's SHA-1, as Wagtail stores it. Rows saved outside the
+    admin may have none stored; hash the file then, without writing to the
+    database (an export only reads).
+    """
+    if getattr(obj, 'file_hash', ''):
+        return obj.file_hash
+    from wagtail.utils.file import hash_filelike
+
+    try:
+        with obj.open_file() as f:
+            return hash_filelike(f)
+    except Exception:
+        return ''
 
 
 def _compression_for(name) -> int:
@@ -183,8 +230,33 @@ class _MediaRegistry:
 # Field serialiser
 # ---------------------------------------------------------------------------
 
+class _Collector(RefMapper):
+    """Export-side mapper: records media references, changes nothing."""
+
+    def __init__(self, serialiser):
+        self._s = serialiser
+
+    def image(self, pk):
+        self._s._media.note_image(pk)
+        return pk
+
+    def document(self, pk):
+        self._s._media.note_document(pk)
+        return pk
+
+    def richtext(self, html):
+        self._s.scan_richtext(html)
+        return html
+
+
 class _Serialiser:
     """Converts model field values to JSON-safe dicts, noting media refs."""
+
+    # Block fields that hold a bare image PK. Struct blocks name their image
+    # child by field (e.g. `image`, `image_override`), so those need a
+    # field-name sweep or their images never make it into the export bundle.
+    # (The walk itself lives in _streamwalk, shared with import_content.)
+    _IMAGE_FIELD_NAMES = IMAGE_FIELD_NAMES
 
     def __init__(self, media: _MediaRegistry, console: Console):
         self._media = media
@@ -202,107 +274,16 @@ class _Serialiser:
 
     # ── StreamField scanning ────────────────────────────────────────────
 
-    def _scan_by_definition(self, block, value):
-        """
-        Walk a StreamField value alongside its *block definitions*.
-
-        Driving off the definitions rather than block names means a media
-        reference is found wherever it lives — a renamed block, a new
-        StructBlock, an image nested three ListBlocks deep — with no need to
-        teach this scanner about each new block type.
-        """
-        from wagtail import blocks as wblocks
-        from wagtail.images.blocks import ImageChooserBlock
-        from wagtail.documents.blocks import DocumentChooserBlock
-
-        if value is None:
-            return
-
-        if isinstance(block, ImageChooserBlock):
-            try:
-                self._media.note_image(int(value))
-            except (TypeError, ValueError):
-                pass
-        elif isinstance(block, DocumentChooserBlock):
-            try:
-                self._media.note_document(int(value))
-            except (TypeError, ValueError):
-                pass
-        elif isinstance(block, wblocks.RichTextBlock):
-            self.scan_richtext(value)
-        elif isinstance(block, wblocks.StructBlock):
-            if isinstance(value, dict):
-                for name, child in block.child_blocks.items():
-                    if name in value:
-                        self._scan_by_definition(child, value[name])
-        elif isinstance(block, wblocks.StreamBlock):
-            for item in value or []:
-                if not isinstance(item, dict):
-                    continue
-                child = block.child_blocks.get(item.get('type'))
-                if child is not None:
-                    self._scan_by_definition(child, item.get('value'))
-        elif isinstance(block, wblocks.ListBlock):
-            for item in value or []:
-                # Wagtail >= 2.16 wraps list items as {'type': 'item', 'value': …}
-                inner = (
-                    item['value']
-                    if isinstance(item, dict) and 'value' in item
-                    else item
-                )
-                self._scan_by_definition(block.child_block, inner)
-        elif isinstance(value, str):
-            # RawHTMLBlock and friends can still carry rich-text embeds
-            self.scan_richtext(value)
-
-    def _scan_generic(self, node):
-        """
-        Name-based fallback scan.
-
-        Runs in addition to the definition walk so that values whose block
-        definition cannot be resolved (legacy JSON, a block removed from the
-        model since the content was authored) still give up their media.
-        """
-        if isinstance(node, list):
-            for item in node:
-                self._scan_generic(item)
-        elif isinstance(node, dict):
-            btype = node.get('type', '')
-            val = node.get('value')
-
-            for name in self._IMAGE_FIELD_NAMES:
-                pk = node.get(name)
-                # Only bare integer PKs — a nested dict under the same key is
-                # handled by the recursion at the end of this method.
-                if isinstance(pk, int):
-                    self._media.note_image(pk)
-
-            if btype == 'image' and isinstance(val, dict):
-                self._media.note_image(val.get('image'))
-            elif btype == 'document' and isinstance(val, (int, str)):
-                try:
-                    self._media.note_document(int(val))
-                except (TypeError, ValueError):
-                    pass
-            elif btype in ('audio', 'video') and isinstance(val, dict):
-                self._media.note_document(val.get('audio_file'))
-                self._media.note_document(val.get('video_file'))
-            for v in node.values():
-                if isinstance(v, (dict, list)):
-                    self._scan_generic(v)
-                elif isinstance(v, str):
-                    self.scan_richtext(v)
-        elif isinstance(node, str):
-            self.scan_richtext(node)
-
     def _scan_stream(self, node, stream_block=None):
         """Note every image/document referenced anywhere in StreamField JSON."""
-        if stream_block is not None:
-            try:
-                self._scan_by_definition(stream_block, node)
-            except Exception as e:
-                self._console.warn(f'block-definition scan failed: {e}')
-        self._scan_generic(node)
+        map_stream(
+            stream_block, node, _Collector(self),
+            on_error=lambda e: self._console.warn(f'block-definition scan failed: {e}'),
+        )
+
+    def _scan_generic(self, node):
+        """Name-based scan (values whose block definitions are unavailable)."""
+        map_generic(node, _Collector(self))
 
     # ── Single field ────────────────────────────────────────────────────
 
@@ -361,7 +342,13 @@ class _Serialiser:
                         'model': label,
                         'key': {k: getattr(obj, k, None) for k in keys},
                     }
-            return raw_id  # plain integer FK with no natural key
+            # Anything else — above all user accounts (Literati.reader_user) —
+            # has no portable identity. Exporting the raw PK made the importer
+            # attach the row to whichever account had that PK on the
+            # destination (and Literati.save() then rewrote that account's
+            # phone and email). Left out; Literati.save() re-links the
+            # author's reader account by phone number on import.
+            return None
 
         # ── ManyToMany ─── handled by serialize() separately ────────────
         if isinstance(field, dj_models.ManyToManyField):
@@ -410,8 +397,26 @@ class _Serialiser:
                     for doc in qs:
                         self._media.note_document(doc.pk)
                     m2m[name] = [{'__ref': 'document', 'pk': d.pk} for d in qs]
+                elif rm and rm._meta.label_lower in SNIPPET_NATURAL_KEYS:
+                    # e.g. Literati.areas_of_interest → Topic: by natural key,
+                    # since the source PKs mean nothing on the destination.
+                    label = rm._meta.label_lower
+                    keys = SNIPPET_NATURAL_KEYS[label]
+                    m2m[name] = [
+                        {'__ref': 'snippet', 'model': label,
+                         'key': {k: getattr(obj, k, None) for k in keys}}
+                        for obj in qs
+                    ]
                 else:
-                    m2m[name] = list(qs.values_list('pk', flat=True))
+                    self._console.detail(
+                        f'    {type(instance).__name__}.{name}: no portable reference for '
+                        f'{rm._meta.label_lower if rm else "?"} — not exported'
+                    )
+                continue
+
+            if isinstance(field, TaggableManager):
+                # A manager, not a value (it was written out as the junk
+                # string "app.Model.None"). Tags go out by name in 'tags'.
                 continue
 
             if not getattr(field, 'concrete', False):
@@ -448,11 +453,15 @@ class ContentExporter:
         ('literati.models', 'EditorialBoardMembershipHistory'),
     )
 
-    def __init__(self, console: Console):
+    def __init__(self, console: Console, include_personal_data=False):
         self.console = console
         self._media = _MediaRegistry(console)
         self._s = _Serialiser(self._media, console)
         self.bar = None
+        self.include_personal_data = include_personal_data
+        #: {source page pk: slug path} — lets the importer remap page ids held
+        #: in page choosers and rich-text page links.
+        self.page_paths = {}
 
     # ── Progress plumbing ─────────────────────────────────────────────────
 
@@ -597,6 +606,7 @@ class ContentExporter:
         root = Page.get_first_root_node()
         result = []
         for page in root.get_descendants(inclusive=False).order_by('path'):
+            self.page_paths[str(page.pk)] = _slug_path(page)
             try:
                 specific = page.specific
                 label = (
@@ -620,9 +630,10 @@ class ContentExporter:
                 if type(specific) is Page:
                     specific_fields = {}
                 else:
-                    specific_fields = self._s.serialize(
-                        specific, exclude=_BASE_PAGE_NAMES | {'id'}
-                    )
+                    exclude = _BASE_PAGE_NAMES | {'id'}
+                    if label in PERSONAL_DATA_FIELDS and not self.include_personal_data:
+                        exclude = exclude | PERSONAL_DATA_FIELDS[label]
+                    specific_fields = self._s.serialize(specific, exclude=exclude)
 
                 self.console.detail(f'    page: {label} [{page.slug}]')
                 result.append({
@@ -632,6 +643,8 @@ class ContentExporter:
                     'parent_slug_path': parent_slug_path,
                     'base_fields': base_fields,
                     'specific_fields': specific_fields,
+                    'children': self._children(specific),
+                    'tags': self._tags(specific),
                 })
             except Exception as e:
                 self.console.warn(
@@ -641,6 +654,54 @@ class ContentExporter:
             finally:
                 self._tick(getattr(page, 'slug', ''))
         return result
+
+    def _children(self, page):
+        """
+        InlinePanel rows (article authors, reprinted articles…), keyed by the
+        relation's accessor. They live in their own tables, so a field-level
+        serialise never saw them and every article lost its author credits.
+        Tag rows are exported by name in _tags() instead.
+        """
+        from modelcluster.models import get_all_child_relations
+        from taggit.models import ItemBase
+
+        out = {}
+        for rel in get_all_child_relations(page):
+            if issubclass(rel.related_model, ItemBase):
+                continue
+            if rel.related_model.__module__.startswith('wagtail.'):
+                # Wagtail's own rows (admin comments): tied to user accounts
+                # and to this database's revisions, not content.
+                continue
+            accessor = rel.get_accessor_name()
+            fk = rel.field
+            out[accessor] = [
+                self._s.serialize(child, exclude={'id', fk.name, fk.attname})
+                for child in getattr(page, accessor).all()
+            ]
+        return out
+
+    @staticmethod
+    def _tags(page):
+        from taggit.managers import TaggableManager
+
+        return {
+            f.name: sorted(t.name for t in getattr(page, f.name).all())
+            for f in page._meta.get_fields() if isinstance(f, TaggableManager)
+        }
+
+    def snippet_keys(self):
+        """{label: {source pk: natural key}} for snippet choosers inside streams."""
+        from django.apps import apps
+
+        out = {}
+        for label, keys in SNIPPET_NATURAL_KEYS.items():
+            Model = apps.get_model(label)
+            out[label] = {
+                str(pk): dict(zip(keys, values))
+                for pk, *values in Model.objects.values_list('pk', *keys)
+            }
+        return out
 
     # ── Dangling reference report ─────────────────────────────────────────
 
@@ -671,6 +732,8 @@ class ContentExporter:
                 'focal_point_height': img.focal_point_height,
                 'width': getattr(img, 'width', None),
                 'height': getattr(img, 'height', None),
+                # Media is matched on import by content, not by title.
+                'file_hash': _file_hash(img),
             })
         return result
 
@@ -682,6 +745,7 @@ class ContentExporter:
                 'pk': pk,
                 'title': doc.title,
                 'file': f'media/documents/{pk}/{os.path.basename(name)}' if name else None,
+                'file_hash': _file_hash(doc),
             })
         return result
 
@@ -719,6 +783,14 @@ class Command(BaseCommand):
             '--no-progress', action='store_true',
             help='Disable progress bars (they are auto-disabled when piped)',
         )
+        parser.add_argument(
+            '--include-personal-data', action='store_true',
+            help=(
+                "Include authors' phone numbers, email and postal addresses. "
+                'Off by default: an archive is an unencrypted file. Use it '
+                'only for a full restore, and keep that archive private.'
+            ),
+        )
 
     # ── output path resolution ───────────────────────────────────────────
 
@@ -744,7 +816,9 @@ class Command(BaseCommand):
         )
         output = self._resolve_output(options['output'])
 
-        ex = ContentExporter(console)
+        ex = ContentExporter(console, include_personal_data=options['include_personal_data'])
+        if not options['include_personal_data']:
+            console.line("  authors' contact details left out (use --include-personal-data for a full restore)")
 
         # ── 1. Snippets ──────────────────────────────────────────────────
         console.heading('Exporting snippets…')
@@ -803,22 +877,42 @@ class Command(BaseCommand):
 
         # ── 4. Build manifest ────────────────────────────────────────────
         manifest = {
-            'version': '1.0',
+            'version': ARCHIVE_VERSION,
             'created_at': datetime.now().isoformat(),
             'wagtail_version': '.'.join(str(v) for v in wagtail.VERSION[:3]),
             'scope': scope,
+            'personal_data': bool(options['include_personal_data']),
             'site': site_data,
             'images': ex.images_manifest(),
             'documents': ex.documents_manifest(),
             'snippets': snippets,
             'pages': pages,
+            'page_paths': ex.page_paths,
+            'snippet_keys': ex.snippet_keys(),
         }
 
         # ── 5. Write ZIP ─────────────────────────────────────────────────
         console.heading(f'Writing {output}…')
         media_bytes = 0
         media_written = 0
-        with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Written beside the target and renamed into place only when complete,
+        # so an interrupted export never leaves a truncated archive that looks
+        # like a good one.
+        partial = output.with_name(output.name + '.partial')
+        try:
+            media_written, media_bytes = self._write_zip(partial, manifest, ex, include_media, console)
+            os.replace(partial, output)
+        finally:
+            if partial.exists():
+                partial.unlink()
+
+        # ── Summary ──────────────────────────────────────────────────────
+        self._summary(started, output, pages, manifest, snippets, ex, media_written, media_bytes, console)
+
+    def _write_zip(self, path, manifest, ex, include_media, console):
+        media_bytes = 0
+        media_written = 0
+        with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as zf:
             zf.writestr(
                 'manifest.json',
                 json.dumps(manifest, indent=2, default=str),
@@ -853,8 +947,9 @@ class Command(BaseCommand):
                 bar.finish()
             else:
                 console.line('  --no-media: file bytes not embedded')
+        return media_written, media_bytes
 
-        # ── Summary ──────────────────────────────────────────────────────
+    def _summary(self, started, output, pages, manifest, snippets, ex, media_written, media_bytes, console):
         elapsed = time.monotonic() - started
         try:
             archive_size = output.stat().st_size

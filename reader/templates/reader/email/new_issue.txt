@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}{% blocktranslate with name=reader.name %}Hello {{ name }},{% endblocktranslate %}
+
+{% blocktranslate %}A new issue of {{ site_name }} has just been published:{% endblocktranslate %}
+  {{ issue.title }}
+
+{% translate "Read it here:" %} {{ issue_url }}
+
+— {{ site_name }}
+
+─────────────────────────────────────────
+{% translate "You are receiving this because you opted in to the newsletter." %}
+{% translate "Unsubscribe with one click:" %} {{ unsubscribe_url }}
+{% endautoescape %}

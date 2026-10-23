@@ -84,10 +84,13 @@ class IssueModelAndFormTests(WagtailPageTestCase):
 
         # Editorial Board Setup
         self.board = EditorialBoard.objects.create(name="Editorial Board 2026")
+        # joined_at defaults to today; the member must have been serving
+        # on the issue's publication date (2026-01-01) to appear on it.
         self.board_member = EditorialBoardMember.objects.create(
             board=self.board,
             editor=self.literati,
-            role="editor"
+            role="editor",
+            joined_at=date(2025, 1, 1),
         )
 
         self.volume = Volume.objects.create(number=1, year_start=2026)

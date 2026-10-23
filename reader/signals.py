@@ -1,41 +1,34 @@
 import logging
+
+from django.db import transaction
 from django.dispatch import receiver
 from wagtail.signals import page_published
+
+from issue.models import Issue
 
 logger = logging.getLogger(__name__)
 
 
-@receiver(page_published)
+@receiver(page_published, sender=Issue)
 def on_issue_published(sender, instance, **kwargs):
     """
-    Fires after every Wagtail page publish.
-    We only act when the page is an Issue — everything else falls through.
+    Queue the new-issue newsletter when an Issue is published.
 
-    The newsletter call is wrapped in a broad try/except so that a broken
-    email config can never roll back a legitimate publish action.
+    Nothing is sent inside the publish request: the task is queued only
+    after the publish transaction commits, and reader.tasks makes sure each
+    issue is mailed once, however often it is re-published. A queueing
+    failure is logged and never blocks the publish.
+
+    Connected from ReaderConfig.ready().
     """
-    # Late import: avoids circular dependency since reader and issue
-    # apps both import from each other at module level in places.
-    try:
-        from issue.models import Issue
-    except ImportError:
-        logger.warning("[Newsletter] Could not import issue.models.Issue — signal ignored.")
-        return
+    if instance.newsletter_sent_at is not None:
+        return  # already mailed — the common case for re-publishes
 
-    if not isinstance(instance, Issue):
-        return  # Not an Issue page — nothing to do
+    def _queue():
+        try:
+            from django_q.tasks import async_task
+            async_task("reader.tasks.send_issue_newsletter_task", instance.pk)
+        except Exception:
+            logger.exception("[Newsletter] Could not queue the newsletter for issue pk=%s.", instance.pk)
 
-    logger.info(
-        "[Newsletter] Issue published: '%s' (pk=%s). Sending newsletter.",
-        instance.title, instance.pk,
-    )
-
-    try:
-        from reader.newsletter import send_new_issue_newsletter
-        send_new_issue_newsletter(instance)
-    except Exception:
-        # Log the full traceback but never propagate — publish must succeed
-        logger.exception(
-            "[Newsletter] Unhandled error while sending newsletter for issue pk=%s.",
-            instance.pk,
-        )
+    transaction.on_commit(_queue)

@@ -15,7 +15,7 @@ class PostboxModelTests(TestCase):
     """
     def setUp(self):
         # Create a test user for the foreign key relationship
-        self.user = User.objects.create_user(username='testuser', password='password')
+        self.user = User.objects.create_user(phone_number='+919000000001', name='Test User', password='password')
         # Create a basic Postbox submission
         self.postbox = Postbox.objects.create(
             feedback_type='bug',
@@ -32,7 +32,10 @@ class PostboxModelTests(TestCase):
 
     def test_postbox_str_representation(self):
         # Verify the __str__ method returns the expected human-readable format
-        expected_str = f"Bug Report by {self.user} — {self.postbox.submitted_at:%Y-%m-%d %H:%M}"
+        expected_str = (
+            f"{self.postbox.get_feedback_type_display()} by {self.user} "
+            f"— {self.postbox.submitted_at:%Y-%m-%d %H:%M}"
+        )
         self.assertEqual(str(self.postbox), expected_str)
 
 
@@ -73,7 +76,7 @@ class PostboxViewTests(TestCase):
     def setUp(self):
         # Initialize test client and user
         self.client = Client()
-        self.user = User.objects.create_user(username='regularuser', password='password')
+        self.user = User.objects.create_user(phone_number='+919000000002', name='Regular User', password='password')
         # Note: Assuming the URL namespace/name based on the redirect in views.py
         # You may need to adjust 'postbox:page' if your urls.py names it differently.
         try:
@@ -91,7 +94,7 @@ class PostboxViewTests(TestCase):
 
     def test_postbox_page_get(self):
         # Log in the user and access the page
-        self.client.login(username='regularuser', password='password')
+        self.client.force_login(self.user)
         response = self.client.get(self.url, {'from': '/about-us/'})
         
         # Verify page loads successfully and context contains the 'from' parameter
@@ -101,7 +104,7 @@ class PostboxViewTests(TestCase):
 
     def test_postbox_page_post(self):
         # Log in the user and submit feedback
-        self.client.login(username='regularuser', password='password')
+        self.client.force_login(self.user)
         post_data = {
             'feedback_type': 'content',
             'feedback': 'Typo on the about page.',
@@ -122,17 +125,19 @@ class PostboxViewTests(TestCase):
 
 class PostboxAdminViewTests(TestCase):
     """
-    Test suite for the Wagtail admin views to ensure staff-only access,
-    filtering, and note-updating functionality.
+    The Wagtail snippet viewset for Postbox: staff-only access, filtering,
+    and saving review notes.
     """
     def setUp(self):
+        from django.contrib.auth.models import Permission
+
         self.client = Client()
-        
-        # Create a regular user and a staff user
-        self.regular_user = User.objects.create_user(username='user', password='password')
-        self.staff_user = User.objects.create_user(username='staff', password='password', is_staff=True)
-        
-        # Create a couple of test submissions
+        self.regular_user = User.objects.create_user(phone_number='+919000000003', name='User', password='password')
+        self.staff_user = User.objects.create_user(phone_number='+919000000004', name='Staff', password='password', is_staff=True)
+        self.staff_user.user_permissions.add(*Permission.objects.filter(
+            codename__in=['access_admin', 'view_postbox', 'change_postbox'],
+        ))
+
         self.sub1 = Postbox.objects.create(
             feedback_type='bug', feedback='Bug 1', user=self.regular_user, is_reviewed=False
         )
@@ -140,54 +145,60 @@ class PostboxAdminViewTests(TestCase):
             feedback_type='suggestion', feedback='Suggestion 1', user=self.regular_user, is_reviewed=True
         )
 
-        self.index_url = reverse('icarus_postbox_index')
-        self.detail_url = reverse('icarus_postbox_detail', args=[self.sub1.pk])
+        self.index_url = reverse('wagtailsnippets_postbox_postbox:list')
+        self.edit_url = reverse('wagtailsnippets_postbox_postbox:edit', args=[self.sub1.pk])
 
     def test_admin_access_forbidden_for_regular_users(self):
-        # Attempt to access admin views as a non-staff user
-        self.client.login(username='user', password='password')
-        
-        # Should return HTTP 403 Forbidden
-        response_index = self.client.get(self.index_url)
-        self.assertEqual(response_index.status_code, 403)
-        
-        response_detail = self.client.get(self.detail_url)
-        self.assertEqual(response_detail.status_code, 403)
+        self.client.force_login(self.regular_user)
+        for url in (self.index_url, self.edit_url):
+            response = self.client.get(url)
+            # Wagtail bounces users without admin access to its login page.
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(response.url.startswith(reverse('wagtailadmin_login')))
 
     def test_admin_index_get_and_filter(self):
-        # Access the index view as a staff member
-        self.client.login(username='staff', password='password')
-        
-        # Test basic GET
+        self.client.force_login(self.staff_user)
+
         response = self.client.get(self.index_url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['page_obj']), 2)
-        
-        # Test filtering by feedback_type
-        response_filtered = self.client.get(self.index_url, {'type': 'bug'})
-        self.assertEqual(response_filtered.status_code, 200)
-        self.assertEqual(len(response_filtered.context['page_obj']), 1)
-        self.assertEqual(response_filtered.context['page_obj'][0], self.sub1)
+        self.assertEqual(len(response.context['object_list']), 2)
 
-        # Test filtering by review status
-        response_unreviewed = self.client.get(self.index_url, {'reviewed': '0'})
-        self.assertEqual(len(response_unreviewed.context['page_obj']), 1)
-        self.assertEqual(response_unreviewed.context['page_obj'][0], self.sub1)
+        response = self.client.get(self.index_url, {'feedback_type': 'bug'})
+        self.assertEqual(list(response.context['object_list']), [self.sub1])
 
-    def test_admin_detail_post(self):
-        # Test updating admin notes and review status via POST in the detail view
-        self.client.login(username='staff', password='password')
-        post_data = {
+        response = self.client.get(self.index_url, {'is_reviewed': 'False'})
+        self.assertEqual(list(response.context['object_list']), [self.sub1])
+
+    def test_admin_edit_saves_review(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.post(self.edit_url, {
             'admin_notes': 'Will fix in next sprint.',
-            'is_reviewed': '1'
-        }
-        
-        response = self.client.post(self.detail_url, data=post_data)
-        
-        # Verify successful update redirects back to the detail page
-        self.assertRedirects(response, self.detail_url)
-        
-        # Refresh object from DB to check if updates were saved
+            'is_reviewed': 'on',
+        })
+        self.assertEqual(response.status_code, 302)
+
         self.sub1.refresh_from_db()
         self.assertEqual(self.sub1.admin_notes, 'Will fix in next sprint.')
         self.assertTrue(self.sub1.is_reviewed)
+        # Read-only fields are untouched by the edit form.
+        self.assertEqual(self.sub1.feedback, 'Bug 1')
+
+
+class PostboxNotificationToggleTests(TestCase):
+    """The mute/unmute toggle changes state, so it only answers POST."""
+
+    def test_get_is_refused_and_post_toggles(self):
+        from django.contrib.auth.models import Permission
+
+        from .models import PostboxNotificationPreference
+
+        staff = User.objects.create_user(phone_number='+919000000010', name='Staff', is_staff=True)
+        staff.user_permissions.add(Permission.objects.get(codename='access_admin'))
+        self.client.force_login(staff)
+        url = reverse('toggle_postbox_notifications')
+
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertFalse(PostboxNotificationPreference.objects.filter(user=staff).exists())
+
+        self.assertEqual(self.client.post(url).status_code, 302)
+        self.assertFalse(PostboxNotificationPreference.objects.get(user=staff).receive_notifications)

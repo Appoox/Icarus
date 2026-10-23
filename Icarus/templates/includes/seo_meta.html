@@ -12,7 +12,9 @@ pages, which fall through gracefully).
 
 {# ── Open Graph ─────────────────────────────── #}
 <meta property="og:site_name" content="ശാസ്ത്രഗതി">
-<meta property="og:locale" content="ml_IN">
+{% if LANGUAGE_CODE == "en" %}<meta property="og:locale" content="en_IN">
+<meta property="og:locale:alternate" content="ml_IN">{% else %}<meta property="og:locale" content="ml_IN">
+<meta property="og:locale:alternate" content="en_IN">{% endif %}
 <meta property="og:title" content="{{ social_title }}">
 {% if page.meta_description %}
 <meta property="og:description" content="{{ page.meta_description }}">

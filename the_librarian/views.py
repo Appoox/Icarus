@@ -31,6 +31,7 @@ from the_librarian.services.search import (
 from the_librarian.services.ingestion import persist_ingested_batch
 from the_librarian.services.vector_schema import validate_batch, VectorValidationError
 from the_librarian import page_cache
+from Icarus.access import archive_access_required, may_read_archive
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +90,9 @@ def _serve_page_image(pdf_path, page_number):
         raise Http404("Could not render that page")
 
     response = FileResponse(open(image_path, "rb"), content_type="image/webp")
-    response["Cache-Control"] = "public, max-age=86400, immutable"
+    # Paywalled content: browsers may cache it, shared caches (CDNs,
+    # proxies) must not hand it to the next visitor.
+    response["Cache-Control"] = "private, max-age=86400"
     return response
 
 
@@ -185,6 +188,31 @@ def _parse_top_k(request, default=5):
     return max(1, min(top_k, 50))
 
 
+# Archive PDF text is paywalled. Search stays public, but readers without
+# archive access see only the start of each matching PDF passage.
+_PREVIEW_CHARS = 200
+
+
+def _redact_for_user(results, user):
+    full_text = may_read_archive(user)
+    for r in results:
+        r.pop("file_path", None)  # an internal path — no client needs it
+        if r.get("type") == "pdf" and not full_text:
+            text = r.get("chunk_text") or ""
+            if len(text) > _PREVIEW_CHARS:
+                r["chunk_text"] = text[:_PREVIEW_CHARS].rstrip() + "…"
+            r["preview_only"] = True
+    return results
+
+
+def _page_param(request):
+    """?page= for the viewers; anything that isn't a positive int means page 1."""
+    try:
+        return max(1, int(request.GET.get("page", 1)))
+    except (TypeError, ValueError):
+        return 1
+
+
 def search_view(request):
     """Render the search page with optional results."""
     query = request.GET.get("q", "").strip()
@@ -200,7 +228,7 @@ def search_view(request):
         else:
             results = search_hybrid(query, top_k=top_k)
 
-        results = _resolve_pdf_display_titles(results)
+        results = _redact_for_user(_resolve_pdf_display_titles(results), request.user)
 
     return render(request, "the_librarian/search.html", {
         "query": query,
@@ -220,6 +248,9 @@ def search_api(request):
         return JsonResponse({"error": "Missing 'q' parameter"}, status=400)
 
     if document:
+        # Searching inside one PDF returns its passages in full: archive only.
+        if not may_read_archive(request.user):
+            return JsonResponse({"error": "Archive access requires a subscription."}, status=403)
         results = search_by_document(document, query, top_k=top_k)
     else:
         mode = request.GET.get("mode", "hybrid").lower()
@@ -230,7 +261,7 @@ def search_api(request):
         else:
             results = search_hybrid(query, top_k=top_k)
 
-    results = _resolve_pdf_display_titles(results)
+    results = _redact_for_user(_resolve_pdf_display_titles(results), request.user)
 
     return JsonResponse({"query": query, "results": results})
 
@@ -260,7 +291,7 @@ def _resolve_document_pdf_path(document_id):
     return pdf_path
 
 
-@login_required
+@archive_access_required
 def viewer_view(request, document_id):
     """Display an ingested ArchiveDocument PDF via ViewerJS."""
     try:
@@ -268,7 +299,7 @@ def viewer_view(request, document_id):
     except ArchiveDocument.DoesNotExist:
         raise Http404("Document not found")
 
-    page = int(request.GET.get("page", 1))
+    page = _page_param(request)
 
     pdf_url = reverse("the_librarian:serve_pdf", args=[document_id])
 
@@ -281,7 +312,7 @@ def viewer_view(request, document_id):
     })
 
 
-@login_required
+@archive_access_required
 def serve_pdf(request, document_id):
     """
     Serve an ingested ArchiveDocument PDF.
@@ -300,14 +331,14 @@ def serve_pdf(request, document_id):
     )
 
 
-@login_required
+@archive_access_required
 @require_GET
 def document_page_meta(request, document_id):
     """Page count for an ArchiveDocument's PDF, as pre-rendered page images."""
     return _serve_page_meta(_resolve_document_pdf_path(document_id))
 
 
-@login_required
+@archive_access_required
 @require_GET
 def document_page_image(request, document_id, page_number):
     """A single pre-rendered (and disk-cached) page image for an ArchiveDocument."""
@@ -380,7 +411,7 @@ def _resolve_issue_pdf_path(issue_id):
         raise Http404("Page rendering isn't supported for this issue's storage backend.")
 
 
-@login_required
+@archive_access_required
 @require_GET
 def magazine_viewer(request, issue_id):
     """Display a ArchiveIssue PDF via ViewerJS."""
@@ -393,28 +424,28 @@ def magazine_viewer(request, issue_id):
             "filename":    issue.title,
             "total_pages": "?",
         },
-        "page":    int(request.GET.get("page", 1)),
+        "page":    _page_param(request),
         "pdf_url": pdf_url,
         "page_meta_url": reverse("the_librarian:magazine_page_meta", args=[issue_id]),
         "page_image_url_template": _page_image_url_template("magazine_page_image", issue_id),
     })
 
 
-@login_required
+@archive_access_required
 @require_GET
 def magazine_page_meta(request, issue_id):
     """Page count for an ArchiveIssue's PDF, as pre-rendered page images."""
     return _serve_page_meta(_resolve_issue_pdf_path(issue_id))
 
 
-@login_required
+@archive_access_required
 @require_GET
 def magazine_page_image(request, issue_id, page_number):
     """A single pre-rendered (and disk-cached) page image for an ArchiveIssue."""
     return _serve_page_image(_resolve_issue_pdf_path(issue_id), page_number)
 
 
-@login_required
+@archive_access_required
 @require_GET
 def serve_magazine_pdf(request, issue_id):
     """Inline-serve the PDF for a ArchiveIssue (used by the ViewerJS iframe)."""
@@ -433,7 +464,7 @@ def serve_magazine_pdf(request, issue_id):
         raise Http404("PDF file not found on disk.")
 
 
-@login_required
+@archive_access_required
 @require_GET
 def download_magazine_pdf(request, issue_id):
     """Force-download the PDF for a ArchiveIssue."""
@@ -469,7 +500,7 @@ def _resolve_archive_filename_path(filename):
     return pdf_path
 
 
-@login_required
+@archive_access_required
 @require_GET
 def archive_viewer(request, filename):
     """View a raw filesystem PDF from ARCHIVE_DIR via ViewerJS."""
@@ -484,7 +515,7 @@ def archive_viewer(request, filename):
     })
 
 
-@login_required
+@archive_access_required
 @require_GET
 def archive_download(request, filename):
     """Serve a raw PDF from ARCHIVE_DIR by filename."""
@@ -498,14 +529,14 @@ def archive_download(request, filename):
     )
 
 
-@login_required
+@archive_access_required
 @require_GET
 def archive_page_meta(request, filename):
     """Page count for a raw filesystem PDF, as pre-rendered page images."""
     return _serve_page_meta(_resolve_archive_filename_path(filename))
 
 
-@login_required
+@archive_access_required
 @require_GET
 def archive_page_image(request, filename, page_number):
     """A single pre-rendered (and disk-cached) page image for a raw filesystem PDF."""
@@ -598,6 +629,7 @@ def get_pending_pdfs_view(request):
     return JsonResponse({"success": True, "pending": pending})
 
 
+@superuser_required
 @require_GET
 def task_status_view(request, task_id):
     """

@@ -14,3 +14,17 @@ jobs:
 
       - name: Deploy
         run: ./deploy.sh
+
+      # The self-hosted runner builds on the production box, so BuildKit cache
+      # grows with every push (7.6 GB at the 2026-10-22 disk-full incident).
+      # Drop cache unused for 7 days, keeping recent layers so builds stay
+      # fast, and remove untagged images. deploy.sh already prunes images, but
+      # only when it reaches its last step; this one runs even when the deploy
+      # fails, and a full disk is a common reason a build fails.
+      # No --all: during the incident, `docker builder prune -f` (also without
+      # it) freed exactly what `docker system df` listed as reclaimable.
+      - name: Prune Docker build cache and dangling images
+        if: always()
+        run: |
+          docker builder prune -f --filter until=168h
+          docker image prune -f

@@ -1,11 +1,21 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+
+def staff_notification_group(user_id):
+    """
+    Each staff member listens on their own group. With one shared group,
+    every comment was broadcast once per staff member to everyone, so each
+    admin got N copies of every toast (one per colleague).
+    """
+    return f"admin_notifications_{user_id}"
+
+
 class AdminNotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         user = self.scope["user"]
         if user.is_authenticated and user.is_staff:
-            self.group_name = "admin_notifications"
+            self.group_name = staff_notification_group(user.pk)
             await self.channel_layer.group_add(
                 self.group_name,
                 self.channel_name

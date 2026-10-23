@@ -158,6 +158,11 @@ class Issue(RoutablePageMixin, Page):
         help_text="Issue number within the volume (e.g. 1, 2, 3…)"
     )
     date_of_publishing = models.DateField("Date of publishing")
+
+    # Set once the new-issue newsletter has gone out (reader.tasks), so later
+    # re-publishes of the same issue — typo fixes, new PDFs — never mail
+    # every subscriber again.
+    newsletter_sent_at = models.DateTimeField(null=True, blank=True, editable=False)
     tags = ClusterTaggableManager(through=IssueTag, blank=True)
 
     # Only allow Articles to be created inside an Issue
@@ -463,11 +468,9 @@ class Issue(RoutablePageMixin, Page):
 
     @route(r'^pdf/$')
     def serve_pdf(self, request):
-        # 1. Permission Check
-        is_subscribed = request.user.is_authenticated and request.user.is_subscribed
-        is_admin = request.user.is_superuser or request.user.is_staff
-        
-        if not (is_subscribed or is_admin):
+        # 1. Permission Check — the same rule as every other archive path
+        from Icarus.access import may_read_archive
+        if not may_read_archive(request.user):
             return redirect(self.url)
 
         # 2. File Check

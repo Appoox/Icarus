@@ -426,16 +426,26 @@ def persist_ingested_batch(*, archive_issue, batch_index, is_final, total_pages,
         if batch_index == 0:
             DocumentChunk.objects.filter(document=archive_doc).delete()
 
-        for record in records:
-            DocumentChunk.objects.update_or_create(
+        # Two queries per batch — it was a SELECT + INSERT/UPDATE per chunk.
+        # Replace whatever this batch's chunk indices already hold, then
+        # insert, inside the surrounding transaction: a retried batch still
+        # converges to the same rows. (Not ON CONFLICT: the unique constraint
+        # is partial — WHERE document IS NOT NULL — which bulk_create can't
+        # target.)
+        DocumentChunk.objects.filter(
+            document=archive_doc,
+            chunk_index__in=[record.chunk_index for record in records],
+        ).delete()
+        DocumentChunk.objects.bulk_create([
+            DocumentChunk(
                 document=archive_doc,
                 chunk_index=record.chunk_index,
-                defaults={
-                    "page_number": record.page_number,
-                    "chunk_text": record.chunk_text,
-                    "embedding": record.embedding,
-                },
+                page_number=record.page_number,
+                chunk_text=record.chunk_text,
+                embedding=record.embedding,
             )
+            for record in records
+        ])
 
         if is_final:
             ArchiveIssue.objects.filter(pk=archive_issue.pk).update(archive_document=archive_doc)

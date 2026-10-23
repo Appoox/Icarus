@@ -131,4 +131,8 @@ class AudioCoveragePanel(Component):
 
 @hooks.register("construct_homepage_panels")
 def add_audio_coverage_panel(request, panels):
-    panels.append(AudioCoveragePanel())
+    # A reporting panel: shown to the same people as the analytics page.
+    from home.permissions import can_view_analytics
+
+    if can_view_analytics(request.user):
+        panels.append(AudioCoveragePanel())

@@ -653,9 +653,15 @@ class MostReadTopicsDashboardPanel(Component):
 
 @hooks.register('construct_homepage_panels')
 def add_most_read_articles_panel(request, panels):
-    panels.append(MostReadArticlesDashboardPanel())
-    panels.append(MostReadIssuesDashboardPanel())
-    panels.append(MostReadTopicsDashboardPanel())
+    # Readership figures are analytics: same audience as the analytics page
+    # (they were shown to everyone who can open the Wagtail admin, and each
+    # one scans the 30-day hit table on every dashboard load).
+    from home.permissions import can_view_analytics
+
+    if can_view_analytics(request.user):
+        panels.append(MostReadArticlesDashboardPanel())
+        panels.append(MostReadIssuesDashboardPanel())
+        panels.append(MostReadTopicsDashboardPanel())
 
 
 @hooks.register('before_edit_page')
@@ -685,8 +691,14 @@ def notify_last_edited_by(request, page):
                     date_str = f" on {localize(page.latest_revision_created_at)}"
             
             if name:
+                from django.utils.html import escape
                 from django.utils.safestring import mark_safe
-                
+
+                # Anyone can set their own display name, and this HTML is
+                # marked safe below: escape every interpolated value.
+                name = escape(name)
+                date_str = escape(date_str)
+
                 modal_html = f"""
                 <div class="last-edited-warning-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(11, 31, 58, 0.4); z-index: 999999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeInModal 0.3s ease-out; box-sizing: border-box; margin: 0; padding: 20px;">
                     <div style="background: #ffffff; padding: 40px; border-radius: 16px; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(11, 31, 58, 0.25); text-align: center; border-top: 6px solid #e65100; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; margin: auto;">

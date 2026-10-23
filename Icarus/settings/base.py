@@ -36,44 +36,76 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUDITLOG_LOGENTRY_MODEL = 'home.CustomLogEntry'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import os
 from pathlib import Path
 from environs import Env
 
-env = Env()
-env.read_env() 
-
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = PROJECT_DIR.parent
+
+# Settings come from the environment, topped up from a .env file: as always,
+# the nearest one from this folder upwards (on the server, deploy.sh links the
+# shared one into the checkout). ICARUS_DOTENV names a different file, or ""
+# for none; the test settings set "", so nothing in a developer's .env can
+# change what the tests check.
+env = Env()
+_dotenv = os.environ.get("ICARUS_DOTENV")
+if _dotenv is None:
+    env.read_env()
+elif _dotenv:
+    env.read_env(_dotenv, recurse=False)
 
 from datetime import timedelta
 
 AXES_FAILURE_LIMIT = env.int('AXES_FAILURE_LIMIT', default=5)                      # Lock out after 5 failures
 AXES_COOLOFF_TIME = env.int('AXES_COOLOFF_TIME', default=timedelta(hours=1))      # Duration of lockout
 
-# ── Cryptographic Field Encryption Settings ───────────────────────────
-# Required by django-fernet-encrypted-fields for field-level encryption.
-# In your production environment file (.env), declare a cryptographically secure string.
-SALT_KEY = env.str('SALT_KEY')
+# ── Secrets (all required, all from the environment) ─────────────────
+# Every settings module (dev, production, test) inherits these, so the
+# production module works on its own and nothing secret lives in git.
+#
+# DO NOT CHANGE SECRET_KEY OR SALT_KEY ON A LIVE SITE.
+# django-fernet-encrypted-fields derives the key that encrypts readers'
+# phone numbers and addresses from SECRET_KEY + SALT_KEY. A new value
+# makes every encrypted field unreadable. To rotate SECRET_KEY, put the
+# old value in SECRET_KEY_FALLBACKS (comma-separated) — old data still
+# decrypts and sessions/reset links signed with it stay valid.
+SECRET_KEY = env.str("SECRET_KEY")
+SECRET_KEY_FALLBACKS = env.list("SECRET_KEY_FALLBACKS", default=[])
+SALT_KEY = env.str("SALT_KEY")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# HMAC key for ReaderUser.phone_number_hash (the login identifier).
+# Changing it locks every reader out; rotation needs a data migration.
+PHONE_HASH_KEY = env.str("PHONE_HASH_KEY")
 
-ALLOWED_HOSTS = [
+DEBUG = env.bool("DEBUG", default=False)
+
+# ── Hosts & URLs ──────────────────────────────────────────────────────
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[
     '139.162.178.139',
     '65.109.131.232',
     '65.109.131.232.sslip.io',
     'sasthragathy.org',
     'www.sasthragathy.org',
-]
+])
 
-CSRF_TRUSTED_ORIGINS = [
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     'https://65.109.131.232',
     'https://65.109.131.232.sslip.io',
     'http://65.109.131.232',
     'https://sasthragathy.org',
     'https://www.sasthragathy.org',
-]
-WAGTAILADMIN_BASE_URL = 'https://sasthragathy.org'
+])
+
+# Absolute site URL for links in emails (newsletter, unsubscribe, resets).
+BASE_URL = env.str("BASE_URL", default="https://sasthragathy.org").rstrip("/")
+WAGTAILADMIN_BASE_URL = env.str("WAGTAILADMIN_BASE_URL", default=BASE_URL)
+
+# ── Payments ──────────────────────────────────────────────────────────
+# The only payment backend is a mock that records every payment as
+# completed — it hands out paid plans for free. Keep this off anywhere
+# real readers can reach (production.py forces it off).
+MOCK_PAYMENTS_ENABLED = env.bool("MOCK_PAYMENTS_ENABLED", default=False)
 
 # Application definition
 
@@ -88,7 +120,7 @@ INSTALLED_APPS = [
     "articles",
     "literati",
     "issue",
-    "reader",
+    "reader.apps.ReaderConfig",
     "axes",
     "kalapila",
     "postbox",
@@ -124,6 +156,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # First: answers /healthz before host checks and redirects (Icarus/health.py).
+    "Icarus.health.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     # Reject known AI/LLM scraper user-agents with 403 early, before any view
     # runs. Search crawlers are a separate category and are never blocked.
@@ -278,11 +312,8 @@ WAGTAILSEARCH_BACKENDS = {
     }
 }
 
-# Base URL to use when referring to full URLs within the Wagtail admin backend -
-# e.g. in notification emails, sitemap URLs, and image rendition `full_url`s
-# (used by Open Graph / structured-data tags). Defined once near the top of
-# this file as https://sasthragathy.org; the historical example.com default
-# is intentionally left out so it cannot win the assignment race.
+# WAGTAILADMIN_BASE_URL (admin emails, sitemap URLs, rendition full_url for
+# Open Graph tags) is set from BASE_URL in the "Hosts & URLs" section above.
 
 # Transparently serve modern image formats. Every rendition whose source is a
 # JPEG or PNG is emitted as WebP, cutting cover-image / thumbnail payloads and
@@ -369,6 +400,17 @@ EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="ശാസ്ത്രഗതി <noreply@example.com>")
 
+# Who mail_admins() reaches: the hourly disk-usage alert (home/tasks.py).
+# Comma-separated addresses, e.g. ADMIN_EMAILS=a@example.org,b@example.org.
+# Django 5.2 wants (name, address) pairs; the address doubles as the name.
+# Empty still starts the site, but the alert task then fails on every run
+# instead of sending nothing (mail_admins() alone would skip silently).
+ADMINS = [(address, address) for address in env.list("ADMIN_EMAILS", default=[])]
+# Sender for mail_admins(). Django's default, root@localhost, would be refused
+# by the mail provider (ZeptoMail only sends from verified domains), so default
+# to the address the site already sends from.
+SERVER_EMAIL = env.str("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
+
 # Enable framing from SAMEORIGIN to allow PDF rendering within search interface
 X_FRAME_OPTIONS = "SAMEORIGIN"
 WAGTAILEMBEDS_RESPONSIVE_HTML = True
@@ -390,7 +432,56 @@ Q_CLUSTER = {
     'retry': 8410,
     'queue_limit': 50,
     'bulk': 1,
-    'orm': 'default'
+    'orm': 'default',
+    # Without these a failing task (bad PDF, TTS quota) is retried forever
+    # (max_attempts defaults to 0 = unlimited), stays on the queue, and after
+    # downtime every missed scheduled run fires at once.
+    'max_attempts': 3,
+    'ack_failures': True,
+    'catch_up': False,
+    # How often the ORM broker checks the queue table while it is empty (Q2's
+    # default is every 0.2 s). Each check calls Django's close_old_connections(),
+    # and with CONN_MAX_AGE=0 (dj_database_url's default, see DATABASES) that
+    # closes the connection, so every idle poll reconnected through PgBouncer:
+    # ~2.5 connections/s with an empty queue, most of the PgBouncer log that
+    # filled the disk on 2026-10-22. TTS, email and the other tasks here can
+    # wait up to 2 s to be picked up; a non-empty queue is drained without
+    # sleeping, so only the first task after a quiet spell waits.
+    'poll': 2,
+}
+
+# ── Cache ─────────────────────────────────────────────────────────────
+# Shared by every gunicorn worker and the qcluster (the default per-process
+# memory cache gave each worker its own crawler-verification results,
+# failed-login counters and analytics). The table is created at container
+# start by `manage.py createcachetable` (see the Dockerfile CMD).
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "icarus_cache",
+        "TIMEOUT": 300,
+        "OPTIONS": {"MAX_ENTRIES": 20000},
+    }
+}
+
+# ── Logging ───────────────────────────────────────────────────────────
+# Everything to stdout, where `docker compose logs` collects it. Errors
+# (including unhandled 500s via the django logger) are always shown.
+LOG_LEVEL = env.str("LOG_LEVEL", default="INFO")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "plain": {"format": "%(asctime)s %(levelname)s %(name)s: %(message)s"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "plain"},
+    },
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.db.backends": {"level": "WARNING"},  # no SQL in the logs
+    },
 }
 
 #Channel layer settings

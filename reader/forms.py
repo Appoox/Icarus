@@ -300,6 +300,8 @@ class ReaderProfileEditForm(forms.ModelForm):
             # ── 3. Read-history purge ────────────────────────────────────────────
             # Must run AFTER instance.save() so the consent_at column is already
             # null in the DB before we remove the history rows.
+            # The free-article meter (metered_articles) is deliberately kept:
+            # clearing it here used to hand out a fresh set of free articles.
             if not wants_read_history and had_read_history:
                 instance.read_articles.clear()
             # ── 4. Old-avatar cleanup ────────────────────────────────────────────
@@ -328,9 +330,20 @@ class UpdateInterestsForm(forms.ModelForm):
         fields = ['interested_topics']  # was ['interests'] — FieldError at form init
 
 
+def _split_full_name(cleaned_data):
+    """Wagtail's forms still carry first_name/last_name; derive them from `name`."""
+    parts = (cleaned_data.get('name') or '').strip().split(maxsplit=1)
+    cleaned_data['first_name'] = parts[0] if parts else ""
+    cleaned_data['last_name'] = parts[1] if len(parts) > 1 else ""
+
+
 class CustomWagtailUserCreationForm(UserCreationForm):
     """
-    Custom implementation of Wagtail's User Creation form matching structural custom user needs.
+    Wagtail's "Add user" form for ReaderUser.
+
+    The login identifier (USERNAME_FIELD) is phone_number_hash, an HMAC no
+    admin can type, so the form takes a phone number instead and derives the
+    hash and the encrypted copy from it — exactly as signup does.
     """
     name = forms.CharField(max_length=255, required=True, label=_("പൂർണ്ണ നാമം"))
 
@@ -350,14 +363,40 @@ class CustomWagtailUserCreationForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+        from allauth.account.adapter import get_adapter
+
+        # Same field (and normalisation to E.164) as the public signup form,
+        # so an admin-created number hashes identically at login.
+        self.fields['phone_number'] = get_adapter().phone_form_field(label=_("ഫോൺ നമ്പർ"))
+
         if 'phone_number_hash' in self.fields:
             self.fields['phone_number_hash'].widget = forms.HiddenInput()
             self.fields['phone_number_hash'].required = False
-            
+
         if 'email' in self.fields:
             self.fields['email'].required = False
             self.fields['email'].empty_value = None
+
+        # Filled from `name` in clean(); required-but-hidden fields made the
+        # form fail on an error nobody could see.
+        for field_name in ('first_name', 'last_name'):
+            if field_name in self.fields:
+                self.fields[field_name].required = False
+                self.fields[field_name].widget = forms.HiddenInput()
+
+    def clean_phone_number(self):
+        phone = str(self.cleaned_data['phone_number'])
+        if User.objects.filter(phone_number_hash=User.hash_phone(phone)).exists():
+            raise forms.ValidationError(_("ഈ ഫോൺ നമ്പർ ഇതിനകം രജിസ്റ്റർ ചെയ്തിട്ടുണ്ട്."))
+        return phone
+
+    def clean(self):
+        cleaned_data = super().clean()
+        _split_full_name(cleaned_data)
+        phone = cleaned_data.get('phone_number')
+        if phone:
+            cleaned_data['phone_number_hash'] = User.hash_phone(phone)
+        return cleaned_data
 
     def validate_unique(self):
         """
@@ -366,6 +405,14 @@ class CustomWagtailUserCreationForm(UserCreationForm):
         if self.instance.email == "":
             self.instance.email = None
         super().validate_unique()
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_phone(self.cleaned_data['phone_number'])  # hash + encrypted copy
+        if commit:
+            user.save()
+            self.save_m2m()
+        return user
 
 
 class CustomWagtailUserEditForm(UserEditForm):
@@ -419,18 +466,7 @@ class CustomWagtailUserEditForm(UserEditForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        full_name = cleaned_data.get('name', '').strip()
-        if full_name:
-            parts = full_name.split(maxsplit=1)
-            if len(parts) == 1:
-                cleaned_data['first_name'] = parts[0]
-                cleaned_data['last_name'] = ""
-            else:
-                cleaned_data['first_name'] = parts[0]
-                cleaned_data['last_name'] = parts[1]
-        else:
-            cleaned_data['first_name'] = ""
-            cleaned_data['last_name'] = ""
+        _split_full_name(cleaned_data)
 
         # ── Temporary-access validation ──
         until = cleaned_data.get('grant_access_until')

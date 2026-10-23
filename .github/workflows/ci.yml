@@ -1,0 +1,83 @@
+name: CI
+
+# Tests run on every push and pull request to development and master.
+# This workflow never deploys: deploy.yml still deploys every push to master,
+# exactly as before, whether or not these tests pass.
+on:
+  push:
+    branches: [development, master]
+  pull_request:
+    branches: [development, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # A newer push to the same branch or PR supersedes the run in progress.
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    services:
+      db:
+        # Same image as docker-compose.yml.
+        image: pgvector/pgvector:pg18-trixie
+        env:
+          POSTGRES_USER: icarus
+          POSTGRES_PASSWORD: icarus
+          POSTGRES_DB: icarus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U icarus"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DJANGO_SETTINGS_MODULE: Icarus.settings.test
+      DATABASE_URL: postgres://icarus:icarus@localhost:5432/icarus
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"   # same as the Dockerfile
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: System libraries (WeasyPrint, PDF tools)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 poppler-utils gettext
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Migrations are up to date
+        run: >
+          python manage.py makemigrations --check --dry-run
+          home articles literati issue reader kalapila postbox the_librarian
+
+      - name: Production settings pass Django's deploy checklist
+        env:
+          DJANGO_SETTINGS_MODULE: Icarus.settings.production
+          # Throwaway values: the check only needs them to exist (and the key
+          # to look like a real one — 50+ characters).
+          SECRET_KEY: ci-only-not-a-real-secret-${{ github.run_id }}-0123456789abcdefghijklmnopqrstuvwxyz
+          SALT_KEY: ci-only
+          PHONE_HASH_KEY: ci-only
+          EMBEDDING_DIM: "1024"  # must match the vector column (the_librarian.W001)
+        run: python manage.py check --deploy --fail-level WARNING
+
+      - name: Tests
+        run: coverage run manage.py test --noinput
+
+      - name: Coverage floor
+        run: coverage report

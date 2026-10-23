@@ -59,103 +59,48 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def send_sms_notification(phone_number, message):
-    """
-    Helper function to send SMS notification.
-    Currently prints to console/logs as no SMS gateway is connected.
-    Can be integrated with services like Twilio, Gupshup, etc.
-    """
-    logger.info(f"Preparing to send SMS to {phone_number}: {message}")
-    print(f"\n--- SMS PREPARED TO SEND ---\nTo: {phone_number}\nMessage: {message}\n-----------------------------\n")
-
 
 @hooks.register('after_create_page')
 def after_create_literati(request, page):
+    """
+    Literati.save() has already created (or linked) the author's reader
+    account. If that account has no password yet, email the author a
+    one-time link to choose one. No password is ever generated, shown,
+    logged or sent.
+    """
     from .models import Literati
-    if isinstance(page, Literati):
-        from reader.models import ReaderUser
-        from django.contrib import messages
-        from django.core.mail import send_mail
-        from django.conf import settings
+    if not isinstance(page, Literati) or page.reader_user is None:
+        return
 
-        if not page.reader_user:
-            # Generate password: pattern username+123
-            clean_phone = str(page.phone_number).replace(' ', '').replace('-', '')
-            password = f"{clean_phone}123"
+    from django.contrib import messages
+    from reader.password_setup import send_password_setup_email
 
-            try:
-                # Create the ReaderUser
-                reader_user = ReaderUser.objects.create_user(
-                    phone_number=page.phone_number,
-                    name=page.title,
-                    email=page.email or None,
-                    password=password,
-                    address_line_1=page.address_line_1,
-                    address_line_2=page.address_line_2,
-                    city=page.city,
-                    post_office=page.post_office,
-                    pincode=page.pincode,
-                    district=page.district,
-                    state=page.state
-                )
-                
-                # Associate with Literati
-                page.reader_user = reader_user
-                page.save_revision()
-                page.save(update_fields=['reader_user'])
-                
-                # Prepare and send notifications
-                email_sent = False
-                if page.email:
-                    subject = "Your ശാസ്ത്രഗതി Reader Account Credentials"
-                    email_message = f"""Dear {page.title},
+    user = page.reader_user
+    if user.has_usable_password():
+        messages.info(request, f"{page.title} is linked to their existing reader account.")
+        return
 
-An author/literati page has been created for you on ശാസ്ത്രഗതി. A reader account has been automatically created for you.
+    if not page.email:
+        messages.warning(
+            request,
+            f"A reader account was created for {page.title}, but there is no "
+            f"email address to send a set-password link to. Add one, or ask "
+            f"them to use \"Forgot password\" on the login page.",
+        )
+        return
 
-Here are your account credentials to log in:
-Phone Number (Username): {page.phone_number}
-Password: {password}
-
-You can log in to your account here: {request.build_absolute_uri('/')}
-
-Best regards,
-The ശാസ്ത്രഗതി Team
-"""
-                    try:
-                        send_mail(
-                            subject,
-                            email_message,
-                            settings.DEFAULT_FROM_EMAIL,
-                            [page.email],
-                            fail_silently=False,
-                        )
-                        email_sent = True
-                    except Exception as email_err:
-                        logger.error(f"Failed to send credentials email to {page.email}: {email_err}")
-
-                # SMS Notification (stub)
-                sms_message = f"Dear {page.title}, your ശാസ്ത്രഗതി reader account is ready. Username: {page.phone_number}, Password: {password}"
-                sms_sent = False
-                try:
-                    send_sms_notification(page.phone_number, sms_message)
-                    sms_sent = True
-                except Exception as sms_err:
-                    logger.error(f"Failed to send credentials SMS to {page.phone_number}: {sms_err}")
-
-                # Admin feedback message
-                msg = f"Reader user auto-created for {page.title} (Phone: {page.phone_number}, Password: {password})."
-                if email_sent:
-                    msg += " Credentials sent via email."
-                elif page.email:
-                    msg += " Failed to send credentials email."
-                else:
-                    msg += " No email address provided."
-                
-                if sms_sent:
-                    msg += " SMS prepared and logged."
-                
-                messages.success(request, msg)
-
-            except Exception as e:
-                logger.error(f"Error auto-creating ReaderUser for Literati {page.title}: {e}")
-                messages.error(request, f"Error auto-creating Reader User: {e}")
+    try:
+        send_password_setup_email(user, name=page.title)
+    except Exception:
+        logger.exception("Could not send password set-up email for Literati pk=%s", page.pk)
+        messages.error(
+            request,
+            f"A reader account was created for {page.title}, but the "
+            f"set-password email could not be sent.",
+        )
+    else:
+        messages.success(
+            request,
+            f"A reader account was created for {page.title} and a link to set "
+            f"their password was emailed to them.",
+        )

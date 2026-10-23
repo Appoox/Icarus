@@ -1,7 +1,9 @@
 import hmac
 import hashlib
 
-from django.db import models
+import logging
+
+from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.contrib.auth.signals import user_logged_in
 from django.conf import settings
@@ -22,6 +24,8 @@ from django.contrib.auth.signals import user_login_failed, user_logged_in
 from django.dispatch import receiver
 from django.core.cache import cache
 from django.db.models import Q
+
+logger = logging.getLogger(__name__)
 
 import re
 _HEX64 = re.compile(r'^[0-9a-f]{64}$')
@@ -549,11 +553,23 @@ class ReaderUser(AbstractUser, index.Indexed):
     )
 
     # ── Reading History & Interests ───────────────────────────────────
+    # Reading HISTORY — personal data, recorded only with consent
+    # (record_read_article) and wiped when consent is withdrawn.
     read_articles = models.ManyToManyField(
         'articles.Article',
         blank=True,
         related_name='readers',
         help_text=_('ഈ വായനക്കാരൻ വായിച്ച ലേഖനങ്ങൾ.'),
+    )
+    # The free-article METER — which articles a non-subscriber has opened
+    # for free. Kept separate from the history above: the meter is needed to
+    # run the paywall whether or not the reader consents to history, and
+    # clearing history must not hand out a fresh set of free articles.
+    metered_articles = models.ManyToManyField(
+        'articles.Article',
+        blank=True,
+        related_name='metered_by',
+        help_text=_('സൗജന്യ ലേഖന പരിധിയിൽ എണ്ണിയ ലേഖനങ്ങൾ.'),
     )
     interested_topics = models.ManyToManyField(
         'issue.Topic',
@@ -750,9 +766,10 @@ class ReaderUser(AbstractUser, index.Indexed):
         self.care_of_meghala = ""
         self.care_of_unit = ""
 
-        # Clear activity, favorites, and read history
+        # Clear activity, favorites, read history and the free-read meter
         if hasattr(self, 'read_articles') and self.read_articles:
             self.read_articles.clear()
+        self.metered_articles.clear()
         if hasattr(self, 'interested_topics') and self.interested_topics:
             self.interested_topics.clear()
         if hasattr(self, 'favorite_articles') and self.favorite_articles:
@@ -766,15 +783,30 @@ class ReaderUser(AbstractUser, index.Indexed):
 
         self.is_active = False
         self.is_anonymized = True
-        self.save()
 
-        # Delete audit logs / tracking logs associated with this user
-        from auditlog.models import LogEntry
-        LogEntry.objects.filter(actor_id=self.id).delete()
-
+        # One transaction: the account is only marked anonymised if its audit
+        # trail was cleaned too (a failure leaves it for the next purge run).
+        # The swapped log model must come from get_logentry_model():
+        # auditlog.models.LogEntry has no manager when
+        # AUDITLOG_LOGENTRY_MODEL is set, so the old code crashed here,
+        # after saving, and no audit row was ever erased.
+        from auditlog import get_logentry_model
         from django.contrib.contenttypes.models import ContentType
-        user_content_type = ContentType.objects.get_for_model(self.__class__)
-        LogEntry.objects.filter(content_type=user_content_type, object_id=self.id).delete()
+
+        LogEntry = get_logentry_model()
+        with transaction.atomic():
+            self.save()
+            # Rows ABOUT this reader hold their old personal data (and the
+            # save above just logged one more): delete them.
+            LogEntry.objects.filter(
+                content_type=ContentType.objects.get_for_model(self.__class__),
+                object_id=self.id,
+            ).delete()
+            # Rows BY this reader (e.g. a former editor's page edits) are other
+            # objects' history: keep them, but drop who did it.
+            LogEntry.objects.filter(actor_id=self.id).update(
+                actor=None, actor_email=None, remote_addr=None, remote_port=None,
+            )
 
     # ── Print Subscription Management ──
     is_print_subscriber = models.BooleanField(
@@ -801,12 +833,26 @@ class ReaderUser(AbstractUser, index.Indexed):
         help_text=_("കൊറിയറിനുള്ള പ്രത്യേക നിർദ്ദേശങ്ങൾ (ഉദാ: 'ഗേറ്റിൽ ഏൽപ്പിക്കുക').")
     )
 
+    # Fields the bookkeeping in save() reacts to. A save limited to other
+    # fields (last_login on every login, last_login_ip, consent stamps...)
+    # skips it: no extra SELECT, and no subscription-history rows written
+    # from in-memory values that this save isn't even persisting.
+    _SAVE_HOOK_FIELDS = frozenset({
+        'subscription_plan', 'subscription_start', 'subscription_end',
+        'payment_details', 'is_cancelled',
+        'newsletter_opt_in', 'deactivated_at', 'is_active', 'phone_number_hash',
+    })
+
     def save(self, *args, **kwargs):
         """
         Override save to handle audit logging for consent changes
         and manage subscription history tracking.
         """
-        # Ensure that if a user is deactivated, we don't accidentally re-activate them 
+        update_fields = kwargs.get('update_fields')
+        if self.pk and update_fields is not None and not (set(update_fields) & self._SAVE_HOOK_FIELDS):
+            return super().save(*args, **kwargs)
+
+        # Ensure that if a user is deactivated, we don't accidentally re-activate them
         # unless specifically intended via the admin.
         if self.deactivated_at and not self.is_active:
              self.newsletter_opt_in = False
@@ -828,7 +874,7 @@ class ReaderUser(AbstractUser, index.Indexed):
                 old_plan = old_instance.subscription_plan
                 old_start = old_instance.subscription_start
                 old_end = old_instance.subscription_end
-                old_payment = old_instance.payment_details
+                old_payment = old_instance.payment_details_id  # id, not a second query
                 old_cancelled = old_instance.is_cancelled
             except ReaderUser.DoesNotExist:
                 pass
@@ -861,7 +907,7 @@ class ReaderUser(AbstractUser, index.Indexed):
             old_plan != self.subscription_plan or
             old_start != self.subscription_start or
             old_end != self.subscription_end or
-            old_payment != self.payment_details or
+            old_payment != self.payment_details_id or
             old_cancelled != self.is_cancelled
         )
 
@@ -920,9 +966,10 @@ class ReaderUser(AbstractUser, index.Indexed):
         verbose_name_plural = _('വായനക്കാർ')
 
     def __str__(self):
-        # Fall back gracefully if the encrypted field hasn't been populated yet.
-        phone_display = self.phone_number_encrypted or f"user #{self.pk}"
-        return f'{self.name or phone_display} ({self.email or phone_display})'
+        # Never the phone number: str(user) ends up in audit-log rows
+        # (object_repr), admin choosers, notifications and log lines.
+        label = self.name or f"Reader #{self.pk}"
+        return f"{label} ({self.email})" if self.email else label
 
 
 class SubscriptionHistory(models.Model):
@@ -1085,8 +1132,27 @@ def update_user_login_ip(sender, request, user, **kwargs):
 # ── Native Auditlog Tracking Registration ─────────────────────────────
 from auditlog.registry import auditlog
 
+# Never copied into the audit log: the password hash, the login identifier,
+# contact details, demographics, addresses and IPs. The log is readable by
+# every holder of home.view_auditlog, and EncryptedCharField hands auditlog
+# the decrypted phone number. (Migration home 0018 scrubs older rows.)
+READER_AUDIT_EXCLUDED_FIELDS = [
+    'password', 'last_login',
+    'phone_number_hash', 'phone_number_encrypted', 'email',
+    'registration_ip', 'last_login_ip',
+    'gender', 'gender_other', 'birth_year',
+    'address_line_1', 'address_line_2', 'city', 'post_office', 'pincode',
+    'district', 'state',
+    'care_of_name', 'care_of_number', 'care_of_district', 'care_of_meghala',
+    'care_of_unit', 'delivery_notes',
+]
+
 if not auditlog.contains(ReaderUser):
-    auditlog.register(ReaderUser, m2m_fields={'groups'})
+    auditlog.register(
+        ReaderUser,
+        m2m_fields={'groups'},
+        exclude_fields=READER_AUDIT_EXCLUDED_FIELDS,
+    )
 
 # ── Tracking Failed Login Attempts ─────────────────────────────────────
 @receiver(user_login_failed)
@@ -1095,9 +1161,6 @@ def track_failed_login(sender, credentials, request, **kwargs):
     Tracks consecutive failed login attempts in the cache framework.
     Inspects all credential values (excluding passwords) to find the correct ReaderUser.
     """
-    # 1. Output a debug line to your terminal console to see exactly what Allauth sends
-    print(f"\n[DEBUG] Failed login attempt detected. Credentials sent: {credentials}\n")
-
     user = None
     
     # 2. Iterate through all submitted credential values to find a matching phone/email
@@ -1120,7 +1183,6 @@ def track_failed_login(sender, credentials, request, **kwargs):
             break
     
     if not user:
-        print("[DEBUG] Could not match any credential value to a ReaderUser in the database.")
         return
 
     # 3. Save the incremented failed attempts count to cache
@@ -1128,7 +1190,8 @@ def track_failed_login(sender, credentials, request, **kwargs):
     attempts = cache.get(cache_key, 0) + 1
     cache.set(cache_key, attempts, timeout=86400)  # Reset after 24 hours
     
-    print(f"[DEBUG] Logged failed attempt #{attempts} for user ID {user.pk} ({user.name})")
+    # Account id only — never the submitted phone/email or the name.
+    logger.info("Failed login attempt #%s for reader id %s", attempts, user.pk)
 
 
 @receiver(user_logged_in)
@@ -1139,4 +1202,4 @@ def reset_failed_login_attempts(sender, request, user, **kwargs):
     if isinstance(user, ReaderUser):
         cache_key = f"consecutive_failed_logins_{user.pk}"
         cache.delete(cache_key)
-        print(f"[DEBUG] Successful login: Cleared failed attempts counter for user ID {user.pk}")
+        logger.debug("Cleared failed-login counter for reader id %s", user.pk)

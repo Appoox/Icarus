@@ -148,7 +148,7 @@ class ArticleModelAndPaywallTests(WagtailPageTestCase):
         self.assertFalse(context["show_paywall"])
 
     def test_paywall_logic_subscribed_reader(self):
-        """Subscribed users must be exempted and the article recorded in their read history."""
+        """Subscribed users are exempted; history is recorded only with consent."""
         subscribed_user = User.objects.create_user(
             phone_number="+918888888888",
             name="Subscribed User",
@@ -167,6 +167,12 @@ class ArticleModelAndPaywallTests(WagtailPageTestCase):
 
         context = self.article.get_context(request)
         self.assertFalse(context["show_paywall"])
+        # No read-history consent → nothing recorded (it used to be, regardless).
+        self.assertFalse(subscribed_user.read_articles.exists())
+
+        subscribed_user.read_history_consent_at = timezone.now()
+        subscribed_user.save()
+        self.article.get_context(request)
         self.assertTrue(subscribed_user.read_articles.filter(pk=self.article.pk).exists())
 
     def test_paywall_logic_unsubscribed_reader_under_limit(self):
@@ -183,7 +189,9 @@ class ArticleModelAndPaywallTests(WagtailPageTestCase):
 
         context = self.article.get_context(request)
         self.assertFalse(context["show_paywall"])
-        self.assertTrue(unsubscribed_user.read_articles.filter(pk=self.article.pk).exists())
+        # Counted on the meter; not in the history (no consent given).
+        self.assertTrue(unsubscribed_user.metered_articles.filter(pk=self.article.pk).exists())
+        self.assertFalse(unsubscribed_user.read_articles.exists())
 
     def test_paywall_logic_unsubscribed_reader_over_limit(self):
         """Unsubscribed readers over the FREE_ARTICLE_LIMIT are gated by a paywall."""
@@ -201,7 +209,7 @@ class ArticleModelAndPaywallTests(WagtailPageTestCase):
                 date=date(2026, 1, 1)
             )
             self.article_index.add_child(instance=art)
-            unsubscribed_user.read_articles.add(art)
+            unsubscribed_user.metered_articles.add(art)
 
         request = self.factory.get(self.article.url)
         request.user = unsubscribed_user
@@ -392,3 +400,101 @@ class ArticleRoutablePdfTests(TestCase):
         self.assertEqual(response['Content-Type'], 'application/pdf')
         self.assertIn("attachment; filename*=UTF-8''", response['Content-Disposition'])
         self.assertTrue(response.content.startswith(b"%PDF"))
+
+
+class LastEditedWarningEscapingTests(TestCase):
+    """
+    The "last edited by" modal is marked safe and showed the editor's
+    display name raw — and any reader can set their own name.
+    """
+
+    def test_editor_name_is_escaped(self):
+        from datetime import date
+
+        from django.contrib.auth import get_user_model
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.sessions.backends.db import SessionStore
+        from django.test import RequestFactory
+        from wagtail.models import Page
+
+        from articles.models import Article
+        from articles.wagtail_hooks import notify_last_edited_by
+
+        User = get_user_model()
+        evil = User.objects.create_user(phone_number="+918800550001", name='<img src=x onerror="alert(1)">')
+        article = Article(title="Edited", slug="edited", date=date(2026, 1, 1))
+        Page.get_first_root_node().add_child(instance=article)
+        article.save_revision(user=evil)
+
+        request = RequestFactory().get("/admin/pages/1/edit/")
+        request.session = SessionStore()
+        request._messages = FallbackStorage(request)
+        notify_last_edited_by(request, article)
+
+        shown = "".join(str(m) for m in request._messages)
+        self.assertIn("This page was last edited by", shown)
+        self.assertNotIn('<img src=x onerror="alert(1)">', shown)
+        self.assertIn("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;", shown)
+
+
+class FreeArticleMeterTests(TestCase):
+    """
+    read_articles was both the consented reading history and the paywall
+    meter, so withdrawing consent (which wipes history) reset the meter.
+    """
+
+    def setUp(self):
+        from django.utils import timezone
+
+        Site.objects.all().delete()
+        for child in Page.get_first_root_node().get_children():
+            child.delete()
+        root = Page.get_first_root_node()
+        self.index = ArticleIndexPage(title="Articles", slug="articles")
+        root.add_child(instance=self.index)
+        Site.objects.create(hostname="testserver", root_page=root, is_default_site=True)
+        self.articles = []
+        for i in range(4):
+            art = Article(title=f"A{i}", slug=f"a{i}", date=date(2026, 1, 1))
+            self.index.add_child(instance=art)
+            self.articles.append(art)
+        self.reader = User.objects.create_user(phone_number="+918800660001", name="Meter Reader")
+        self.reader.read_history_consent_at = timezone.now()
+        self.reader.save()
+        self.factory = RequestFactory()
+
+    def _open(self, article):
+        request = self.factory.get(article.url)
+        request.user = self.reader
+        request.session = MockSession()
+        return article.get_context(request)["show_paywall"]
+
+    @override_settings(FREE_ARTICLE_LIMIT=3)
+    def test_withdrawing_consent_does_not_reset_the_meter(self):
+        from reader.forms import ReaderProfileEditForm
+
+        for art in self.articles[:3]:
+            self.assertFalse(self._open(art))
+        self.assertTrue(self._open(self.articles[3]))  # limit reached
+        self.assertEqual(self.reader.read_articles.count(), 3)  # consented history
+
+        # Withdraw consent through the real profile form (box left unticked).
+        form = ReaderProfileEditForm(
+            data={"name": "Meter Reader", "phone_number_0": "IN", "phone_number_1": "8800660001"},
+            instance=self.reader,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.reader.refresh_from_db()
+
+        self.assertFalse(self.reader.tracking_consent)
+        self.assertEqual(self.reader.read_articles.count(), 0)    # history wiped
+        self.assertEqual(self.reader.metered_articles.count(), 3)  # meter kept
+        self.assertTrue(self._open(self.articles[3]))  # still paywalled
+
+    @override_settings(FREE_ARTICLE_LIMIT=3)
+    def test_already_metered_articles_stay_open(self):
+        self.assertFalse(self._open(self.articles[0]))
+        for art in self.articles[1:3]:
+            self._open(art)
+        self.assertFalse(self._open(self.articles[0]))
