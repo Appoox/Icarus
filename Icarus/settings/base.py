@@ -400,6 +400,17 @@ EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="ശാസ്ത്രഗതി <noreply@example.com>")
 
+# Who mail_admins() reaches: the hourly disk-usage alert (home/tasks.py).
+# Comma-separated addresses, e.g. ADMIN_EMAILS=a@example.org,b@example.org.
+# Django 5.2 wants (name, address) pairs; the address doubles as the name.
+# Empty still starts the site, but the alert task then fails on every run
+# instead of sending nothing (mail_admins() alone would skip silently).
+ADMINS = [(address, address) for address in env.list("ADMIN_EMAILS", default=[])]
+# Sender for mail_admins(). Django's default, root@localhost, would be refused
+# by the mail provider (ZeptoMail only sends from verified domains), so default
+# to the address the site already sends from.
+SERVER_EMAIL = env.str("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
+
 # Enable framing from SAMEORIGIN to allow PDF rendering within search interface
 X_FRAME_OPTIONS = "SAMEORIGIN"
 WAGTAILEMBEDS_RESPONSIVE_HTML = True
@@ -428,6 +439,15 @@ Q_CLUSTER = {
     'max_attempts': 3,
     'ack_failures': True,
     'catch_up': False,
+    # How often the ORM broker checks the queue table while it is empty (Q2's
+    # default is every 0.2 s). Each check calls Django's close_old_connections(),
+    # and with CONN_MAX_AGE=0 (dj_database_url's default, see DATABASES) that
+    # closes the connection, so every idle poll reconnected through PgBouncer:
+    # ~2.5 connections/s with an empty queue, most of the PgBouncer log that
+    # filled the disk on 2026-10-22. TTS, email and the other tasks here can
+    # wait up to 2 s to be picked up; a non-empty queue is drained without
+    # sleeping, so only the first task after a quiet spell waits.
+    'poll': 2,
 }
 
 # ── Cache ─────────────────────────────────────────────────────────────

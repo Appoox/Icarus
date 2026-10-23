@@ -334,6 +334,34 @@ class SettingsModuleTests(WagtailPageTestCase):
             "True True ('HTTP_X_FORWARDED_PROTO', 'https') 3 True False Icarus.health.HealthCheckMiddleware",
         )
 
+    def test_idle_queue_polls_are_slow_enough_not_to_flood_pgbouncer(self):
+        # Every idle ORM-broker poll reconnects through PgBouncer (CONN_MAX_AGE
+        # is 0). At Q2's 0.2 s default that was ~2.5 logins/s and filled the
+        # disk with PgBouncer log lines (2026-10-22). See Q_CLUSTER in base.py.
+        out = self._import("Icarus.settings.production", "s.Q_CLUSTER['poll']", **self.REQUIRED)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(out.stdout.strip(), "2")
+
+    def test_admin_alerts_have_recipients_and_a_real_sender(self):
+        # The disk-usage alert sends with mail_admins(): it needs ADMINS, and
+        # a sender the mail provider accepts (Django's default is root@localhost).
+        out = self._import(
+            "Icarus.settings.production", "s.ADMINS, s.SERVER_EMAIL",
+            ADMIN_EMAILS="a@example.org,b@example.org",
+            DEFAULT_FROM_EMAIL="Site <noreply@example.org>", **self.REQUIRED,
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(
+            out.stdout.strip(),
+            "[('a@example.org', 'a@example.org'), ('b@example.org', 'b@example.org')] "
+            "Site <noreply@example.org>",
+        )
+
+        # Unset, the site still starts; the alert task is what complains.
+        out = self._import("Icarus.settings.production", "s.ADMINS", **self.REQUIRED)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(out.stdout.strip(), "[]")
+
     def test_cache_is_shared_between_workers(self):
         out = self._import(
             "Icarus.settings.production", "s.CACHES['default']['BACKEND'].rsplit('.', 1)[1]", **self.REQUIRED,
@@ -619,3 +647,80 @@ class AdminHygieneTests(WagtailPageTestCase):
         from reader.wagtail_hooks import global_admin_js
 
         self.assertNotIn("?v=", str(global_admin_js()))
+
+
+class DiskUsageAlertTests(TestCase):
+    """
+    The hourly disk check (home.tasks.check_disk_usage), added after the
+    2026-10-22 incident, when the host disk sat full for days unnoticed.
+    """
+
+    ADMINS = [("ops@example.org", "ops@example.org")]
+
+    def _check(self, used, free, reserved=0):
+        """Run the check against a fake disk of these sizes, in bytes."""
+        from types import SimpleNamespace
+        from unittest import mock
+
+        from home import tasks
+
+        disk = SimpleNamespace(total=used + free + reserved, used=used, free=free)
+        with mock.patch("home.tasks.shutil.disk_usage", return_value=disk):
+            return tasks.check_disk_usage()
+
+    def test_no_email_below_the_threshold(self):
+        from django.core import mail
+
+        with self.settings(ADMINS=self.ADMINS):
+            self.assertAlmostEqual(self._check(used=79, free=21), 0.79)
+        self.assertEqual(mail.outbox, [])
+
+    def test_emails_admins_at_the_threshold(self):
+        from django.core import mail
+
+        with self.settings(ADMINS=self.ADMINS):
+            self._check(used=80 * 10**9, free=20 * 10**9)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["ops@example.org"])
+        self.assertIn("Disk at 80% on icarus-flight", mail.outbox[0].subject)
+        self.assertIn("80.0 GB used of 100.0 GB, 20.0 GB free", mail.outbox[0].body)
+
+    def test_the_threshold_is_measured_like_df(self):
+        # ext4 reserves 5% for root: df shows 80% here, used / total only 76%.
+        from django.core import mail
+
+        with self.settings(ADMINS=self.ADMINS):
+            self._check(used=76, free=19, reserved=5)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_without_admins_it_fails_instead_of_sending_nothing(self):
+        # mail_admins() returns quietly when ADMINS is empty. The check raises,
+        # even on a healthy disk, so the gap shows up as a failed task at once
+        # rather than on the day the disk fills.
+        from django.core.exceptions import ImproperlyConfigured
+
+        with self.settings(ADMINS=[]):
+            with self.assertRaises(ImproperlyConfigured):
+                self._check(used=10, free=90)
+
+    def test_schedule_command_registers_one_hourly_schedule(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+        from django_q.models import Schedule
+
+        call_command("setup_disk_alert_schedule", stdout=StringIO())
+        call_command("setup_disk_alert_schedule", stdout=StringIO())  # idempotent
+        schedule = Schedule.objects.get(func="home.tasks.check_disk_usage")
+        self.assertEqual(schedule.schedule_type, Schedule.HOURLY)
+        self.assertEqual(schedule.repeats, -1)
+
+        call_command("setup_disk_alert_schedule", "--delete", stdout=StringIO())
+        self.assertFalse(Schedule.objects.filter(func="home.tasks.check_disk_usage").exists())
+
+    def test_the_web_container_registers_the_schedule_on_start(self):
+        # The schedule only exists once the command has run.
+        from django.conf import settings
+
+        dockerfile = (settings.BASE_DIR / "Dockerfile").read_text()
+        self.assertIn("python manage.py setup_disk_alert_schedule;", dockerfile)

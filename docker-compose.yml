@@ -1,6 +1,23 @@
+# Shared logging policy for every service (a YAML anchor, used below as
+# `logging: *default-logging`). Docker's default json-file driver never rotates:
+# PgBouncer's log alone reached 14 GB and filled the disk on 2026-10-22. The
+# `local` driver rotates and compresses, and `docker logs` / `docker compose
+# logs` keep working. Set here rather than in /etc/docker/daemon.json so it is
+# version-controlled and needs no dockerd restart.
+# Logging options are fixed when a container is created. Editing this block
+# changes every service's config, so the next deploy's `docker compose up -d`
+# recreates all of them, db included (a brief database restart), and each
+# container's existing log is deleted with it.
+x-logging: &default-logging
+  driver: local
+  options:
+    max-size: "20m"  # rotate each file at 20 MB
+    max-file: "5"    # keep 5 files: at most ~100 MB per container
+
 services:
   db:
     image: pgvector/pgvector:pg18-trixie
+    logging: *default-logging
 
     restart: unless-stopped
     environment:
@@ -21,6 +38,7 @@ services:
 
   bouncer:
     image: edoburu/pgbouncer:v1.25.2-p0
+    logging: *default-logging
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_NAME}
@@ -35,6 +53,20 @@ services:
       MAX_CLIENT_CONN: "100"
       DEFAULT_POOL_SIZE: "60"
       ADMIN_USERS: ${POSTGRES_USER}
+      # PgBouncer logs one line per client connect and one per disconnect by
+      # default. The Q2 cluster reconnects on every idle queue poll, and these
+      # lines grew this container's Docker log to 14 GB and filled the disk
+      # (2026-10-22 incident). Every client is our own app, on an internal
+      # network, with the one DB user, so the lines carry little audit value.
+      LOG_CONNECTIONS: "0"
+      LOG_DISCONNECTIONS: "0"
+      # Still log real pooler failures (PgBouncer's default, made explicit).
+      LOG_POOLER_ERRORS: "1"
+      # The image writes pgbouncer.ini from these variables only when the
+      # container is created: a restart or SIGHUP keeps the old file. Changing
+      # this block changes the service config, so deploy.sh's `docker compose
+      # up -d` recreates bouncer (dropping every client session; web, qcluster
+      # and channels_postgres reconnect).
     depends_on:
       db:
         condition: service_healthy
@@ -47,6 +79,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: icarus-web:latest
+    logging: *default-logging
     restart: unless-stopped
     env_file:
       - .env
@@ -94,6 +127,7 @@ services:
   # just runs a different command. Remove it only if you run qcluster elsewhere.
   qcluster:
     image: icarus-web:latest
+    logging: *default-logging
     restart: unless-stopped
     env_file:
       - .env
@@ -122,6 +156,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
+    logging: *default-logging
     restart: unless-stopped
     ports:
       - "80:80"
