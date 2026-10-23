@@ -639,6 +639,17 @@ html[data-theme="dark"] {
     100% { background-position: -200% 0; }
 }
 
+/* Failsafe for the hidden body: article.css and issue.css run these after a  */
+/* delay, so the text still appears if article.js / issue.js never runs       */
+/* (failed download, script error) instead of staying blank behind the        */
+/* skeleton. When the script runs first it has already shown the text.        */
+@keyframes lazy-body-failsafe-show {
+    to { opacity: 1; }
+}
+@keyframes lazy-body-failsafe-hide {
+    to { visibility: hidden; }
+}
+
 /* Word-by-word reveal. Icarus.js wraps each word in `.lazy-word` (starting   */
 /* hidden) and adds `.lazy-word--in` to them one at a time, in reading order,  */
 /* so they fade in as a single continuous wave. The pace between words is set  */

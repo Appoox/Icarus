@@ -932,12 +932,15 @@ html[data-theme="dark"] .paywall-fade {
    behind the skeleton (see includes/body_skeleton.html + Icarus.css) and
    fades in once article.js adds `.body-loaded`. Applies to the full body
    and the paywalled/truncated preview (both use .article-body).
+   If article.js never runs, the failsafe animations show the text and hide
+   the skeleton after 1.5s anyway.
 ───────────────────────────────────────────── */
 .js-lazy-body .article-body {
     position: relative;
 }
 .js-lazy-body .article-body .article-content {
     opacity: 0;
+    animation: lazy-body-failsafe-show 0s 1.5s forwards;
 }
 /* Overlay the skeleton so the (invisible) body still reserves its real height */
 /* and removing the skeleton on reveal causes no layout shift.                 */
@@ -947,6 +950,7 @@ html[data-theme="dark"] .paywall-fade {
     left: 0;
     right: 0;
     z-index: 2;
+    animation: lazy-body-failsafe-hide 0s 1.5s forwards;
 }
 .js-lazy-body .article-body.body-loaded .article-content {
     opacity: 1; /* block shown instantly; individual words cascade in (Icarus.js/.css) */

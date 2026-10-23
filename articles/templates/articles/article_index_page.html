@@ -26,7 +26,8 @@
                 {% if post.cover_image %}
                 {% image post.cover_image fill-300x200 as img %}
                 <a href="{{ post.url }}">
-                    <img src="{{ img.url }}" alt="{{ img.alt }}">
+                    {# The first few are on screen at once; lazy-load the rest. #}
+                    <img src="{{ img.url }}" alt="{{ img.alt }}"{% if forloop.counter > 3 %} loading="lazy"{% endif %} decoding="async">
                 </a>
                 {% endif %}
             </div>

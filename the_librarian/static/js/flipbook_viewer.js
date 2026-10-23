@@ -18,6 +18,8 @@
           _page_image_url_template) — the page images themselves are
           rendered and disk-cached server-side (see page_cache.py), so
           this is just normal image loading, no client-side rasterisation.
+          Only the pages near the one being read are downloaded; the
+          window moves as the reader flips (loadAround).
        3. StPageFlip (the `St.PageFlip` global from page-flip.browser.js)
           takes those elements and renders the flip-book UI, including its
           own drag/click-to-turn interactions and shadows.
@@ -85,6 +87,14 @@
     var PAGE_GAP             = 20;  // px reserved below the book within the stage
     var RESIZE_DEBOUNCE_MS   = 200; // wait for resizing/rotation to settle before rebuilding
 
+    // ── Page image window ────────────────────────────────────────────────
+    // Only the pages around the one being read are downloaded, and the window
+    // moves with each flip. Requesting a whole issue at once (often 100+
+    // pages, each with its own access check on the server) delayed the pages
+    // the reader wanted and loaded the server for everyone else.
+    var PAGES_AHEAD  = 6; // three two-page spreads
+    var PAGES_BEHIND = 2;
+
     document.addEventListener('DOMContentLoaded', init);
 
     function init() {
@@ -130,6 +140,22 @@
 
         function pageImageUrl(pageNumber) {
             return pageImageUrlTemplate.replace('{page}', String(pageNumber));
+        }
+
+        // Start downloading the page images within the window around
+        // `index` (0-based) that haven't been requested yet. Each <img> holds
+        // its URL in data-src until then.
+        var requestedCount = 0;
+        function loadAround(index) {
+            var from = Math.max(0, index - PAGES_BEHIND);
+            var to   = Math.min(pageElements.length - 1, index + PAGES_AHEAD);
+            for (var i = from; i <= to; i++) {
+                var img = pageElements[i].querySelector('img');
+                if (!img || !img.dataset.src) continue;
+                img.src = img.dataset.src;
+                delete img.dataset.src;
+                requestedCount++;
+            }
         }
 
         // ── Size the stage from the viewport, not from CSS ───────────────
@@ -293,10 +319,12 @@
             pageCount = pageFlip.getPageCount();
 
             pageFlip.on('flip', function (e) {
+                loadAround(e.data);
                 updateIndicator(e.data);
                 updateNavButtons(e.data);
             });
 
+            loadAround(clampedStart);
             updateIndicator(clampedStart);
             updateNavButtons(clampedStart);
 
@@ -352,13 +380,10 @@
                 img.style.width = '100%';
                 img.style.height = '100%';
                 img.style.display = 'block'; // prevents nasty inline baseline gaps
-                img.src = pageImageUrl(pageNumber);
-                // Hint the browser to fetch the opening page first; the
-                // rest can wait their turn. Pre-rendered pages are small
-                // (tens of KB), so — unlike the old client-rendering
-                // pipeline — there's no need for a custom concurrency-
-                // limited worker queue here; the browser's own network
-                // scheduling handles this well on its own.
+                // Not downloaded yet: loadAround() sets src once the reader
+                // is near this page (see PAGES_AHEAD / PAGES_BEHIND).
+                img.dataset.src = pageImageUrl(pageNumber);
+                // Hint the browser to fetch the opening page first.
                 img.fetchPriority = (pageNumber === initialPageNumber) ? 'high' : 'low';
                 img.addEventListener('load', onImageSettled);
                 img.addEventListener('error', onImageSettled);
@@ -370,9 +395,13 @@
 
             function onImageSettled() {
                 loadedCount++;
-                setStatus(t.i18nLoadingPages + ' (' + loadedCount + ' / ' + total + ')');
-                setProgress(loadedCount, total);
+                setStatus(t.i18nLoadingPages + ' (' + loadedCount + ' / ' + requestedCount + ')');
+                setProgress(loadedCount, requestedCount);
             }
+
+            // Start the opening page and its neighbours now; the rest follow
+            // as the reader flips.
+            loadAround(initialPageNumber - 1);
 
             // We need the *real* aspect ratio for the layout math in
             // buildBook() — wait for the opening page's image specifically

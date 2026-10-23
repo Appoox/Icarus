@@ -5,25 +5,24 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ── LAZY BODY REVEAL ──
-    // The body starts hidden behind a shimmer skeleton (via the `js-lazy-body`
-    // class set in the template). On reveal we wrap the text in words and let
-    // them cascade in block-by-block as they scroll into view (see
-    // window.lazyRevealWords in Icarus.js). Content is already in the DOM, so
+    // ── BODY REVEAL ──
+    // The body ships in the HTML and starts hidden behind a shimmer skeleton
+    // (the `js-lazy-body` class set in the template). Reveal it now, as soon as
+    // the DOM is ready. Never wait for the window `load` event: that also waits
+    // for every image, font and video embed on the page, and kept the text
+    // hidden for seconds on slow connections. The words on screen fade in (see
+    // window.lazyRevealWords in Icarus.js); content is already in the DOM, so
     // media players and the language switcher below need no re-initialization.
     if (document.documentElement.classList.contains('js-lazy-body')) {
-        const bodies = document.querySelectorAll('.article-body');
-        const revealBodies = () => bodies.forEach(b => {
+        document.querySelectorAll('.article-body').forEach(b => {
             b.querySelectorAll('.article-content').forEach(c => {
-                if (window.lazyRevealWords) window.lazyRevealWords(c);
+                // Already showing means the CSS failsafe in article.css got
+                // there first (this script ran late); don't hide it again.
+                const alreadyShown = parseFloat(getComputedStyle(c).opacity) > 0;
+                if (!alreadyShown && window.lazyRevealWords) window.lazyRevealWords(c);
             });
             b.classList.add('body-loaded');
         });
-        if (document.readyState === 'complete') {
-            setTimeout(revealBodies, 250);
-        } else {
-            window.addEventListener('load', () => setTimeout(revealBodies, 150));
-        }
     }
 
     // ── LANGUAGE SLIDER ──
@@ -274,6 +273,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (id) {
             const iframe = document.createElement('iframe');
             iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;';
+            // Lazy: don't download YouTube's player until the video is near
+            // the screen.
+            iframe.loading = 'lazy';
             iframe.src = `https://www.youtube.com/embed/${id}`;
             iframe.title = 'YouTube video player';
             iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';

@@ -359,3 +359,34 @@ class StaffNotificationDeliveryTests(TestCase):
         self._post_with_layer(reverse('kalapila:post_comment'), {'page_id': self.article_page.id, 'body': 'Hi'})
         for note in DashboardNotification.objects.all():
             self.assertNotIn("+1555", note.message)
+
+
+class UserNotificationMiddlewareTests(TestCase):
+    """
+    Caddy checks access to each protected image (every page of an archive
+    issue) with a request to /internal/…, and throws its response away. The
+    notification middleware must leave those alone: it used to mark a reader's
+    notifications read there, so they were never shown, and wrote the session
+    once per image.
+    """
+
+    def setUp(self):
+        from .models import UserNotification
+
+        self.reader = User.objects.create_user(
+            phone_number="+15555555577", name="Notified Reader", password="readerpassword",
+        )
+        self.note = UserNotification.objects.create(user=self.reader, message="Your comment was approved.")
+        self.client.force_login(self.reader)
+
+    def test_internal_access_checks_leave_notifications_unread(self):
+        self.client.get("/internal/page-cache-authz")
+        self.client.get("/internal/archive-authz")
+        self.note.refresh_from_db()
+        self.assertFalse(self.note.is_read)
+        self.assertNotIn("_warn_hit", self.client.session)
+
+    def test_a_page_request_still_delivers_them(self):
+        self.client.get("/no-such-page/")
+        self.note.refresh_from_db()
+        self.assertTrue(self.note.is_read)

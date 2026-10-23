@@ -8,7 +8,9 @@
   {% else %}
     {% image self.image width-680 as img %}
   {% endif %}
-  <img src="{{ img.url }}" alt="{% if self.alt_text %}{{ self.alt_text }}{% else %}{{ img.alt }}{% endif %}">
+  {# width/height reserve the space (CSS scales it with height:auto) so lazy loading doesn't shift the text. #}
+  <img src="{{ img.url }}" alt="{% if self.alt_text %}{{ self.alt_text }}{% else %}{{ img.alt }}{% endif %}"
+       width="{{ img.width }}" height="{{ img.height }}" loading="lazy" decoding="async">
   {% if self.caption or self.credit %}
     <figcaption>
       {% if self.caption %}{{ self.caption|richtext }}{% endif %}

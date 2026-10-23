@@ -1326,12 +1326,15 @@ html[data-theme^="d"] .show-more-banner {
    behind the skeleton and fades in once issue.js adds `.body-loaded`. The
    skeleton is an absolute overlay so it stays out of the .expandable-content
    flow and doesn't perturb the scrollHeight math in issue.js (show-more/TOC).
+   If issue.js never runs, the failsafe animations (Icarus.css) show the
+   editorial and hide the skeleton after 1.5s anyway.
 ───────────────────────────────────────────── */
 .js-lazy-body .editorial-content-col .expandable-wrapper {
     position: relative;
 }
 .js-lazy-body .editorial-content-col .expandable-content {
     opacity: 0;
+    animation: lazy-body-failsafe-show 0s 1.5s forwards;
 }
 .js-lazy-body .editorial-content-col .expandable-wrapper > .body-skeleton {
     position: absolute;
@@ -1339,6 +1342,7 @@ html[data-theme^="d"] .show-more-banner {
     left: 0;
     right: 0;
     z-index: 2;
+    animation: lazy-body-failsafe-hide 0s 1.5s forwards;
 }
 /* Keep the "show more" banner out of sight until the editorial is revealed. */
 /* !important beats the inline display issue.js sets via checkOverflow.       */

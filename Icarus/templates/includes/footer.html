@@ -101,7 +101,7 @@
                 <div class="board-member__photo">
                   {% if rel.editor.profile_image %}
                     {% image rel.editor.profile_image fill-108x108 as ed_img %}
-                    <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}">
+                    <img src="{{ ed_img.url }}" alt="{{ rel.editor.title }}" loading="lazy" decoding="async">
                   {% else %}
                     <div class="board-member__photo-placeholder">
                       {{ rel.editor.title|first }}

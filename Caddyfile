@@ -110,13 +110,18 @@ encode gzip
     }
 
     # PUBLIC: Wagtail image originals + renditions (public by design).
+    # Browsers keep them for a day, then revalidate with the ETag (a cheap
+    # 304). Not longer: replacing an image in the Wagtail admin deletes its
+    # old files, so the same URL can come back with a different picture.
     handle /media/images/* {
         root * /srv
         file_server
+        header Cache-Control "public, max-age=86400"
     }
     handle /media/original_images/* {
         root * /srv
         file_server
+        header Cache-Control "public, max-age=86400"
     }
 
     # DEFAULT-DENY: any other /media path is not public until whitelisted above.
