@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static humanize i18n %}
+
+{% block title %}{% translate "ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  {% translate "വിഷയങ്ങൾ" as kicker %}
+  {% translate "ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട വിഷയങ്ങൾ" as title %}
+  {% translate "കഴിഞ്ഞ 30 ദിവസത്തെ വായനകൾ" as meta %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=title meta=meta %}
+
+  <section class="pt-list-section">
+    {% if page_obj %}
+    <ol class="pt-ranklist">
+      {% for topic in page_obj %}
+      <li class="pt-rank">
+        <span class="pt-rank__n">{{ page_obj.start_index|add:forloop.counter0 }}</span>
+        <a href="{% url 'topic_detail' topic.slug %}" class="pt-rank__who"><span class="pt-rank__name">{{ topic.name }}</span></a>
+        <span class="pt-rank__reads"><strong>{{ topic.total_views|intcomma }}</strong>{% translate "വായനകൾ" %}</span>
+        {% if topic.top_articles %}
+        <ul class="pt-rank__top">
+          {% for article in topic.top_articles|slice:":3" %}<li><a href="{{ article.url }}">{{ article.title }}</a></li>{% endfor %}
+        </ul>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+    {% include "themes/print/includes/pagination.html" with page_obj=page_obj %}
+    {% else %}
+    <p class="pt-list-empty">{% translate "നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല." %}</p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "വിഷയങ്ങൾ" %} | ശാസ്ത്രഗതി{% endblock %}

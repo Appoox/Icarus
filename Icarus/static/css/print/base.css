@@ -1,0 +1,627 @@
+/* =========================================================
+   Print edition design — shared styles
+   Loaded by base.html only when Settings → Site theme is
+   "Print edition" (see home/theme.py). The classic design's
+   stylesheets still load underneath it, so the pages that have
+   no print-edition template of their own pick up these colours
+   and fonts through the classic tokens re-pointed below.
+
+   The issue colour (--issue and its shades) is set per page by
+   {% pt_palette_style %} in a <style> right after this file.
+   ========================================================= */
+
+:root {
+    color-scheme: light;
+
+    /* Fixed colours (design handoff "Design tokens") */
+    --ink: #1a1612;
+    --body: #2a251e;
+    --muted: #4a453c;
+    --subtle: #6b6659;
+    --band: #15171c;
+    --paper: #f3f4f0;
+    --panel: #fbfbf9;
+    --rule: #9aa0a8;
+    --divider: #c8ccd2;
+    --hairline: #dcdfe4;
+    --track: #dde2ea;
+    --on-band: #c7ccd6;
+    --field: #ffffff;
+    --shadow-ink: #1a1612;
+    --ph-a: #dcdee2;
+    --ph-b: #d1d4d9;
+
+    /* Issue colour — real values come from {% pt_palette_style %}; what
+       each shade is for is listed in home/theme.py. */
+    --issue: #1d5fc4;
+    --issue-display: #1d5fc4;
+    --issue-fill: #1d5fc4;
+    --on-issue: #ffffff;
+    --on-issue-accent: #144289;
+    --issue-dark: #144289;
+    --issue-bright: #5687d3;
+    --issue-light: #a5bfe7;
+    --issue-on-band: #5a8ad4;
+    --issue-on-white: #1d5fc4;
+
+    /* Type */
+    --font-display: 'Baloo Chettan 2', 'Noto Sans Malayalam', sans-serif;
+    --font-text: 'Noto Serif Malayalam', Georgia, serif;
+    --font-ui: 'Anek Malayalam', 'Noto Sans Malayalam', sans-serif;
+
+    /* Layout: a 1280px page with 64px sides, as designed */
+    --pt-page: 1280px;
+    --pt-gutter: 64px;
+    --pt-pad-x: max(var(--pt-gutter), calc((100% - var(--pt-page)) / 2 + var(--pt-gutter)));
+
+    /* Classic tokens re-pointed, for pages without a print template */
+    --navy: var(--band);
+    --navy-mid: var(--band);
+    --red: var(--issue);
+    --red-hover: var(--issue-dark);
+    --red-dark: var(--issue-dark);
+    --sky: var(--issue);
+    --surface: var(--panel);
+    --surface-2: #e9eae5;
+    --rule-soft: var(--hairline);
+    --link: var(--ink);
+    --caption: var(--subtle);
+    --bg-light: #e9eae5;
+    --bg: var(--panel);
+    --gray-dark: var(--muted);
+    --serif: var(--font-display);
+    --body-serif: var(--font-text);
+    --label: var(--font-ui);
+}
+
+/* Dusk: warm near-black, the reader's "dusk" choice. Not in the design
+   handoff (only light was designed); built from the same roles. */
+html[data-theme^="d"] {
+    color-scheme: dark;
+
+    --ink: #efe9de;
+    --body: #ded7ca;
+    --muted: #c4bcad;
+    --subtle: #a39a89;
+    --band: #0b0a07;
+    --paper: #16130e;
+    --panel: #201c16;
+    --rule: #6a6255;
+    --divider: #3e382f;
+    --hairline: #2f2a22;
+    --track: #3e382f;
+    --field: #16130e;
+    --shadow-ink: #3b352b;
+    --ph-a: #2a251e;
+    --ph-b: #231f19;
+    --surface-2: #2a251e;
+    --bg-light: #2a251e;
+}
+
+/* Dark: true black for OLED screens */
+html[data-theme="dark"] {
+    --band: #0f1013;
+    --paper: #000000;
+    --panel: #0e0e0f;
+    --divider: #2c2c2f;
+    --hairline: #1f1f22;
+    --field: #000000;
+    --shadow-ink: #2e2e33;
+    --ph-a: #1a1a1d;
+    --ph-b: #141416;
+    --surface-2: #141416;
+    --bg-light: #141416;
+}
+
+/* ── Page ─────────────────────────────────────────── */
+
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-text);
+    -webkit-font-smoothing: antialiased;
+    /* Malayalam compounds (വാണിജ്യവൽക്കരണത്തിൽനിന്നുള്ള) and long links can
+       be wider than a narrow column: break such a word at the column edge
+       instead of letting it run into the next column. Words that fit are
+       never broken. */
+    overflow-wrap: break-word;
+}
+
+/* Malayalam letter-joining in Baloo Chettan 2 (the headline font).
+   The font's separate Malayalam setting (OpenType language "MAL") leaves
+   out its joined letters, so on pages marked lang="ml" browsers draw
+   ക്ക as ക്‌ക and ന്‍ as ന് with a visible chandrakkala. These two lines
+   make browsers use the font's normal setting, the one the design was
+   drawn with. Screen readers still read lang="ml"; Noto Serif and Anek
+   Malayalam look exactly the same either way. */
+html.theme-print:lang(ml),
+html.theme-print :lang(ml) {
+    -webkit-locale: "und";            /* Chrome, Edge, Safari */
+    font-language-override: "dflt";   /* Firefox */
+}
+
+a:hover { color: var(--issue); }
+
+.pt-page {
+    width: 100%;
+    max-width: var(--pt-page);
+    margin: 0 auto;
+}
+
+.pt-sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* A block wearing another issue's colour ({% pt_issue_style %}): its own
+   text shade, light or dark to suit the reader's theme. */
+.pt-own-colour {
+    --issue: var(--own-issue);
+    --issue-display: var(--own-issue-display);
+    --issue-dark: var(--own-issue-dark);
+}
+html[data-theme^="d"] .pt-own-colour {
+    --issue: var(--own-issue-on-dark);
+    --issue-display: var(--own-issue-display-on-dark);
+    --issue-dark: var(--own-issue-dark-on-dark);
+}
+
+/* Colour stripe under the masthead and over the footer */
+.pt-stripe { height: 8px; background: var(--issue-bright); }
+
+/* A dark-on-light wordmark shown light on the dark band: inverted (with
+   the contrast pushed so an off-white JPEG background becomes pure black)
+   and screen-blended so that black disappears into the band. */
+.pt-on-band-invert { filter: grayscale(1) invert(1) contrast(2); mix-blend-mode: screen; }
+
+/* ── Header ───────────────────────────────────────── */
+
+.pt-header { background: var(--band); color: #fff; position: relative; z-index: 20; }
+
+.pt-header__band {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: 96px;
+    padding: 0 32px;
+    gap: 16px;
+}
+
+.pt-header__left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+.pt-header__logo-link { flex: none; }
+.pt-header__logo {
+    height: 46px; width: auto;
+    background: #fff; padding: 4px; border-radius: 2px;
+}
+
+.pt-header__org {
+    display: flex; flex-direction: column;
+    font: 600 12px/1.3 var(--font-ui);
+}
+
+.pt-header__wordmark { display: block; color: #fff; }
+.pt-header__wordmark:hover { color: #fff; opacity: .9; }
+.pt-header__wordmark img { height: 56px; width: auto; }
+.pt-header__wordmark-text { font: 800 44px/1 var(--font-display); }
+
+.pt-header__right,
+.pt-header__controls {
+    display: flex; align-items: center; justify-content: flex-end; gap: 18px;
+    font: 600 14px/1.2 var(--font-ui);
+}
+
+.pt-header a { color: #fff; }
+.pt-header a:hover { color: var(--issue-light); }
+
+.pt-header__icon {
+    background: none; border: 0; color: #fff; cursor: pointer;
+    padding: 4px; font-size: 16px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.pt-header__icon.search-icon-btn,
+.pt-header__icon.search-icon-btn:hover { border-radius: 0; background: none; transform: none; }
+.pt-header__icon:hover { color: var(--issue-light); }
+
+.pt-header__lang { border-left: 1px solid rgba(255, 255, 255, .45); padding-left: 16px; }
+.pt-header__link--muted { opacity: .8; }
+
+.pt-header a.pt-header__subscribe {
+    background: #fff; color: var(--issue-on-white);
+    padding: 7px 16px; border-radius: 2px; white-space: nowrap;
+}
+.pt-header a.pt-header__subscribe:hover { background: var(--issue-light); color: var(--band); }
+
+.pt-header__menu {
+    display: none;
+    background: none; border: 1.5px solid rgba(255, 255, 255, .6); color: #fff;
+    width: 38px; height: 34px; cursor: pointer; font-size: 16px;
+}
+
+/* ── Section nav ──────────────────────────────────── */
+
+.pt-nav {
+    display: flex; align-items: center; gap: 32px;
+    padding: 14px var(--pt-pad-x);
+    border-bottom: 1px dashed var(--rule);
+    font: 600 15px/1.4 var(--font-ui);
+    color: var(--muted);
+}
+
+.pt-nav__list { display: flex; gap: 32px; list-style: none; margin: 0; padding: 0; }
+.pt-nav__item { color: var(--muted); white-space: nowrap; }
+.pt-nav__item.is-active { color: var(--issue); }
+.pt-nav__issue { margin-left: auto; color: var(--subtle); font-weight: 500; white-space: nowrap; }
+
+/* ── Folio (the running line above the footer) ────── */
+
+.pt-folio {
+    display: flex; justify-content: space-between; gap: 24px;
+    padding: 12px var(--pt-pad-x);
+    margin-top: auto;
+    border-top: 1px solid var(--hairline);
+    font: 13px/1.5 var(--font-ui);
+    color: var(--subtle);
+}
+.pt-folio a { color: var(--ink); font-weight: 700; }
+.pt-folio__pager { display: flex; gap: 24px; }
+
+/* ── Footer ───────────────────────────────────────── */
+
+.pt-footer { background: var(--band); color: #fff; font-family: var(--font-ui); }
+.pt-footer a { color: #fff; }
+.pt-footer a:hover { color: var(--issue-light); }
+
+.pt-footer__inner {
+    max-width: var(--pt-page);
+    margin: 0 auto;
+    padding: 48px var(--pt-gutter) 32px;
+    display: flex; flex-direction: column; gap: 32px;
+}
+
+.pt-footer__grid {
+    display: grid;
+    grid-template-columns: 1.4fr repeat(var(--pt-footer-cols, 3), 1fr);
+    gap: 40px;
+}
+
+.pt-footer__brand { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.pt-footer__wordmark { height: 40px; width: auto; }
+.pt-footer__wordmark-text { font: 800 32px/1 var(--font-display); }
+.pt-footer__tagline { margin: 0; font: 15px/1.7 var(--font-text); }
+
+.pt-footer__board-btn {
+    background: none; border: 0; padding: 0; cursor: pointer; color: #fff;
+    font: 600 15px var(--font-ui); text-decoration: underline; text-underline-offset: 4px;
+}
+.pt-footer__board-btn:hover { color: var(--issue-light); }
+
+.pt-footer__col { display: flex; flex-direction: column; gap: 10px; }
+.pt-footer__heading { margin: 0 0 4px; font: 700 14px/1.4 var(--font-ui); color: var(--issue-light); }
+.pt-footer__links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 15px; }
+
+.pt-footer__bottom {
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+    border-top: 1px solid rgba(255, 255, 255, .35);
+    padding-top: 20px;
+    font-size: 13px;
+}
+.pt-footer__social { display: flex; gap: 18px; font-size: 16px; }
+
+/* ── Modal (editorial board) ──────────────────────── */
+
+.pt-modal {
+    border: 0; padding: 0; background: transparent; color: var(--ink);
+    width: min(760px, calc(100% - 32px)); max-width: none; max-height: calc(100vh - 48px);
+    margin: min(200px, 12vh) auto auto;
+    overflow: visible;
+}
+.pt-modal::backdrop { background: rgba(26, 22, 18, .55); }
+.pt-modal__panel {
+    background: var(--paper);
+    box-shadow: 12px 12px 0 var(--shadow-ink);
+    max-height: calc(100vh - min(200px, 12vh) - 48px);
+    overflow: auto;
+}
+.pt-modal__head {
+    background: var(--band); color: #fff;
+    padding: 22px 32px;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+}
+.pt-modal__title { margin: 0; font: 800 34px/1.1 var(--font-display); }
+.pt-modal__subtitle { margin: 4px 0 0; font: 600 14px/1.4 var(--font-ui); color: var(--on-band); }
+.pt-modal__close {
+    width: 36px; height: 36px; flex: none;
+    border: 1.5px solid #fff; background: none; color: #fff;
+    font-size: 18px; cursor: pointer;
+}
+.pt-modal__close:hover { background: #fff; color: var(--band); }
+.pt-modal__body { padding: 28px 32px 32px; }
+
+.pt-board__roles { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; margin: 0; }
+.pt-board__pair { padding: 10px 0; border-bottom: 1px dashed var(--divider); }
+.pt-board__pair dt { font: 600 13px/1.4 var(--font-ui); color: var(--subtle); }
+.pt-board__pair dd { margin: 2px 0 0; font: 700 17px/1.5 var(--font-text); }
+.pt-board__members-title { margin: 22px 0 6px; font: 700 15px/1.4 var(--font-ui); }
+.pt-board__members { margin: 0; font: 16px/1.8 var(--font-text); }
+
+/* ── Shared building blocks ───────────────────────── */
+
+.pt-tag {
+    display: inline-block; align-self: flex-start;
+    background: var(--issue-fill); color: var(--on-issue);
+    font: 700 15px/1.5 var(--font-ui);
+    padding: 4px 14px;
+}
+a.pt-tag:hover { color: var(--issue-fill); background: var(--on-issue); box-shadow: inset 0 0 0 1.5px var(--issue-fill); }
+
+.pt-h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: var(--issue-display);
+    text-wrap: balance;
+}
+.pt-h1--article { font-size: 88px; line-height: 1; max-width: 1050px; }
+.pt-h1--home { font-size: 96px; line-height: .98; }
+.pt-h1--issue { font-size: 104px; line-height: .98; }
+
+.pt-standfirst {
+    margin: 0;
+    font: 500 21px/1.7 var(--font-text);
+    color: var(--ink);
+    max-width: 640px;
+    text-wrap: pretty;
+}
+
+/* Section title: ■ Title - - - - - - - (link) */
+.pt-section-head {
+    display: flex; align-items: center; gap: 16px;
+    margin: 0 0 28px;
+}
+.pt-section-head::before {
+    content: ''; width: 14px; height: 14px; flex: none;
+    background: var(--issue-bright);
+}
+.pt-section-head__title { margin: 0; font: 800 32px/1.25 var(--font-display); color: var(--ink); }
+.pt-section-head__count { font: 700 16px var(--font-ui); color: var(--subtle); }
+.pt-section-head__rule { flex: 1; border-top: 1px dashed var(--rule); }
+.pt-section-head__more { font: 700 15px var(--font-ui); color: var(--issue); white-space: nowrap; }
+
+.pt-more { font: 700 15px/1.4 var(--font-ui); color: var(--issue); }
+.pt-more:hover { color: var(--issue-dark); }
+
+.pt-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 22px;
+    border: 2px solid var(--ink);
+    font: 700 15px/1.2 var(--font-ui);
+    text-align: center; cursor: pointer;
+    background: transparent; color: var(--ink);
+}
+.pt-btn--dark { background: var(--ink); color: var(--paper); }
+.pt-btn--dark:hover { background: var(--issue-fill); border-color: var(--issue-fill); color: var(--on-issue); }
+.pt-btn--outline:hover { background: var(--ink); color: var(--paper); }
+.pt-btn--on-colour { border-color: var(--on-issue); color: var(--on-issue); }
+.pt-btn--on-colour:hover { background: var(--on-issue); color: var(--issue-fill); }
+.pt-btn--white { background: var(--on-issue); border-color: var(--on-issue); color: var(--issue-fill); }
+.pt-btn--white:hover { background: var(--band); border-color: var(--band); color: #fff; }
+
+.pt-chip {
+    display: inline-block;
+    border: 1.5px solid var(--ink);
+    padding: 4px 12px;
+    font: 600 14px/1.4 var(--font-ui);
+    color: var(--ink);
+}
+.pt-chip:hover { border-color: var(--issue); }
+.pt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.pt-panel { background: var(--panel); border-top: 6px solid var(--issue-fill); }
+
+.pt-cover { display: block; width: 100%; height: auto; box-shadow: 8px 8px 0 var(--shadow-ink); }
+.pt-cover--small { box-shadow: 6px 6px 0 var(--shadow-ink); }
+.pt-cover--thumb { box-shadow: 4px 4px 0 var(--shadow-ink); }
+
+/* Striped placeholder for a missing image */
+.pt-ph {
+    background: repeating-linear-gradient(135deg, var(--ph-a) 0 10px, var(--ph-b) 10px 20px);
+}
+
+.pt-avatar {
+    width: 44px; height: 44px; flex: none;
+    border-radius: 50%; overflow: hidden;
+    background: var(--band); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font: 700 18px/1 var(--font-display);
+}
+.pt-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Contents (Home and Issue) */
+.pt-contents {
+    margin: 0 var(--pt-gutter);
+    padding: 40px 48px;
+    display: grid; grid-template-columns: 240px 1fr; gap: 48px;
+}
+.pt-contents__title { margin: 0; font: 800 44px/1 var(--font-display); }
+.pt-contents__sub { margin: 12px 0 0; font: 14px/1.5 var(--font-ui); color: var(--subtle); }
+
+.pt-toc {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px;
+}
+.pt-toc__row {
+    display: grid; grid-template-columns: 52px 1fr; gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px dashed var(--divider);
+}
+.pt-toc__page { font: 800 30px/1 var(--font-display); color: var(--issue-display); }
+/* Issues entered without print page numbers: no empty number column */
+.pt-toc__row:has(.pt-toc__page:empty) { grid-template-columns: 1fr; }
+.pt-toc__page:empty { display: none; }
+.pt-toc__text { display: flex; flex-direction: column; gap: 4px; }
+.pt-toc__kicker { font: 700 13px/1.4 var(--font-ui); color: var(--band); }
+html[data-theme^="d"] .pt-toc__kicker { color: var(--muted); }
+.pt-toc__title { font: 700 18px/1.45 var(--font-text); color: var(--ink); }
+.pt-toc__author { font: 14px/1.5 var(--font-ui); color: var(--subtle); }
+
+/* Subscribe box (Home, paywall) */
+.pt-subscribe {
+    background: var(--issue-fill); color: var(--on-issue);
+    padding: 36px;
+    display: flex; flex-direction: column; gap: 14px;
+}
+.pt-subscribe__label {
+    align-self: flex-start;
+    background: var(--on-issue); color: var(--on-issue-accent);
+    font: 700 14px/1.5 var(--font-ui);
+    padding: 2px 10px;
+}
+.pt-subscribe__title { margin: 0; font: 800 38px/1.05 var(--font-display); }
+.pt-subscribe__text { margin: 0; font: 16px/1.7 var(--font-text); }
+.pt-subscribe__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.pt-subscribe .pt-btn--dark { background: var(--band); border-color: var(--band); color: #fff; padding: 12px 22px; font-size: 16px; }
+.pt-subscribe .pt-btn--dark:hover { background: var(--on-issue); border-color: var(--on-issue); color: var(--issue-fill); }
+
+/* Listen bar (article / issue audio) */
+.pt-listen {
+    background: var(--panel);
+    padding: 12px 18px 12px 12px;
+    display: flex; align-items: center; gap: 16px;
+    font-family: var(--font-ui);
+}
+.pt-listen__play {
+    width: 42px; height: 42px; flex: none;
+    border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--issue-fill); color: var(--on-issue); font-size: 15px;
+}
+.pt-listen__play .fa-play { margin-left: 2px; }
+.pt-listen__label { font-weight: 700; font-size: 15px; white-space: nowrap; }
+.pt-listen__track {
+    position: relative; flex: 1; height: 4px;
+    background: var(--track); cursor: pointer;
+}
+.pt-listen__track::before { content: ''; position: absolute; inset: -8px 0; } /* bigger hit area */
+.pt-listen__fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--issue-fill); }
+.pt-listen__time { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--subtle); white-space: nowrap; }
+.pt-listen__speed {
+    border: 1px solid var(--ink); background: none; color: var(--ink);
+    font: 600 13px/1 var(--font-ui); padding: 4px 8px; cursor: pointer; min-width: 40px;
+}
+
+/* Cover caption row and buttons (Home, Issue) */
+.pt-cover-meta {
+    display: flex; justify-content: space-between;
+    padding-top: 10px;
+    font: 600 14px/1.4 var(--font-ui);
+    color: var(--muted);
+}
+.pt-cover-actions { display: flex; gap: 10px; }
+.pt-cover-actions .pt-btn { flex: 1; padding: 9px 0; }
+
+/* Generated cover (issue without a cover image) */
+.pt-gencover {
+    position: relative;
+    display: flex; flex-direction: column;
+    aspect-ratio: 7 / 10;
+    background: var(--gc-bg); color: var(--gc-on, #fff);
+    padding: 16px 16px 14px;
+    box-shadow: 8px 8px 0 var(--shadow-ink);
+    overflow: hidden;
+}
+.pt-gencover__wordmark { font: 800 34px/1 var(--font-display); }
+.pt-gencover__wordmark-img { width: 100%; height: auto; }
+/* A light cover (dark text): draw the wordmark dark instead of white. */
+.pt-gencover--light .pt-gencover__wordmark-img { filter: brightness(0); opacity: .9; }
+.pt-gencover--light .pt-gencover__wordmark-img.pt-on-band-invert { filter: grayscale(1) contrast(2); mix-blend-mode: multiply; opacity: 1; }
+.pt-gencover__stripe { height: 6px; background: var(--gc-stripe); margin: 12px -16px 0; }
+.pt-gencover__date { margin-top: auto; display: flex; flex-direction: column; }
+.pt-gencover__month { font: 800 28px/1.05 var(--font-display); }
+.pt-gencover__year { font: 700 22px/1.2 var(--font-display); }
+.pt-gencover__foot {
+    display: flex; justify-content: space-between; gap: 8px;
+    margin-top: 12px; padding-top: 8px;
+    border-top: 1px solid currentColor;
+    font: 600 12px/1.4 var(--font-ui);
+}
+
+/* Video and embeds (article and issue) — youtube-fallback's iframe is
+   absolutely positioned by article.js */
+.pt-video { width: 100%; aspect-ratio: 16 / 9; background: #000; display: block; position: relative; overflow: hidden; }
+.pt-embed iframe { width: 100%; }
+
+/* ── Classic pieces inside the print design ───────── */
+
+/* The section nav takes the place of the visible breadcrumbs; their
+   BreadcrumbList JSON-LD is still on the page for search engines. */
+.site-breadcrumbs { display: none; }
+
+.floating-btn { border-radius: 0 !important; background: var(--ink) !important; color: var(--paper) !important; }
+.go-back-btn { top: auto !important; bottom: 24px; left: 24px !important; }
+.pagination a, .pagination span { font-family: var(--font-ui); }
+.messages-container .message { border-radius: 0; font-family: var(--font-ui); }
+
+/* ── Responsive (not designed; per the handoff's suggestions) ── */
+
+@media (max-width: 1280px) {
+    .pt-h1--article { font-size: 72px; }
+    .pt-h1--home, .pt-h1--issue { font-size: 80px; }
+}
+
+@media (max-width: 1024px) {
+    :root { --pt-gutter: 40px; }
+    .pt-header__org { display: none; }
+    .pt-footer__grid { grid-template-columns: 1fr 1fr; }
+    .pt-contents { grid-template-columns: 1fr; gap: 24px; }
+}
+
+@media (max-width: 900px) {
+    .pt-toc { grid-template-columns: 1fr; }
+    .pt-board__roles { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+    :root { --pt-gutter: 20px; }
+
+    .pt-header__band {
+        grid-template-columns: auto 1fr auto;
+        height: 72px; padding: 0 16px; gap: 12px;
+    }
+    .pt-header__logo { height: 38px; }
+    .pt-header__wordmark { justify-self: center; }
+    .pt-header__wordmark img { height: 40px; }
+    .pt-header__right { gap: 10px; }
+    .pt-header__menu { display: inline-flex; align-items: center; justify-content: center; }
+    .pt-header__controls {
+        display: none;
+        position: absolute; top: 72px; left: 0; right: 0;
+        background: var(--band);
+        padding: 14px 16px 18px;
+        flex-wrap: wrap; justify-content: flex-start; gap: 16px;
+        border-top: 1px solid rgba(255, 255, 255, .2);
+    }
+    .pt-header.is-menu-open .pt-header__controls { display: flex; }
+
+    .pt-nav { overflow-x: auto; gap: 24px; scrollbar-width: none; }
+    .pt-nav::-webkit-scrollbar { display: none; }
+    .pt-nav__list { gap: 24px; }
+
+    /* Long Malayalam words can't wrap, so the size follows the screen. */
+    .pt-h1--article, .pt-h1--home, .pt-h1--issue { font-size: clamp(34px, 11vw, 52px); line-height: 1.05; }
+    .pt-h1 { overflow-wrap: break-word; }
+    .pt-standfirst { font-size: 18px; }
+    .pt-section-head__title { font-size: 26px; }
+
+    .pt-folio { flex-direction: column; gap: 4px; }
+    .pt-footer__grid { grid-template-columns: 1fr; }
+    .pt-footer__bottom { flex-direction: column; align-items: flex-start; }
+    .pt-contents { padding: 28px 20px; }
+    .pt-contents__title { font-size: 36px; }
+    .pt-subscribe { padding: 28px 24px; }
+    .pt-subscribe__title { font-size: 30px; }
+    .pt-modal__head { padding: 18px 20px; }
+    .pt-modal__title { font-size: 26px; }
+    .pt-modal__body { padding: 20px; }
+    .pt-listen { flex-wrap: wrap; }
+    .pt-listen__track { flex-basis: 100%; order: 5; }
+}

@@ -1,0 +1,18 @@
+{% extends "themes/print/notice.html" %}
+{% load i18n %}
+{# Print-design 403 (see Icarus.views.permission_denied). #}
+
+{% block title %}{% trans "പ്രവേശനമില്ല" %}{% endblock %}
+{% block pt_notice_code %}403{% endblock %}
+{% block pt_notice_heading %}{% trans "പ്രവേശനമില്ല" %}{% endblock %}
+{% block pt_notice_body %}
+<p class="pt-notice__body">{% trans "ഈ പേജ് കാണാൻ നിങ്ങൾക്ക് അനുമതിയില്ല." %} {% trans "ആർക്കൈവിലെ ലക്കങ്ങൾ വരിക്കാർക്ക് മാത്രമാണ്." %}</p>
+{% endblock %}
+{% block pt_notice_actions %}
+{% if request.user.is_authenticated %}
+<a href="{% url 'reader_profile' %}" class="pt-btn pt-btn--dark">{% trans "വരിസംഖ്യ പ്ലാനുകൾ കാണുക" %}</a>
+<a href="{% url 'wagtail_serve' '' %}" class="pt-btn pt-btn--outline">{% trans "ഹോം പേജിലേക്ക് മടങ്ങുക" %}</a>
+{% else %}
+<a href="{% url 'wagtail_serve' '' %}" class="pt-btn pt-btn--dark">{% trans "ഹോം പേജിലേക്ക് മടങ്ങുക" %}</a>
+{% endif %}
+{% endblock %}

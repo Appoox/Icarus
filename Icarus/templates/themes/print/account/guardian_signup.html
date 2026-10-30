@@ -1,0 +1,23 @@
+{% extends "themes/print/notice.html" %}
+{% load i18n %}
+{# Print-design version of account/guardian_signup.html: shown when an #}
+{# under-18 birth year is entered at sign-up (reader.views.guardian_account_info). #}
+
+{% block title %}{% trans "രക്ഷിതാവിന്റെ അക്കൗണ്ട്" %}{% endblock %}
+{% block pt_notice_code %}18+{% endblock %}
+{% block pt_notice_heading_class %}pt-notice__title--long{% endblock %}
+{% block pt_notice_heading %}{% trans "ഇന്ത്യൻ ഡാറ്റാ പ്രൊട്ടക്ഷൻ ആക്റ്റ് (DPDP 2023) പ്രകാരം, 18 വയസ്സിന് താഴെയുള്ളവർക്ക് വരിസംഖ്യ നൽകി വരിക്കാരാകാന്‍ ബുദ്ധിമുട്ടാണ്." %}{% endblock %}
+{% block pt_notice_body %}
+<p class="pt-notice__body">{% trans "അതിനാല്‍ ശാസ്ത്രഗതി ഡിജിറ്റല്‍ പോര്‍ട്ടലില്‍ 18 വയസ്സിൽ താഴെയുള്ളവർക്ക് സ്വന്തമായി അക്കൗണ്ട് സൃഷ്ടിക്കാനാവില്ല." %}</p>
+<div class="pt-panel pt-notice__panel">
+  <p>{% trans "പകരം, രക്ഷിതാവിനോ മാതാപിതാക്കൾക്കോ കുടുംബത്തിനായി ഒരു അക്കൗണ്ട് എടുക്കാം — ആ അക്കൗണ്ടിലൂടെ വീട്ടിലുള്ള എല്ലാവർക്കും വായിക്കാം." %}</p>
+</div>
+<p class="pt-notice__note">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+  {% trans "സൈൻഅപ്പിൽ നൽകിയ വിവരങ്ങളൊന്നും ഞങ്ങൾ സൂക്ഷിച്ചിട്ടില്ല." %}
+</p>
+{% endblock %}
+{% block pt_notice_actions %}
+<a href="{% url 'account_signup' %}" class="pt-btn pt-btn--dark">{% trans "രക്ഷിതാവാണോ? അക്കൗണ്ട് സൃഷ്ടിക്കുക" %}</a>
+<a href="{% url 'wagtail_serve' '' %}" class="pt-btn pt-btn--outline">{% trans "ഹോംപേജിലേക്ക് മടങ്ങുക" %}</a>
+{% endblock %}

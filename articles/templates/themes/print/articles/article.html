@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags wagtailembeds_tags static i18n print_theme %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/print/article.css' %}">
+<meta name="article-id" content="{{ page.id }}">
+{% endblock %}
+
+{% block content %}
+<script type="application/ld+json">{{ page.ld_json }}</script>
+{% with issue=page.main_issue %}
+<article class="pt-page pt-article pt-article--{% if pt_single %}single{% else %}columns{% endif %}" data-pt-text-size="1">
+
+  {# ── Header: kicker, headline, summary, byline bar ── #}
+  <header class="pt-article__head">
+    <div class="pt-kicker">
+      {% if page.topic %}<a class="pt-tag" href="{% url 'topic_detail' slug=page.topic.slug %}">{{ page.topic.name }}</a>{% endif %}
+      {% if issue %}<a href="{{ issue.url }}">{% blocktranslate with issue=issue.date_of_publishing|month_year %}{{ issue }} ലക്കം{% endblocktranslate %}</a>{% endif %}
+      {% if page.print_page_start %}<span aria-hidden="true">·</span><span>{% blocktranslate with n=page.print_page_start %}പേജ് {{ n }}{% endblocktranslate %}</span>{% endif %}
+    </div>
+
+    {% for lang in pt_langs %}
+    <div class="pt-article__titles" data-pt-lang="{{ lang.code }}"{% if not forloop.first %} hidden{% endif %}{% if lang.code != 'ml' %} lang="{{ lang.code }}"{% endif %}>
+      <h1 class="pt-h1 pt-h1--article">{{ lang.title }}</h1>
+      {% if lang.standfirst %}<p class="pt-standfirst pt-standfirst--article">{{ lang.standfirst }}</p>{% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="pt-byline">
+      <div class="pt-byline__authors">
+        {% for author in page.authors %}
+        <a href="{{ author.url }}" class="pt-byline__author">
+          <span class="pt-avatar">
+            {% if author.profile_image %}{% image author.profile_image fill-88x88 as avatar %}<img src="{{ avatar.url }}" alt="">{% else %}{{ author.title|initials }}{% endif %}
+          </span>
+          <span class="pt-byline__who">
+            <span class="pt-byline__name">{{ author.title }}</span>
+            {% if forloop.last and page.reading_minutes %}<span class="pt-byline__meta">{% blocktranslate with n=page.reading_minutes %}{{ n }} മിനിറ്റ് വായന{% endblocktranslate %}</span>{% endif %}
+          </span>
+        </a>
+        {% empty %}
+        {% if page.reading_minutes %}<span class="pt-byline__meta">{% blocktranslate with n=page.reading_minutes %}{{ n }} മിനിറ്റ് വായന{% endblocktranslate %}</span>{% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="pt-byline__tools">
+        {% if pt_langs|length > 1 %}
+        <div class="pt-segmented" data-pt-lang-switch role="group" aria-label="{% translate 'ഭാഷ' %}">
+          {% for lang in pt_langs %}
+          <button type="button" class="pt-segmented__item{% if forloop.first %} is-active{% endif %}" data-lang-target="{{ lang.code }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">{{ lang.label }}</button>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="pt-segmented pt-sizes" role="group" aria-label="{% translate 'അക്ഷരവലുപ്പം' %}">
+          <button type="button" class="pt-segmented__item" data-pt-size="0" aria-pressed="false" aria-label="{% translate 'ചെറിയ അക്ഷരം' %}">അ</button>
+          <button type="button" class="pt-segmented__item is-active" data-pt-size="1" aria-pressed="true" aria-label="{% translate 'സാധാരണ അക്ഷരം' %}">അ</button>
+          <button type="button" class="pt-segmented__item" data-pt-size="2" aria-pressed="false" aria-label="{% translate 'വലിയ അക്ഷരം' %}">അ</button>
+        </div>
+
+        <div class="pt-share">
+          <a href="https://wa.me/?text={{ page.title|urlencode }}%20{{ page.full_url|urlencode }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u={{ page.full_url|urlencode }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+          {% if pt_can_pdf %}
+          {# Same class as the classic button: print.js keeps its ?lang= in step with the language switch. #}
+          <a href="{{ page.url }}pdf/" class="article-pdf-download-btn pt-share__pdf" target="_blank" rel="noopener" title="{% translate 'PDF ഡൗൺലോഡ്' %}"><i class="fas fa-file-arrow-down" aria-hidden="true"></i><span>PDF</span></a>
+          {% endif %}
+          <button type="button" data-pt-copy-link="{{ page.full_url }}" data-copied-label="{% translate 'ലിങ്ക് പകർത്തി' %}" aria-label="{% translate 'ലിങ്ക് പകർത്തുക' %}" title="{% translate 'ലിങ്ക് പകർത്തുക' %}"><i class="fas fa-link" aria-hidden="true"></i></button>
+          {% if user.is_authenticated %}
+          <button class="favorite-btn" data-id="{{ page.id }}" data-type="article"
+                  data-favorited="{% if reader and page in reader.favorite_articles.all %}true{% else %}false{% endif %}"
+                  data-label-add="{% translate 'പ്രിയപ്പെട്ടവയിൽ ചേർക്കുക' %}"
+                  data-label-remove="{% translate 'പ്രിയപ്പെട്ടവയിൽ നിന്ന് നീക്കുക' %}"
+                  data-label-error="{% translate 'ഒരു പിശക് സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.' %}"
+                  title="{% translate 'പ്രിയപ്പെട്ടതാക്കുക' %}" aria-label="{% translate 'പ്രിയപ്പെട്ടതാക്കുക' %}">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% csrf_token %}
+  </header>
+
+  {# ── Body + rail ── #}
+  <div class="pt-article__grid">
+    <div class="pt-article__main">
+
+      {% if page.cover_image %}
+      {% image page.cover_image width-1400 as hero %}
+      <figure class="pt-figure pt-figure--full pt-article__cover">
+        <img src="{{ hero.url }}" alt="{{ hero.alt|default:page.title }}" width="{{ hero.width }}" height="{{ hero.height }}" fetchpriority="high" decoding="async">
+        {% if page.cover_image_caption %}<figcaption>{{ page.cover_image_caption }}</figcaption>{% endif %}
+      </figure>
+      {% endif %}
+
+      {# Listen bar: a direct audio file only; embeds (SoundCloud…) render as given. #}
+      {% if page.audio_file %}
+        {% include "themes/print/includes/listen_bar.html" with src=page.audio_file.url %}
+      {% elif page.audio_embed_url %}
+        {% if ".mp3" in page.audio_embed_url or ".wav" in page.audio_embed_url or ".m4a" in page.audio_embed_url %}
+        {% include "themes/print/includes/listen_bar.html" with src=page.audio_embed_url %}
+        {% else %}
+        <div class="pt-embed">{% embed page.audio_embed_url %}</div>
+        {% endif %}
+      {% endif %}
+
+      {% if page.video_file %}
+      <video class="pt-video" src="{{ page.video_file.url }}" controls preload="metadata"></video>
+      {% elif page.video_embed_url %}
+        {% if ".mp4" in page.video_embed_url or ".webm" in page.video_embed_url or ".ogv" in page.video_embed_url %}
+        <video class="pt-video" src="{{ page.video_embed_url }}" controls preload="metadata"></video>
+        {% elif "youtu.be" in page.video_embed_url or "youtube.com" in page.video_embed_url %}
+        <div class="youtube-fallback pt-video" data-url="{{ page.video_embed_url }}"></div>
+        {% else %}
+        <div class="pt-embed">{% embed page.video_embed_url %}</div>
+        {% endif %}
+      {% endif %}
+
+      {% if pt_notice_langs %}
+      <p class="pt-notice" data-pt-lang="{{ pt_notice_langs }}" hidden lang="en">
+        <i class="fas fa-language" aria-hidden="true"></i>
+        This article is available in Malayalam only.
+      </p>
+      {% endif %}
+
+      {% if show_paywall %}
+      {# Same .paywall-wrapper as the classic design: the Article JSON-LD points at it. #}
+      <div class="paywall-wrapper pt-paywall">
+        {% for body in pt_bodies %}
+        <div data-pt-lang="{{ body.langs }}"{% if not forloop.first %} hidden{% endif %}>
+          {% include "themes/print/articles/includes/body.html" with blocks=body.blocks lang=body.code rail_callouts=False complete=False %}
+        </div>
+        {% endfor %}
+        <div class="pt-paywall__fade" aria-hidden="true"></div>
+        <div class="pt-subscribe">
+          <span class="pt-subscribe__label">{% translate "വരിക്കാർക്ക്" %}</span>
+          <h2 class="pt-subscribe__title">{% translate "ബാക്കി വായിക്കാൻ വരിക്കാരാകൂ" %}</h2>
+          <p class="pt-subscribe__text">
+            {% if request.user.is_authenticated %}
+            {% translate "നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. അച്ചടിപ്പതിപ്പും മുഴുവൻ ഓൺലൈൻ ആർക്കൈവും വരിക്കാർക്ക്." %}
+            {% else %}
+            {% translate "അച്ചടിപ്പതിപ്പും മുഴുവൻ ഓൺലൈൻ ആർക്കൈവും." %}
+            {% endif %}
+          </p>
+          <div class="pt-subscribe__actions">
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'reader_profile' %}" class="pt-btn pt-btn--dark">{% translate "ഇപ്പോൾതന്നെ വരിക്കാരാകൂ" %}</a>
+            {% else %}
+            <a href="{% url 'account_signup' %}" class="pt-btn pt-btn--dark">{% translate "ഇപ്പോൾതന്നെ വരിക്കാരാകൂ" %}</a>
+            <a href="{% url 'account_login' %}?next={{ page.url|urlencode }}" class="pt-btn pt-btn--on-colour">{% translate "ലോഗിൻ" %}</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% else %}
+      {% if crawler_full_access %}<div class="paywall-wrapper">{% endif %}
+        {% for body in pt_bodies %}
+        <div data-pt-lang="{{ body.langs }}"{% if not forloop.first %} hidden{% endif %}{% if body.code != 'ml' %} lang="{{ body.code }}"{% endif %}>
+          {% include "themes/print/articles/includes/body.html" with blocks=body.blocks lang=body.code rail_callouts=pt_single complete=True %}
+        </div>
+        {% endfor %}
+      {% if crawler_full_access %}</div>{% endif %}
+      {% endif %}
+
+      {% if page.tags.all %}
+      <div class="pt-chips" aria-label="{% translate 'ടാഗുകൾ' %}">
+        {% for tag in page.tags.all %}<a href="{% url 'tag_detail' tag=tag.name %}" class="pt-chip">{{ tag.name }}</a>{% endfor %}
+      </div>
+      {% endif %}
+
+      {% for author in page.authors %}
+      <section class="pt-authorbox pt-panel">
+        <span class="pt-avatar pt-avatar--large">
+          {% if author.profile_image %}{% image author.profile_image fill-160x160 as avatar %}<img src="{{ avatar.url }}" alt="">{% else %}{{ author.title|initials }}{% endif %}
+        </span>
+        <div class="pt-authorbox__text">
+          <span class="pt-authorbox__label">{% translate "ലേഖകർ" %}</span>
+          <a href="{{ author.url }}" class="pt-authorbox__name">{{ author.title }}</a>
+          {% if author.bio %}<p class="pt-authorbox__bio">{{ author.bio|richtext|striptags|truncatewords:30 }}</p>{% endif %}
+        </div>
+        <a href="{{ author.url }}" class="pt-more">{% blocktranslate count n=author.live_article_count %}{{ n }} ലേഖനം{% plural %}{{ n }} ലേഖനങ്ങൾ{% endblocktranslate %} →</a>
+      </section>
+      {% endfor %}
+
+      {% if pt_can_pdf %}
+      <a href="{{ page.url }}pdf/" class="pt-btn pt-btn--outline article-pdf-download-btn pt-article__pdf" target="_blank" rel="noopener noreferrer">
+        <i class="fas fa-file-arrow-down" aria-hidden="true"></i> {% translate "PDF ഡൗൺലോഡ് ചെയ്യാം" %}
+      </a>
+      {% endif %}
+    </div>
+
+    {% if pt_single %}
+    <aside class="pt-article__rail">
+      {% if not show_paywall %}
+        {% for body in pt_bodies %}
+        <div class="pt-article__rail-boxes" data-pt-lang="{{ body.langs }}"{% if not forloop.first %} hidden{% endif %}>
+          {% for block in body.blocks %}{% if block.block_type == 'callout' %}
+          {% include "themes/print/articles/includes/callout.html" with value=block.value %}
+          {% endif %}{% endfor %}
+        </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if issue %}
+      <div class="pt-inprint">
+        <a href="{{ issue.url }}" class="pt-inprint__cover" tabindex="-1" aria-hidden="true">
+          {% if issue.cover_image %}{% image issue.cover_image width-160 as thumb %}<img src="{{ thumb.url }}" alt="" class="pt-cover pt-cover--thumb">{% else %}<span class="pt-ph pt-inprint__ph pt-cover--thumb"></span>{% endif %}
+        </a>
+        <div class="pt-inprint__text">
+          <span class="pt-inprint__label">{% translate "അച്ചടിപ്പതിപ്പിൽ" %}</span>
+          <a href="{{ issue.url }}" class="pt-inprint__where">{{ issue.date_of_publishing|month_year }}{% if page.print_pages_label %} · {% blocktranslate with pages=page.print_pages_label %}പേജ് {{ pages }}{% endblocktranslate %}{% endif %}</a>
+          {% if issue.archive_issue %}
+          <a href="{% url 'the_librarian:magazine_viewer' issue.archive_issue.pk %}" class="pt-more pt-inprint__more">{% translate "ഫ്ലിപ്പ്ബുക്കിൽ തുറക്കാം" %} →</a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </aside>
+    {% endif %}
+  </div>
+
+  {# ── Comments ── #}
+  <div class="pt-article__comments">
+    {% include "themes/print/kalapila/comment_section.html" %}
+  </div>
+
+  {# ── More from this issue (or related articles) ── #}
+  {% with more=page.next_in_issue %}
+  {% if more or related_articles %}
+  <section class="pt-article__more">
+    <div class="pt-section-head">
+      {% if more %}
+      <h2 class="pt-section-head__title">{% translate "ഈ ലക്കത്തിൽ തുടർന്ന്" %}</h2>
+      <span class="pt-section-head__rule"></span>
+      <a href="{{ issue.url }}#contents" class="pt-section-head__more">{% translate "ഉള്ളടക്കം" %} →</a>
+      {% else %}
+      <h2 class="pt-section-head__title">{% translate "അടുത്തതായി ഇവ വായിക്കാം" %}</h2>
+      <span class="pt-section-head__rule"></span>
+      {% endif %}
+    </div>
+    <div class="pt-morecards">
+      {% for item in more|default:related_articles %}
+      <a href="{{ item.url }}" class="pt-morecard pt-panel">
+        {% if item.print_page_start %}<span class="pt-morecard__page">{{ item.print_page_start|pad2 }}</span>{% elif item.topic %}<span class="pt-card__topic">{{ item.topic.name }}</span>{% endif %}
+        <span class="pt-morecard__title">{{ item.title }}</span>
+        {% if item.authors %}<span class="pt-morecard__author">{% for a in item.authors %}{{ a.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% endwith %}
+</article>
+{% endwith %}
+{% endblock %}
+
+{% block pt_folio_left %}{% if page.print_page_start %}{{ page.print_page_start }} | {% endif %}ശാസ്ത്രഗതി{% if page.main_issue %} | {{ page.main_issue.date_of_publishing|month_year }}{% endif %}{% endblock %}
+{% block pt_folio_right %}{% if page.main_issue %}{{ page.main_issue.date_of_publishing|month_year }} | {% endif %}ശാസ്ത്രഗതി{% if page.print_page_start %} | {% firstof page.print_page_end page.print_page_start %}{% endif %}{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/article.js' %}" defer></script>
+<script src="{% static 'js/comments.js' %}" defer></script>
+{% endblock %}

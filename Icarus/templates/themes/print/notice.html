@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+{# A short notice in the print design: not found, no access, coming soon, #}
+{# under-18. A big figure on the left; heading, text and buttons on the    #}
+{# right. Styles in css/print/forms.css (loaded on every print page).     #}
+{# Blocks: pt_notice_code, pt_notice_code_class, pt_notice_tag,            #}
+{# pt_notice_heading, pt_notice_heading_class, pt_notice_body,              #}
+{# pt_notice_actions.                                                       #}
+
+{% block content %}
+<main class="pt-notice-page">
+  <p class="pt-notice__code {% block pt_notice_code_class %}{% endblock %}" aria-hidden="true">{% block pt_notice_code %}{% endblock %}</p>
+  <div class="pt-notice__text">
+    {% block pt_notice_tag %}{% endblock %}
+    <h1 class="pt-notice__title {% block pt_notice_heading_class %}{% endblock %}">{% block pt_notice_heading %}{% endblock %}</h1>
+    {% block pt_notice_body %}{% endblock %}
+    <div class="pt-notice__actions">
+      {% block pt_notice_actions %}
+      <a href="{% url 'wagtail_serve' '' %}" class="pt-btn pt-btn--dark">{% trans "ഹോം പേജിലേക്ക് മടങ്ങുക" %}</a>
+      {% endblock %}
+    </div>
+  </div>
+</main>
+{% endblock %}

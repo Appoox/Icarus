@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static i18n print_theme wagtailimages_tags %}
+
+{% block title %}{% translate "ആർക്കൈവ്" %}{% if selected_year %} {{ selected_year }}{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/archive.css' %}">
+{% endblock %}
+
+{% block content %}
+{% pt_wordmark as wm %}
+{% if wm.image %}{% image wm.image height-80 as wm_img %}{% endif %}
+<main class="pt-page pt-archive">
+
+  <section class="pt-archive-intro">
+    <div class="pt-archive-intro__text">
+      <span class="pt-tag">{% translate "ആർക്കൈവ്" %}</span>
+      <h1 class="pt-h1 pt-h1--home">{% translate "എല്ലാ ലക്കങ്ങളും" %}</h1>
+      {% if first_volume and last_volume %}
+      <p class="pt-standfirst">{% blocktranslate with first=first_volume last=last_volume %}വാല്യം {{ first }} മുതൽ {{ last }} വരെ. വർഷം തിരഞ്ഞെടുത്ത് പഴയ ലക്കങ്ങൾ വായിക്കാം.{% endblocktranslate %}</p>
+      {% else %}
+      <p class="pt-standfirst">{% translate "വർഷം തിരഞ്ഞെടുത്ത് പഴയ ലക്കങ്ങൾ വായിക്കാം." %}</p>
+      {% endif %}
+    </div>
+    <form class="pt-archive-search" action="{% url 'the_librarian:search' %}" method="get" role="search">
+      <label for="pt-archive-q" class="pt-sr-only">{% translate "തിരയുക" %}</label>
+      <input id="pt-archive-q" type="search" name="q" placeholder="{% translate 'ലേഖനം, ലേഖകർ, വിഷയം…' %}">
+      <button type="submit" class="pt-btn pt-btn--dark">{% translate "തിരയുക" %}</button>
+    </form>
+  </section>
+
+  {% if selected_year %}
+  <div class="pt-archive-body">
+    <nav class="pt-yearrail" aria-label="{% translate 'വർഷം' %}">
+      <h2 class="pt-yearrail__label">{% translate "വർഷം" %}</h2>
+      <ul class="pt-yearrail__years">
+        {% for year in years %}
+        <li><a href="?year={{ year }}" class="pt-yearrail__year{% if year == selected_year %} is-active{% endif %}"{% if year == selected_year %} aria-current="page"{% endif %}>{{ year }}</a></li>
+        {% endfor %}
+      </ul>
+      {% if decades %}
+      <h2 class="pt-yearrail__label pt-yearrail__label--older">{% translate "പഴയ ലക്കങ്ങൾ" %}</h2>
+      <ul class="pt-yearrail__decades">
+        {% for group in decades %}
+        <li><a href="?year={{ group.year }}" class="pt-yearrail__decade{% if group.active %} is-active{% endif %}">{{ group.label }}</a></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </nav>
+
+    <section class="pt-archive-year" aria-labelledby="pt-archive-year-title">
+      <div class="pt-archive-year__head">
+        <h2 class="pt-archive-year__title" id="pt-archive-year-title">{{ selected_year }}</h2>
+        <span class="pt-archive-year__meta">
+          {% blocktranslate count n=issue_count %}{{ n }} ലക്കം{% plural %}{{ n }} ലക്കങ്ങൾ{% endblocktranslate %}{% if volume_low %} · {% translate "വാല്യം" %} {{ volume_low }}{% if volume_high != volume_low %}–{{ volume_high }}{% endif %}{% endif %}
+        </span>
+        <span class="pt-archive-year__rule"></span>
+      </div>
+
+      <ul class="pt-archive-grid">
+        {% for issue in issues %}
+        <li class="pt-archive-card">
+          <a href="{{ issue.url }}" class="pt-archive-card__link">
+            {% if issue.cover_url %}
+            <img src="{{ issue.cover_url }}" alt="" class="pt-archive-card__cover pt-cover pt-cover--small" loading="lazy" decoding="async">
+            {% else %}
+            {% include "themes/print/includes/generated_cover.html" with bg=issue.cover_bg stripe=issue.cover_stripe on=issue.cover_on month=issue.month_name year=issue.year meta=issue.meta price=issue.price wordmark_url=wm_img.url wordmark_invert=wm.invert issue=None %}
+            {% endif %}
+            <span class="pt-archive-card__label">{{ issue.label }}</span>
+          </a>
+          {% if issue.meta %}<span class="pt-archive-card__meta">{{ issue.meta }}</span>{% endif %}
+          {% if issue.theme %}<span class="pt-archive-card__theme">{{ issue.theme }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+  {% else %}
+  <p class="pt-archive-empty">{% translate "ഇതുവരെ ലക്കങ്ങളൊന്നും ചേർത്തിട്ടില്ല" %}</p>
+  {% endif %}
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "ആർക്കൈവ്" %} | ശാസ്ത്രഗതി{% if selected_year %} | {{ selected_year }}{% endif %}{% endblock %}
+{% block pt_folio_right %}<span class="pt-folio__pager">{% if newer_year %}<a href="?year={{ newer_year }}">← {{ newer_year }}</a>{% endif %}{% if older_year %}<a href="?year={{ older_year }}">{{ older_year }} →</a>{% endif %}</span>{% endblock %}

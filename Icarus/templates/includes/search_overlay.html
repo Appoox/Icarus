@@ -1,0 +1,51 @@
+{% load i18n %}
+<!-- Full-screen search overlay -->
+<div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="{% translate 'തിരയൽ' %}" aria-hidden="true">
+    <div class="search-overlay__content">
+        <button type="button" class="search-overlay__close-btn" id="searchClose" aria-label="{% translate 'തിരയൽ അടയ്ക്കുക' %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+
+        <div class="search-overlay__container">
+            <form action="{% url 'the_librarian:search' %}" method="get" class="search-overlay__form" id="searchForm">
+                <div class="search-overlay__input-wrapper">
+                    <svg class="search-overlay__search-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                         stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input
+                        type="text"
+                        name="q"
+                        placeholder="{% translate 'ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുക...' %}"
+                        class="search-overlay__input"
+                        id="searchOverlayInput"
+                        autocomplete="off"
+                        autofocus
+                    >
+                    <div class="search-overlay__loading-spinner" id="searchSpinner"></div>
+                </div>
+            </form>
+
+            <!-- Results Area -->
+             <div class="search-results" id="searchResults"
+                 data-i18n-min-chars="{% translate 'തിരയാൻ കുറഞ്ഞത് 2 അക്ഷരങ്ങൾ ടൈപ്പ് ചെയ്യുക...' %}"
+                 data-i18n-searching="{% translate 'ആർക്കൈവ്, ലേഖനങ്ങൾ, രചയിതാക്കൾ എന്നിവയിൽ തിരയുന്നു...' %}"
+                 data-i18n-error="{% translate 'ഫലങ്ങൾ ലഭ്യമാക്കുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക.' %}"
+                 data-i18n-no-results="{% translate 'ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല' %}"
+                 data-i18n-found="{% translate 'ഫലങ്ങൾ കണ്ടെത്തി' %}"
+                 data-i18n-page="{% translate 'പേജ്' %}"
+                 data-i18n-pdf="{% translate 'പിഡിഎഫ്' %}"
+                 data-i18n-article="{% translate 'ലേഖനം' %}"
+                 data-i18n-author="{% translate 'രചയിതാവ്' %}">
+                <div class="search-results__status" id="searchStatus">
+                    {% translate "തിരയാൻ ടൈപ്പ് ചെയ്യുക..." %}
+                </div>
+                <div class="search-results__list" id="resultsList"></div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,23 @@
+{% load wagtailimages_tags print_theme i18n %}
+{# One article in a list: topic, title, summary, byline · issue · page, thumbnail. Expects `article`. #}
+<article class="pt-row">
+  <div class="pt-row__text">
+    {% if article.kicker %}<span class="pt-row__topic">{{ article.kicker }}</span>
+    {% elif article.topic %}<a class="pt-row__topic" href="{% url 'topic_detail' slug=article.topic.slug %}">{{ article.topic.name }}</a>{% endif %}
+    <h2 class="pt-row__title"><a href="{{ article.url }}">{{ article.title }}</a></h2>
+    {% if article.standfirst %}<p class="pt-row__summary">{{ article.standfirst }}</p>
+    {% else %}{% with excerpt=article.excerpt|striptags|truncatewords:28 %}{% if excerpt %}<p class="pt-row__summary">{{ excerpt }}</p>{% endif %}{% endwith %}{% endif %}
+    <p class="pt-row__meta">
+      {% for a in article.authors %}<a href="{{ a.url }}" class="pt-row__author">{{ a.title }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+      {% if article.authors %}<span aria-hidden="true"> · </span>{% endif %}
+      {% if article.main_issue %}<a href="{{ article.main_issue.url }}">{{ article.main_issue.date_of_publishing|month_year }}</a>{% else %}{{ article.date|month_year }}{% endif %}
+      {% if article.print_page_start %}<span aria-hidden="true"> · </span>{% blocktranslate with n=article.print_page_start %}പേജ് {{ n }}{% endblocktranslate %}{% endif %}
+    </p>
+  </div>
+  {% if article.cover_image %}
+  <a href="{{ article.url }}" class="pt-row__media" tabindex="-1" aria-hidden="true">
+    {% image article.cover_image fill-440x330 as thumb %}
+    <img src="{{ thumb.url }}" alt="" width="440" height="330" loading="lazy" decoding="async" class="pt-cover--thumb">
+  </a>
+  {% endif %}
+</article>

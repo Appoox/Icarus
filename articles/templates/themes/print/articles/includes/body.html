@@ -1,0 +1,41 @@
+{% load wagtailcore_tags wagtailimages_tags i18n %}
+{# One language's body, in the print edition's styles.                      #}
+{#   blocks        the StreamField (or the paywall's truncated list)         #}
+{#   lang          'ml', 'en', …                                             #}
+{#   rail_callouts True in single-column layout: callouts go to the rail     #}
+{#   complete      True when the whole article is shown (adds the end mark)  #}
+<div class="pt-body{% if complete %} pt-body--complete{% endif %}">
+{% for block in blocks %}
+  {% if block.block_type == 'heading' %}
+    <h2 class="pt-subhead">{{ block.value|striptags }}</h2>
+  {% elif block.block_type == 'colored_heading' %}
+    <h2 class="pt-subhead">{{ block.value.text }}</h2>
+  {% elif block.block_type == 'callout' %}
+    {% if not rail_callouts %}{% include "themes/print/articles/includes/callout.html" with value=block.value %}{% endif %}
+  {% elif block.block_type == 'blockquote' %}
+    <blockquote class="pt-pullquote">
+      <span class="pt-pullquote__text">{{ block.value.text|richtext|striptags }}</span>
+      {% if block.value.attribute_name %}<cite class="pt-pullquote__cite">{{ block.value.attribute_name }}</cite>{% endif %}
+    </blockquote>
+  {% elif block.block_type == 'image' %}
+    <figure class="pt-figure pt-figure--{{ block.value.alignment }} pt-figure--{{ block.value.size }}">
+      {% if block.value.alignment == 'full' %}{% image block.value.image width-1400 as img %}{% else %}{% image block.value.image width-700 as img %}{% endif %}
+      <img src="{{ img.url }}" alt="{% firstof block.value.alt_text img.alt %}"
+           width="{{ img.width }}" height="{{ img.height }}" loading="lazy" decoding="async">
+      {% if block.value.caption or block.value.credit %}
+      <figcaption>
+        {% if block.value.caption %}{{ block.value.caption|richtext|striptags }}{% endif %}
+        {% if block.value.credit %}<span class="pt-figure__credit">{{ block.value.credit }}</span>{% endif %}
+      </figcaption>
+      {% endif %}
+    </figure>
+  {% elif block.block_type == 'references' %}
+    <section class="pt-references">
+      <h2 class="pt-references__title">{% if lang == 'ml' and block.value.heading == 'References' %}അവലംബം{% else %}{{ block.value.heading|default:"അവലംബം" }}{% endif %}</h2>
+      <ol>{% for item in block.value.items %}<li>{{ item|richtext }}</li>{% endfor %}</ol>
+    </section>
+  {% else %}
+    {% include_block block %}
+  {% endif %}
+{% endfor %}
+</div>

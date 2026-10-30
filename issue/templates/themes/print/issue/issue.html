@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags wagtailembeds_tags static i18n print_theme %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/print/issue.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page pt-issue">
+
+  {# ── Hero: cover on the left, the issue on the right ── #}
+  <section class="pt-issue-hero">
+    <div class="pt-issue-hero__cover">
+      {% if page.cover_image %}
+      {% image page.cover_image width-880 as cover %}
+      <img src="{{ cover.url }}" width="{{ cover.width }}" height="{{ cover.height }}" class="pt-cover" fetchpriority="high"
+           alt="{% blocktranslate with title=page.title %}ശാസ്ത്രഗതി {{ title }} മുഖച്ചിത്രം{% endblocktranslate %}">
+      {% else %}
+      {% include "themes/print/includes/generated_cover.html" with issue=page %}
+      {% endif %}
+      {% if page.page_count or page.price %}
+      <div class="pt-cover-meta">
+        <span>{% if page.page_count %}{% blocktranslate with n=page.page_count %}{{ n }} പേജ്{% endblocktranslate %}{% endif %}</span>
+        <span>{% if page.price %}{% blocktranslate with price=page.price %}വില: {{ price }} രൂപ{% endblocktranslate %}{% endif %}</span>
+      </div>
+      {% endif %}
+      <div class="pt-cover-actions">
+        <a href="#contents" class="pt-btn pt-btn--dark">{% translate "ലക്കം വായിക്കാം" %}</a>
+        {% if page.archive_issue %}
+        <a href="{% url 'the_librarian:magazine_viewer' page.archive_issue.pk %}" class="pt-btn pt-btn--outline">{% translate "ഫ്ലിപ്പ്ബുക്ക്" %}</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="pt-issue-hero__text">
+      <div class="pt-issue-meta">
+        <span class="pt-tag">{{ page.date_of_publishing|month_year|default:page.title }}</span>
+        {% if page.volume %}<span>{% translate "വാല്യം" %} {{ page.volume.number }}</span>{% endif %}
+        {% if page.volume and page.issue_number %}<span aria-hidden="true">·</span>{% endif %}
+        {% if page.issue_number %}<span>{% translate "ലക്കം" %} {{ page.issue_number }}</span>{% endif %}
+        <span class="pt-issue-meta__end">
+          {% if user.is_authenticated %}
+          <button class="favorite-btn pt-issue-meta__fav" data-id="{{ page.id }}" data-type="issue"
+                  data-favorited="{% if reader and page in reader.favorite_issues.all %}true{% else %}false{% endif %}"
+                  data-label-add="{% translate 'പ്രിയപ്പെട്ടവയിൽ ചേർക്കുക' %}"
+                  data-label-remove="{% translate 'പ്രിയപ്പെട്ടവയിൽ നിന്ന് നീക്കുക' %}"
+                  data-label-error="{% translate 'അപ്ഡേറ്റ് ചെയ്യാനായില്ല. നിങ്ങൾ ലോഗിൻ ചെയ്തിട്ടുണ്ടോയെന്ന് പരിശോധിക്കുക.' %}"
+                  title="{% translate 'പ്രിയപ്പെട്ടതാക്കുക' %}" aria-label="{% translate 'പ്രിയപ്പെട്ടതാക്കുക' %}">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
+          {% endif %}
+          {% if page.editorial_board %}
+          <button type="button" class="pt-issue-meta__board" data-pt-modal-open="pt-issue-board">
+            <i class="fas fa-users" aria-hidden="true"></i>{% translate "പത്രാധിപസമിതി" %}
+          </button>
+          {% endif %}
+        </span>
+      </div>
+
+      <h1 class="pt-h1 pt-h1--issue">{% firstof page.topic.name page.title %}</h1>
+      {% if page.standfirst %}<p class="pt-standfirst">{{ page.standfirst }}</p>{% endif %}
+
+      {% if page.editorial %}
+      <section class="pt-editorial">
+        <h2 class="pt-editorial__title">{% firstof page.editorial_heading _("മുഖക്കുറിപ്പ്") %}</h2>
+        {# Long editorials start folded to two columns' worth (print.js). #}
+        <div class="pt-editorial__text" data-pt-fold>
+          {% for block in page.editorial %}
+            {% if block.block_type == 'heading' %}<h3 class="pt-editorial__subhead">{{ block.value|striptags }}</h3>
+            {% elif block.block_type == 'colored_heading' %}<h3 class="pt-editorial__subhead">{{ block.value.text }}</h3>
+            {% else %}{% include_block block %}{% endif %}
+          {% endfor %}
+        </div>
+        <button type="button" class="pt-more pt-editorial__toggle" hidden
+                data-pt-fold-toggle data-label-more="{% translate 'തുടർന്നു വായിക്കാം' %} ↓" data-label-less="{% translate 'ചുരുക്കുക' %} ↑">{% translate "തുടർന്നു വായിക്കാം" %} ↓</button>
+        {% if page.editorial_signature %}<p class="pt-editorial__signature">{{ page.editorial_signature }}</p>{% endif %}
+      </section>
+      {% endif %}
+
+      {% if page.tags.all %}
+      <div class="pt-chips">{% for tag in page.tags.all %}<a href="{% url 'tag_detail' tag=tag.name %}" class="pt-chip">{{ tag.name }}</a>{% endfor %}</div>
+      {% endif %}
+    </div>
+    {% csrf_token %}
+  </section>
+
+  {# ── Issue audio / video ── #}
+  {% if page.audio_file or page.audio_embed_url or page.video_file or page.video_embed_url %}
+  <section class="pt-issue-media">
+    {% translate "ഈ ലക്കം കേൾക്കാം" as listen_label %}
+    {% if page.audio_file %}
+      {% include "themes/print/includes/listen_bar.html" with src=page.audio_file.url label=listen_label %}
+    {% elif page.audio_embed_url %}
+      {% if ".mp3" in page.audio_embed_url or ".wav" in page.audio_embed_url or ".m4a" in page.audio_embed_url %}
+      {% include "themes/print/includes/listen_bar.html" with src=page.audio_embed_url label=listen_label %}
+      {% else %}<div class="pt-embed">{% embed page.audio_embed_url %}</div>{% endif %}
+    {% endif %}
+    {% if page.video_file %}
+      <video class="pt-video" src="{{ page.video_file.url }}" controls preload="metadata"></video>
+    {% elif page.video_embed_url %}
+      {% if ".mp4" in page.video_embed_url or ".webm" in page.video_embed_url or ".ogv" in page.video_embed_url %}
+      <video class="pt-video" src="{{ page.video_embed_url }}" controls preload="metadata"></video>
+      {% elif "youtu.be" in page.video_embed_url or "youtube.com" in page.video_embed_url %}
+      <div class="youtube-fallback pt-video" data-url="{{ page.video_embed_url }}"></div>
+      {% else %}<div class="pt-embed">{% embed page.video_embed_url %}</div>{% endif %}
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {# ── Contents ── #}
+  <section class="pt-contents pt-panel pt-issue-contents" id="contents" aria-labelledby="pt-issue-contents-title">
+    <div>
+      <h2 class="pt-contents__title" id="pt-issue-contents-title">{% translate "ഉള്ളടക്കം" %}</h2>
+      <p class="pt-contents__sub">
+        {% with n=page.print_articles|length %}{% blocktranslate count n=n %}{{ n }} ഇനം{% plural %}{{ n }} ഇനങ്ങൾ{% endblocktranslate %}{% endwith %}{% if page.page_count %} · {% blocktranslate with n=page.page_count %}{{ n }} പേജ്{% endblocktranslate %}{% endif %}
+      </p>
+    </div>
+    <div class="pt-toc-groups">
+      {% for group in page.contents_groups %}
+      <div class="pt-toc-group">
+        {% if group.heading %}
+        <h3 class="pt-toc-group__head{% if group.is_theme %} pt-toc-group__head--theme{% endif %}">
+          {% if group.is_theme %}{% translate "മുഖ്യവിഷയം" %} · {% endif %}{{ group.heading }}
+        </h3>
+        {% elif page.contents_order != 'by_page' and not forloop.first %}
+        <h3 class="pt-toc-group__head">{% translate "മറ്റുള്ളവ" %}</h3>
+        {% endif %}
+        <ol class="pt-toc">
+          {% for article in group.items %}{% include "themes/print/includes/toc_row.html" %}{% endfor %}
+        </ol>
+      </div>
+      {% empty %}
+      <p class="pt-contents__sub">{% translate "ഈ ലക്കത്തിൽ ലേഖനങ്ങളൊന്നുമില്ല." %}</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if not page.is_current_issue and page.PDF_file %}
+  {% if request.user.is_staff or request.user.is_superuser or request.user.is_subscribed %}
+  <div class="pt-issue-pdf">
+    <a href="{{ page.url }}pdf/" class="pt-btn pt-btn--outline" target="_blank" rel="noopener noreferrer">
+      <i class="fas fa-file-arrow-down" aria-hidden="true"></i> {% translate "PDF ഡൗൺലോഡ് ചെയ്യാം" %}
+    </a>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {# ── Next issue ── #}
+  {% if page.next_issue_theme %}
+  <section class="pt-nextissue{% if page.next_issue_colour %} pt-own-colour" style="{% pt_issue_style page.next_issue_colour %}{% endif %}">
+    <span class="pt-nextissue__label">{% translate "അടുത്ത ലക്കം" %}</span>
+    <div class="pt-nextissue__text">
+      <h2 class="pt-nextissue__title">{{ page.next_issue_theme }}</h2>
+      <span class="pt-nextissue__date">{{ page.date_of_publishing|next_month_year }}</span>
+    </div>
+    {% if not request.user.is_subscribed %}
+    <a href="{% if request.user.is_authenticated %}{% url 'reader_profile' %}{% else %}{% url 'account_signup' %}{% endif %}" class="pt-btn pt-btn--white">{% translate "വരിക്കാരാകൂ" %}</a>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <div class="pt-issue-comments">
+    {% include "themes/print/kalapila/comment_section.html" %}
+  </div>
+</main>
+
+{% if page.editorial_board %}
+{% pt_board page.board_members as board %}
+{% translate "പത്രാധിപസമിതി" as board_title %}
+{% with subtitle="ശാസ്ത്രഗതി"|add:" · "|add:page.volume_label %}
+{% include "themes/print/includes/board_modal.html" with modal_id="pt-issue-board" title=board_title subtitle=subtitle board=board %}
+{% endwith %}
+{% endif %}
+{% endblock %}
+
+{% block pt_folio_left %}2 | ശാസ്ത്രഗതി | {{ page.date_of_publishing|month_year }}{% endblock %}
+{% block pt_folio_right %}{{ page.date_of_publishing|month_year }} | ശാസ്ത്രഗതി | 3{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/article.js' %}" defer></script>
+<script src="{% static 'js/comments.js' %}" defer></script>
+{% endblock %}

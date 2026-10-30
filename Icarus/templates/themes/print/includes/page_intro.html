@@ -1,0 +1,13 @@
+{% load wagtailcore_tags %}
+{# The opening of a list page: tag, headline, summary, count.            #}
+{#   kicker, title       required                                         #}
+{#   standfirst          plain text summary                               #}
+{#   intro               rich text summary (an index page's intro field)  #}
+{#   meta                small line under it, e.g. "45 ലേഖകർ"             #}
+<header class="pt-intro">
+  {% if kicker %}<span class="pt-tag">{{ kicker }}</span>{% endif %}
+  <h1 class="pt-h1 pt-h1--list">{{ title }}</h1>
+  {% if standfirst %}<p class="pt-standfirst">{{ standfirst }}</p>{% endif %}
+  {% if intro %}<div class="pt-standfirst pt-intro__rich">{{ intro|richtext }}</div>{% endif %}
+  {% if meta %}<p class="pt-intro__meta">{{ meta }}</p>{% endif %}
+</header>

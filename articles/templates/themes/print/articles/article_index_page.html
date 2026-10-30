@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  {% translate "ലേഖനങ്ങൾ" as kicker %}
+  {% if page.sort_by == 'most_read' %}
+    {% translate "കഴിഞ്ഞ 30 ദിവസം ഏറ്റവും കൂടുതൽ വായിച്ചവ ആദ്യം" as meta %}
+  {% else %}
+    {% blocktranslate count n=paginator.count asvar meta %}{{ n }} ലേഖനം{% plural %}{{ n }} ലേഖനങ്ങൾ{% endblocktranslate %}
+  {% endif %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=page.title intro=page.intro meta=meta %}
+
+  <section class="pt-list-section">
+    <div class="pt-rows">
+      {% for article in articles %}{% include "themes/print/includes/article_row.html" %}
+      {% empty %}<p class="pt-list-empty">{% translate "ലേഖനങ്ങളൊന്നുമില്ല." %}</p>{% endfor %}
+    </div>
+    {% include "themes/print/includes/pagination.html" with page_obj=page_obj %}
+  </section>
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "ലേഖനങ്ങൾ" %} | ശാസ്ത്രഗതി{% endblock %}

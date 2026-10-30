@@ -372,7 +372,7 @@ class ArticleRoutablePdfTests(TestCase):
         self.assertIsInstance(response, HttpResponseRedirect)
         self.assertEqual(response.url, self.article.url)
 
-    @patch('articles.models.HTML')
+    @patch('articles.pdf.HTML')
     def test_serve_pdf_subscribed_user_success(self, mock_html):
         """Subscribed users successfully get the PDF download with custom filename headers."""
         subscribed_user = User.objects.create_user(
@@ -400,6 +400,90 @@ class ArticleRoutablePdfTests(TestCase):
         self.assertEqual(response['Content-Type'], 'application/pdf')
         self.assertIn("attachment; filename*=UTF-8''", response['Content-Disposition'])
         self.assertTrue(response.content.startswith(b"%PDF"))
+
+    def test_pdf_draws_malayalam_with_the_bundled_fonts(self):
+        """
+        The server has no Malayalam font of its own, so every letter used to
+        come out as an empty box.  The PDF must use the fonts shipped in
+        articles/pdf_fonts/ (no system on which these tests run has them).
+        """
+        import fitz  # PyMuPDF, already a dependency
+
+        self.article.title = "ക്വാണ്ടം മെക്കാനിക്സിന്റെ ചരിത്രം"
+        self.article.body = [('paragraph', '<p>ശാസ്ത്രഗതി: പ്രൊഫ. ടി.പി.കുഞ്ഞിക്കണ്ണന്‍ എഴുതുന്നു.</p>')]
+        self.article.save()
+        staff = User.objects.create_user(
+            phone_number="+913333333333", name="Staff", password="password123", is_staff=True,
+        )
+        request = self.factory.get(self.article.url + "pdf/")
+        request.user = staff
+        request.session = MockSession()
+
+        response = self.article.serve_pdf(request)
+        self.assertEqual(response.status_code, 200)
+        document = fitz.open(stream=response.content, filetype="pdf")
+        fonts = {font[3] for page in document for font in page.get_fonts()}
+        self.assertTrue(any("Noto-Serif-Malayalam" in name for name in fonts), fonts)
+        self.assertTrue(any("Anek-Malayalam" in name for name in fonts), fonts)
+
+    def test_pdf_body_is_not_justified(self):
+        """
+        Justified lines were stretched with wide gaps between words (Malayalam
+        words are long and can't be hyphenated).  Body lines now end where
+        their last word ends, so their right edges differ.
+        """
+        import fitz  # PyMuPDF, already a dependency
+
+        sentence = "Sustainability is not an economic concept, but an ecological one."
+        self.article.body = [('paragraph', '<p>' + ' '.join([sentence] * 12) + '</p>')]
+        self.article.save()
+        staff = User.objects.create_user(
+            phone_number="+913333333334", name="Staff", password="password123", is_staff=True,
+        )
+        request = self.factory.get(self.article.url + "pdf/?lang=en")
+        request.user = staff
+        request.session = MockSession()
+
+        response = self.article.serve_pdf(request)
+        self.assertEqual(response.status_code, 200)
+        document = fitz.open(stream=response.content, filetype="pdf")
+        right_edges = [
+            line["bbox"][2]
+            for page in document
+            for block in page.get_text("dict")["blocks"]
+            for line in block.get("lines", [])
+            if "ecological" in "".join(span["text"] for span in line["spans"])
+            or "Sustainability" in "".join(span["text"] for span in line["spans"])
+        ]
+        self.assertGreater(len(right_edges), 4, right_edges)
+        lines_before_last = right_edges[:-1]
+        self.assertGreater(max(lines_before_last) - min(lines_before_last), 5, right_edges)
+
+
+class PdfFileFetcherTests(TestCase):
+    """articles.pdf.LocalFileFetcher: site files from disk, nothing else from disk."""
+
+    def test_bundled_fonts_exist(self):
+        from articles.pdf import FONT_DIR, PDF_FONTS
+        for family, weight, filename in PDF_FONTS:
+            self.assertTrue((FONT_DIR / filename).is_file(), filename)
+
+    def test_media_is_read_from_disk_and_other_files_are_refused(self):
+        import tempfile
+        from pathlib import Path
+        from articles.pdf import LocalFileFetcher
+
+        with tempfile.TemporaryDirectory() as media_root:
+            Path(media_root, "photo.txt").write_bytes(b"from disk")
+            with override_settings(MEDIA_ROOT=media_root, MEDIA_URL="/media/"):
+                # Port 9 (discard) is never served here: a network fetch would fail.
+                fetcher = LocalFileFetcher("http://127.0.0.1:9/")
+                self.assertEqual(fetcher.fetch("http://127.0.0.1:9/media/photo.txt").read(), b"from disk")
+                with self.assertRaises(ValueError):
+                    fetcher.fetch("file:///etc/passwd")
+                # A path that climbs out of the media folder is not read from disk.
+                with self.assertRaises(Exception):
+                    fetcher.fetch("http://127.0.0.1:9/media/../../../etc/passwd")
 
 
 class LastEditedWarningEscapingTests(TestCase):

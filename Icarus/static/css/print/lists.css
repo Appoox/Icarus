@@ -1,0 +1,133 @@
+/* =========================================================
+   Print edition — list pages
+   All issues, all articles, all authors, topics, tags, most-read
+   lists and search results. Not in the design handoff: built from
+   its parts (the archive's intro, the author page's rows, the
+   archive's cover grid, the home page's ranked list).
+   ========================================================= */
+
+/* Opening: tag, headline, summary, over a 2px rule */
+.pt-intro {
+    margin: 0 var(--pt-gutter);
+    padding: 56px 0 32px;
+    border-bottom: 2px solid var(--ink);
+    display: flex; flex-direction: column; gap: 20px;
+}
+.pt-h1--list { font-size: 80px; line-height: 1; }
+.pt-intro__rich p { margin: 0; }
+.pt-intro__rich p + p { margin-top: .6em; }
+.pt-intro__meta { margin: 0; font: 600 15px/1.4 var(--font-ui); color: var(--subtle); }
+
+/* A page section below the opening */
+.pt-list-section { padding: 40px var(--pt-gutter) 56px; }
+.pt-list-section + .pt-list-section { padding-top: 0; }
+.pt-list-section .pt-section-head { margin-bottom: 8px; }
+.pt-list-empty { margin: 24px 0 0; font: 17px/1.6 var(--font-ui); color: var(--subtle); }
+
+/* Article rows: text left, thumbnail right, dashed dividers */
+.pt-rows { display: flex; flex-direction: column; }
+.pt-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 32px; align-items: start;
+    padding: 22px 0;
+    border-bottom: 1px dashed var(--divider);
+}
+.pt-row:not(:has(.pt-row__media)) { grid-template-columns: minmax(0, 1fr); }
+.pt-row__text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pt-row__topic { font: 700 13px/1.4 var(--font-ui); color: var(--issue); align-self: flex-start; }
+.pt-row__title { margin: 0; font: 700 22px/1.45 var(--font-text); }
+.pt-row__title a { color: var(--ink); }
+.pt-row__title a:hover { color: var(--issue); }
+.pt-row__summary { margin: 2px 0 0; font: 16px/1.7 var(--font-text); color: var(--body); max-width: 720px; }
+.pt-row__meta { margin: 4px 0 0; font: 14px/1.5 var(--font-ui); color: var(--subtle); }
+.pt-row__meta a { color: var(--subtle); }
+.pt-row__meta a:hover { color: var(--issue); }
+.pt-row__meta .pt-row__author { color: var(--issue-dark); font-weight: 600; }
+.pt-row__media img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; box-shadow: 4px 4px 0 var(--shadow-ink); }
+
+/* Issue covers in a grid (each card wears its own issue's colour) */
+.pt-issuegrid {
+    list-style: none; margin: 32px 0 0; padding: 0;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 28px;
+}
+.pt-issuecard { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pt-issuecard__link { display: flex; flex-direction: column; gap: 14px; color: var(--ink); }
+.pt-issuecard__cover { aspect-ratio: 7 / 10; object-fit: cover; }
+.pt-issuecard .pt-gencover { box-shadow: 6px 6px 0 var(--shadow-ink); }
+.pt-issuecard .pt-gencover__wordmark { font-size: 30px; }
+.pt-issuecard__label { font: 700 16px/1.4 var(--font-ui); }
+.pt-issuecard__meta { font: 13px/1.5 var(--font-ui); color: var(--subtle); }
+.pt-issuecard__theme { font: 700 16px/1.5 var(--font-text); color: var(--issue); align-self: flex-start; }
+
+/* People: avatar, name, role, count — three to a row */
+.pt-people {
+    list-style: none; margin: 16px 0 0; padding: 0;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 40px;
+}
+.pt-person { border-bottom: 1px dashed var(--divider); }
+.pt-person__link { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 16px; align-items: center; padding: 16px 0; color: var(--ink); }
+.pt-person__avatar { width: 56px; height: 56px; font-size: 22px; }
+.pt-person__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pt-person__name { font: 700 18px/1.4 var(--font-text); }
+.pt-person__link:hover .pt-person__name { color: var(--issue); }
+.pt-person__role { font: 14px/1.4 var(--font-ui); color: var(--subtle); }
+.pt-person__count { font: 700 13px/1.4 var(--font-ui); color: var(--issue); }
+
+/* Ranked lists (most read): numeral, name, reads, a few top articles */
+.pt-ranklist { list-style: none; margin: 8px 0 0; padding: 0; }
+.pt-rank {
+    display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 8px 20px;
+    padding: 20px 0 22px;
+    border-top: 2px solid var(--ink);
+}
+.pt-rank__n { grid-row: span 2; font: 800 48px/1 var(--font-display); color: var(--issue-display); }
+.pt-rank__who { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.pt-rank__name { font: 800 30px/1.15 var(--font-display); color: var(--ink); }
+.pt-rank__who:hover .pt-rank__name { color: var(--issue); }
+.pt-rank__role { display: block; font: 14px/1.4 var(--font-ui); color: var(--subtle); }
+.pt-rank__reads { font: 600 14px/1.4 var(--font-ui); color: var(--subtle); white-space: nowrap; align-self: center; }
+.pt-rank__reads strong { font: 800 22px/1 var(--font-display); color: var(--ink); margin-right: 4px; }
+.pt-rank__top { grid-column: 2 / -1; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.pt-rank__top li { border-top: 1px dashed var(--divider); }
+.pt-rank__top a { display: block; padding: 8px 0; font: 600 16px/1.5 var(--font-text); color: var(--body); }
+.pt-rank__top a:hover { color: var(--issue); }
+
+/* Pagination */
+.pt-pager {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    margin: 40px 0 0; padding-top: 16px;
+    border-top: 2px solid var(--ink);
+    font: 700 15px/1.2 var(--font-ui);
+}
+.pt-pager__step { color: var(--ink); }
+.pt-pager__step.is-disabled { color: var(--rule); }
+.pt-pager__pages { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 6px; }
+.pt-pager__num {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 40px; height: 40px; padding: 0 8px;
+    font: 800 20px/1 var(--font-display); color: var(--ink);
+}
+.pt-pager__num:hover { color: var(--issue); }
+.pt-pager__num.is-current { background: var(--issue-fill); color: var(--on-issue); }
+.pt-pager__gap { color: var(--subtle); padding: 0 4px; }
+
+@media (max-width: 1024px) {
+    .pt-issuegrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .pt-people { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+    .pt-intro { padding-top: 32px; }
+    .pt-h1--list { font-size: clamp(34px, 11vw, 52px); line-height: 1.05; }
+    .pt-list-section { padding-top: 28px; padding-bottom: 40px; }
+    .pt-row { grid-template-columns: minmax(0, 1fr) 96px; gap: 16px; }
+    .pt-row__title { font-size: 19px; }
+    .pt-row__summary { display: none; }
+    .pt-issuegrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
+    .pt-people { grid-template-columns: 1fr; }
+    .pt-rank { grid-template-columns: 48px minmax(0, 1fr); }
+    .pt-rank__n { font-size: 36px; }
+    .pt-rank__name { font-size: 24px; }
+    .pt-rank__reads { grid-column: 2; justify-self: start; }
+    .pt-pager__step { font-size: 14px; }
+    .pt-pager__pages { order: 3; width: 100%; justify-content: center; }
+}

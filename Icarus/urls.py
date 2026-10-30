@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.urls import include, path
 from django.contrib import admin
+from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
 
 from wagtail.admin import urls as wagtailadmin_urls
@@ -19,6 +20,17 @@ urlpatterns = [
         "robots.txt",
         TemplateView.as_view(
             template_name="robots.txt", content_type="text/plain"
+        ),
+    ),
+    # Removes a leftover service worker from browsers that still have one
+    # for this address (see the template).  Never cached, so a browser
+    # always gets the current file.
+    path(
+        "sw.js",
+        never_cache(
+            TemplateView.as_view(
+                template_name="sw.js", content_type="text/javascript"
+            )
         ),
     ),
     path("django-admin/", admin.site.urls),
@@ -54,3 +66,8 @@ urlpatterns += i18n_patterns(
     path("", include(wagtail_urls)),  # must stay last
     prefix_default_language=False,
 )
+
+# Error pages follow the site design chosen in Settings → Site theme.
+handler403 = "Icarus.views.permission_denied"
+handler404 = "Icarus.views.page_not_found"
+handler500 = "Icarus.views.server_error"

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ doc.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+<link rel="stylesheet" href="{% static 'css/print/tools.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  {% translate "മീഡിയ" as kicker %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=doc.title %}
+
+  <section class="pt-list-section pt-media">
+    {% if is_video %}
+    <video class="pt-video" src="{{ doc.url }}" controls autoplay preload="metadata"></video>
+    {% elif is_audio %}
+    {% translate "കേൾക്കാം" as listen_label %}
+    {% include "themes/print/includes/listen_bar.html" with src=doc.url label=listen_label %}
+    {% else %}
+    <p class="pt-notice"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> {% translate "ഈ ഫയൽ പ്ലേ ചെയ്യാൻ കഴിയില്ല." %}</p>
+    {% endif %}
+    <a href="javascript:history.back()" class="pt-more pt-media__back">← {% translate "തിരികെ പോകുക" %}</a>
+  </section>
+</main>
+{% endblock %}

@@ -7,7 +7,8 @@
 (function () {
     const btn = document.getElementById('themeToggle');
     const THEMES = ['light', 'dusk', 'dark'];
-    const THEME_COLORS = { light: '#fafaf8', dusk: '#16130e', dark: '#000000' };
+    // base.html picks these per site design (classic or print edition).
+    const THEME_COLORS = window.icarusThemeColors || { light: '#fafaf8', dusk: '#16130e', dark: '#000000' };
 
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);

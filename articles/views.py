@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db.models import F
+from home.theme import themed_template
 from .models import Article
 
 @require_POST
@@ -34,7 +35,7 @@ def tag_detail(request, tag):
     else:
         articles = []
     
-    return render(request, 'articles/tag_detail.html', {
+    return render(request, themed_template(request, 'articles/tag_detail.html'), {
         'tag_name': tag_obj.name if tag_obj else tag,
         'articles': articles,
     })
@@ -52,7 +53,7 @@ def media_player(request, doc_id):
     is_video = ext in ['mp4', 'webm', 'ogg', 'ogv', 'mov', 'm4v', 'avi', 'mkv', '3gp']
     is_audio = ext in ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'opus', 'oga', 'wma', 'amr']
     
-    return render(request, 'articles/media_player.html', {
+    return render(request, themed_template(request, 'articles/media_player.html'), {
         'doc': doc,
         'is_video': is_video,
         'is_audio': is_audio,

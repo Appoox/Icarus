@@ -1,0 +1,36 @@
+{% load i18n %}
+{# The editorial board as a modal. Expects modal_id, title, subtitle and   #}
+{# board (from {% pt_board %}). Opened by any [data-pt-modal-open=modal_id]. #}
+<dialog class="pt-modal" id="{{ modal_id }}" aria-labelledby="{{ modal_id }}-title">
+    <div class="pt-modal__panel">
+        <div class="pt-modal__head">
+            <div>
+                <h2 class="pt-modal__title" id="{{ modal_id }}-title">{{ title }}</h2>
+                {% if subtitle %}<p class="pt-modal__subtitle">{{ subtitle }}</p>{% endif %}
+            </div>
+            <button type="button" class="pt-modal__close" data-pt-modal-close aria-label="{% translate 'അടയ്ക്കുക' %}">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="pt-stripe" aria-hidden="true"></div>
+        <div class="pt-modal__body">
+            {% if board.roles %}
+            <dl class="pt-board__roles">
+                {% for role in board.roles %}{% for person in role.people %}
+                <div class="pt-board__pair">
+                    <dt>{{ role.label }}</dt>
+                    <dd>{% if person.url %}<a href="{{ person.url }}">{{ person.title }}</a>{% else %}{{ person.title }}{% endif %}</dd>
+                </div>
+                {% endfor %}{% endfor %}
+            </dl>
+            {% endif %}
+            {% if board.members %}
+            <h3 class="pt-board__members-title">{% translate "അംഗങ്ങൾ" %}</h3>
+            <p class="pt-board__members">{% for person in board.members %}{% if person.url %}<a href="{{ person.url }}">{{ person.title }}</a>{% else %}{{ person.title }}{% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+            {% endif %}
+            {% if board.empty %}
+            <p class="pt-board__members">{% translate "പത്രാധിപ സമിതി അംഗങ്ങളാരും ലിസ്റ്റ് ചെയ്തിട്ടില്ല." %}</p>
+            {% endif %}
+        </div>
+    </div>
+</dialog>

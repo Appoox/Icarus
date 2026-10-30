@@ -1,24 +1,29 @@
 {% load wagtailcore_tags wagtailimages_tags header_tags i18n %}
 <!DOCTYPE html>
-<html lang="ml">
+<html lang="{% if lang == 'en' or lang == 'hi' or lang == 'ta' %}{{ lang }}{% else %}ml{% endif %}">
 <head>
   <meta charset="utf-8">
   <title>{{ page.title }}</title>
   <style>
-    /* ── PDF-specific styles for WeasyPrint ── */
+    /* ── PDF-specific styles for WeasyPrint ──
+       The fonts named below are bundled in articles/pdf_fonts/ and loaded
+       by articles/pdf.py: the server has no Malayalam, Hindi or Tamil fonts
+       of its own. Noto Serif Malayalam for text and headings, Anek
+       Malayalam for small labels; Noto Serif Devanagari/Tamil for Hindi
+       and Tamil versions. */
     @page {
       size: A4;
       margin: 2.5cm;
       @bottom-right {
         content: "Page " counter(page) " of " counter(pages);
-        font-family: 'DejaVu Sans', sans-serif;
+        font-family: 'Anek Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Sans', sans-serif;
         font-size: 9pt;
         color: #888;
       }
     }
 
     body {
-      font-family: 'DejaVu Sans', sans-serif;
+      font-family: 'Noto Serif Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Serif', serif;
       font-size: 11pt;
       line-height: 1.5;
       color: #333;
@@ -42,7 +47,7 @@
     }
 
     .pdf-site-title-text {
-      font-family: 'Noto Serif', 'DejaVu Serif', Georgia, serif;
+      font-family: 'Noto Serif Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Serif', serif;
       font-size: 14pt;
       font-weight: 700;
       color: #1a1612;
@@ -59,10 +64,11 @@
 
     .pdf-topic {
       display: inline-block;
+      font-family: 'Anek Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Sans', sans-serif;
       font-size: 8pt;
       font-weight: 700;
-      letter-spacing: 0.12em;
-            color: #ffffff;
+      /* No extra letter-spacing: it pulls Malayalam syllables apart. */
+      color: #ffffff;
       background: #c8102e;
       padding: 3pt 10pt;
       border-radius: 10pt;
@@ -70,7 +76,7 @@
     }
 
     .pdf-title {
-      font-family: 'Noto Serif', Georgia, 'Times New Roman', serif;
+      font-family: 'Noto Serif Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Serif', serif;
       font-size: 24pt;
       font-weight: 700;
       line-height: 1.2;
@@ -79,6 +85,7 @@
     }
 
     .pdf-meta {
+      font-family: 'Anek Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Sans', sans-serif;
       font-size: 9pt;
       color: #6b6659;
       margin-bottom: 4pt;
@@ -101,6 +108,7 @@
     }
 
     .pdf-cover-caption {
+      font-family: 'Anek Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Sans', sans-serif;
       font-size: 8pt;
       color: #888;
       font-style: italic;
@@ -108,17 +116,20 @@
     }
 
     /* ── Body Content ── */
+    /* Ragged right, not justified: Malayalam words are long and can't be
+       hyphenated, so justified lines were stretched with wide gaps. */
     .pdf-body {
       margin-top: 16pt;
+      text-align: start;
+      overflow-wrap: break-word;
     }
 
     .pdf-body p {
       margin-bottom: 10pt;
-      text-align: justify;
     }
 
     .pdf-body h2 {
-      font-family: 'Noto Serif', Georgia, 'Times New Roman', serif;
+      font-family: 'Noto Serif Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Serif', serif;
       font-size: 16pt;
       font-weight: 700;
       color: #1a1612;
@@ -156,6 +167,7 @@
     }
 
     .pdf-body figcaption {
+      font-family: 'Anek Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Sans', sans-serif;
       font-size: 8pt;
       color: #888;
       font-style: italic;
@@ -204,6 +216,7 @@
 
     /* ── Footer ── */
     .pdf-footer {
+      font-family: 'Anek Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Sans', sans-serif;
       margin-top: 32pt;
       padding-top: 12pt;
       border-top: 1pt solid #d4d0c8;
@@ -213,6 +226,7 @@
     }
 
     .pdf-media-link {
+      font-family: 'Anek Malayalam', 'Noto Serif Devanagari', 'Noto Serif Tamil', 'DejaVu Sans', sans-serif;
       background: #f9fafb;
       border: 1px solid #e5e7eb;
       padding: 8pt 12pt;

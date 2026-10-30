@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% translate "ആർക്കൈവ് തിരയൽ" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+<link rel="stylesheet" href="{% static 'css/print/tools.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  <header class="pt-intro pt-search-intro">
+    <span class="pt-tag">{% translate "ആർക്കൈവ്" %}</span>
+    <h1 class="pt-h1 pt-h1--list">{% translate "ആർക്കൈവിൽ തിരയൂ" %}</h1>
+    <p class="pt-standfirst">{% translate "പദാര്‍ത്ഥപരമോ വാക്കുകളോ ഉപയോഗിച്ച് ശാസ്ത്രഗതിയല്‍ മുഴുവന്‍ തിരയൂ" %}</p>
+
+    <form method="get" class="pt-searchform" role="search">
+      <div class="pt-searchbox">
+        <label for="pt-search-q" class="pt-sr-only">{% translate "തിരയുക" %}</label>
+        <input id="pt-search-q" type="search" name="q" value="{{ query }}" autofocus
+               placeholder="{% translate 'ആർക്കൈവിൽ തിരയൂ (ഉദാ. കാലാവസ്ഥാ വ്യതിയാനം, പരിസ്ഥിതി...)' %}">
+        <button type="submit" class="pt-btn pt-btn--dark">{% translate "തിരയൂ" %}</button>
+      </div>
+      <div class="pt-searchform__options">
+        <label class="pt-select">
+          <span>{% translate "തിരയൽ രീതി" %}</span>
+          <select name="mode" onchange="this.form.submit()">
+            <option value="hybrid" {% if mode == 'hybrid' %}selected{% endif %}>{% translate "ഹൈബ്രിഡ് (Recomended)" %}</option>
+            <option value="similarity" {% if mode == 'similarity' %}selected{% endif %}>{% translate "അര്‍ത്ഥത്തിലെ സാമ്യത" %}</option>
+            <option value="keyword" {% if mode == 'keyword' %}selected{% endif %}>{% translate "വാക്കിലെ സാമ്യത" %}</option>
+          </select>
+        </label>
+        <label class="pt-select">
+          <span>{% translate "ഫലങ്ങൾ" %}</span>
+          <select name="top_k" onchange="this.form.submit()">
+            <option value="3" {% if top_k == 3 %}selected{% endif %}>3</option>
+            <option value="5" {% if top_k == 5 %}selected{% endif %}>5</option>
+            <option value="10" {% if top_k == 10 %}selected{% endif %}>10</option>
+            <option value="20" {% if top_k == 20 %}selected{% endif %}>20</option>
+          </select>
+        </label>
+      </div>
+    </form>
+  </header>
+
+  {% if query %}
+  <section class="pt-list-section" aria-live="polite">
+    {% if results %}
+    <div class="pt-section-head">
+      <h2 class="pt-section-head__title">{% blocktranslate count counter=results|length %}"{{ query }}"-ന് {{ counter }} ഫലം{% plural %}"{{ query }}"-ന് {{ counter }} ഫലങ്ങൾ{% endblocktranslate %}</h2>
+      <span class="pt-section-head__rule"></span>
+    </div>
+    <ol class="pt-results">
+      {% for result in results %}
+      <li class="pt-result">
+        <p class="pt-result__kind">
+          {% if result.type == 'pdf' %}{% translate "പിഡിഎഫ്" %}
+          {% elif result.type == 'article' %}{% translate "ലേഖനം" %}
+          {% elif result.type == 'author' %}{% translate "രചയിതാവിന്റെ പ്രൊഫൈൽ" %}
+          {% elif result.type == 'editorial' %}{% translate "എഡിറ്റോറിയൽ" %}
+          {% elif result.type == 'topic' %}{% translate "വിഷയം" %}{% endif %}
+          {% if result.type == 'pdf' or result.page_number %}<span>· {% blocktranslate with n=result.page_number %}പേജ് {{ n }}{% endblocktranslate %}</span>{% endif %}
+          <span class="pt-result__score">{% blocktranslate with score=result.score %}പ്രസക്തി: {{ score }}{% endblocktranslate %}</span>
+        </p>
+        <h3 class="pt-result__title">{% firstof result.title result.document_name %}</h3>
+        <p class="pt-result__text">{{ result.chunk_text }}</p>
+        {% if result.preview_only %}<p class="pt-result__note">{% translate "മുഴുവൻ പാഠം വരിക്കാർക്ക് മാത്രം." %}</p>{% endif %}
+
+        {% if result.type == 'pdf' %}
+        <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}" class="pt-more" target="_blank">{% blocktranslate with n=result.page_number|default:1 %}പേജ് {{ n }}-ൽ PDF തുറക്കൂ{% endblocktranslate %} →</a>
+        {% elif result.type == 'topic' %}
+          {% if result.url %}
+          <a href="{{ result.url }}" class="pt-more">{% translate "വിഷയം പര്യവേക്ഷണം ചെയ്യൂ" %} →</a>
+          {% else %}
+          <a href="?q={{ result.title|urlencode }}&mode={{ mode }}" class="pt-more">{% translate "വിഷയം പര്യവേക്ഷണം ചെയ്യൂ" %} →</a>
+          {% endif %}
+        {% elif result.url %}
+        <a href="{{ result.url }}" class="pt-more" target="_blank">{% translate "മുഴുവൻ പേജും കാണൂ" %} →</a>
+        {% elif result.document_id %}
+        <a href="{% url 'the_librarian:viewer' result.document_id %}?page={{ result.page_number|default:1 }}" class="pt-more" target="_blank">{% translate "ഡോക്യുമെന്റ് തുറക്കൂ" %} →</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <div class="pt-list-empty">
+      <p>{% blocktranslate %}"{{ query }}"-ന് ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല{% endblocktranslate %}</p>
+      <p>{% translate "മറ്റ് തിരയൽ പദങ്ങൾ ഉപയോഗിക്കുക അല്ലെങ്കിൽ കൂടുതൽ ഡോക്യുമെന്റുകൾ ചേർക്കുക." %}</p>
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "ആർക്കൈവ്" %} | ശാസ്ത്രഗതി{% endblock %}

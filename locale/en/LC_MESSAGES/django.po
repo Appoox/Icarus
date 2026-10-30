@@ -3461,3 +3461,348 @@ msgstr "Previous page"
 #, python-format
 #~ msgid "ലേഖനം %(n)s-ലേക്ക് പോകുക"
 #~ msgstr "Go to article %(n)s"
+
+# ── Print edition site design (home/theme.py) ──
+
+#: Icarus/templates/base.html:103
+msgid "ഡിസൈൻ പ്രിവ്യൂ. നിങ്ങൾക്ക് മാത്രമേ ഇത് കാണാനാകൂ."
+msgstr "design preview. Only you can see it."
+
+#: Icarus/templates/base.html:104
+msgid "പ്രിവ്യൂ നിർത്തുക"
+msgstr "Stop preview"
+
+#: Icarus/templates/themes/print/includes/board_modal.html:28
+msgid "അംഗങ്ങൾ"
+msgstr "Members"
+
+#: Icarus/templates/themes/print/includes/header.html:47
+msgid "മെനു"
+msgstr "Menu"
+
+#: Icarus/templates/themes/print/includes/header.html:83
+msgid "വിഭാഗങ്ങൾ"
+msgstr "Sections"
+
+#: Icarus/templates/themes/print/includes/listen_bar.html:6
+msgid "നിർത്തുക"
+msgstr "Pause"
+
+#: Icarus/templates/themes/print/includes/listen_bar.html:8
+msgid "ലേഖനം കേൾക്കാം"
+msgstr "Listen to this article"
+
+#: Icarus/templates/themes/print/includes/listen_bar.html:13
+msgid "വേഗം"
+msgstr "Speed"
+
+#: articles/templates/themes/print/articles/article.html:19
+#, python-format
+msgid "%(issue)s ലക്കം"
+msgstr "%(issue)s issue"
+
+#: articles/templates/themes/print/articles/article.html:39
+#: articles/templates/themes/print/articles/article.html:43
+#, python-format
+msgid "%(n)s മിനിറ്റ് വായന"
+msgstr "%(n)s min read"
+
+#: articles/templates/themes/print/articles/article.html:49
+msgid "ഭാഷ"
+msgstr "Language"
+
+#: articles/templates/themes/print/articles/article.html:56
+msgid "അക്ഷരവലുപ്പം"
+msgstr "Text size"
+
+#: articles/templates/themes/print/articles/article.html:57
+msgid "ചെറിയ അക്ഷരം"
+msgstr "Small text"
+
+#: articles/templates/themes/print/articles/article.html:58
+msgid "സാധാരണ അക്ഷരം"
+msgstr "Normal text"
+
+#: articles/templates/themes/print/articles/article.html:59
+msgid "വലിയ അക്ഷരം"
+msgstr "Large text"
+
+#: articles/templates/themes/print/articles/article.html:65
+msgid "ലിങ്ക് പകർത്തി"
+msgstr "Link copied"
+
+#: articles/templates/themes/print/articles/article.html:65
+msgid "ലിങ്ക് പകർത്തുക"
+msgstr "Copy link"
+
+#: articles/templates/themes/print/articles/article.html:136
+msgid "വരിക്കാർക്ക്"
+msgstr "For subscribers"
+
+#: articles/templates/themes/print/articles/article.html:137
+msgid "ബാക്കി വായിക്കാൻ വരിക്കാരാകൂ"
+msgstr "Subscribe to read the rest"
+
+#: articles/templates/themes/print/articles/article.html:142
+#: home/templates/themes/print/home/home_page.html:141
+msgid "അച്ചടിപ്പതിപ്പും മുഴുവൻ ഓൺലൈൻ ആർക്കൈവും."
+msgstr "The print edition and the full online archive."
+
+#: articles/templates/themes/print/articles/article.html:147
+#: articles/templates/themes/print/articles/article.html:149
+#: home/templates/themes/print/home/home_page.html:144
+#: home/templates/themes/print/home/home_page.html:146
+msgid "ഇപ്പോൾതന്നെ വരിക്കാരാകൂ"
+msgstr "Subscribe now"
+
+#: articles/templates/themes/print/articles/article.html:177
+#: home/templatetags/print_theme.py:224
+#: literati/templates/themes/print/literati/literati.html:21
+#: literati/templates/themes/print/literati/literati.html:114
+msgid "ലേഖകർ"
+msgstr "Authors"
+
+#: articles/templates/themes/print/articles/article.html:181
+#, python-format
+msgid "%(n)s ലേഖനം"
+msgid_plural "%(n)s ലേഖനങ്ങൾ"
+msgstr[0] "%(n)s article"
+msgstr[1] "%(n)s articles"
+
+#: articles/templates/themes/print/articles/article.html:210
+msgid "അച്ചടിപ്പതിപ്പിൽ"
+msgstr "In print"
+
+#: articles/templates/themes/print/articles/article.html:211
+#, python-format
+msgid "പേജ് %(pages)s"
+msgstr "Pages %(pages)s"
+
+#: articles/templates/themes/print/articles/article.html:213
+msgid "ഫ്ലിപ്പ്ബുക്കിൽ തുറക്കാം"
+msgstr "Open in the flipbook"
+
+#: articles/templates/themes/print/articles/article.html:233
+msgid "ഈ ലക്കത്തിൽ തുടർന്ന്"
+msgstr "More in this issue"
+
+#: home/templates/themes/print/home/home_page.html:29
+msgid "കവർ സ്റ്റോറി"
+msgstr "Cover story"
+
+#: home/templates/themes/print/home/home_page.html:39
+#: issue/templates/themes/print/issue/issue.html:76
+msgid "തുടർന്നു വായിക്കാം"
+msgstr "Continue reading"
+
+#: home/templates/themes/print/home/home_page.html:49
+#: issue/templates/themes/print/issue/issue.html:18
+#, python-format
+msgid "ശാസ്ത്രഗതി %(title)s മുഖച്ചിത്രം"
+msgstr "Sasthragathy %(title)s cover"
+
+#: home/templates/themes/print/home/home_page.html:57
+#: issue/templates/themes/print/issue/issue.html:25
+#, python-format
+msgid "വില: %(price)s രൂപ"
+msgstr "Price: ₹%(price)s"
+
+#: home/templates/themes/print/home/home_page.html:60
+#: issue/templates/themes/print/issue/issue.html:29
+msgid "ലക്കം വായിക്കാം"
+msgstr "Read the issue"
+
+#: home/templates/themes/print/home/home_page.html:62
+#: issue/templates/themes/print/issue/issue.html:31
+msgid "ഫ്ലിപ്പ്ബുക്ക്"
+msgstr "Flipbook"
+
+#: home/templates/themes/print/home/home_page.html:72
+msgid "ഈ ലക്കത്തിൽ"
+msgstr "In this issue"
+
+#: home/templates/themes/print/home/home_page.html:73
+#: issue/templates/themes/print/issue/issue.html:24
+#: issue/templates/themes/print/issue/issue.html:116
+#, python-format
+msgid "%(n)s പേജ്"
+msgstr "%(n)s pages"
+
+#: home/templates/themes/print/home/home_page.html:88
+msgid "ശാസ്ത്രലോകം"
+msgstr "World of science"
+
+#: home/templates/themes/print/home/home_page.html:118
+msgid "കൂടുതൽ വായിച്ചവ"
+msgstr "Most read"
+
+#: home/templates/themes/print/home/home_page.html:140
+msgid "എല്ലാ മാസവും ശാസ്ത്രം, മലയാളത്തിൽ"
+msgstr "Science every month, in Malayalam"
+
+#: home/templatetags/print_theme.py:221
+msgid "ലക്കങ്ങൾ"
+msgstr "Issues"
+
+#: home/templatetags/print_theme.py:223
+msgid "വിഷയങ്ങൾ"
+msgstr "Topics"
+
+#: home/templatetags/print_theme.py:226
+msgid "കത്തുകൾ"
+msgstr "Letters"
+
+#: issue/templates/themes/print/issue/issue.html:55
+#: issue/templates/themes/print/issue/issue.html:170
+msgid "പത്രാധിപസമിതി"
+msgstr "Editorial board"
+
+#: issue/templates/themes/print/issue/issue.html:76
+msgid "ചുരുക്കുക"
+msgstr "Show less"
+
+#: issue/templates/themes/print/issue/issue.html:91
+msgid "ഈ ലക്കം കേൾക്കാം"
+msgstr "Listen to this issue"
+
+#: issue/templates/themes/print/issue/issue.html:116
+#, python-format
+msgid "%(n)s ഇനം"
+msgid_plural "%(n)s ഇനങ്ങൾ"
+msgstr[0] "%(n)s item"
+msgstr[1] "%(n)s items"
+
+#: issue/templates/themes/print/issue/issue.html:124
+msgid "മുഖ്യവിഷയം"
+msgstr "Cover theme"
+
+#: issue/templates/themes/print/issue/issue.html:152
+msgid "അടുത്ത ലക്കം"
+msgstr "Next issue"
+
+#: kalapila/templates/themes/print/kalapila/comment_section.html:26
+msgid "പ്രതികരണങ്ങൾ"
+msgstr "Responses"
+
+#: kalapila/templates/themes/print/kalapila/comment_section.html:39
+msgid "പ്രതികരണം"
+msgstr "Response"
+
+#: kalapila/templates/themes/print/kalapila/comment_section.html:40
+#: kalapila/templates/themes/print/kalapila/comment_section.html:55
+msgid "ഈ ലേഖനത്തെക്കുറിച്ച് എന്തു പറയാനുണ്ട്?"
+msgstr "What do you think of this article?"
+
+#: kalapila/templates/themes/print/kalapila/comment_section.html:40
+#: kalapila/templates/themes/print/kalapila/comment_section.html:55
+msgid "ഈ ലക്കത്തെക്കുറിച്ച് എന്തു പറയാനുണ്ട്?"
+msgstr "What do you think of this issue?"
+
+#: kalapila/templates/themes/print/kalapila/comment_section.html:43
+#: kalapila/templates/themes/print/kalapila/comment_section.html:58
+msgid "പ്രതികരിക്കാം"
+msgstr "Respond"
+
+#: kalapila/templates/themes/print/kalapila/comment_section.html:57
+msgid "ലോഗിൻ ചെയ്ത് പ്രതികരിക്കാം"
+msgstr "Log in to respond"
+
+#: literati/templates/themes/print/literati/literati.html:51
+msgid "മുതൽ"
+msgstr "since"
+
+#: literati/templates/themes/print/literati/literati.html:68
+msgid "ഏറ്റവും പുതിയത്"
+msgstr "Latest"
+
+#: literati/templates/themes/print/literati/literati.html:73
+msgid "വായിക്കാം"
+msgstr "Read"
+
+#: literati/templates/themes/print/literati/literati.html:87
+msgid "എല്ലാ ലേഖനങ്ങളും"
+msgstr "All articles"
+
+#: the_librarian/templates/themes/print/the_librarian/archive_list.html:18
+msgid "എല്ലാ ലക്കങ്ങളും"
+msgstr "All issues"
+
+#: the_librarian/templates/themes/print/the_librarian/archive_list.html:20
+#, python-format
+msgid "വാല്യം %(first)s മുതൽ %(last)s വരെ. വർഷം തിരഞ്ഞെടുത്ത് പഴയ ലക്കങ്ങൾ വായിക്കാം."
+msgstr "Volumes %(first)s to %(last)s. Pick a year to read past issues."
+
+#: the_librarian/templates/themes/print/the_librarian/archive_list.html:22
+msgid "വർഷം തിരഞ്ഞെടുത്ത് പഴയ ലക്കങ്ങൾ വായിക്കാം."
+msgstr "Pick a year to read past issues."
+
+#: the_librarian/templates/themes/print/the_librarian/archive_list.html:26
+#: the_librarian/templates/themes/print/the_librarian/archive_list.html:28
+msgid "തിരയുക"
+msgstr "Search"
+
+#: the_librarian/templates/themes/print/the_librarian/archive_list.html:27
+msgid "ലേഖനം, ലേഖകർ, വിഷയം…"
+msgstr "Article, author, topic…"
+
+#: the_librarian/templates/themes/print/the_librarian/archive_list.html:42
+msgid "പഴയ ലക്കങ്ങൾ"
+msgstr "Older issues"
+
+#: the_librarian/templates/themes/print/the_librarian/archive_list.html:55
+#, python-format
+msgid "%(n)s ലക്കം"
+msgid_plural "%(n)s ലക്കങ്ങൾ"
+msgstr[0] "%(n)s issue"
+msgstr[1] "%(n)s issues"
+
+# ── Print edition site design: search, letters, sign-in, notice pages ──
+
+msgid "പ്രവേശനമില്ല"
+msgstr "No access"
+
+msgid "ഈ പേജ് കാണാൻ നിങ്ങൾക്ക് അനുമതിയില്ല."
+msgstr "You don't have permission to see this page."
+
+msgid "ആർക്കൈവിലെ ലക്കങ്ങൾ വരിക്കാർക്ക് മാത്രമാണ്."
+msgstr "Archive issues are for subscribers only."
+
+msgid "വരിസംഖ്യ പ്ലാനുകൾ കാണുക"
+msgstr "See subscription plans"
+
+msgid "ആർക്കൈവിൽ തിരയൂ"
+msgstr "Search the archive"
+
+msgid ""
+"നിങ്ങളുടെ സൗജന്യ വായനാ പരിധി അവസാനിച്ചു. അച്ചടിപ്പതിപ്പും മുഴുവൻ ഓൺലൈൻ "
+"ആർക്കൈവും വരിക്കാർക്ക്."
+msgstr ""
+"You've reached your free reading limit. The print edition and the full "
+"online archive are for subscribers."
+
+msgid "കഴിഞ്ഞ 30 ദിവസം ഏറ്റവും കൂടുതൽ വായിച്ചവ ആദ്യം"
+msgstr "Most read in the last 30 days first"
+
+msgid "ലേഖനങ്ങളൊന്നുമില്ല."
+msgstr "No articles yet."
+
+msgid "മീഡിയ"
+msgstr "Media"
+
+msgid "കേൾക്കാം"
+msgstr "Listen"
+
+msgid "ലക്കങ്ങളൊന്നുമില്ല."
+msgstr "No issues yet."
+
+#, python-format
+msgid "%(n)s പേർ"
+msgid_plural "%(n)s പേർ"
+msgstr[0] "%(n)s person"
+msgstr[1] "%(n)s people"
+
+msgid "ആർക്കൈവിൽ തിരയൂ (ഉദാ. കാലാവസ്ഥാ വ്യതിയാനം, പരിസ്ഥിതി...)"
+msgstr "Search the archive (e.g. climate change, environment...)"
+
+msgid "മുഴുവൻ പാഠം വരിക്കാർക്ക് മാത്രം."
+msgstr "Full text for subscribers only."

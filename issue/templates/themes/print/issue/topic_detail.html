@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  {% translate "വിഷയം" as kicker %}
+  {% translate "വിഷയ വിശദാംശം" as default_topic %}
+  {% with n_articles=articles|length n_issues=issues|length %}
+  {% blocktranslate count n=n_articles asvar meta %}{{ n }} ലേഖനം{% plural %}{{ n }} ലേഖനങ്ങൾ{% endblocktranslate %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=topic.name|default:default_topic meta=meta %}
+
+  {% if articles %}
+  <section class="pt-list-section" aria-labelledby="pt-topic-articles">
+    <div class="pt-section-head">
+      <h2 class="pt-section-head__title" id="pt-topic-articles">{% translate "ലേഖനങ്ങൾ" %}</h2>
+      <span class="pt-section-head__rule"></span>
+    </div>
+    <div class="pt-rows">
+      {% for article in articles %}{% include "themes/print/includes/article_row.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if issues %}
+  <section class="pt-list-section" aria-labelledby="pt-topic-issues">
+    <div class="pt-section-head">
+      <h2 class="pt-section-head__title" id="pt-topic-issues">{% translate "ലക്കങ്ങൾ" %}</h2>
+      <span class="pt-section-head__count">{{ n_issues }}</span>
+      <span class="pt-section-head__rule"></span>
+    </div>
+    <ul class="pt-issuegrid">
+      {% for issue in issues %}{% include "themes/print/includes/issue_card.html" %}{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if not articles and not issues %}
+  <section class="pt-list-section">
+    <p class="pt-list-empty">{% translate "ഈ വിഷയത്തിൽ ലേഖനങ്ങളോ ലക്കങ്ങളോ ഇതുവരെ കണ്ടെത്തിയില്ല." %}</p>
+  </section>
+  {% endif %}
+  {% endwith %}
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "വിഷയങ്ങൾ" %} | ശാസ്ത്രഗതി{% endblock %}
+{% block pt_folio_right %}ശാസ്ത്രഗതി | {{ topic.name }}{% endblock %}

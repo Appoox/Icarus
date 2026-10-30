@@ -15,6 +15,7 @@ from collections import defaultdict
 # Import Django's structural paginator classes to handle page distribution splits
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+from home.theme import themed_template
 from .models import Literati, ArticleAuthorRelationship
 
 
@@ -43,7 +44,7 @@ def most_read_authors(request):
         page_ct       = ContentType.objects.get_for_model(WagtailPage)
     except LookupError:
         # Graceful degradation if articles app is unavailable
-        return render(request, 'literati/most_read_authors.html', {'page_obj': None})
+        return render(request, themed_template(request, 'literati/most_read_authors.html'), {'page_obj': None})
 
     # ── Build article → [author_id, …] mapping ────────────────────────────
     # Only consider live articles to avoid counting hits on unpublished drafts.
@@ -126,4 +127,4 @@ def most_read_authors(request):
         # If target parameter breaks upper limits, drop context safely into the final page window
         page_obj = paginator.page(paginator.num_pages)
 
-    return render(request, 'literati/most_read_authors.html', {'page_obj': page_obj})
+    return render(request, themed_template(request, 'literati/most_read_authors.html'), {'page_obj': page_obj})

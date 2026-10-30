@@ -1,0 +1,58 @@
+{% load footer_tags wagtailimages_tags i18n print_theme %}
+{% get_site_footer as ctx %}
+{% with footer=ctx.footer %}
+<footer class="pt-footer" role="contentinfo">
+    <div class="pt-stripe" aria-hidden="true"></div>
+    <div class="pt-footer__inner">
+        {% with sections=footer.sections.all %}
+        <div class="pt-footer__grid" style="--pt-footer-cols: {{ sections|length|default:1 }}">
+            <div class="pt-footer__brand">
+                {% pt_wordmark as wm %}
+                {% if wm.image %}
+                    {% image wm.image height-80 as wordmark %}
+                    <img src="{{ wordmark.url }}" alt="{{ wm.title }}" class="pt-footer__wordmark{% if wm.invert %} pt-on-band-invert{% endif %}">
+                {% else %}
+                    <span class="pt-footer__wordmark-text">{{ wm.title }}</span>
+                {% endif %}
+                {% if footer.about_text %}<p class="pt-footer__tagline">{{ footer.about_text }}</p>{% endif %}
+                {% if ctx.editorial_board %}
+                <button type="button" class="pt-footer__board-btn" data-pt-modal-open="pt-footer-board">
+                    {% translate "പത്രാധിപ സമിതി" %}
+                </button>
+                {% endif %}
+            </div>
+
+            {% for section in sections %}
+            <div class="pt-footer__col">
+                {% if section.heading %}<h2 class="pt-footer__heading">{{ section.heading }}</h2>{% endif %}
+                <ul class="pt-footer__links" role="list">
+                    {% for col in section.columns.all %}{% for link in col.column_links.all %}
+                    <li><a href="{{ link.get_url }}"{% if link.is_external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label }}</a></li>
+                    {% endfor %}{% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        {% endwith %}
+
+        <div class="pt-footer__bottom">
+            <span>{{ footer.copyright_text|default:"© ശാസ്ത്രഗതി" }}</span>
+            <div class="pt-footer__social" aria-label="{% translate 'സോഷ്യൽ മീഡിയ ലിങ്കുകൾ' %}">
+                {% if footer.facebook_url %}<a href="{{ footer.facebook_url }}" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>{% endif %}
+                {% if footer.instagram_url %}<a href="{{ footer.instagram_url }}" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram" aria-hidden="true"></i></a>{% endif %}
+                {% if footer.youtube_url %}<a href="{{ footer.youtube_url }}" aria-label="YouTube" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube" aria-hidden="true"></i></a>{% endif %}
+                {% if footer.twitter_url %}<a href="{{ footer.twitter_url }}" aria-label="X / Twitter" target="_blank" rel="noopener noreferrer"><i class="fab fa-x-twitter" aria-hidden="true"></i></a>{% endif %}
+                {% if footer.linkedin_url %}<a href="{{ footer.linkedin_url }}" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a>{% endif %}
+                {% if footer.tiktok_url %}<a href="{{ footer.tiktok_url }}" aria-label="TikTok" target="_blank" rel="noopener noreferrer"><i class="fab fa-tiktok" aria-hidden="true"></i></a>{% endif %}
+                {% if footer.reddit_url %}<a href="{{ footer.reddit_url }}" aria-label="Reddit" target="_blank" rel="noopener noreferrer"><i class="fab fa-reddit-alien" aria-hidden="true"></i></a>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if ctx.editorial_board %}
+    {% pt_board ctx.editorial_board as board %}
+    {% translate "പത്രാധിപ സമിതി" as board_title %}
+    {% include "themes/print/includes/board_modal.html" with modal_id="pt-footer-board" title=board_title subtitle=ctx.editorial_board.board.name board=board %}
+    {% endif %}
+</footer>
+{% endwith %}

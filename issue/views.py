@@ -15,6 +15,7 @@ from collections import defaultdict
 # Import Django's structural paginator classes to handle page distribution splits
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+from home.theme import themed_template
 from .models import Topic, Issue
 from articles.models import Article
 
@@ -25,7 +26,7 @@ def topic_detail(request, slug):
     articles = Article.objects.live().filter(topic=topic).order_by('-first_published_at')
     issues = Issue.objects.live().filter(topic=topic).order_by('-date_of_publishing')
     
-    return render(request, 'issue/topic_detail.html', {
+    return render(request, themed_template(request, 'issue/topic_detail.html'), {
         'topic': topic,
         'articles': articles,
         'issues': issues,
@@ -45,7 +46,7 @@ def most_read_topics(request):
         article_ct = ContentType.objects.get_for_model(Article_model)
         page_ct = ContentType.objects.get_for_model(WagtailPage)
     except LookupError:
-        return render(request, 'issue/most_read_topics.html', {'page_obj': None})
+        return render(request, themed_template(request, 'issue/most_read_topics.html'), {'page_obj': None})
 
     # Pull live articles to establish an ID-to-Topic relational mapping reference
     live_articles = Article_model.objects.live().values('id', 'topic_id')
@@ -118,6 +119,6 @@ def most_read_topics(request):
         # If target parameter breaks upper limits, drop context safely into the final page window
         page_obj = paginator.page(paginator.num_pages)
 
-    return render(request, 'issue/most_read_topics.html', {
+    return render(request, themed_template(request, 'issue/most_read_topics.html'), {
         'page_obj': page_obj,
     })

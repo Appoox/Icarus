@@ -1,0 +1,83 @@
+/* Print edition — author (design: #author) */
+
+.pt-author-profile {
+    display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 56px;
+    padding: 56px var(--pt-gutter) 48px;
+    align-items: end;
+}
+.pt-author-profile__portrait img,
+.pt-author-profile__ph { width: 300px; height: 300px; object-fit: cover; }
+.pt-author-profile__ph {
+    display: flex; align-items: center; justify-content: center;
+    font: 800 96px/1 var(--font-display); color: var(--subtle);
+}
+
+.pt-author-profile__text { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.pt-author-profile__role { margin: -8px 0 0; font: 600 16px/1.5 var(--font-ui); color: var(--subtle); }
+.pt-author-profile__bio { font: 500 21px/1.7 var(--font-text); color: var(--ink); max-width: 640px; }
+.pt-author-profile__bio p { margin: 0 0 .6em; }
+.pt-author-profile__bio p:last-child { margin-bottom: 0; }
+.pt-author-profile__contact { display: flex; flex-wrap: wrap; gap: 10px 20px; font: 600 14px/1.5 var(--font-ui); color: var(--muted); }
+
+.pt-author-stats {
+    display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    border-top: 2px solid var(--ink);
+    padding-top: 16px;
+}
+.pt-author-stats__item { display: flex; flex-direction: column; }
+.pt-author-stats__n { font: 800 34px/1.1 var(--font-display); color: var(--issue-display); }
+.pt-author-stats__label { font: 13px/1.4 var(--font-ui); color: var(--subtle); }
+.pt-author-stats__topics { margin-left: auto; justify-content: flex-end; }
+
+.pt-author-latest {
+    margin: 0 var(--pt-gutter);
+    padding: 36px 48px;
+    display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 48px; align-items: center;
+}
+.pt-author-latest__text { display: flex; flex-direction: column; gap: 14px; }
+.pt-author-latest__label { font: 700 14px/1.4 var(--font-ui); color: var(--band); }
+html[data-theme^="d"] .pt-author-latest__label { color: var(--muted); }
+.pt-author-latest__title { margin: 0; font: 800 48px/1.05 var(--font-display); }
+.pt-author-latest__title a { color: var(--ink); }
+.pt-author-latest__title a:hover { color: var(--issue); }
+.pt-author-latest__standfirst { margin: 0; font: 17px/1.75 var(--font-text); color: var(--body); max-width: 640px; }
+
+.pt-author-all { padding: 56px var(--pt-gutter); }
+
+.pt-author-year {
+    display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 40px;
+    border-top: 2px solid var(--ink);
+    padding: 18px 0 26px;
+}
+.pt-author-year__n { margin: 0; font: 800 56px/1 var(--font-display); color: var(--issue-dark); }
+.pt-author-year__list { list-style: none; margin: 0; padding: 0; }
+.pt-author-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: start;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--divider);
+}
+.pt-author-row__text { display: flex; flex-direction: column; gap: 4px; }
+.pt-author-row__title { font: 700 21px/1.45 var(--font-text); color: var(--ink); }
+.pt-author-row:hover .pt-author-row__title { color: var(--issue); }
+.pt-author-row__meta { font: 14px/1.5 var(--font-ui); color: var(--subtle); }
+.pt-author-row__topic { font: 700 13px/1.6 var(--font-ui); color: var(--issue); text-align: right; }
+.pt-author-empty { font: 16px/1.6 var(--font-ui); color: var(--subtle); }
+
+@media (max-width: 1024px) {
+    .pt-author-profile { grid-template-columns: 220px minmax(0, 1fr); gap: 40px; }
+    .pt-author-profile__portrait img, .pt-author-profile__ph { width: 220px; height: 220px; }
+}
+
+@media (max-width: 720px) {
+    .pt-author-profile { grid-template-columns: 1fr; gap: 24px; padding-top: 32px; }
+    .pt-author-profile__portrait img, .pt-author-profile__ph { width: 160px; height: 160px; }
+    .pt-author-profile__bio { font-size: 18px; }
+    .pt-author-stats__topics { margin-left: 0; justify-content: flex-start; }
+    .pt-author-latest { grid-template-columns: 1fr; padding: 28px 20px; gap: 20px; }
+    .pt-author-latest__cover { max-width: 140px; }
+    .pt-author-latest__title { font-size: 34px; }
+    .pt-author-year { grid-template-columns: 1fr; gap: 8px; }
+    .pt-author-year__n { font-size: 40px; }
+    .pt-author-row { grid-template-columns: 1fr; gap: 4px; }
+    .pt-author-row__topic { text-align: left; }
+}
