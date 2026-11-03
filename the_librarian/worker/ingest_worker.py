@@ -16,15 +16,17 @@ Two ways to run it:
 
 2. Command line, configured via environment variables:
        export ICARUS_BASE_URL="https://kadannal-koodu.miku-brill.ts.net"
-       export ICARUS_WORKER_TOKEN="<a key generated from the Remote
-                                    Ingestion Worker dashboard panel>"
-       python worker_ingest.py
-       python worker_ingest.py --force   # re-ingest everything
+       export ICARUS_WORKER_TOKEN="<a key generated on the Remote Worker
+                                    page in the Wagtail admin>"
+       python ingest_worker.py
+       python ingest_worker.py --force   # re-ingest everything
+
+Full setup steps are on the Remote Worker page in the Wagtail admin.
 
 Before either one, an admin must:
-    1. Generate an API key from the "Remote Ingestion Worker" dashboard
-       panel and copy it (shown in plaintext exactly once).
-    2. Click "Enable Remote Ingestion" on the same panel — every request
+    1. Generate an API key on the "Remote Worker" admin page and copy it
+       (shown in plaintext exactly once).
+    2. Click "Enable Remote Ingestion" on the same page — every request
        403s while this switch is off, regardless of token. It stays
        enabled until an admin disables it again; there is no automatic
        timeout.
@@ -59,12 +61,15 @@ CACHE_DIR = Path(os.environ.get("WORKER_OCR_CACHE", "./ocr_cache"))
 WORKER_BATCH_SIZE = 150  # stays comfortably under the server's MAX_CHUNKS_PER_BATCH=200
 
 # Add the repo's project root to sys.path so we can import the Django-free
-# service modules directly without configuring Django at all.
-REPO_ROOT = os.environ.get("ICARUS_REPO_ROOT", "..")
+# service modules directly without configuring Django at all. Defaults to the
+# checkout this file lives in (the_librarian/worker/ is two levels down), so
+# it works whichever folder the worker is started from.
+REPO_ROOT = os.environ.get("ICARUS_REPO_ROOT", str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, REPO_ROOT)
 
 from the_librarian.services.ocr_processing import process_page          # noqa: E402
 from the_librarian.services.text_cleanup import chunk_pages             # noqa: E402
+from the_librarian.services.embedding_text import DOCUMENT_PREFIX     # noqa: E402
 
 
 class StopRequested(Exception):
@@ -90,7 +95,10 @@ def get_model(model_name):
 
 
 def embed_texts(texts, model_name):
-    return get_model(model_name).encode(texts, normalize_embeddings=True, show_progress_bar=False).tolist()
+    # Same label the site adds before embedding stored text (services/embedder.py),
+    # so a chunk gets the same vector whichever side processed it.
+    labelled = [DOCUMENT_PREFIX + t for t in texts]
+    return get_model(model_name).encode(labelled, normalize_embeddings=True, show_progress_bar=False).tolist()
 
 
 def _page_cache_path(cache_dir, pdf_stem, page_num):

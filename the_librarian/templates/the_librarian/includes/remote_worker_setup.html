@@ -1,0 +1,180 @@
+{% comment %}
+Remote worker setup steps. Shown on the Remote Worker admin page and, as a
+panel, on the Remote Ingestion Worker Settings page. Needs the context from
+the_librarian.panels.remote_worker_setup_context.
+{% endcomment %}
+<div class="ri-setup">
+    <style>
+        .ri-setup { line-height: 1.55; max-width: 60em; }
+        .ri-setup h3 { font-size: 1em; font-weight: 700; margin: 1.4em 0 0.5em; }
+        .ri-setup p { margin: 0 0 0.6em; }
+        /* Wagtail's panels strip list markers; the step numbers matter here. */
+        .ri-setup ol, .ri-setup ul { padding-inline-start: 1.4em; margin: 0 0 0.6em; }
+        .ri-setup ol > li { list-style-type: decimal; }
+        .ri-setup ul > li { list-style-type: disc; }
+        .ri-setup li { margin-bottom: 0.4em; }
+        .ri-setup .ri-meta { color: var(--w-color-text-meta); font-size: 0.9em; }
+        .ri-setup .ri-code { display: flex; gap: 0.5em; align-items: flex-start; margin: 0.4em 0 0.8em; }
+        .ri-setup .ri-code pre {
+            flex: 1; min-width: 0; margin: 0; padding: 0.8em 1em; overflow-x: auto; white-space: pre; font-size: 0.85em;
+            background: var(--w-color-surface-field); border: 1px solid var(--w-color-border-furniture); border-radius: 6px;
+        }
+        .ri-setup details { margin-top: 1em; }
+        /* Wagtail hides the browser's disclosure arrow, so draw one. */
+        .ri-summary { cursor: pointer; font-weight: 600; list-style: none; }
+        .ri-summary::-webkit-details-marker { display: none; }
+        .ri-summary::before { content: "▸"; display: inline-block; width: 1.1em; }
+        details[open] > .ri-summary::before { content: "▾"; }
+    </style>
+
+    <p>
+        The worker is a program you run on a computer of your choice, not on this server. It downloads the
+        back issues that haven't been processed yet, reads the text off each page, and sends it back here so
+        those issues become searchable. It runs on the processor, so no graphics card is needed.
+    </p>
+
+    <h3>1. Get a key and switch remote ingestion on</h3>
+    <ol>
+        <li>
+            {% if on_worker_page %}Under <strong>API Keys</strong> below{% else %}On the <a href="{{ worker_page_url }}">Remote Worker</a> page (in the sidebar), under <strong>API Keys</strong>{% endif %},
+            type a label such as “Home workstation” and click <strong>+ Generate Key</strong>. Copy the key straight
+            away: it is shown only once. Give each computer its own key, so you can revoke one without stopping the others.
+        </li>
+        <li>
+            Click <strong>Enable Remote Ingestion</strong>. While it is off, this site turns away every worker
+            request, even ones with a valid key. It stays on until someone turns it off.
+        </li>
+    </ol>
+
+    <h3>2. Install the worker (first time only)</h3>
+    <p>
+        You need a Linux or macOS computer with git, Python 3.10 or newer, and several gigabytes of free disk
+        space for the text-recognition and search models. On Debian or Ubuntu, install the basics with
+        <code>sudo apt install git python3-venv</code>. Then run:
+    </p>
+    <div class="ri-code">
+        <pre id="ri-setup-install">git clone {{ repository_url }}
+cd Icarus/the_librarian/worker
+LIBRARIAN_EMBEDDING_MODEL="{{ embedding_model }}" bash start.sh</pre>
+        <button type="button" class="button button-small button-secondary ri-copy" data-copy="ri-setup-install">Copy</button>
+    </div>
+    <p>
+        The first run installs poppler (a PDF tool; it may ask for your password), creates a Python environment
+        in <code>.venv-worker</code> and installs the worker's packages. This takes a while. After that, the
+        worker starts straight away.
+    </p>
+    <p>
+        Start the worker with that last line every time. It tells the worker to use this site's search model,
+        <code>{{ embedding_model }}</code>. With any other model, this site rejects what the worker sends.
+    </p>
+    <p class="ri-meta">
+        Cloning needs read access to the Icarus repository. If the computer already has a checkout, run
+        <code>git pull</code> in it instead of cloning again.
+    </p>
+
+    <h3>3. Run it</h3>
+    <ol>
+        <li>
+            <code>start.sh</code> opens the worker's control panel in your browser at
+            <code>http://127.0.0.1:5057</code>. If no tab opens, go to that address yourself. Only that computer
+            can reach this panel.
+        </li>
+        <li>
+            In <strong>Icarus address</strong>, enter <code id="ri-setup-address">{{ site_base_url }}</code>
+            <button type="button" class="button button-small button-secondary ri-copy" data-copy="ri-setup-address">Copy</button>
+        </li>
+        <li>In <strong>Worker key</strong>, paste the key from step 1.</li>
+        <li>
+            Click <strong>Start processing</strong>. The worker's log shows each page as it goes, and
+            {% if on_worker_page %}the counters below{% else %}the <a href="{{ worker_page_url }}">Remote Worker</a> page{% endif %}
+            show files downloaded and vectors uploaded. The first run also downloads the text-recognition and
+            search models, so it is slow to get going.
+        </li>
+        <li>
+            Click <strong>Stop</strong> whenever you like. Pages already read are kept in the worker's
+            <code>ocr_cache</code> folder, so the next run picks up where this one stopped.
+        </li>
+    </ol>
+
+    <h3>4. When you're finished</h3>
+    <ul>
+        <li>Click <strong>Disable Remote Ingestion</strong>{% if not on_worker_page %} on the <a href="{{ worker_page_url }}">Remote Worker</a> page{% endif %}.</li>
+        <li>Close the worker by pressing <kbd>Ctrl</kbd>+<kbd>C</kbd> in its terminal window. Nothing keeps running afterwards.</li>
+        <li>If that computer won't run the worker again, revoke its key. Deleting its <code>ocr_cache</code> folder frees up the space.</li>
+    </ul>
+
+    <details>
+        <summary class="ri-summary">Running it without a browser (on a server)</summary>
+        <p>
+            Install poppler first (<code>sudo apt install poppler-utils</code>, or <code>brew install poppler</code>
+            on macOS). Then, from the cloned repository:
+        </p>
+        <div class="ri-code">
+            <pre id="ri-setup-cli">cd Icarus/the_librarian/worker
+python3 -m venv .venv-worker
+.venv-worker/bin/pip install -r requirements-worker.txt
+export ICARUS_BASE_URL="{{ site_base_url }}"
+export ICARUS_WORKER_TOKEN="paste-your-key-here"
+export LIBRARIAN_EMBEDDING_MODEL="{{ embedding_model }}"
+.venv-worker/bin/python ingest_worker.py</pre>
+            <button type="button" class="button button-small button-secondary ri-copy" data-copy="ri-setup-cli">Copy</button>
+        </div>
+        <p>
+            If <code>start.sh</code> has already run on that computer, skip the <code>venv</code> and
+            <code>pip</code> lines. Add <code>--force</code> to the last line to reprocess issues that were already
+            done. The run stops by itself once nothing is left to process.
+        </p>
+    </details>
+
+    <details>
+        <summary class="ri-summary">Troubleshooting</summary>
+        <ul>
+            <li>
+                <strong>The log says a request was rejected:</strong> remote ingestion is switched off, or the key
+                is mistyped or revoked.
+                {% if on_worker_page %}<strong>Recent Activity</strong> below{% else %}The Recent Activity table on the <a href="{{ worker_page_url }}">Remote Worker</a> page{% endif %}
+                lists every rejected request and the reason.
+            </li>
+            <li>
+                <strong>The worker's log says “Failed on …” and Recent Activity says “embedding has …
+                dimensions”:</strong> the worker was started without this site's search model. Stop it and start
+                it again with the last line from step 2.
+            </li>
+            <li>
+                <strong>“0 issue(s) to process”:</strong> every issue has already been processed. Tick
+                <strong>Reprocess everything</strong> in the worker to redo them.
+            </li>
+            <li>
+                <strong>The worker can't connect:</strong> check that the Icarus address is exactly
+                <code>{{ site_base_url }}</code> and that the computer can open it in a browser.
+            </li>
+            <li>
+                <strong>Setup stopped with an error:</strong> run the last line from step 2 again; it retries the
+                install. If it keeps failing, delete the <code>.venv-worker</code> folder and try once more.
+            </li>
+        </ul>
+    </details>
+
+    <script>
+    (function () {
+        // Copy buttons. Bound once, even if these instructions appear twice on a page.
+        if (!navigator.clipboard) {
+            // Clipboard access needs HTTPS (or localhost); without it the buttons would do nothing.
+            document.querySelectorAll('.ri-copy').forEach(function (btn) { btn.style.display = 'none'; });
+            return;
+        }
+        if (window.riSetupCopyBound) return;
+        window.riSetupCopyBound = true;
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.ri-copy');
+            if (!btn) return;
+            var target = document.getElementById(btn.dataset.copy);
+            if (!target) return;
+            navigator.clipboard.writeText(target.textContent).then(function () {
+                btn.textContent = 'Copied!';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+            });
+        });
+    })();
+    </script>
+</div>

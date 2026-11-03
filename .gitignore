@@ -13,6 +13,8 @@ models
 archive/
 migrate.script
 .ocr_cache/
+the_librarian/worker/.venv-worker/
+the_librarian/worker/ocr_cache/
 .env
 media/
 media_backup/

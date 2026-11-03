@@ -7,6 +7,8 @@ from pgvector.django import VectorField, HnswIndex
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
 
+from the_librarian.panels import RemoteWorkerSetupPanel
+
 import hashlib
 import secrets
 import logging
@@ -527,6 +529,7 @@ class LibrarianRemoteIngestSettings(BaseGenericSetting):
         FieldPanel('enabled_at', read_only=True),
         FieldPanel('enabled_by', read_only=True),
         FieldPanel('pending_total_at_enable', read_only=True),
+        RemoteWorkerSetupPanel(heading="Setting up the remote worker"),
     ]
 
     class Meta:

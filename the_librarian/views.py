@@ -32,6 +32,7 @@ from the_librarian.services.search import (
 from the_librarian.services.ingestion import persist_ingested_batch
 from the_librarian.services.vector_schema import validate_batch, VectorValidationError
 from the_librarian import page_cache
+from the_librarian.panels import remote_worker_setup_context
 from Icarus.access import archive_access_required, may_read_archive
 
 logger = logging.getLogger(__name__)
@@ -940,4 +941,7 @@ def remote_worker_admin(request):
         "list_keys_url": reverse("the_librarian:list_api_keys"),
         "create_key_url": reverse("the_librarian:create_api_key"),
         "revoke_key_url_template": revoke_key_url_template,
+        # The setup steps start open until the first key exists, then fold away.
+        "show_setup_open": not LibrarianAPIKey.objects.filter(is_active=True).exists(),
+        **remote_worker_setup_context(request, on_worker_page=True),
     })

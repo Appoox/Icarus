@@ -9,8 +9,8 @@ Run it:
     python worker_ui.py
 
 A browser tab opens automatically at http://127.0.0.1:5057. Paste in
-your Icarus site's address and the worker key from the "Remote Ingestion
-Worker" dashboard panel, click Start, and watch it work. Click Stop
+your Icarus site's address and the worker key from the "Remote Worker"
+page in the Wagtail admin, click Start, and watch it work. Click Stop
 whenever, or just close this terminal window (Ctrl+C) when you're done —
 nothing is left running in the background afterward.
 
@@ -24,8 +24,9 @@ Security notes, since this handles a live credential:
   - This key can only authenticate the worker's own upload/download
     endpoints on the Icarus server — it has no path to the admin toggle
     that enables remote ingestion in the first place. That switch has to
-    be flipped separately, by a signed-in administrator, in the Wagtail
-    dashboard. This tool can't do that for you, on purpose.
+    be flipped separately, by a signed-in administrator, on the Remote
+    Worker page in the Wagtail admin. This tool can't do that for you, on
+    purpose.
 """
 import logging
 import queue
@@ -412,7 +413,7 @@ PAGE_HTML = """
           <input type="password" id="api_key" name="api_key" placeholder="icrs_..." autocomplete="off">
           <button type="button" class="ghost-btn" id="toggle-key">Show</button>
         </div>
-        <div class="hint">From the "Remote Ingestion Worker" panel in the Wagtail admin dashboard. If you don't have one, ask an administrator to generate one for you.</div>
+        <div class="hint">From the "Remote Worker" page in the Icarus admin sidebar. If you don't have one, ask an administrator to generate one for you.</div>
       </div>
 
       <div class="checkbox-row">

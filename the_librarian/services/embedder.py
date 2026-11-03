@@ -38,6 +38,8 @@ from collections import OrderedDict
 
 from django.conf import settings
 
+from the_librarian.services.embedding_text import DOCUMENT_PREFIX, QUERY_PREFIX
+
 batch_size = settings.LIBRARIAN_EMBED_BATCH_SIZE
 _embedder_instance = None
 
@@ -81,7 +83,7 @@ class CachingEmbeddings:
             # #10: iterate in fixed-size batches
             for i in range(0, len(uncached), batch_size):
                 batch = uncached[i : i + batch_size]
-                prefixed_batch = ["passage: " + t for t in batch]
+                prefixed_batch = [DOCUMENT_PREFIX + t for t in batch]
                 new_embeddings.extend(self._base.embed_documents(prefixed_batch))
             for text, emb in zip(uncached, new_embeddings):
                 self._cache[text] = emb
@@ -97,7 +99,7 @@ class CachingEmbeddings:
             self._query_cache.move_to_end(text)
             return cached
 
-        embedding = self._base.embed_query("query: " + text)
+        embedding = self._base.embed_query(QUERY_PREFIX + text)
 
         self._query_cache[text] = embedding
         if len(self._query_cache) > _QUERY_CACHE_MAX_SIZE:
