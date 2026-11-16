@@ -1,0 +1,133 @@
+/* =========================================================
+   Glossary pages — /glossary/ and /glossary/<term>/.
+   Classic design first, then the print edition's (.pt-…),
+   which builds on css/print/base.css and lists.css.
+   (The marked word and its card are in glossary.css.)
+   ========================================================= */
+
+/* ── Classic ────────────────────────────────────── */
+.glossary-page {
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+}
+
+.glossary-page__head {
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--ink);
+}
+.glossary-page__head h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 900;
+    line-height: 1.15;
+}
+.glossary-page__kicker {
+    display: inline-block;
+    margin-bottom: 0.6rem;
+    font-family: var(--label);
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--red);
+    text-decoration: none;
+}
+.glossary-page__kicker:hover { text-decoration: underline; }
+.glossary-page__intro,
+.glossary-page__other { margin-top: 0.6rem; font-size: 1.15rem; color: var(--muted); }
+
+.glossary-letters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2.5rem; }
+.glossary-letters a {
+    min-width: 2.2rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--link);
+    font-family: var(--font-ui);
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+}
+.glossary-letters a:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+.glossary-group { margin-bottom: 2.5rem; scroll-margin-top: 90px; }
+.glossary-group__letter {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--red);
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 0.5rem;
+}
+
+.glossary-entry { padding: 1rem 0; border-bottom: 1px solid var(--rule-soft); }
+.glossary-entry dt { font-size: 1.2rem; font-weight: 700; }
+.glossary-entry dt a { color: var(--ink); text-decoration: none; }
+.glossary-entry dt a:hover { color: var(--red); }
+.glossary-entry__other { margin-left: 0.5rem; font-size: 0.95rem; font-weight: 400; color: var(--muted); }
+.glossary-entry dd { margin-top: 0.3rem; color: var(--gray-dark); line-height: 1.7; }
+
+.glossary-empty { color: var(--muted); font-size: 1.1rem; }
+
+.glossary-lang { padding: 1.25rem 0; border-bottom: 1px solid var(--rule-soft); }
+.glossary-lang__label {
+    font-family: var(--label);
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--muted);
+}
+.glossary-lang__name { margin-top: 0.2rem; font-size: 1.3rem; font-weight: 700; }
+.glossary-lang__text { margin-top: 0.4rem; font-size: 1.1rem; line-height: 1.8; color: var(--gray-dark); }
+
+.glossary-articles { margin-top: 3rem; }
+.glossary-articles h2 {
+    font-family: var(--label);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--link);
+    margin-bottom: 0.75rem;
+}
+.glossary-articles ul { list-style: none; }
+.glossary-articles li { padding: 0.7rem 0; border-bottom: 1px solid var(--rule-soft); }
+.glossary-articles a { color: var(--ink); font-weight: 700; text-decoration: none; }
+.glossary-articles a:hover { color: var(--red); }
+.glossary-articles__date { margin-left: 0.5rem; font-size: 0.9rem; color: var(--caption); white-space: nowrap; }
+
+/* ── Print edition ──────────────────────────────── */
+.pt-glossary-letters {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 24px var(--pt-gutter) 0;
+}
+.pt-glossary-letters a {
+    min-width: 40px; padding: 4px 10px;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    font: 700 17px/1.5 var(--font-ui);
+    text-align: center;
+}
+.pt-glossary-letters a:hover { background: var(--ink); color: var(--paper); }
+
+.pt-list-section[id^="glossary-"] { scroll-margin-top: 24px; }
+
+.pt-glossary { margin: 0; }
+.pt-glossary__entry { padding: 20px 0; border-bottom: 1px dashed var(--divider); }
+.pt-glossary__entry dt { font: 700 22px/1.45 var(--font-text); }
+.pt-glossary__entry dt a { color: var(--ink); }
+.pt-glossary__entry dt a:hover { color: var(--issue); }
+.pt-glossary__other { margin-left: 10px; font: 600 15px/1.4 var(--font-ui); color: var(--subtle); }
+.pt-glossary__entry dd { margin: 6px 0 0; max-width: 720px; font: 16px/1.7 var(--font-text); color: var(--body); }
+
+.pt-glossary-lang {
+    display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 24px;
+    padding: 22px 0;
+    border-bottom: 1px dashed var(--divider);
+}
+.pt-glossary-lang__label { margin: 4px 0 0; font: 700 15px/1.5 var(--font-ui); color: var(--issue); }
+.pt-glossary-lang__name { margin: 0; font: 700 24px/1.45 var(--font-text); color: var(--ink); }
+.pt-glossary-lang__text { margin-top: 6px; max-width: 720px; font: 18px/1.8 var(--font-text); color: var(--body); }
+
+@media (max-width: 720px) {
+    .pt-glossary-lang { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}

@@ -188,6 +188,14 @@
       text-decoration: underline;
     }
 
+    /* A word marked as a glossary term. On the site a card explains it; in
+       a PDF it stays a quiet link to the term's page. */
+    .pdf-body a.glossary-term {
+      color: inherit;
+      text-decoration-style: dotted;
+      text-decoration-color: #888;
+    }
+
     .pdf-body table {
       width: 100%;
       border-collapse: collapse;

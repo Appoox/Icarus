@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{# Every glossary term under its first letter (Classic design). #}
+
+{% block title %}{% translate "ശാസ്ത്ര പദാവലി" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/glossary_pages.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="glossary-page">
+  <header class="glossary-page__head">
+    <h1>{% translate "ശാസ്ത്ര പദാവലി" %}</h1>
+    <p class="glossary-page__intro">{% translate "ലേഖനങ്ങളിൽ വരുന്ന ശാസ്ത്രപദങ്ങളും അവയുടെ അർത്ഥവും." %}</p>
+  </header>
+
+  {% if groups %}
+  <nav class="glossary-letters" aria-label="{% translate 'അക്ഷരങ്ങൾ' %}">
+    {% for letter, entries in groups %}<a href="#glossary-{{ forloop.counter }}">{{ letter }}</a>{% endfor %}
+  </nav>
+
+  {% for letter, entries in groups %}
+  <section class="glossary-group" id="glossary-{{ forloop.counter }}">
+    <h2 class="glossary-group__letter">{{ letter }}</h2>
+    <dl class="glossary-list">
+      {% for entry in entries %}
+      <div class="glossary-entry">
+        <dt>
+          <a href="{{ entry.term.get_absolute_url }}">{{ entry.name }}</a>
+          {% if entry.other_name %}<span class="glossary-entry__other">{{ entry.other_name }}</span>{% endif %}
+        </dt>
+        <dd{% if entry.text_lang %} lang="{{ entry.text_lang }}"{% endif %}>{{ entry.text }}</dd>
+      </div>
+      {% endfor %}
+    </dl>
+  </section>
+  {% endfor %}
+  {% else %}
+  <p class="glossary-empty">{% translate "പദാവലിയിൽ ഇതുവരെ പദങ്ങളൊന്നും ചേർത്തിട്ടില്ല." %}</p>
+  {% endif %}
+</main>
+{% endblock %}

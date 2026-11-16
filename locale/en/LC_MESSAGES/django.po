@@ -3806,3 +3806,45 @@ msgstr "Search the archive (e.g. climate change, environment...)"
 
 msgid "മുഴുവൻ പാഠം വരിക്കാർക്ക് മാത്രം."
 msgstr "Full text for subscribers only."
+
+#: Icarus/templates/base.html glossary/templates/themes/print/glossary/index.html
+#: glossary/templates/themes/print/glossary/term.html
+msgid "പദാവലി"
+msgstr "Glossary"
+
+#: Icarus/templates/base.html
+msgid "കൂടുതൽ"
+msgstr "More"
+
+#: glossary/templates/glossary/index.html glossary/templates/glossary/term.html
+#: glossary/templates/themes/print/glossary/index.html
+#: glossary/templates/themes/print/glossary/term.html
+msgid "ശാസ്ത്ര പദാവലി"
+msgstr "Science glossary"
+
+#: glossary/templates/glossary/index.html
+#: glossary/templates/themes/print/glossary/index.html
+msgid "ലേഖനങ്ങളിൽ വരുന്ന ശാസ്ത്രപദങ്ങളും അവയുടെ അർത്ഥവും."
+msgstr "Science terms that appear in articles, and what they mean."
+
+#: glossary/templates/glossary/index.html
+#: glossary/templates/themes/print/glossary/index.html
+msgid "അക്ഷരങ്ങൾ"
+msgstr "Letters"
+
+#: glossary/templates/glossary/index.html
+#: glossary/templates/themes/print/glossary/index.html
+msgid "പദാവലിയിൽ ഇതുവരെ പദങ്ങളൊന്നും ചേർത്തിട്ടില്ല."
+msgstr "No terms have been added to the glossary yet."
+
+#: glossary/templates/themes/print/glossary/index.html
+#, python-format
+msgid "%(n)s പദം"
+msgid_plural "%(n)s പദങ്ങൾ"
+msgstr[0] "%(n)s term"
+msgstr[1] "%(n)s terms"
+
+#: glossary/templates/glossary/term.html
+#: glossary/templates/themes/print/glossary/term.html
+msgid "ഈ പദം വരുന്ന ലേഖനങ്ങൾ"
+msgstr "Articles that use this term"

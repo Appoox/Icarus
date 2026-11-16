@@ -2,7 +2,8 @@
 
 The Wagtail site behind [sasthragathy.org](https://sasthragathy.org): the
 magazine (issues, articles, authors), reader accounts and subscriptions,
-comments (kalapila), feedback (postbox) and the searchable archive (the_librarian).
+comments (kalapila), feedback (postbox), the searchable archive (the_librarian)
+and the science glossary (glossary).
 
 Stack: Python 3.12 · Django 5.2 LTS · Wagtail 7.4 · PostgreSQL 18 + pgvector ·
 Django-Q2 (background jobs) · Channels (admin notifications) · Caddy · Docker Compose.

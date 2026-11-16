@@ -119,7 +119,7 @@ than deflated, which speeds up export noticeably on media-heavy sites.
 - **Snippets**: `Volume`, `Topic`, `SiteContactSettings`, `SiteHeader`,
   `SiteFooter` (with full section → column → link hierarchy),
   `EditorialBoard` (with ordered member list),
-  `EditorialBoardMembershipHistory`
+  `EditorialBoardMembershipHistory`, `GlossaryTerm`
 - **Pages**: all pages in `--scope`, stored in tree order (parents first)
   so that `add_child` works during import
 - **Images** and **Documents**: metadata + file bytes
@@ -151,7 +151,9 @@ places:
 
 `<embed embedtype="media">` is an external oEmbed URL, not a stored file, so
 it is skipped. `<a linktype="page">` links are remapped on import through the
-archive's page table (below).
+archive's page table (below). A word marked as a glossary term,
+`<a linktype="glossary" id="N">`, is remapped through the snippet table: the
+term is found on the destination by its slug.
 
 The exporter and importer share one StreamField walker (`_streamwalk.py`), so
 whatever the exporter collects — images, documents, pages, snippets, inside
@@ -174,7 +176,7 @@ typed dicts rather than raw integers:
 ```
 
 Snippets the importer upserts by natural key (`Volume`, `Topic`,
-`EditorialBoard`) are stored by that key:
+`EditorialBoard`, `GlossaryTerm`) are stored by that key:
 
 ```json
 { "__ref": "snippet", "model": "issue.topic", "key": { "slug": "science" } }
@@ -238,7 +240,7 @@ Inside a single `transaction.atomic()`:
 
 1. Images, documents
 2. Site name
-3. Volumes → Topics → SiteContactSettings → EditorialBoard rows
+3. Volumes → Topics → Glossary terms → SiteContactSettings → EditorialBoard rows
 4. Pages *(tree order — parents before children)*
 5. Pages again, with every page in place: references between pages,
    StreamField/rich-text ids, InlinePanel rows, tags, then a new published
@@ -266,7 +268,7 @@ Running `import_content` twice on the same ZIP is safe:
   Rows saved without a stored hash (scripts, generated TTS audio) are hashed
   on the fly when their size matches.
 - **Snippets** — upserted by natural key (`number` for Volume, `slug` for
-  Topic, `name` for EditorialBoard).
+  Topic and GlossaryTerm, `name` for EditorialBoard).
 - **Pages** — looked up by slug path. A page of the same type is updated in
   place; a page of a *different* type at that path is a failure rather than a
   half-applied update. The one exception is Wagtail's default "Welcome" page

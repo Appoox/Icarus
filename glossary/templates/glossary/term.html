@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static i18n wagtailcore_tags %}
+{# One glossary term: every language it has, and the articles that use it (Classic design). #}
+
+{% block title %}{{ name }} — {% translate "ശാസ്ത്ര പദാവലി" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/glossary_pages.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="glossary-page">
+  <header class="glossary-page__head">
+    <a class="glossary-page__kicker" href="{% url 'glossary_index' %}">{% translate "ശാസ്ത്ര പദാവലി" %}</a>
+    <h1>{{ name }}</h1>
+    {% if other_name %}<p class="glossary-page__other">{{ other_name }}</p>{% endif %}
+  </header>
+
+  {% for language in languages %}
+  <section class="glossary-lang" lang="{{ language.code }}">
+    <h2 class="glossary-lang__label">{{ language.label }}</h2>
+    {% if language.name %}<p class="glossary-lang__name">{{ language.name }}</p>{% endif %}
+    {% if language.text %}<div class="glossary-lang__text">{{ language.text }}</div>{% endif %}
+  </section>
+  {% endfor %}
+
+  {% if articles %}
+  <section class="glossary-articles">
+    <h2>{% translate "ഈ പദം വരുന്ന ലേഖനങ്ങൾ" %}</h2>
+    <ul>
+      {% for article in articles %}
+      <li>
+        <a href="{% pageurl article %}">{{ article.title }}</a>
+        <span class="glossary-articles__date">{{ article.date|date:"F j, Y" }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}

@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     "kalapila",
     "postbox",
     "the_librarian",
+    "glossary",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.settings",

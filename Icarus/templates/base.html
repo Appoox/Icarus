@@ -85,6 +85,9 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/pagination.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
     {% endif %}
+    {# A word marked as a glossary term, and the card that explains it — #}
+    {# rich text can appear on any page. Both themes.                     #}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/glossary.css' %}">
 
     {% block extra_css %}
     {# Override this in templates to add extra stylesheets #}
@@ -169,6 +172,12 @@
     {% if site_theme == 'print' %}
     <script type="text/javascript" src="{% static 'js/print.js' %}" defer></script>
     {% endif %}
+    {# Explains words marked as glossary terms; idle on pages without any. #}
+    <script type="text/javascript" src="{% static 'js/glossary.js' %}" defer
+            data-terms-url="{% url 'glossary_terms' %}"
+            data-card-label="{% translate 'പദാവലി' %}"
+            data-more-label="{% translate 'കൂടുതൽ' %}"
+            data-close-label="{% translate 'അടയ്ക്കുക' %}"></script>
     {% block extra_js %}
     {# Override this in templates to add extra javascript #}
     {% endblock %}

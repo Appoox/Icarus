@@ -63,7 +63,7 @@ jobs:
       - name: Migrations are up to date
         run: >
           python manage.py makemigrations --check --dry-run
-          home articles literati issue reader kalapila postbox the_librarian
+          home articles literati issue reader kalapila postbox the_librarian glossary
 
       - name: Production settings pass Django's deploy checklist
         env:

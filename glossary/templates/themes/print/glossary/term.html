@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{# One glossary term: every language it has, and the articles that use it (print edition design). #}
+
+{% block title %}{{ name }} — {% translate "ശാസ്ത്ര പദാവലി" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+<link rel="stylesheet" href="{% static 'css/glossary_pages.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  <header class="pt-intro">
+    <a class="pt-tag" href="{% url 'glossary_index' %}">{% translate "പദാവലി" %}</a>
+    <h1 class="pt-h1 pt-h1--list">{{ name }}</h1>
+    {% if other_name %}<p class="pt-standfirst">{{ other_name }}</p>{% endif %}
+  </header>
+
+  <section class="pt-list-section">
+    {% for language in languages %}
+    <div class="pt-glossary-lang" lang="{{ language.code }}">
+      <h2 class="pt-glossary-lang__label">{{ language.label }}</h2>
+      <div class="pt-glossary-lang__body">
+        {% if language.name %}<p class="pt-glossary-lang__name">{{ language.name }}</p>{% endif %}
+        {% if language.text %}<div class="pt-glossary-lang__text">{{ language.text }}</div>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  {% if articles %}
+  <section class="pt-list-section" aria-labelledby="pt-glossary-articles">
+    <div class="pt-section-head">
+      <h2 class="pt-section-head__title" id="pt-glossary-articles">{% translate "ഈ പദം വരുന്ന ലേഖനങ്ങൾ" %}</h2>
+      <span class="pt-section-head__rule"></span>
+    </div>
+    <div class="pt-rows">
+      {% for article in articles %}{% include "themes/print/includes/article_row.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "പദാവലി" %} | ശാസ്ത്രഗതി{% endblock %}
+{% block pt_folio_right %}ശാസ്ത്രഗതി | {{ name }}{% endblock %}

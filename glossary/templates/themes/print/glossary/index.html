@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{# Every glossary term under its first letter (print edition design). #}
+
+{% block title %}{% translate "ശാസ്ത്ര പദാവലി" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+<link rel="stylesheet" href="{% static 'css/glossary_pages.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  {% translate "പദാവലി" as kicker %}
+  {% translate "ശാസ്ത്ര പദാവലി" as title %}
+  {% translate "ലേഖനങ്ങളിൽ വരുന്ന ശാസ്ത്രപദങ്ങളും അവയുടെ അർത്ഥവും." as standfirst %}
+  {% blocktranslate count n=count asvar meta %}{{ n }} പദം{% plural %}{{ n }} പദങ്ങൾ{% endblocktranslate %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=title standfirst=standfirst meta=meta %}
+
+  {% if groups %}
+  <nav class="pt-glossary-letters" aria-label="{% translate 'അക്ഷരങ്ങൾ' %}">
+    {% for letter, entries in groups %}<a href="#glossary-{{ forloop.counter }}">{{ letter }}</a>{% endfor %}
+  </nav>
+
+  {% for letter, entries in groups %}
+  <section class="pt-list-section" id="glossary-{{ forloop.counter }}">
+    <div class="pt-section-head">
+      <h2 class="pt-section-head__title">{{ letter }}</h2>
+      <span class="pt-section-head__count">{{ entries|length }}</span>
+      <span class="pt-section-head__rule"></span>
+    </div>
+    <dl class="pt-glossary">
+      {% for entry in entries %}
+      <div class="pt-glossary__entry">
+        <dt>
+          <a href="{{ entry.term.get_absolute_url }}">{{ entry.name }}</a>
+          {% if entry.other_name %}<span class="pt-glossary__other">{{ entry.other_name }}</span>{% endif %}
+        </dt>
+        <dd{% if entry.text_lang %} lang="{{ entry.text_lang }}"{% endif %}>{{ entry.text }}</dd>
+      </div>
+      {% endfor %}
+    </dl>
+  </section>
+  {% endfor %}
+  {% else %}
+  <section class="pt-list-section">
+    <p class="pt-list-empty">{% translate "പദാവലിയിൽ ഇതുവരെ പദങ്ങളൊന്നും ചേർത്തിട്ടില്ല." %}</p>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "പദാവലി" %} | ശാസ്ത്രഗതി{% endblock %}
+{% block pt_folio_right %}ശാസ്ത്രഗതി | {% translate "പദാവലി" %}{% endblock %}
