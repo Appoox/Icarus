@@ -103,6 +103,16 @@ Run automatically at container start: `migrate`, `createcachetable`,
 `setup_page_lock_schedule`, `setup_geoip_schedule`, `setup_retention_schedules`,
 `setup_disk_alert_schedule`, `setup_backup_schedules`.
 
+### Trial mode (temporary)
+
+Wagtail admin → Settings → Trial mode. While it is on, readers and visitors
+get a "not available" page (a 404 listing the ticked issues) for issues that
+aren't ticked there, their articles and the archive scans of those months.
+Everything else stays open, and lists still show every issue. Editors (staff,
+editorial board members, anyone who can use the admin) see everything.
+Everyone sees a trial banner. It ships switched off; a newly published issue
+must be ticked before readers can open it. See `home/trial.py`.
+
 ## Backups
 
 Every night qcluster dumps the database and makes an rsync-style copy of the

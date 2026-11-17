@@ -1,6 +1,6 @@
 from django.utils.functional import SimpleLazyObject
 
-from home import theme
+from home import theme, trial
 
 
 def site_theme(request):
@@ -16,3 +16,11 @@ def site_theme(request):
         'site_theme_previewing': SimpleLazyObject(lambda: theme.is_previewing(request)),
         'theme_preview_param': theme.PREVIEW_PARAM,
     }
+
+
+def trial_mode(request):
+    """
+    `trial_mode` for the trial banner (includes/trial_banner.html): empty
+    while trial mode is off.  Lazy, like the theme above.
+    """
+    return {'trial_mode': SimpleLazyObject(lambda: trial.banner(request))}

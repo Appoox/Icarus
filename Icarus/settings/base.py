@@ -176,6 +176,8 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "kalapila.middleware.UserNotificationMiddleware",
     "axes.middleware.AxesMiddleware",
+    # Trial mode: readers see only the picked issues (home/trial.py).
+    "home.trial.TrialModeMiddleware",
 ]
 
 ROOT_URLCONF = "Icarus.urls"
@@ -194,6 +196,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "home.context_processors.site_theme",
+                "home.context_processors.trial_mode",
             ],
         },
     },

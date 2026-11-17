@@ -10,6 +10,7 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
+from wagtail.admin.forms import WagtailAdminModelForm
 
 from auditlog.models import AbstractLogEntry
 from wagtail.admin.panels import PageChooserPanel
@@ -92,6 +93,104 @@ class SiteThemeSettings(BaseSiteSetting):
 
     class Meta:
         verbose_name = 'Site theme'
+
+
+class TrialModeSettingsForm(WagtailAdminModelForm):
+    """Lists the issues newest first, with their month and whether they are live."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        field = self.fields.get('allowed_issues')
+        if field is not None:
+            from issue.models import Issue
+
+            field.queryset = Issue.objects.order_by('-date_of_publishing', '-pk')
+            field.label_from_instance = self.issue_label
+
+    @staticmethod
+    def issue_label(issue):
+        label = issue.title
+        if issue.date_of_publishing:
+            label += f' ({issue.date_of_publishing:%Y-%m})'
+        if not issue.live:
+            label += ' — not published'
+        return label
+
+
+@register_setting(icon='warning')
+class TrialModeSettings(BaseSiteSetting):
+    """
+    Trial mode: readers see only the picked issues, editors see the whole
+    site, and everyone sees a banner saying the site is on trial.  See
+    home/trial.py.
+    """
+
+    enabled = models.BooleanField(
+        default=False,
+        verbose_name='Trial mode on',
+        help_text=(
+            "Readers and visitors can't open issues that aren't ticked below, "
+            "their articles, or the archive scans of those months: they get the "
+            "'not available' page instead. Everything else stays open, and lists "
+            "still show every issue. Editors (staff, editorial board members and "
+            "anyone who can use this admin) see everything. Everyone sees the "
+            "trial banner."
+        ),
+    )
+    allowed_issues = models.ManyToManyField(
+        'issue.Issue',
+        blank=True,
+        related_name='+',
+        verbose_name='Issues readers can see',
+        help_text=(
+            "Publishing a new issue doesn't add it here: tick it, or readers "
+            "(and the newsletter's links to it) can't open it."
+        ),
+    )
+    banner_message = models.TextField(
+        blank=True,
+        verbose_name='Banner text',
+        help_text=(
+            'Shown in the trial banner at the top of every page. Empty = '
+            '"ഈ വെബ്സൈറ്റ് ഇപ്പോൾ പരീക്ഷണാടിസ്ഥാനത്തിലാണ്. തിരഞ്ഞെടുത്ത '
+            'ലക്കങ്ങൾ മാത്രമേ ഇപ്പോൾ ലഭ്യമുള്ളൂ." (in English on /en/).'
+        ),
+    )
+
+    unavailable_heading = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="'Not available' page heading",
+        help_text=(
+            "Shown to readers who open something closed. Empty = "
+            '"ഇപ്പോൾ ലഭ്യമല്ല" (in English on /en/).'
+        ),
+    )
+    unavailable_message = models.TextField(
+        blank=True,
+        verbose_name="'Not available' page message",
+        help_text=(
+            'Shown under the heading, above the issues readers can open. Empty = '
+            '"പരീക്ഷണ ഘട്ടത്തിൽ ഈ ഉള്ളടക്കം ലഭ്യമല്ല. ഇപ്പോൾ വായിക്കാവുന്ന '
+            'ലക്കങ്ങൾ താഴെ." (in English on /en/).'
+        ),
+    )
+
+    base_form_class = TrialModeSettingsForm
+
+    panels = [
+        FieldPanel('enabled'),
+        FieldPanel('allowed_issues', widget=forms.CheckboxSelectMultiple),
+        FieldPanel('banner_message'),
+        MultiFieldPanel([
+            FieldPanel('unavailable_heading'),
+            FieldPanel('unavailable_message'),
+        ], heading="'Not available' page"),
+    ]
+
+    class Meta:
+        verbose_name = 'Trial mode'
+
 
 @register_snippet
 class SiteHeader(models.Model):

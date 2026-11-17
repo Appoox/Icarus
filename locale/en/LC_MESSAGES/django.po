@@ -3848,3 +3848,57 @@ msgstr[1] "%(n)s terms"
 #: glossary/templates/themes/print/glossary/term.html
 msgid "ഈ പദം വരുന്ന ലേഖനങ്ങൾ"
 msgstr "Articles that use this term"
+
+#: Icarus/templates/includes/trial_banner.html
+msgid "ട്രയൽ മോഡ്"
+msgstr "Trial mode"
+
+#: Icarus/templates/includes/trial_banner.html
+msgid ""
+"ഈ വെബ്സൈറ്റ് ഇപ്പോൾ പരീക്ഷണാടിസ്ഥാനത്തിലാണ്. തിരഞ്ഞെടുത്ത ലക്കങ്ങൾ മാത്രമേ "
+"ഇപ്പോൾ ലഭ്യമുള്ളൂ."
+msgstr ""
+"This website is running on a trial basis. Only selected issues are available "
+"for now."
+
+#: Icarus/templates/includes/trial_banner.html
+#, python-format
+msgid ""
+"എഡിറ്ററായതിനാൽ നിങ്ങൾക്ക് മുഴുവൻ സൈറ്റും കാണാം. വായനക്കാർക്ക് തിരഞ്ഞെടുത്ത "
+"%(n)s ലക്കം മാത്രമേ കാണാനാകൂ."
+msgid_plural ""
+"എഡിറ്ററായതിനാൽ നിങ്ങൾക്ക് മുഴുവൻ സൈറ്റും കാണാം. വായനക്കാർക്ക് തിരഞ്ഞെടുത്ത "
+"%(n)s ലക്കങ്ങൾ മാത്രമേ കാണാനാകൂ."
+msgstr[0] ""
+"You can see the whole site because you are an editor. Readers can see only "
+"the %(n)s selected issue."
+msgstr[1] ""
+"You can see the whole site because you are an editor. Readers can see only "
+"the %(n)s selected issues."
+
+#: Icarus/templates/includes/trial_banner.html
+msgid ""
+"എഡിറ്ററായതിനാൽ നിങ്ങൾക്ക് മുഴുവൻ സൈറ്റും കാണാം. ഇതുവരെ ഒരു ലക്കവും "
+"തിരഞ്ഞെടുത്തിട്ടില്ല: വായനക്കാർക്ക് ഒരു ലക്കവും കാണാനാകില്ല."
+msgstr ""
+"You can see the whole site because you are an editor. No issues have been "
+"selected yet, so readers can't see any."
+
+#: Icarus/templates/includes/trial_banner.html
+msgid "ക്രമീകരണങ്ങൾ"
+msgstr "Settings"
+
+#: home/trial.py
+msgid "ഇപ്പോൾ ലഭ്യമല്ല"
+msgstr "Not available right now"
+
+#: home/trial.py
+msgid ""
+"പരീക്ഷണ ഘട്ടത്തിൽ ഈ ഉള്ളടക്കം ലഭ്യമല്ല. ഇപ്പോൾ വായിക്കാവുന്ന ലക്കങ്ങൾ താഴെ."
+msgstr ""
+"This content isn't available during the trial. The issues you can read now "
+"are below."
+
+#: Icarus/templates/themes/print/trial_unavailable.html
+msgid "ട്രയൽ"
+msgstr "Trial"

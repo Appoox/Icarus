@@ -24,3 +24,9 @@
    - What is sent is that turn's progressive patch (rule 4), not a cumulative one. Say in the reply which patch it goes on top of; earlier files stay valid and are applied in the order they were sent.
    - Do NOT paste the patch into the chat. The reply carries a short summary of what changed; the file carries the diff.
    - If the session has no way to attach a file, say so and give the file's path instead of pasting the diff.
+
+## 🛑 NO ASSUMPTIONS (NON-NEGOTIABLE)
+
+6. **ASK, DON'T ASSUME — THE USER DECIDES**:
+   - Before writing any code, list every assumption and design choice the task leaves open (who it applies to, what is in or out of scope, behaviour in edge cases, wording, defaults) and ask the user to decide each one.
+   - Do NOT pick a "sensible default" and build it. Wait for the user's answers, and ask again if a new open question comes up while working.

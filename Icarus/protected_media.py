@@ -23,6 +23,7 @@ from django.conf import settings
 from django.http import HttpResponse
 
 from Icarus.access import may_read_archive
+from home import trial
 from postbox.models import Postbox
 
 logger = logging.getLogger(__name__)
@@ -102,6 +103,11 @@ def archive_authz(request):
         return HttpResponse(status=404)
 
     if not target_path.is_file():
+        return HttpResponse(status=404)
+
+    # 3. Trial mode: a scan of an issue that isn't picked (home/trial.py)
+    name = str(target_path.relative_to(Path(settings.MEDIA_ROOT).resolve()))
+    if not trial.allows_archive_file(request, name):
         return HttpResponse(status=404)
 
     return HttpResponse(status=200)
