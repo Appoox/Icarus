@@ -100,7 +100,23 @@ The live site must run `Icarus.settings.production`. Secrets come from
    lot of CPU.
 
 Run automatically at container start: `migrate`, `createcachetable`,
-`setup_page_lock_schedule`, `setup_geoip_schedule`, `setup_retention_schedules`.
+`setup_page_lock_schedule`, `setup_geoip_schedule`, `setup_retention_schedules`,
+`setup_disk_alert_schedule`, `setup_backup_schedules`.
+
+## Backups
+
+Every night qcluster dumps the database and makes an rsync-style copy of the
+media (only new and changed files travel), and rclone sends both, with the
+`.env`, to Google Drive, encrypted before they leave the server. **Backups** in
+the admin sidebar starts and watches them; `./restore.sh` brings them back,
+even onto a new server. ADMIN_EMAILS hear about it twice a day while the last
+good backup is over 26 hours old.
+
+It needs a one-time setup on the server (an rclone config holding the Drive
+token and the encryption passwords, then `BACKUP_REMOTE` in the `.env`), and
+that config must also live in your password manager: the backups can't be
+read without it. Steps, the restore runbook and troubleshooting:
+[backups/README.md](backups/README.md).
 
 ## Useful commands
 
@@ -111,3 +127,5 @@ Run automatically at container start: `migrate`, `createcachetable`,
 | `reset_author_passwords [--dry-run] [--email]` | See upgrade step 4. |
 | `export_content` / `import_content` / `check_archive` | Content export and import; see `home/management/commands/README.md`. |
 | `update_geoip` | Refresh the offline GeoIP databases. |
+| `backup [--check \| --verify]` | Back up now, check the backup setup, or prove the newest snapshot restores. Run it in qcluster: `docker compose exec qcluster python manage.py backup`. |
+| `./restore.sh list \| drill \| db \| media \| env` | On the server: restore from Google Drive; see [backups/README.md](backups/README.md#restoring). |

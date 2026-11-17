@@ -4,6 +4,7 @@
 *.sqlite3
 /.ocr_cache/
 /media_backup/
+/local_backups/
 
 # Python and others
 __pycache__

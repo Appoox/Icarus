@@ -1,0 +1,243 @@
+{% extends "wagtailadmin/base.html" %}
+{% load humanize i18n tz %}
+
+{% block titletag %}Backups{% endblock %}
+
+{% block content %}
+    {% include "wagtailadmin/shared/header.html" with title="Backups" subtitle="Off-server copies on Google Drive" icon="history" %}
+    {% include "backups/includes/styles.html" %}
+
+    <div class="nice-padding bk">
+    {# An English-only ops page, like Remote Worker: keep sizes, dates and #}
+    {# "3 hours ago" in English too, whatever the admin's language. #}
+    {% language "en" %}{% timezone display_tz %}
+
+        {# ── Health ─────────────────────────────────────────────────────── #}
+        <section class="bk-banner bk-banner--{{ state }}" aria-live="polite">
+            {% if state == "ok" %}
+                <strong>✓ Backups are healthy</strong>
+                The last complete backup finished {{ health.last_ok.finished_at|naturaltime }}
+                ({{ health.last_ok.finished_at|date:"j M Y, H:i" }} IST) and is off the server.
+            {% elif state == "warn" %}
+                <strong>! Backups are working, with a warning</strong>
+                The last complete backup finished {{ health.last_ok.finished_at|naturaltime }}.
+                <ul>{% for warning in health.warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
+            {% else %}
+                <strong>✗ Backups need attention</strong>
+                <ul>{% for problem in health.problems %}<li>{{ problem }}</li>{% endfor %}</ul>
+                <p class="bk-meta" style="margin-bottom:0;">
+                    ADMIN_EMAILS get this list by email twice a day until it is fixed.
+                    Setup steps are in <code>backups/README.md</code>.
+                </p>
+            {% endif %}
+        </section>
+
+        {# ── Actions ────────────────────────────────────────────────────── #}
+        <section class="bk-section">
+            <div class="bk-actions">
+                <form method="post" action="{% url 'backups_start' 'backup' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-primary"{% if active %} disabled{% endif %}>Back up now</button>
+                </form>
+                <form method="post" action="{% url 'backups_start' 'verify' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-secondary"{% if active or not health.last_ok %} disabled{% endif %}>Verify latest backup</button>
+                </form>
+                <form method="post" action="{% url 'backups_start' 'check' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-secondary"{% if active %} disabled{% endif %}>Check setup</button>
+                </form>
+            </div>
+            <p class="bk-meta">
+                <strong>Back up now</strong> dumps the database and copies new or changed media to
+                {% if remote %}<code>{{ remote }}</code>{% else %}the remote{% endif %}.
+                <strong>Verify</strong> downloads the newest snapshot, checks it byte for byte and reads it back with pg_restore, without touching the live site.
+                <strong>Check setup</strong> tests the tools, the connection to Google Drive and the encryption, and changes nothing.
+                Runs happen in the background worker, one at a time.
+            </p>
+        </section>
+
+        {# ── The run in progress ────────────────────────────────────────── #}
+        {% if active %}
+        <section class="bk-section">
+            <h2>{{ active.get_kind_display }} #{{ active.pk }} in progress</h2>
+            <p class="bk-meta">
+                Queued {{ active.created_at|naturaltime }}
+                {% if active.requested_by %}by {{ active.requested_by.get_full_name|default:active.requested_by }}{% else %}by the {{ active.get_trigger_display|lower }}{% endif %}.
+                <a href="{% url 'backups_run' active.pk %}">Open the run</a>
+            </p>
+            {% if active_stuck %}
+                <p class="bk-error">
+                    Still queued after several minutes: the background worker may be down.
+                    On the server: <code>docker compose ps qcluster</code> and <code>docker compose logs --tail 50 qcluster</code>.
+                </p>
+            {% endif %}
+            {% include "backups/includes/live_log.html" with run=active %}
+        </section>
+        {% endif %}
+
+        {# ── At a glance ────────────────────────────────────────────────── #}
+        <div class="bk-cards">
+            <div class="bk-card">
+                <div class="bk-card__label">Last complete backup</div>
+                {% if health.last_ok %}
+                    <div class="bk-card__value">{{ health.last_ok.finished_at|naturaltime }}</div>
+                    <div class="bk-meta">{{ health.last_ok.finished_at|date:"j M Y, H:i" }} IST · alert after {{ max_age_hours }} h</div>
+                {% else %}
+                    <div class="bk-card__value">Never</div>
+                {% endif %}
+            </div>
+            <div class="bk-card">
+                <div class="bk-card__label">Database dump</div>
+                <div class="bk-card__value">{% if health.last_ok.db_bytes %}{{ health.last_ok.db_bytes|filesizeformat }}{% else %}—{% endif %}</div>
+                <div class="bk-meta">pg_dump archive, compressed</div>
+            </div>
+            <div class="bk-card">
+                <div class="bk-card__label">Media copy</div>
+                {% if health.last_ok.media_files is not None %}
+                    <div class="bk-card__value">{{ health.last_ok.media_bytes|filesizeformat }}</div>
+                    <div class="bk-meta">
+                        {{ health.last_ok.media_files|intcomma }} files.
+                        Last run: {{ health.last_ok.media_uploaded|default:0|intcomma }} uploaded,
+                        {{ health.last_ok.media_archived|default:0|intcomma }} archived.
+                    </div>
+                {% else %}
+                    <div class="bk-card__value">—</div>
+                {% endif %}
+            </div>
+            <div class="bk-card">
+                <div class="bk-card__label">Google Drive storage</div>
+                {% if usage %}
+                    <div class="bk-card__value">{% if usage.free is not None %}{{ usage.free|filesizeformat }} free{% else %}{{ usage.used|filesizeformat }} used{% endif %}</div>
+                    {% if usage.percent is not None %}
+                        <div class="bk-meter" role="img" aria-label="{{ usage.percent }}% used"><span style="width:{{ usage.percent }}%;"></span></div>
+                        <div class="bk-meta">{{ usage.used|filesizeformat }} of {{ usage.total|filesizeformat }} used ({{ usage.percent }}%){% if usage.trashed %}, {{ usage.trashed|filesizeformat }} in the trash{% endif %}</div>
+                    {% endif %}
+                    <div class="bk-meta">as of {{ usage.as_of|naturaltime }}</div>
+                {% elif usage is not None %}
+                    <div class="bk-card__value">—</div>
+                    <div class="bk-meta">This remote does not report its storage.</div>
+                {% else %}
+                    <div class="bk-card__value">—</div>
+                    <div class="bk-meta">Known after the first check or backup.</div>
+                {% endif %}
+            </div>
+            <div class="bk-card">
+                <div class="bk-card__label">Next backup</div>
+                {% if next_backup %}
+                    <div class="bk-card__value">{{ next_backup.next_run|naturaltime }}</div>
+                    <div class="bk-meta">{{ next_backup.next_run|date:"j M, H:i" }} IST · nightly (<code>{{ next_backup.cron }}</code> UTC)</div>
+                {% else %}
+                    <div class="bk-card__value bk-error">Not scheduled</div>
+                    <div class="bk-meta">Run <code>python manage.py setup_backup_schedules</code> (the web container does at start).</div>
+                {% endif %}
+            </div>
+            <div class="bk-card">
+                <div class="bk-card__label">Last verification</div>
+                {% if health.last_verify %}
+                    <div class="bk-card__value">{{ health.last_verify.created_at|naturaltime }}</div>
+                    <div class="bk-meta">
+                        <span class="bk-tag bk-tag--{{ health.last_verify.status }}">{{ health.last_verify.get_status_display }}</span>
+                        snapshot {{ health.last_verify.snapshot|default:"—" }}
+                    </div>
+                {% else %}
+                    <div class="bk-card__value">Never</div>
+                {% endif %}
+                {% if next_verify %}<div class="bk-meta">Next: {{ next_verify.next_run|naturaltime }} (weekly)</div>{% endif %}
+            </div>
+        </div>
+
+        {# ── Setup checks ───────────────────────────────────────────────── #}
+        <section class="bk-section">
+            <h2>Setup</h2>
+            {% if checks %}
+                <p class="bk-meta">As found by {{ checks_run.get_kind_display|lower }} <a href="{% url 'backups_run' checks_run.pk %}">#{{ checks_run.pk }}</a>, {{ checks_run.finished_at|naturaltime }}.</p>
+                {% include "backups/includes/checks.html" %}
+            {% else %}
+                <p>Nothing checked yet. Press <strong>Check setup</strong> to test pg_dump, rclone, the Google Drive connection and the encryption.</p>
+            {% endif %}
+        </section>
+
+        {# ── Snapshots ──────────────────────────────────────────────────── #}
+        <section class="bk-section">
+            <h2>Snapshots off the server</h2>
+            <p class="bk-meta">
+                The newest {{ keep_daily }} snapshots, plus the first of each of the last {{ keep_monthly }} months.
+                Media is one rsync-style copy that every backup brings up to date; files deleted or replaced on the
+                server stay in its archive for {{ archive_days }} days.
+                {% if health.last_ok %}As listed by backup #{{ health.last_ok.pk }}.{% endif %}
+            </p>
+            {% if snapshots %}
+            <table class="listing">
+                <thead><tr><th>Taken (IST)</th><th>Snapshot</th><th>Database</th><th>Kept as</th><th>.env</th><th>Restore on the server</th><th></th></tr></thead>
+                <tbody>
+                {% for snapshot in snapshots %}
+                    <tr>
+                        <td>{{ snapshot.time|date:"j M Y, H:i" }}<div class="bk-meta">{{ snapshot.time|naturaltime }}</div></td>
+                        <td><code>{{ snapshot.id }}</code></td>
+                        <td>{{ snapshot.bytes|filesizeformat }}</td>
+                        <td>{% if snapshot.monthly %}<span class="bk-tag bk-tag--info">monthly</span>{% else %}daily{% endif %}</td>
+                        <td>{% if snapshot.env %}✓{% else %}—{% endif %}</td>
+                        <td><code class="bk-cmd">./restore.sh db {{ snapshot.id }}</code></td>
+                        <td>
+                            <form method="post" action="{% url 'backups_start' 'verify' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="snapshot" value="{{ snapshot.id }}">
+                                <button type="submit" class="button button-small button-secondary"{% if active %} disabled{% endif %}>Verify</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p>No snapshot has reached Google Drive yet.</p>
+            {% endif %}
+        </section>
+
+        {# ── History ────────────────────────────────────────────────────── #}
+        <section class="bk-section">
+            <h2>Recent runs</h2>
+            {% if runs %}
+            <table class="listing">
+                <thead><tr><th>#</th><th>What</th><th>Started (IST)</th><th>By</th><th>Took</th><th>Result</th></tr></thead>
+                <tbody>
+                {% for run in runs %}
+                    <tr>
+                        <td><a href="{% url 'backups_run' run.pk %}">{{ run.pk }}</a></td>
+                        <td><a href="{% url 'backups_run' run.pk %}">{{ run.get_kind_display }}</a>{% if run.snapshot %}<div class="bk-meta">{{ run.snapshot }}</div>{% endif %}</td>
+                        <td>{{ run.started_at|default:run.created_at|date:"j M Y, H:i" }}</td>
+                        <td>{% if run.requested_by %}{{ run.requested_by.get_full_name|default:run.requested_by }}{% else %}{{ run.get_trigger_display }}{% endif %}</td>
+                        <td>{{ run.duration_display|default:"—" }}</td>
+                        <td>
+                            <span class="bk-tag bk-tag--{{ run.status }}">{{ run.get_status_display }}</span>
+                            {% if run.error %}<div class="bk-meta bk-error">{{ run.error|truncatechars:160 }}</div>{% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p>No runs yet.</p>
+            {% endif %}
+        </section>
+
+        {# ── Restoring ──────────────────────────────────────────────────── #}
+        <section class="bk-section">
+            <details>
+                <summary>How to restore</summary>
+                <p>Restores run on the server, with <code>restore.sh</code> in the repository checkout. They work even when the site and its database are gone, and nothing on this page can start one: replacing the live database is not a web-button job.</p>
+                <ol class="bk-steps">
+                    <li><code class="bk-cmd">./restore.sh list</code>: the snapshots on Google Drive.</li>
+                    <li><code class="bk-cmd">./restore.sh drill latest</code>: restores the newest snapshot into a scratch database and checks it, touching nothing live. Worth doing every few months.</li>
+                    <li><code class="bk-cmd">./restore.sh db latest</code> (or a snapshot ID from the table): restores into a scratch database first, then stops the site, keeps a safety dump of the current database and swaps the restored one in. Downtime is the swap, not the restore.</li>
+                    <li><code class="bk-cmd">./restore.sh media</code>: copies back media files that are missing on the server; files already there are left alone.</li>
+                    <li><code class="bk-cmd">./restore.sh env latest &gt; .env.restored</code>: the server's <code>.env</code> as of that snapshot.</li>
+                </ol>
+                <p>Rebuilding a lost server from scratch is a numbered checklist in <code>backups/README.md</code>. It needs <code>rclone.conf</code>, so keep a copy of that file in your password manager: without its encryption passwords nobody, you included, can read the backups.</p>
+            </details>
+        </section>
+
+    {% endtimezone %}{% endlanguage %}
+    </div>
+{% endblock %}

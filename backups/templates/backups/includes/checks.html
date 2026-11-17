@@ -1,0 +1,17 @@
+{# The setup checks a run recorded. Expects `checks` (list of {name, state, detail}). #}
+<table class="listing">
+    <thead><tr><th style="width:12em;">Check</th><th style="width:6em;">Result</th><th>Detail</th></tr></thead>
+    <tbody>
+    {% for check in checks %}
+        <tr>
+            <td><strong>{{ check.name }}</strong></td>
+            <td>
+                {% if check.state == "ok" %}<span class="bk-tag bk-tag--ok">✓ OK</span>
+                {% elif check.state == "warn" %}<span class="bk-tag bk-tag--warn">! Note</span>
+                {% else %}<span class="bk-tag bk-tag--fail">✗ Fix</span>{% endif %}
+            </td>
+            <td>{{ check.detail }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

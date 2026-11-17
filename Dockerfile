@@ -22,13 +22,23 @@ RUN uv pip install --system \
 
 FROM python:3.12-slim-bookworm
 
-RUN useradd -m wagtail
+# The uid is pinned because restore.sh and docker-compose.yml's backup-tools
+# service run as 1000 too, so files they write into the shared volumes (and
+# the rclone.conf they refresh) stay this user's. useradd picked 1000 anyway.
+RUN useradd -m -u 1000 wagtail
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/install \
     PATH="/install/bin:$PATH"
 
+# pg_dump/pg_restore for the backups app. pg_dump must be at least the
+# server's major version (pgvector/pgvector:pg18 in docker-compose.yml), and
+# bookworm ships 15, so they come from the PostgreSQL project's apt repository.
+ADD https://www.postgresql.org/media/keys/ACCC4CF8.asc /usr/share/keyrings/postgresql.asc
+RUN chmod 644 /usr/share/keyrings/postgresql.asc \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -39,10 +49,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     weasyprint \
     poppler-utils \
     gettext \
+    postgresql-client-18 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /install
 COPY --from=builder /usr/local/bin /usr/local/bin
+
+# rclone for the backups app: a single static binary, from the same pinned
+# release that docker-compose.yml's backup-tools service (restore.sh) runs.
+COPY --from=rclone/rclone:1.75.2 /usr/local/bin/rclone /usr/local/bin/rclone
 
 WORKDIR /Icarus
 COPY --chown=wagtail:wagtail . .
@@ -51,9 +66,10 @@ COPY --chown=wagtail:wagtail . .
 # named volumes in docker-compose.yml. Create them and give wagtail ownership
 # BEFORE dropping privileges. On a freshly-created (empty) named volume, Docker
 # copies this ownership onto the volume; an already-existing root-owned volume
-# must be chowned once out-of-band (see deploy notes).
-RUN mkdir -p /Icarus/static /Icarus/media /Icarus/geoip \
-    && chown -R wagtail:wagtail /Icarus/static /Icarus/media /Icarus/geoip
+# must be chowned once out-of-band (see deploy notes). local_backups is where
+# qcluster writes database dumps before sending them off the server.
+RUN mkdir -p /Icarus/static /Icarus/media /Icarus/geoip /Icarus/local_backups \
+    && chown -R wagtail:wagtail /Icarus/static /Icarus/media /Icarus/geoip /Icarus/local_backups
 
 USER wagtail
 
@@ -68,6 +84,7 @@ CMD set -e; \
     python manage.py setup_geoip_schedule; \
     python manage.py setup_retention_schedules; \
     python manage.py setup_disk_alert_schedule; \
+    python manage.py setup_backup_schedules; \
     python manage.py update_geoip || true; \
     gunicorn -b 0.0.0.0:8000 Icarus.asgi:application -k uvicorn_worker.UvicornWorker -w 2 --preload
 

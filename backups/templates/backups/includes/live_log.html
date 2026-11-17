@@ -1,0 +1,38 @@
+{# A run's log that keeps itself up to date while the run is active. Expects `run` and `status_url_base`. #}
+<div {% if run.is_active %}data-bk-live="{{ status_url_base }}?run={{ run.pk }}"{% endif %}>
+    <p class="bk-meta">Status: <strong data-bk-status>{{ run.get_status_display }}</strong>{% if run.is_active %} · updates every few seconds; you can leave this page, the run carries on{% endif %}</p>
+    <pre class="bk-log" data-bk-log>{% if run.log %}{{ run.log }}{% elif run.is_active %}Waiting for the background worker to start…{% else %}(no log){% endif %}</pre>
+</div>
+{% if run.is_active %}
+<script>
+(function () {
+    var panel = document.querySelector("[data-bk-live]");
+    if (!panel) { return; }
+    var url = panel.getAttribute("data-bk-live");
+    var log = panel.querySelector("[data-bk-log]");
+    var label = panel.querySelector("[data-bk-status]");
+    var follow = true;
+    log.addEventListener("scroll", function () {
+        follow = log.scrollTop + log.clientHeight >= log.scrollHeight - 24;
+    });
+    function stick() { if (follow) { log.scrollTop = log.scrollHeight; } }
+    stick();
+    function poll() {
+        fetch(url, { credentials: "same-origin", headers: { "Accept": "application/json" } })
+            .then(function (response) {
+                if (!response.ok) { throw new Error(String(response.status)); }
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.log) { log.textContent = data.log; }
+                label.textContent = data.status_label;
+                stick();
+                if (data.active) { window.setTimeout(poll, 3000); }
+                else { window.location.reload(); }
+            })
+            .catch(function () { window.setTimeout(poll, 10000); });
+    }
+    window.setTimeout(poll, 3000);
+})();
+</script>
+{% endif %}
