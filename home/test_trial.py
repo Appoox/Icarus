@@ -165,13 +165,15 @@ class TrialModeTests(SiteTreeMixin, TestCase):
         self.assertContains(response, 'പിന്നീട് വരൂ.', status_code=404)
         self.assertNotContains(response, DEFAULT_HEADING, status_code=404)
 
-    def test_not_available_page_in_english(self):
+    def test_not_available_page_on_the_english_site(self):
+        # Checks the page, not the English wording (see test_banner_on_the_english_site).
         self.turn_on()
         # Literal paths: after a request to /en/, .url would be English too.
         response = self.client.get('/en/issues/sep-2025/')
-        self.assertContains(response, 'Not available right now', status_code=404)
-        self.assertContains(response, 'The issues you can read now are below.', status_code=404)
-        self.assertContains(response, '/en/issues/aug-2025/', status_code=404)
+        self.assertContains(response, '<html lang="en">', status_code=404)
+        self.assertContains(response, 'trial-banner', status_code=404)
+        # The open issue, at its English address.
+        self.assertContains(response, 'href="/en/issues/aug-2025/"', status_code=404)
 
     def test_not_available_page_in_print_design(self):
         self.turn_on()
@@ -262,11 +264,14 @@ class TrialModeTests(SiteTreeMixin, TestCase):
         response = self.client.get(self.other_issue.url)
         self.assertContains(response, DEFAULT_BANNER, status_code=404)
 
-    def test_banner_in_english(self):
+    def test_banner_on_the_english_site(self):
+        # Checks the page, not the English wording, as the glossary and home
+        # tests do: CI doesn't compile the translations (the .mo is built in
+        # the Docker image).
         self.turn_on()
         response = self.assertOpens('/en/issues/aug-2025/')
-        self.assertContains(response, 'Trial mode')
-        self.assertContains(response, 'Only selected issues are available')
+        self.assertContains(response, '<html lang="en">')
+        self.assertContains(response, 'trial-banner')
 
     def test_custom_banner_text(self):
         self.turn_on(banner_message='പരീക്ഷണം <b>നടക്കുന്നു</b>')
