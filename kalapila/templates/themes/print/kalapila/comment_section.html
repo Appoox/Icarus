@@ -1,0 +1,73 @@
+{% load static i18n %}
+{# Print edition comments. Same ids, classes and data attributes as        #}
+{# kalapila/comment_section.html, which comments.js depends on; only the   #}
+{# heading and the composer's look differ.                                  #}
+<section class="comment-section pt-comments" id="comments-wrapper"
+         data-page-id="{{ page.id }}"
+         data-current-user-id="{{ user.id|default:'' }}"
+         data-is-staff="{{ user.is_staff|yesno:'true,false' }}"
+         data-is-superuser="{{ user.is_superuser|yesno:'true,false' }}"
+         data-i18n-delete="{% translate 'ഒഴിവാക്കുക' %}"
+         data-i18n-report="{% translate 'റിപ്പോർട്ട് ചെയ്യുക' %}"
+         data-i18n-reported="{% translate 'റിപ്പോർട്ട് ചെയ്തു' %}"
+         data-i18n-reply-placeholder="{% translate 'മറുപടി രേഖപ്പെടുത്തുക...' %}"
+         data-i18n-reply-cancel="{% translate 'റദ്ദാക്കുക' %}"
+         data-i18n-reply-submit="{% translate 'മറുപടി നൽകുക' %}"
+         data-i18n-confirm-delete="{% translate 'ഈ അഭിപ്രായം ഒഴിവാക്കണോ?' %}"
+         data-i18n-confirm-report="{% translate 'ഈ അഭിപ്രായം റിപ്പോർട്ട് ചെയ്യണോ?' %}"
+         data-i18n-error-generic="{% translate 'എന്തോ കുഴപ്പം സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.' %}"
+         data-i18n-error-post="{% translate 'അഭിപ്രായം പോസ്റ്റ് ചെയ്യുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക.' %}"
+         data-i18n-error-delete="{% translate 'അഭിപ്രായം നീക്കുന്നതിൽ പിശക്.' %}"
+         data-i18n-error-report="{% translate 'അഭിപ്രായം റിപ്പോർട്ട് ചെയ്യുന്നതിൽ പിശക്.' %}"
+         data-i18n-deleted-user="{% translate 'ഈ അഭിപ്രായം യൂസര്‍ ഒഴിവാക്കി' %}"
+         data-i18n-deleted-mod="{% translate 'ഈ അഭിപ്രായം മോഡറേറ്റർ ഒഴിവാക്കി' %}">
+
+    <div class="pt-section-head pt-section-head--issue">
+        <h2 class="pt-section-head__title">{% translate "പ്രതികരണങ്ങൾ" %}</h2>
+        <span class="pt-section-head__count" id="comment-count-badge">{{ comment_count }}</span>
+        <span class="pt-section-head__rule"></span>
+    </div>
+
+    <div class="pt-comments__composer">
+    {% if user.is_authenticated %}
+        {% if user.can_comment %}
+            <form id="main-comment-form" class="comment-form">
+                {% csrf_token %}
+                <input type="hidden" name="page_id" value="{{ page.id }}">
+                <div class="comment-form__input-wrapper">
+                    <textarea name="body" class="comment-textarea" maxlength="3000" required
+                              aria-label="{% translate 'പ്രതികരണം' %}"
+                              placeholder="{% if page.content_type.model == 'article' %}{% translate 'ഈ ലേഖനത്തെക്കുറിച്ച് എന്തു പറയാനുണ്ട്?' %}{% else %}{% translate 'ഈ ലക്കത്തെക്കുറിച്ച് എന്തു പറയാനുണ്ട്?' %}{% endif %}"></textarea>
+                    <div class="comment-form__footer">
+                        <span class="char-counter"><span class="char-count-current">0</span> / 3000</span>
+                        <button type="submit" class="submit-comment-btn pt-btn pt-btn--dark">{% translate "പ്രതികരിക്കാം" %}</button>
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <p class="pt-comments__notice">
+                <i class="fas fa-ban" aria-hidden="true"></i> {% translate "നിങ്ങളുടെ അക്കൗണ്ടിൽ അഭിപ്രായങ്ങൾ രേഖപ്പെടുത്തുന്നത് താൽക്കാലികമായി വിലക്കിയിരിക്കുന്നു." %}
+            </p>
+        {% endif %}
+    {% else %}
+        {% url 'account_login' as login_url %}
+        <div class="pt-comments__signin">
+            <textarea disabled aria-hidden="true" tabindex="-1" placeholder="{% if page.content_type.model == 'article' %}{% translate 'ഈ ലേഖനത്തെക്കുറിച്ച് എന്തു പറയാനുണ്ട്?' %}{% else %}{% translate 'ഈ ലക്കത്തെക്കുറിച്ച് എന്തു പറയാനുണ്ട്?' %}{% endif %}"></textarea>
+            <div class="comment-form__footer">
+                <span class="pt-comments__help">{% translate "ലോഗിൻ ചെയ്ത് പ്രതികരിക്കാം" %}</span>
+                <a href="{{ login_url }}?next={{ page.url|urlencode }}" class="pt-btn pt-btn--dark">{% translate "പ്രതികരിക്കാം" %}</a>
+            </div>
+        </div>
+    {% endif %}
+    </div>
+
+    <div class="comments-list" id="comments-list-container">
+        {% for comment in comments %}
+            {% include "kalapila/comment_single.html" with comment=comment %}
+        {% empty %}
+            <div class="comments-empty-state" id="comments-empty-message">
+                {% translate "ആദ്യമായി ഒരു അഭിപ്രായം രേഖപ്പെടുത്തൂ!" %}
+            </div>
+        {% endfor %}
+    </div>
+</section>

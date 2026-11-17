@@ -2,7 +2,8 @@
 
 The Wagtail site behind [sasthragathy.org](https://sasthragathy.org): the
 magazine (issues, articles, authors), reader accounts and subscriptions,
-comments (kalapila), feedback (postbox) and the searchable archive (the_librarian).
+comments (kalapila), feedback (postbox), the searchable archive (the_librarian)
+and the science glossary (glossary).
 
 Stack: Python 3.12 · Django 5.2 LTS · Wagtail 7.4 · PostgreSQL 18 + pgvector ·
 Django-Q2 (background jobs) · Channels (admin notifications) · Caddy · Docker Compose.
@@ -99,7 +100,33 @@ The live site must run `Icarus.settings.production`. Secrets come from
    lot of CPU.
 
 Run automatically at container start: `migrate`, `createcachetable`,
-`setup_page_lock_schedule`, `setup_geoip_schedule`, `setup_retention_schedules`.
+`setup_page_lock_schedule`, `setup_geoip_schedule`, `setup_retention_schedules`,
+`setup_disk_alert_schedule`, `setup_backup_schedules`.
+
+### Trial mode (temporary)
+
+Wagtail admin → Settings → Trial mode. While it is on, readers and visitors
+get a "not available" page (a 404 listing the ticked issues) for issues that
+aren't ticked there, their articles and the archive scans of those months.
+Everything else stays open, and lists still show every issue. Editors (staff,
+editorial board members, anyone who can use the admin) see everything.
+Everyone sees a trial banner. It ships switched off; a newly published issue
+must be ticked before readers can open it. See `home/trial.py`.
+
+## Backups
+
+Every night qcluster dumps the database and makes an rsync-style copy of the
+media (only new and changed files travel), and rclone sends both, with the
+`.env`, to Google Drive, encrypted before they leave the server. **Backups** in
+the admin sidebar starts and watches them; `./restore.sh` brings them back,
+even onto a new server. ADMIN_EMAILS hear about it twice a day while the last
+good backup is over 26 hours old.
+
+It needs a one-time setup on the server (an rclone config holding the Drive
+token and the encryption passwords, then `BACKUP_REMOTE` in the `.env`), and
+that config must also live in your password manager: the backups can't be
+read without it. Steps, the restore runbook and troubleshooting:
+[backups/README.md](backups/README.md).
 
 ## Useful commands
 
@@ -110,3 +137,5 @@ Run automatically at container start: `migrate`, `createcachetable`,
 | `reset_author_passwords [--dry-run] [--email]` | See upgrade step 4. |
 | `export_content` / `import_content` / `check_archive` | Content export and import; see `home/management/commands/README.md`. |
 | `update_geoip` | Refresh the offline GeoIP databases. |
+| `backup [--check \| --verify]` | Back up now, check the backup setup, or prove the newest snapshot restores. Run it in qcluster: `docker compose exec qcluster python manage.py backup`. |
+| `./restore.sh list \| drill \| db \| media \| env` | On the server: restore from Google Drive; see [backups/README.md](backups/README.md#restoring). |

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% translate "ഫീഡ്‌ബാക്ക്" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+<link rel="stylesheet" href="{% static 'css/print/tools.css' %}">
+{% endblock %}
+
+{% block content %}
+{# Same form fields, ids and classes as postbox/postbox_page.html (postbox.js). #}
+<main class="pt-page">
+  {% translate "കത്തുകൾ" as kicker %}
+  {% translate "ഫീഡ്‌ബാക്ക് അറിയിക്കൂ" as title %}
+  {% translate "വെബ്സൈറ്റ് മെച്ചപ്പെടുത്താൻ നിങ്ങളുടെ നിർദ്ദേശങ്ങളും അഭിപ്രായങ്ങളും അറിയിക്കുക" as standfirst %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=title standfirst=standfirst %}
+
+  <div class="pt-list-section pt-letters">
+    <div class="pt-letters__form pt-panel">
+      <fieldset class="pt-field">
+        <legend class="pt-field__label">{% translate "ഫീഡ്‌ബാക്കിൻ്റെ തരം" %}</legend>
+        <div class="pt-choice">
+          <button type="button" class="fb-type-btn pt-choice__item active" data-type="general">{% translate "പൊതുവായത്" %}</button>
+          <button type="button" class="fb-type-btn pt-choice__item" data-type="bug">{% translate "ബഗ് റിപ്പോർട്ട്" %}</button>
+          <button type="button" class="fb-type-btn pt-choice__item" data-type="suggestion">{% translate "നിർദ്ദേശം" %}</button>
+          <button type="button" class="fb-type-btn pt-choice__item" data-type="content">{% translate "ഉള്ളടക്കത്തിലെ പ്രശ്നം" %}</button>
+        </div>
+      </fieldset>
+
+      <div class="pt-field">
+        <p class="pt-field__label">{% translate "റേറ്റുചെയ്യൂ" %} <span class="pt-field__optional">{% translate "(ഓപ്ഷണൽ)" %}</span></p>
+        <div class="fb-stars pt-stars" role="group" aria-label="{% translate 'നക്ഷത്ര റേറ്റിംഗ്, 1 മുതൽ 5 വരെ' %}"
+             data-label-1="{% translate 'മോശം' %}"
+             data-label-2="{% translate 'സാധാരണം' %}"
+             data-label-3="{% translate 'നല്ലത്' %}"
+             data-label-4="{% translate 'വളരെ നല്ലത്' %}"
+             data-label-5="{% translate 'മികച്ചത്' %}"
+             data-label-choose="{% translate 'ഫയൽ തിരഞ്ഞെടുക്കൂ' %}">
+          {% for i in "12345" %}
+          <button type="button" class="fb-star pt-stars__star" data-value="{{ i }}"
+                  aria-label="{% blocktranslate count counter=i|add:0 %}{{ counter }} നക്ഷത്രം{% plural %}{{ counter }} നക്ഷത്രങ്ങൾ{% endblocktranslate %}">★</button>
+          {% endfor %}
+          <span class="fb-stars__label pt-stars__label" id="fb-star-label" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <form method="post" id="fb-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.feedback_type }}
+        {{ form.rating }}
+        {{ form.page_context }}
+
+        <div class="pt-field">
+          <label class="pt-field__label" for="{{ form.feedback.id_for_label }}">
+            {% translate "നിങ്ങള്‍ക്ക് പറയുവാനുള്ളത്" %} <span class="pt-field__required" aria-hidden="true">*</span>
+          </label>
+          {% if form.feedback.errors %}<div class="pt-field__error" role="alert">{% for error in form.feedback.errors %}{{ error }}{% endfor %}</div>{% endif %}
+          {{ form.feedback }}
+          <div class="fb-char-count pt-field__count"><span id="fb-char-count">0</span> / 2000</div>
+        </div>
+
+        <div class="pt-field">
+          <span class="pt-field__label">{% translate "ചിത്രം അറ്റാച്ച് ചെയ്യാം" %} <span class="pt-field__optional">{% translate "(ഓപ്ഷണൽ)" %}</span></span>
+          <div class="custom-file-upload pt-upload">
+            <label for="{{ form.image.id_for_label }}" class="custom-browse-btn pt-btn pt-btn--outline">
+              <span>{% translate "📷 ചിത്രം നിങ്ങളുടെ ഉപകരണത്തില്‍ നിന്ന് തിരഞ്ഞെടുക്കൂ" %}</span>
+            </label>
+            {{ form.image }}
+          </div>
+          {% if form.image.errors %}<div class="pt-field__error" role="alert">{% for error in form.image.errors %}{{ error }}{% endfor %}</div>{% endif %}
+        </div>
+
+        {% if form.non_field_errors %}<div class="pt-field__error" role="alert">{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>{% endif %}
+
+        <button type="submit" class="pt-btn pt-btn--dark pt-letters__submit">{% translate "ഫീഡ്‌ബാക്ക് അയക്കൂ" %}</button>
+      </form>
+
+      {% with ctx=form.page_context.value %}{% if ctx %}
+      <p class="pt-letters__context">{% translate "ഫീഡ്‌ബാക്ക് സന്ദർഭം:" %} <span>{{ ctx }}</span></p>
+      {% endif %}{% endwith %}
+    </div>
+
+    {% if previous %}
+    <section class="pt-letters__history" aria-labelledby="pt-letters-history">
+      <div class="pt-section-head">
+        <h2 class="pt-section-head__title" id="pt-letters-history">{% translate "നിങ്ങളുടെ മുൻ സമർപ്പണങ്ങൾ" %}</h2>
+        <span class="pt-section-head__rule"></span>
+      </div>
+      <ol class="pt-letters__list">
+        {% for fb in previous %}
+        <li class="pt-letter">
+          <p class="pt-letter__meta">
+            <span class="pt-letter__type">{{ fb.get_feedback_type_display }}</span>
+            {% if fb.rating %}<span>{{ fb.rating }}★</span>{% endif %}
+            <time>{{ fb.submitted_at|date:"F j, Y" }}</time>
+            {% if fb.is_reviewed %}<span class="pt-letter__reviewed">✓ {% translate "റിവ്യൂ ചെയ്തു" %}</span>{% endif %}
+            {% if fb.image %}<span><i class="fas fa-paperclip" aria-hidden="true"></i> {% translate "ചിത്രം അറ്റാച്ച് ചെയ്തു" %}</span>{% endif %}
+          </p>
+          <p class="pt-letter__text">{{ fb.feedback }}</p>
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "കത്തുകൾ" %} | ശാസ്ത്രഗതി{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/postbox.js' %}"></script>
+{% endblock %}

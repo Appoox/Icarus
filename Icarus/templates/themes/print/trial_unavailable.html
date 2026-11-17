@@ -1,0 +1,30 @@
+{% extends "themes/print/notice.html" %}
+{% load static i18n %}
+{# Print-design version of trial_unavailable.html (home.trial.unavailable): the #}
+{# notice, then the picked issues as on the issue list.                          #}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+{% endblock %}
+
+{% block title %}{{ heading }}{% endblock %}
+{% block pt_notice_code_class %}pt-notice__code--word{% endblock %}
+{% block pt_notice_code %}{% translate "ട്രയൽ" %}{% endblock %}
+{% block pt_notice_heading %}{{ heading }}{% endblock %}
+{% block pt_notice_body %}
+<p class="pt-notice__body">{{ message|linebreaksbr }}</p>
+{% endblock %}
+{% block pt_notice_actions %}{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% if issues %}
+<div class="pt-page pt-trial-issues">
+  <section class="pt-list-section">
+    <ul class="pt-issuegrid">
+      {% for issue in issues %}{% include "themes/print/includes/issue_card.html" %}{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

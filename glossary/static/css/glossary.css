@@ -1,0 +1,186 @@
+/* =========================================================
+   Glossary — a marked word and the card that explains it.
+   Loaded by base.html on every page, in both themes: the
+   rules without a prefix are the Classic design, the
+   `.theme-print` ones the print edition's. Colours come
+   from each theme's own tokens, so the light, dusk and dark
+   modes need nothing here.   (The card: js/glossary.js)
+   ========================================================= */
+
+:root {
+    /* Blue in Classic; the issue's colour in the print edition, where
+       print/base.css points --sky at it. */
+    --glossary-accent: var(--sky);
+}
+
+/* ── The word ───────────────────────────────────── */
+/* The attribute is only there to outrank each theme's own link rules
+   (.article-content a, .pt-body a), which are loaded later.          */
+a.glossary-term[data-glossary-id] {
+    color: inherit;
+    cursor: help;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--glossary-accent) 12%, transparent);
+    text-decoration: underline dotted var(--glossary-accent);
+    text-decoration-thickness: 2px;
+    /* Clear of the signs Malayalam hangs below the line. */
+    text-underline-offset: 0.3em;
+    transition: background-color 0.15s;
+}
+
+a.glossary-term[data-glossary-id]:hover,
+a.glossary-term[data-glossary-id]:focus-visible,
+a.glossary-term[data-glossary-id].is-open {
+    color: inherit;
+    background: color-mix(in srgb, var(--glossary-accent) 26%, transparent);
+    text-decoration-color: var(--glossary-accent);
+}
+
+/* ── The card ───────────────────────────────────── */
+.glossary-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1100;                      /* over the header and floating buttons */
+    width: min(340px, calc(100vw - 16px));
+    padding: 14px 16px 12px;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--glossary-accent);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: left;
+    animation: glossary-card-in 0.12s ease-out;
+}
+.glossary-card[hidden] { display: none; }
+
+@keyframes glossary-card-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.glossary-card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+.glossary-card__names { margin: 0; line-height: 1.4; }
+.glossary-card__name { font-size: 17px; font-weight: 700; }
+.glossary-card__other { color: var(--muted); font-size: 14px; }
+
+/* Only a touch screen needs a button to close it. */
+.glossary-card__close {
+    display: none;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    margin: -6px -8px 0 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+.glossary-card--touch .glossary-card__close { display: block; }
+
+.glossary-card__langs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.glossary-card__langs[hidden] { display: none; }
+.glossary-card__lang {
+    padding: 2px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+.glossary-card__lang[aria-pressed="true"] {
+    background: var(--glossary-accent);
+    border-color: var(--glossary-accent);
+    color: var(--paper);                /* light on blue, dark on the dusk blue */
+}
+
+.glossary-card__text {
+    margin-top: 8px;
+    font-family: var(--body-serif);
+    overflow-wrap: break-word;
+}
+.glossary-card__text p { margin: 0 0 0.5em; font-size: inherit; line-height: inherit; color: inherit; }
+.glossary-card__text p:last-child { margin-bottom: 0; }
+
+.glossary-card__more {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--glossary-accent);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+.glossary-card__more::after { content: " \2192"; }
+.glossary-card__more:hover { text-decoration: underline; }
+
+/* Opened by a tap on a narrow screen: a sheet along the foot of the window. */
+.glossary-card--sheet {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 18px 20px calc(18px + env(safe-area-inset-bottom, 0px));
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.25);
+    font-size: 16px;
+}
+
+/* ── Print edition ──────────────────────────────── */
+/* Square corners, ink rules and the flat offset shadow of its covers. */
+.theme-print .glossary-card {
+    background: var(--panel);
+    border: 1.5px solid var(--ink);
+    border-top-width: 5px;
+    border-top-color: var(--issue-fill);
+    border-radius: 0;
+    box-shadow: 6px 6px 0 var(--shadow-ink);
+}
+.theme-print .glossary-card__name { font-family: var(--font-display); font-size: 19px; }
+.theme-print .glossary-card__other { color: var(--subtle); }
+.theme-print .glossary-card__text { font-family: var(--font-text); color: var(--body); }
+.theme-print .glossary-card__close { border-radius: 0; color: var(--ink); }
+.theme-print .glossary-card__lang {
+    border: 1.5px solid var(--ink);
+    border-radius: 0;
+    color: var(--ink);
+    font-weight: 600;
+}
+.theme-print .glossary-card__lang[aria-pressed="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+}
+.theme-print .glossary-card__more { color: var(--issue); }
+.theme-print .glossary-card--sheet {
+    border-width: 5px 0 0;
+    box-shadow: 0 -6px 0 var(--shadow-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .glossary-card { animation: none; }
+    a.glossary-term[data-glossary-id] { transition: none; }
+}
+
+/* On paper a marked word is just a word. */
+@media print {
+    a.glossary-term[data-glossary-id] { background: none; text-decoration: none; }
+    .glossary-card { display: none; }
+}

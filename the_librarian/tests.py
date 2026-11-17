@@ -446,3 +446,96 @@ class IngestPanelCountTests(TestCase):
         # One article, however many chunks. (count() clears DocumentChunk's
         # default ordering, so the DISTINCT is over article ids alone.)
         self.assertIn('id="stat-articles">1<', html)
+
+
+class RemoteWorkerSetupInstructionsTests(TestCase):
+    """The Remote Worker page and its settings page both explain how to set the worker up."""
+
+    def setUp(self):
+        self.admin = User.objects.create_superuser(phone_number="+918800330001", name="A", password="x")
+        self.client.force_login(self.admin)
+
+    def test_worker_page_shows_the_setup_steps(self):
+        from django.test import override_settings
+
+        with override_settings(LIBRARIAN_EMBEDDING_MODEL="example/model-1024"):
+            response = self.client.get(reverse("the_librarian:remote_worker_admin"))
+        self.assertContains(response, "How to set up the worker")
+        self.assertContains(response, "git clone https://github.com/Appoox/Icarus.git")
+        # The worker is started with this site's embedding model, or its uploads are rejected.
+        self.assertContains(response, 'LIBRARIAN_EMBEDDING_MODEL="example/model-1024" bash start.sh')
+        self.assertContains(response, 'export LIBRARIAN_EMBEDDING_MODEL="example/model-1024"')
+        # The address to paste into the worker is this site's root.
+        self.assertContains(response, '<code id="ri-setup-address">http://testserver</code>', html=True)
+        self.assertContains(response, 'export ICARUS_BASE_URL="http://testserver"')
+
+    def test_steps_start_open_until_a_key_exists(self):
+        from the_librarian.models import LibrarianAPIKey
+
+        url = reverse("the_librarian:remote_worker_admin")
+        self.assertContains(self.client.get(url), "<details open>")
+
+        key, _ = LibrarianAPIKey.generate("Home workstation", created_by=self.admin)
+        self.assertNotContains(self.client.get(url), "<details open>")
+
+        key.revoke(revoked_by=self.admin)  # a revoked key doesn't count
+        self.assertContains(self.client.get(url), "<details open>")
+
+    def test_settings_page_shows_the_steps_and_links_to_the_worker_page(self):
+        from the_librarian.models import LibrarianRemoteIngestSettings
+
+        settings_obj = LibrarianRemoteIngestSettings.load()
+        url = reverse("wagtailsettings:edit", args=["the_librarian", "librarianremoteingestsettings", settings_obj.pk])
+        response = self.client.get(url)
+        self.assertContains(response, "Setting up the remote worker")
+        self.assertContains(response, "bash start.sh")
+        self.assertContains(response, f'<a href="{reverse("the_librarian:remote_worker_admin")}">Remote Worker</a>')
+
+    def test_a_local_model_folder_is_shown_by_its_hugging_face_name(self):
+        from django.test import override_settings
+
+        # The server loads its model from a folder; the worker downloads it by name.
+        with override_settings(LIBRARIAN_EMBEDDING_MODEL="models/intfloat/multilingual-e5-large/"):
+            response = self.client.get(reverse("the_librarian:remote_worker_admin"))
+        self.assertContains(response, 'LIBRARIAN_EMBEDDING_MODEL="intfloat/multilingual-e5-large" bash start.sh')
+        self.assertNotContains(response, "models/intfloat")
+
+
+class WorkerModelNameTests(TestCase):
+    def test_names(self):
+        from the_librarian.panels import worker_model_name
+
+        cases = {
+            "models/intfloat/multilingual-e5-large/": "intfloat/multilingual-e5-large",
+            "/Icarus/models/intfloat/multilingual-e5-large": "intfloat/multilingual-e5-large",
+            "intfloat/multilingual-e5-large": "intfloat/multilingual-e5-large",
+            "sentence-transformers/LaBSE": "sentence-transformers/LaBSE",
+            "someone/my-models/thing": "someone/my-models/thing",  # only a whole "models" folder counts
+        }
+        for configured, expected in cases.items():
+            self.assertEqual(worker_model_name(configured), expected, configured)
+
+
+class EmbeddingLabelTests(TestCase):
+    """The site labels stored text and searches with the labels the worker shares."""
+
+    def test_documents_and_queries_are_labelled(self):
+        from the_librarian.services.embedder import CachingEmbeddings
+        from the_librarian.services.embedding_text import DOCUMENT_PREFIX, QUERY_PREFIX
+
+        seen = []
+
+        class FakeModel:
+            def embed_documents(self, texts):
+                seen.extend(texts)
+                return [[0.0] for _ in texts]
+
+            def embed_query(self, text):
+                seen.append(text)
+                return [0.0]
+
+        embedder = CachingEmbeddings(FakeModel())
+        embedder.embed_documents(["chunk"])
+        embedder.embed_query("search")
+        self.assertEqual(seen, [DOCUMENT_PREFIX + "chunk", QUERY_PREFIX + "search"])
+        self.assertEqual((DOCUMENT_PREFIX, QUERY_PREFIX), ("passage: ", "query: "))

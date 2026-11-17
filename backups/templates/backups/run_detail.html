@@ -1,0 +1,46 @@
+{% extends "wagtailadmin/base.html" %}
+{% load humanize i18n tz %}
+
+{% block titletag %}{{ run.get_kind_display }} #{{ run.pk }} · Backups{% endblock %}
+
+{% block content %}
+    {% include "wagtailadmin/shared/header.html" with title=header_title subtitle=header_subtitle icon="history" %}
+    {% include "backups/includes/styles.html" %}
+
+    <div class="nice-padding bk">
+    {# An English-only ops page, like Remote Worker: keep sizes, dates and #}
+    {# "3 hours ago" in English too, whatever the admin's language. #}
+    {% language "en" %}{% timezone display_tz %}
+        <p><a href="{% url 'backups_dashboard' %}">← All backups</a></p>
+
+        <section class="bk-section">
+            <table class="listing">
+                <tbody>
+                    <tr><th style="width:12em;">Result</th><td><span class="bk-tag bk-tag--{{ run.status }}">{{ run.get_status_display }}</span></td></tr>
+                    {% if run.error %}<tr><th>Error</th><td class="bk-error">{{ run.error }}</td></tr>{% endif %}
+                    <tr><th>Started by</th><td>{% if run.requested_by %}{{ run.requested_by.get_full_name|default:run.requested_by }} (dashboard){% else %}{{ run.get_trigger_display }}{% endif %}</td></tr>
+                    <tr><th>Queued</th><td>{{ run.created_at|date:"j M Y, H:i:s" }} IST</td></tr>
+                    <tr><th>Ran</th><td>{% if run.started_at %}{{ run.started_at|date:"j M Y, H:i:s" }}{% if run.finished_at %} to {{ run.finished_at|date:"H:i:s" }} ({{ run.duration_display }}){% endif %}{% else %}not started{% endif %}</td></tr>
+                    {% if run.snapshot %}<tr><th>Snapshot</th><td><code>{{ run.snapshot }}</code>{% if run.snapshot_time %} · taken {{ run.snapshot_time|date:"j M Y, H:i" }} IST{% endif %}</td></tr>{% endif %}
+                    {% if run.db_bytes %}<tr><th>Database dump</th><td>{{ run.db_bytes|filesizeformat }}{% if verify.objects %}, {{ verify.objects|intcomma }} objects read back{% endif %}</td></tr>{% endif %}
+                    {% if run.media_files is not None %}<tr><th>Media copy</th><td>{{ run.media_files|intcomma }} files, {{ run.media_bytes|filesizeformat }}; this run uploaded {{ run.media_uploaded|default:0|intcomma }} and archived {{ run.media_archived|default:0|intcomma }}</td></tr>{% endif %}
+                    {% if verify.media %}<tr><th>Media check</th><td>Everything older than the last backup is off the server; {{ verify.media.newer_than_backup|intcomma }} newer files wait for the next one.</td></tr>{% endif %}
+                    {% if run.snapshot and run.status == "succeeded" and run.kind != "check" %}<tr><th>Restore this</th><td><code class="bk-cmd">./restore.sh db {{ run.snapshot }}</code> on the server</td></tr>{% endif %}
+                </tbody>
+            </table>
+        </section>
+
+        {% if checks %}
+        <section class="bk-section">
+            <h2>Setup checks</h2>
+            {% include "backups/includes/checks.html" %}
+        </section>
+        {% endif %}
+
+        <section class="bk-section">
+            <h2>Log</h2>
+            {% include "backups/includes/live_log.html" %}
+        </section>
+    {% endtimezone %}{% endlanguage %}
+    </div>
+{% endblock %}

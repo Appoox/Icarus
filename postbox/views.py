@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
+from home.theme import themed_template
 from .forms import PostboxForm
 from .models import Postbox, PostboxNotification, PostboxNotificationPreference
 
@@ -46,7 +47,7 @@ def postbox_page(request):
         request.user.feedback_submissions
         .order_by('-submitted_at')[:5]
     )
-    return render(request, 'postbox/postbox_page.html', {
+    return render(request, themed_template(request, 'postbox/postbox_page.html'), {
         'form':     form,
         'previous': previous,
     })

@@ -1,0 +1,89 @@
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#15171c">
+<title>ശാസ്ത്രഗതി | {% trans "സര്‍വ്വര്‍ തകരാറ്" %}</title>
+{# Print-design 500 page (see Icarus.views.server_error). Drawn without   #}
+{# the database or the request, so it is self-contained: no base.html,   #}
+{# no tags beyond i18n, and its own copy of the print colours and fonts.  #}
+
+<script>
+  try {
+    var t = localStorage.getItem('theme');
+    if (t === 'light' || t === 'dusk' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Chettan+2:wght@800&family=Noto+Serif+Malayalam:wght@400&family=Anek+Malayalam:wght@700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #1a1612; --body: #2a251e; --band: #15171c; --paper: #f3f4f0;
+    --issue: #1d5fc4; --issue-bright: #5687d3;
+    --display: 'Baloo Chettan 2', 'Noto Sans Malayalam', sans-serif;
+    --text: 'Noto Serif Malayalam', Georgia, serif;
+    --ui: 'Anek Malayalam', 'Noto Sans Malayalam', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ink: #efe9de; --body: #ded7ca; --band: #0b0a07; --paper: #16130e; --issue: #7fa6e3; }
+  }
+  :root[data-theme="dusk"] { --ink: #efe9de; --body: #ded7ca; --band: #0b0a07; --paper: #16130e; --issue: #7fa6e3; }
+  :root[data-theme="dark"] { --ink: #efe9de; --body: #ded7ca; --band: #0f1013; --paper: #000; --issue: #7fa6e3; }
+
+  * { box-sizing: border-box; }
+  /* Baloo Chettan 2 drops its joined letters for lang="ml"; use its normal
+     setting (see the same rule in css/print/base.css). */
+  :lang(ml) { -webkit-locale: "und"; font-language-override: "dflt"; }
+  body {
+    margin: 0; min-height: 100vh;
+    display: flex; flex-direction: column;
+    background: var(--paper); color: var(--ink);
+    font-family: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .band { background: var(--band); padding: 22px 16px; text-align: center; }
+  .wordmark { font: 800 34px/1 var(--display); color: #fff; }
+  .stripe { height: 8px; background: var(--issue-bright); }
+  main {
+    flex: 1;
+    width: 100%; max-width: 1280px; margin: 0 auto;
+    padding: 72px 64px 96px;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 24px 64px; align-items: start;
+  }
+  .code { margin: 0; font: 800 200px/.9 var(--display); color: var(--issue); letter-spacing: -.02em; }
+  .text { display: flex; flex-direction: column; gap: 20px; padding-top: 12px; border-top: 2px solid var(--ink); }
+  h1 { margin: 0; font: 800 48px/1.1 var(--display); }
+  p { margin: 0; font: 18px/1.75 var(--text); color: var(--body); max-width: 620px; }
+  a.btn {
+    align-self: flex-start;
+    display: inline-block; padding: 12px 22px;
+    border: 2px solid var(--ink); background: var(--ink); color: var(--paper);
+    font: 700 15px/1.2 var(--ui); text-decoration: none;
+  }
+  a.btn:hover { background: var(--issue); border-color: var(--issue); color: #fff; }
+  footer { border-top: 8px solid var(--issue-bright); background: var(--band); height: 64px; }
+  @media (max-width: 900px) {
+    main { grid-template-columns: minmax(0, 1fr); padding: 40px 16px 64px; }
+    .code { font-size: clamp(96px, 30vw, 160px); }
+    h1 { font-size: clamp(30px, 9vw, 40px); }
+  }
+</style>
+</head>
+<body>
+  <header class="band"><span class="wordmark">ശാസ്ത്രഗതി</span></header>
+  <div class="stripe" aria-hidden="true"></div>
+  <main>
+    <p class="code" aria-hidden="true">500</p>
+    <div class="text">
+      <h1>{% trans "സര്‍വ്വര്‍ തകരാറ്" %}</h1>
+      <p>{% trans "ക്ഷമിക്കണം, ഒരു പിഴവുണ്ടായിരിക്കുന്നു. ദയവായി ഉടൻ വീണ്ടും ശ്രമിക്കുക." %}</p>
+      <a class="btn" href="{% if LANGUAGE_CODE == 'en' %}/en/{% else %}/{% endif %}">{% trans "ഹോം പേജിലേക്ക് മടങ്ങുക" %}</a>
+    </div>
+  </main>
+  <footer aria-hidden="true"></footer>
+</body>
+</html>

@@ -1,0 +1,641 @@
+/* =========================================================
+   Print edition — sign-in, sign-up, reader pages, messages
+   Loaded by base.html on every page in the print design, after
+   the page's own stylesheets (account.css, reader.css). Those
+   pages keep their Classic markup and scripts; this file only
+   restyles them, so how they work is unchanged.
+
+   Not in the design handoff: built from its parts (the panel with
+   the issue-colour top rule, the ink buttons, the dashed rows).
+   Every rule is under html.theme-print so it outranks the Classic
+   rules it replaces.
+   ========================================================= */
+
+html.theme-print {
+    /* State colours for messages, badges and warnings */
+    --pt-ok: #1e7a3a;
+    --pt-warn: #9a4a0c;
+    --pt-bad: #b3261e;
+
+    /* Fallbacks named in the reader templates' inline styles */
+    --border-color: var(--divider);
+    --color-muted: var(--subtle);
+    --color-primary: var(--issue);
+}
+html.theme-print[data-theme^="d"] {
+    --pt-ok: #7fd18a;
+    --pt-warn: #ffb74d;
+    --pt-bad: #f28b94;
+}
+
+/* ── Flash messages (bottom-right toasts) ───────────── */
+html.theme-print .messages-container .message {
+    border-radius: 0;
+    border: 1.5px solid var(--ink);
+    border-left-width: 6px;
+    background: var(--panel);
+    color: var(--ink);
+    box-shadow: 6px 6px 0 var(--shadow-ink);
+    font: 500 15px/1.5 var(--font-ui);
+}
+html.theme-print .messages-container .message a { color: inherit; }
+html.theme-print .messages-container .message--success { border-left-color: var(--pt-ok); }
+html.theme-print .messages-container .message--error { border-left-color: var(--pt-bad); }
+html.theme-print .messages-container .message--info { border-left-color: var(--issue-fill); }
+html.theme-print .messages-container .message--warning { border-left-color: var(--pt-warn); }
+html.theme-print .message__close { font-size: 20px; opacity: .6; }
+
+/* ── Page frames ────────────────────────────────────── */
+html.theme-print .auth-page,
+html.theme-print .checkout-page,
+html.theme-print .profile-page {
+    /* Some of these sit in a flex row; never wider than the screen */
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+html.theme-print .auth-page,
+html.theme-print .checkout-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 56px 24px 88px;
+}
+html.theme-print .profile-page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 56px 24px 88px;
+}
+html.theme-print .inactive-page { margin-top: 0; }
+
+/* Headline and summary, left-aligned like the other print pages */
+html.theme-print .auth-page h1,
+html.theme-print .checkout-page h1,
+html.theme-print .profile-page h1 {
+    margin: 0 0 12px;
+    font: 800 52px/1.08 var(--font-display);
+    color: var(--issue-display);
+    text-align: left;
+    text-wrap: balance;
+}
+html.theme-print .auth-page .subtitle,
+html.theme-print .checkout-header p,
+html.theme-print .profile-page .email {
+    margin: 0 0 32px;
+    font: 500 18px/1.7 var(--font-text);
+    color: var(--ink);
+    text-align: left;
+}
+html.theme-print .checkout-header {
+    padding-bottom: 28px;
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--ink);
+}
+html.theme-print .checkout-header form { margin-top: 24px; }
+html.theme-print .checkout-header .checkout-submit { width: auto; padding: 14px 32px; }
+
+/* ── Panels ─────────────────────────────────────────── */
+html.theme-print .auth-form,
+html.theme-print .auth-card,
+html.theme-print .success-card,
+html.theme-print .payment-form,
+html.theme-print .summary-box,
+html.theme-print .sub-card {
+    background: var(--panel);
+    border: 0;
+    border-top: 6px solid var(--issue-fill);
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    padding: 32px 36px 36px;
+    margin-bottom: 36px;
+}
+html.theme-print .auth-card p,
+html.theme-print .success-card p,
+html.theme-print .payment-form > p {
+    font: 16px/1.7 var(--font-text);
+    color: var(--body);
+}
+html.theme-print .success-icon { color: var(--issue); }
+
+/* ── Fields ─────────────────────────────────────────── */
+html.theme-print .form-group { margin-bottom: 22px; }
+html.theme-print .form-group label,
+html.theme-print .form-fieldset label,
+html.theme-print .payment-form label:not(.method-option) {
+    display: block;
+    margin-bottom: 8px;
+    font: 700 15px/1.4 var(--font-ui);
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+}
+html.theme-print .label--flex { display: flex; }
+
+html.theme-print .form-input,
+html.theme-print .password-wrapper input,
+html.theme-print .phone-widget-container select,
+html.theme-print .phone-widget-container input,
+html.theme-print .phone-widget select,
+html.theme-print .phone-widget input,
+html.theme-print .auth-form input[type="text"],
+html.theme-print .auth-form input[type="email"],
+html.theme-print .auth-form input[type="tel"],
+html.theme-print .auth-form input[type="number"],
+html.theme-print .auth-form input[type="password"],
+html.theme-print .auth-form input[type="url"],
+html.theme-print .auth-form input[type="date"],
+html.theme-print .auth-form select,
+html.theme-print .auth-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 0;
+    background-color: var(--field);
+    color: var(--ink);
+    font: 16px/1.4 var(--font-ui);
+    box-shadow: none;
+}
+html.theme-print .password-wrapper input { padding-right: 46px; }
+/* Phone number: country code at a fixed width, the number takes the rest */
+html.theme-print .phone-widget-container,
+html.theme-print .phone-widget { display: flex; gap: 8px; }
+html.theme-print .phone-widget-container select,
+html.theme-print .phone-widget select { flex: none; width: 150px; }
+html.theme-print .phone-widget-container input,
+html.theme-print .phone-widget input { flex: 1; min-width: 0; width: auto; }
+html.theme-print .auth-form textarea { min-height: 120px; resize: vertical; }
+html.theme-print .form-input:focus,
+html.theme-print .password-wrapper input:focus,
+html.theme-print .phone-widget-container select:focus,
+html.theme-print .phone-widget-container input:focus,
+html.theme-print .phone-widget select:focus,
+html.theme-print .phone-widget input:focus,
+html.theme-print .auth-form input:focus,
+html.theme-print .auth-form select:focus,
+html.theme-print .auth-form textarea:focus {
+    outline: 2px solid var(--issue);
+    outline-offset: -1px;
+    border-color: var(--ink);
+    box-shadow: none;
+}
+html.theme-print .auth-form input[type="checkbox"],
+html.theme-print .auth-form input[type="radio"],
+html.theme-print .topics-group input[type="checkbox"] { accent-color: var(--issue-fill); }
+
+html.theme-print .password-toggle { color: var(--subtle); }
+html.theme-print .password-toggle:hover { color: var(--ink); }
+html.theme-print .password-toggle:focus-visible { outline: 2px solid var(--issue); }
+
+html.theme-print .helptext,
+html.theme-print .help-text,
+html.theme-print .form-help-text {
+    font: 14px/1.5 var(--font-ui);
+    color: var(--subtle);
+}
+html.theme-print a.helptext { color: var(--issue); font-weight: 600; }
+html.theme-print .link--forgot { font: 600 14px/1.4 var(--font-ui); color: var(--issue); }
+html.theme-print .link--forgot:hover { color: var(--issue-dark); }
+
+html.theme-print .form-errors,
+html.theme-print .errorlist {
+    font: 600 14px/1.5 var(--font-ui);
+    color: var(--pt-bad);
+}
+html.theme-print .form-errors--center { text-align: left; }
+html.theme-print .form-errors--global,
+html.theme-print .form-errors--center {
+    padding: 12px 16px;
+    border-left: 4px solid var(--pt-bad);
+    background: var(--panel);
+    margin-bottom: 20px;
+}
+html.theme-print .form-errors--global p,
+html.theme-print .form-errors--center p { margin: 0; }
+
+/* Groups of fields: a heading over a 2px rule instead of a box */
+html.theme-print .form-fieldset {
+    border: 0;
+    border-top: 2px solid var(--ink);
+    border-radius: 0;
+    padding: 18px 0 0;
+    margin: 8px 0 24px;
+    min-width: 0;
+}
+html.theme-print .form-fieldset__legend {
+    padding: 0 12px 0 0;
+    font: 800 20px/1.3 var(--font-display);
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+}
+html.theme-print .form-fieldset--inner { border-top: 0; padding: 0 0 8px; margin: 0; }
+
+/* Collapsible "added by" section */
+html.theme-print .care-of-details {
+    border: 0;
+    border-top: 2px solid var(--ink);
+    border-radius: 0;
+}
+html.theme-print .care-of-summary {
+    padding: 14px 0;
+    border-radius: 0;
+    font: 800 20px/1.3 var(--font-display);
+    color: var(--ink);
+}
+html.theme-print .care-of-chevron { color: var(--issue); }
+html.theme-print .care-of-body { padding: 0 0 16px; }
+
+/* Topic choices at sign-up: chips */
+html.theme-print .topics-group label {
+    border: 1.5px solid var(--ink);
+    border-radius: 0;
+    background: transparent;
+    padding: 6px 12px;
+    font: 600 14px/1.3 var(--font-ui);
+    color: var(--ink);
+}
+html.theme-print .topics-group label:hover { border-color: var(--issue); }
+html.theme-print .topics-group label:has(input:checked) { background: var(--ink); color: var(--paper); }
+
+/* Checkbox rows (remember me, consents): box, label, then any help
+   text under the label */
+html.theme-print .checkbox-group {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 4px 12px;
+    align-items: start;
+    margin-top: 16px;
+}
+html.theme-print .checkbox-group input[type="checkbox"] { grid-column: 1; grid-row: 1; width: 18px; height: 18px; margin: 3px 0 0; }
+html.theme-print .checkbox-group label { grid-column: 2; grid-row: 1; margin: 0; }
+html.theme-print .checkbox-group .helptext,
+html.theme-print .checkbox-group .form-errors { grid-column: 2; margin-top: 0 !important; }
+
+html.theme-print .form-group--checkbox label,
+html.theme-print .checkbox-group label,
+html.theme-print .consent-label {
+    font: 500 15px/1.5 var(--font-ui);
+    color: var(--ink);
+}
+
+/* ── Buttons ────────────────────────────────────────── */
+html.theme-print .auth-submit,
+html.theme-print .checkout-submit,
+html.theme-print .auth-back,
+html.theme-print .btn-renew,
+html.theme-print .inactive-btn--primary {
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font: 700 16px/1.2 var(--font-ui);
+    letter-spacing: 0;
+    text-transform: none;
+    padding: 14px 22px;
+    box-shadow: none;
+    transform: none;
+}
+html.theme-print .auth-submit:hover,
+html.theme-print .checkout-submit:hover,
+html.theme-print .auth-back:hover,
+html.theme-print .btn-renew:hover,
+html.theme-print .inactive-btn--primary:hover {
+    background: var(--issue-fill);
+    border-color: var(--issue-fill);
+    color: var(--on-issue);
+    box-shadow: none;
+    transform: none;
+}
+html.theme-print .btn-cancel,
+html.theme-print .inactive-btn--ghost {
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 700 16px/1.2 var(--font-ui);
+    letter-spacing: 0;
+    text-transform: none;
+    padding: 14px 22px;
+}
+html.theme-print .btn-cancel:hover,
+html.theme-print .inactive-btn--ghost:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* Deactivation: inert until both steps are done, then red */
+html.theme-print .auth-submit--danger:disabled,
+html.theme-print .auth-submit--danger[aria-disabled="true"] {
+    background: transparent;
+    border-color: var(--divider);
+    color: var(--subtle);
+    opacity: 1;
+}
+html.theme-print .auth-submit--danger-armed,
+html.theme-print .auth-submit--danger:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--pt-bad);
+    border-color: var(--pt-bad);
+    color: #fff;
+}
+html.theme-print .auth-submit--danger-armed:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+html.theme-print .auth-footer {
+    margin-top: 24px;
+    text-align: left;
+    font: 15px/1.6 var(--font-ui);
+    color: var(--subtle);
+}
+html.theme-print .auth-footer a { color: var(--issue); font-weight: 700; }
+html.theme-print .auth-footer a:hover { color: var(--issue-dark); text-decoration: none; }
+
+/* ── Notices inside forms ───────────────────────────── */
+html.theme-print .messages li,
+html.theme-print .login-attempts-warning,
+html.theme-print .grace-banner,
+html.theme-print .notice-banner {
+    border: 0;
+    border-left: 4px solid var(--pt-ok);
+    border-radius: 0;
+    background: var(--panel);
+    color: var(--ink);
+    padding: 12px 16px;
+    font: 500 15px/1.5 var(--font-ui);
+}
+html.theme-print .messages li.error,
+html.theme-print .login-attempts-warning.lockout { border-left-color: var(--pt-bad); background: var(--panel); }
+html.theme-print .login-attempts-warning,
+html.theme-print .grace-banner { border-left-color: var(--pt-warn); }
+html.theme-print .notice-banner { border-left-color: var(--issue-fill); }
+html.theme-print .login-attempts-warning p,
+html.theme-print .login-attempts-warning.lockout p { color: var(--ink); font: 500 15px/1.5 var(--font-ui); }
+
+/* ── One-time code ──────────────────────────────────── */
+html.theme-print .otp-form { text-align: left; }
+html.theme-print .otp-digit-group { justify-content: flex-start; }
+html.theme-print .otp-digit {
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    background: var(--field);
+    font: 800 28px/1 var(--font-display);
+}
+html.theme-print .otp-digit:focus { border-color: var(--issue); outline: 2px solid var(--issue); outline-offset: 0; box-shadow: none; }
+html.theme-print .otp-digit--filled { border-color: var(--issue); background: var(--field); }
+html.theme-print .otp-resend-section { text-align: left; }
+html.theme-print .otp-timer-line { font: 15px/1.5 var(--font-ui); color: var(--subtle); }
+html.theme-print .otp-resend-btn { border-radius: 0; color: var(--issue); font: 700 15px/1.4 var(--font-ui); padding: 6px 0; }
+html.theme-print .otp-resend-btn:hover:not(:disabled) { background: none; color: var(--issue-dark); }
+
+/* ── Account deactivated / inactive ─────────────────── */
+html.theme-print .inactive-card { text-align: left; }
+html.theme-print .inactive-icon { margin: 0 0 24px; border-radius: 0; background: var(--paper); color: var(--issue); }
+html.theme-print .inactive-body { font: 16px/1.7 var(--font-text); color: var(--body); }
+html.theme-print .inactive-actions { justify-content: flex-start; }
+html.theme-print .inactive-btn { white-space: normal; }
+html.theme-print .inactive-meta { text-align: left; border-top: 1px dashed var(--divider); font: 14px/1.6 var(--font-ui); }
+
+html.theme-print .deactivate-section-label,
+html.theme-print .deactivate-step__label {
+    font: 700 15px/1.4 var(--font-ui);
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+}
+html.theme-print .consequence-list li { font: 15px/1.6 var(--font-ui); }
+html.theme-print .consequence-icon { border-radius: 0; background: transparent; color: var(--pt-bad); border: 1.5px solid currentColor; }
+html.theme-print .consequence-divider { border-top: 1px dashed var(--divider); }
+html.theme-print .deactivate-step__num { border-radius: 0; background: var(--ink); color: var(--paper); font: 800 13px/1 var(--font-display); }
+html.theme-print kbd.confirm-keyword { border-radius: 0; background: var(--paper); color: var(--pt-bad); border-color: currentColor; }
+
+/* ── Reader profile ─────────────────────────────────── */
+html.theme-print .profile-header {
+    gap: 24px;
+    padding-bottom: 24px;
+    margin-bottom: 36px;
+    border-bottom: 2px solid var(--ink);
+}
+html.theme-print .profile-page .email { margin-bottom: 0; }
+html.theme-print .profile-header__actions { flex-wrap: wrap; justify-content: flex-end; }
+
+html.theme-print .profile-section { margin-bottom: 40px; }
+html.theme-print .profile-section__header {
+    gap: 16px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--rule);
+}
+html.theme-print .profile-section__header h2,
+html.theme-print .danger-zone h2,
+html.theme-print .summary-box h2 {
+    display: flex; align-items: center; gap: 14px;
+    margin: 0;
+    font: 800 26px/1.3 var(--font-display);
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+}
+html.theme-print .profile-section__header h2::before {
+    content: ''; width: 12px; height: 12px; flex: none;
+    background: var(--issue-bright);
+}
+html.theme-print .danger-zone { border-top: 2px solid var(--ink); padding-top: 32px; }
+html.theme-print .danger-zone h2 { color: var(--pt-bad); }
+
+html.theme-print .link-edit { font: 700 15px/1.4 var(--font-ui); color: var(--issue); white-space: nowrap; }
+html.theme-print .link-edit:hover { color: var(--issue-dark); text-decoration: none; }
+
+html.theme-print .address-block,
+html.theme-print .profile-bio { font: 16px/1.8 var(--font-ui); color: var(--body); overflow-wrap: anywhere; }
+html.theme-print .address-block strong { color: var(--ink); }
+html.theme-print .empty-state { font: italic 16px/1.6 var(--font-text); color: var(--subtle); }
+
+html.theme-print .profile-avatar,
+html.theme-print .profile-avatar-placeholder { border-radius: 50%; border: 2px solid var(--ink); }
+html.theme-print .profile-avatar-placeholder {
+    background: var(--issue-fill); color: var(--on-issue);
+    font: 800 30px/1 var(--font-display);
+}
+
+/* Subscription card */
+html.theme-print .sub-card__label {
+    margin: 0 0 8px;
+    font: 700 15px/1.4 var(--font-ui);
+    color: var(--subtle);
+    text-transform: none;
+    letter-spacing: 0;
+}
+html.theme-print .sub-card__status { font: 800 32px/1.2 var(--font-display); margin-bottom: 8px; }
+html.theme-print .sub-card__status--active { color: var(--pt-ok); }
+html.theme-print .sub-card__status--grace { color: var(--pt-warn); }
+html.theme-print .sub-card__status--inactive { color: var(--pt-bad); }
+html.theme-print .sub-card__detail { margin: 0 0 4px; font: 16px/1.6 var(--font-ui); color: var(--body); }
+html.theme-print .sub-card__plans { border-top-color: var(--divider) !important; }
+
+html.theme-print .plans-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+html.theme-print .plan-option {
+    display: flex; flex-direction: column; gap: 4px;
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    background: var(--paper);
+    padding: 18px 16px;
+    text-align: left;
+    transform: none;
+    box-shadow: none;
+}
+html.theme-print .plan-option__name { font: 800 22px/1.2 var(--font-display); color: var(--ink); margin: 0; }
+html.theme-print .plan-option__price { font: 700 15px/1.4 var(--font-ui); color: var(--issue); }
+html.theme-print .plan-option:hover { background: var(--ink); border-color: var(--ink); transform: none; box-shadow: none; }
+html.theme-print .plan-option:hover .plan-option__name,
+html.theme-print .plan-option:hover .plan-option__price { color: var(--paper); }
+
+/* Saved and read articles */
+html.theme-print .read-list li { padding: 14px 0; border-bottom: 1px dashed var(--divider); }
+html.theme-print .read-list li:last-child { border-bottom: 1px dashed var(--divider); }
+html.theme-print .read-list a { font: 700 19px/1.5 var(--font-text); color: var(--ink); }
+html.theme-print .read-list a:hover { color: var(--issue); }
+html.theme-print .read-list .date { margin-top: 4px; font: 14px/1.4 var(--font-ui); color: var(--subtle); }
+
+html.theme-print .topics-list li {
+    border: 1.5px solid var(--ink);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    padding: 4px 12px;
+    font: 600 14px/1.4 var(--font-ui);
+}
+
+/* Comments */
+html.theme-print .comments-count {
+    border-radius: 0;
+    background: var(--issue-fill);
+    color: var(--on-issue);
+    font: 700 14px/1.4 var(--font-ui);
+    padding: 2px 10px;
+}
+html.theme-print .comment-item { padding: 16px 0; border-bottom: 1px dashed var(--divider); }
+html.theme-print .comment-item:last-child { border-bottom: 1px dashed var(--divider); }
+html.theme-print .comment-item__page { font: 700 15px/1.4 var(--font-ui); color: var(--issue); }
+html.theme-print .comment-item__page:hover { color: var(--issue-dark); }
+html.theme-print .comment-item__date { font: 13px/1.4 var(--font-ui); color: var(--subtle); }
+html.theme-print .comment-item__body { font: 16px/1.7 var(--font-text); color: var(--body); }
+html.theme-print .comment-item__toggle { color: var(--issue); font: 700 14px/1.4 var(--font-ui); }
+html.theme-print .comment-item__removal-reason { color: var(--pt-bad); }
+html.theme-print .comment-badge {
+    border-radius: 0;
+    background: transparent;
+    border: 1px solid currentColor;
+    font: 700 12px/1.4 var(--font-ui);
+    letter-spacing: 0;
+    text-transform: none;
+}
+html.theme-print .comment-badge--approved { color: var(--pt-ok); background: transparent; }
+html.theme-print .comment-badge--pending { color: var(--pt-warn); background: transparent; }
+html.theme-print .comment-badge--removed { color: var(--pt-bad); background: transparent; }
+html.theme-print .comment-badge--reply { color: var(--issue); background: transparent; }
+
+html.theme-print .comments-pagination { border-top: 2px solid var(--ink); }
+html.theme-print .page-btn {
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    color: var(--ink);
+    font: 700 14px/1.2 var(--font-ui);
+    letter-spacing: 0;
+    text-transform: none;
+    padding: 8px 14px;
+}
+html.theme-print .page-btn:hover { background: var(--ink); color: var(--paper); }
+html.theme-print .page-btn--disabled { border-color: var(--divider); color: var(--rule); }
+html.theme-print .page-indicator { font: 600 14px/1.4 var(--font-ui); color: var(--subtle); }
+
+/* Subscription history */
+html.theme-print .history-table { font: 15px/1.5 var(--font-ui); color: var(--body); }
+html.theme-print .history-table th { font: 700 14px/1.4 var(--font-ui); color: var(--ink); }
+html.theme-print .history-table thead tr { border-bottom-color: var(--ink) !important; }
+html.theme-print .history-table tbody tr { border-bottom-style: dashed !important; }
+
+/* ── Checkout ───────────────────────────────────────── */
+html.theme-print .summary-box h2 {
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1px dashed var(--rule);
+}
+html.theme-print .summary-row { font: 16px/1.5 var(--font-ui); color: var(--ink); }
+html.theme-print .summary-row span:first-child { color: var(--subtle); }
+html.theme-print .summary-row.total {
+    border-top: 2px solid var(--ink);
+    font: 800 30px/1.2 var(--font-display);
+    color: var(--issue-display);
+}
+html.theme-print .summary-row.total span:first-child { color: var(--ink); }
+html.theme-print .payment-form .summary-row { gap: 16px; }
+html.theme-print .payment-form .summary-row .form-group { flex: 1; }
+html.theme-print .payment-form > p:last-child { color: var(--subtle) !important; font: 13px/1.5 var(--font-ui) !important; }
+
+html.theme-print .payment-methods { gap: 10px; flex-wrap: wrap; }
+html.theme-print .method-option {
+    border: 2px solid var(--divider);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 700 15px/1.3 var(--font-ui);
+    padding: 12px;
+}
+html.theme-print .method-option.active { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+
+/* ── Phones ─────────────────────────────────────────── */
+@media (max-width: 720px) {
+    html.theme-print .auth-page,
+    html.theme-print .checkout-page,
+    html.theme-print .profile-page { padding: 32px 16px 64px; }
+    html.theme-print .auth-page h1,
+    html.theme-print .checkout-page h1,
+    html.theme-print .profile-page h1 { font-size: clamp(32px, 10vw, 44px); }
+    html.theme-print .auth-form,
+    html.theme-print .auth-card,
+    html.theme-print .success-card,
+    html.theme-print .payment-form,
+    html.theme-print .summary-box,
+    html.theme-print .sub-card { padding: 24px 18px 28px; }
+    html.theme-print .profile-header { flex-direction: column; }
+    html.theme-print .profile-header__actions { justify-content: flex-start; }
+    html.theme-print .profile-section__header h2 { font-size: 22px; }
+    html.theme-print .history-table { display: block; overflow-x: auto; }
+}
+
+/* =========================================================
+   Notice pages: not found, no access, coming soon, under-18
+   (themes/print/notice.html). The 500 page carries its own
+   copy of these styles, as it is drawn without the database.
+   ========================================================= */
+.pt-notice-page {
+    padding: 72px var(--pt-pad-x) 96px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 24px 64px;
+    align-items: start;
+}
+.pt-notice__code {
+    margin: 0;
+    font: 800 200px/.9 var(--font-display);
+    color: var(--issue-display);
+    letter-spacing: -.02em;
+    overflow-wrap: anywhere;
+}
+.pt-notice__code--word { font-size: 96px; line-height: 1; }
+.pt-notice__text { display: flex; flex-direction: column; gap: 20px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.pt-notice__text .pt-tag { margin-top: 12px; }
+.pt-notice__title { margin: 0; font: 800 48px/1.1 var(--font-display); color: var(--ink); text-wrap: balance; }
+.pt-notice__title--long { font-size: 32px; line-height: 1.3; }
+.pt-notice__body { margin: 0; font: 18px/1.75 var(--font-text); color: var(--body); max-width: 620px; }
+.pt-notice__panel { padding: 20px 24px; }
+.pt-notice__panel p { margin: 0; font: 500 17px/1.7 var(--font-text); color: var(--ink); }
+.pt-notice__note { display: flex; gap: 10px; align-items: flex-start; margin: 0; font: 15px/1.6 var(--font-ui); color: var(--subtle); }
+.pt-notice__note svg { width: 18px; height: 18px; flex: none; margin-top: 3px; color: var(--issue); }
+.pt-notice__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+
+@media (max-width: 900px) {
+    .pt-notice-page { grid-template-columns: minmax(0, 1fr); padding-top: 40px; padding-bottom: 64px; }
+    .pt-notice__code { font-size: clamp(96px, 30vw, 160px); }
+    .pt-notice__code--word { font-size: clamp(44px, 13vw, 72px); }
+}
+@media (max-width: 720px) {
+    .pt-notice__title { font-size: clamp(30px, 9vw, 40px); }
+    .pt-notice__title--long { font-size: 24px; }
+    .pt-notice__actions .pt-btn { width: 100%; }
+}

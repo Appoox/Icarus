@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static humanize wagtailimages_tags i18n print_theme %}
+
+{% block title %}{% translate "ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട എഴുത്തുകാർ" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  {% translate "ലേഖകർ" as kicker %}
+  {% translate "ഏറ്റവും കൂടുതൽ വായിക്കപ്പെട്ട എഴുത്തുകാർ" as title %}
+  {% translate "കഴിഞ്ഞ 30 ദിവസത്തെ ലേഖന വായനകൾ" as meta %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=title meta=meta %}
+
+  <section class="pt-list-section">
+    {% if page_obj %}
+    <ol class="pt-ranklist">
+      {% for author in page_obj %}
+      <li class="pt-rank">
+        <span class="pt-rank__n">{{ page_obj.start_index|add:forloop.counter0 }}</span>
+        <a href="{{ author.url }}" class="pt-rank__who">
+          <span class="pt-avatar">{% if author.profile_image %}{% image author.profile_image fill-88x88 as thumb %}<img src="{{ thumb.url }}" alt="">{% else %}{{ author.title|initials }}{% endif %}</span>
+          <span><span class="pt-rank__name">{{ author.title }}</span>{% if author.role %}<span class="pt-rank__role">{{ author.role }}</span>{% endif %}</span>
+        </a>
+        <span class="pt-rank__reads"><strong>{{ author.total_views|intcomma }}</strong>{% translate "വായനകൾ" %}</span>
+        {% if author.top_articles %}
+        <ul class="pt-rank__top">
+          {% for article in author.top_articles|slice:":3" %}<li><a href="{{ article.url }}">{{ article.title }}</a></li>{% endfor %}
+        </ul>
+        {% endif %}
+      </li>
+      {% empty %}
+      <li class="pt-list-empty">{% translate "നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല." %}</li>
+      {% endfor %}
+    </ol>
+    {% include "themes/print/includes/pagination.html" with page_obj=page_obj %}
+    {% else %}
+    <p class="pt-list-empty">{% translate "നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല." %}</p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "ലേഖകർ" %} | ശാസ്ത്രഗതി{% endblock %}

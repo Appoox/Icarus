@@ -60,10 +60,23 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      # The backups tests run the real pg_dump and rclone (and skip without
+      # them): the PostgreSQL 18 client, like the app image, and the rclone
+      # release the Dockerfile and docker-compose.yml pin.
+      - name: Backup tools (pg_dump 18, rclone)
+        run: |
+          sudo apt-get install -y --no-install-recommends postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y --no-install-recommends postgresql-client-18
+          echo /usr/lib/postgresql/18/bin >> "$GITHUB_PATH"
+          RCLONE_IMAGE="$(grep -m1 -oE 'rclone/rclone:[0-9][0-9.]*' docker-compose.yml)"
+          docker run --rm -v /usr/local/bin:/out --entrypoint cp "$RCLONE_IMAGE" /usr/local/bin/rclone /out/rclone
+          rclone version
+
       - name: Migrations are up to date
         run: >
           python manage.py makemigrations --check --dry-run
-          home articles literati issue reader kalapila postbox the_librarian
+          home articles literati issue reader kalapila postbox the_librarian backups
 
       - name: Production settings pass Django's deploy checklist
         env:

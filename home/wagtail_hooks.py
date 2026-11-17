@@ -17,6 +17,7 @@ from django.contrib.auth.models import Group, Permission
 from wagtail.admin.userbar import AddPageItem, AdminItem, ExplorePageItem
 from wagtail.admin.menu import MenuItem
 
+from home import trial
 from home.permissions import can_view_analytics, can_view_audit_log
 
 from auditlog import get_logentry_model
@@ -420,6 +421,18 @@ class AuditLogDashboardPanel(Component):
 def register_log_actions(actions):
     actions.register_action('wagtail.added_to_group', 'Added to group', 'Added to group')
     actions.register_action('wagtail.removed_from_group', 'Removed from group', 'Removed from group')
+
+
+@hooks.register('before_serve_page')
+def trial_mode_gate(page, request, serve_args, serve_kwargs):
+    """Trial mode: issues that aren't picked, and their articles, are "not available" (home/trial.py)."""
+    if (
+        trial.is_gated_page(page)
+        and trial.is_restricted(request)
+        and not trial.allows_page(request, page)
+    ):
+        return trial.unavailable(request)
+    return None
 
 
 @hooks.register("construct_homepage_panels")

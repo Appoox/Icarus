@@ -74,6 +74,21 @@ class RichTextRefTests(SimpleTestCase):
             '<p><a linktype="page" id="30">next</a> <a linktype="document" id="8">pdf</a></p>',
         )
 
+    def test_glossary_marks_are_remapped_only_when_given_a_term_table(self):
+        html = '<p><a linktype="glossary" id="5">cells</a> <a linktype="page" id="5">next</a></p>'
+
+        # Not media: nothing for the exporter to bundle.
+        self.assertEqual(list(iter_richtext_refs(html)), [])
+        self.assertEqual(rewrite_richtext_refs(html, {5: 1}, {5: 1}), html)
+        self.assertEqual(
+            rewrite_richtext_refs(html, {}, {}, glossary_map={5: 50}),
+            '<p><a linktype="glossary" id="50">cells</a> <a linktype="page" id="5">next</a></p>',
+        )
+        self.assertEqual(
+            rewrite_richtext_refs(html, {}, {}, glossary_map={}, drop_unmapped=True),
+            '<p><a linktype="glossary" id="0">cells</a> <a linktype="page" id="5">next</a></p>',
+        )
+
     def test_an_unmapped_reference_is_zeroed_rather_than_kept(self):
         html = '<embed embedtype="image" id="5"/>'
         self.assertEqual(rewrite_richtext_refs(html, {}, {}), html)
@@ -330,6 +345,30 @@ class ImportResolverTests(TestCase):
         resolver = self._resolver()
         self.assertEqual(resolver.page_pk(3), 3)
         self.assertEqual(resolver.snippet_pk('issue.topic', 4), 4)
+        mark = '<a linktype="glossary" id="7">cells</a>'
+        self.assertEqual(resolver.rewrite_richtext(mark), mark)
+
+    def test_a_glossary_mark_follows_its_term_by_slug(self):
+        from wagtail.rich_text import expand_db_html
+
+        from glossary.models import GlossaryTerm
+
+        term = GlossaryTerm.objects.create(term='കോശം', term_en='Cell', definition='<p>x</p>')
+        resolver = self._resolver(
+            snippet_keys={'glossary.glossaryterm': {'7': {'slug': 'cell'}, '8': {'slug': 'gone'}}}
+        )
+        html = resolver.rewrite_richtext(
+            '<p><a linktype="glossary" id="7">cells</a> <a linktype="glossary" id="8">genes</a>'
+            ' <a linktype="glossary" id="9">atoms</a></p>'
+        )
+        # 8: its term isn't on this database; 9: not in the archive's table.
+        self.assertEqual(
+            html,
+            f'<p><a linktype="glossary" id="{term.pk}">cells</a> <a linktype="glossary" id="0">genes</a>'
+            ' <a linktype="glossary" id="0">atoms</a></p>',
+        )
+        # A mark with no term still renders: the word, unmarked.
+        self.assertIn('<a>genes</a>', expand_db_html(html))
 
     def test_bare_pks_in_m2m_lists_are_skipped(self):
         resolver = self._resolver(images={5: 50})
@@ -399,6 +438,7 @@ class _ArchiveTestCase(TestCase):
     @staticmethod
     def _wipe_to_fresh_install():
         """Back to what `migrate` leaves: Wagtail's Welcome page and a default Site."""
+        from glossary.models import GlossaryTerm
         from issue.models import Topic, Volume
 
         root = Page.get_first_root_node()
@@ -419,6 +459,7 @@ class _ArchiveTestCase(TestCase):
         get_document_model().objects.all().delete()
         Topic.objects.all().delete()
         Volume.objects.all().delete()
+        GlossaryTerm.objects.all().delete()
 
 
 class ContentRoundTripTests(_ArchiveTestCase):
@@ -576,6 +617,51 @@ class ContentRoundTripTests(_ArchiveTestCase):
         with mock.patch('articles.signals.async_task') as tts_after:
             second.save_revision().publish()
         tts_after.assert_called_once_with('articles.tasks.generate_article_audio_task', second.pk)
+
+    def test_glossary_terms_and_marked_words_come_across(self):
+        from articles.models import Article
+        from glossary.models import GlossaryTerm
+
+        self._build_site()
+        explanation = '<p>ജീവന്റെ അടിസ്ഥാന ഘടകം. 10<sup>-6</sup> m</p>'
+        term = GlossaryTerm.objects.create(
+            term='കോശം', term_en='Cell', term_ta='செல்', definition=explanation,
+            definition_en='<p>The basic unit of life.</p>',
+        )
+        GlossaryTerm.objects.create(term='ജീൻ', term_en='Gene', definition='<p>unused</p>')
+        first = Article.objects.get(slug='first')
+        first.body = json.dumps([{'type': 'paragraph', 'id': 'g1', 'value': (
+            f'<p>ഓരോ <a linktype="glossary" id="{term.pk}">കോശത്തിലും</a> ഉണ്ട്.</p>'
+        )}])
+        first.save()
+        source_pk = term.pk
+
+        manifest = self._export()
+        self.assertEqual(len(manifest['snippets']['glossary.glossaryterm']), 2)
+        self.assertEqual(
+            manifest['snippet_keys']['glossary.glossaryterm'][str(source_pk)], {'slug': 'cell'}
+        )
+
+        self._wipe_to_fresh_install()
+        self._import()
+
+        # A new row, so a new id: the mark in the article has to follow it.
+        cell = GlossaryTerm.objects.get(slug='cell')
+        self.assertNotEqual(cell.pk, source_pk)
+        self.assertEqual((cell.term, cell.term_en, cell.term_ta), ('കോശം', 'Cell', 'செல்'))
+        self.assertEqual(cell.definition, explanation)
+        self.assertEqual(list(cell.explanations), ['ml', 'en'])
+        first = Article.objects.get(slug='first')
+        self.assertEqual(
+            first.body.raw_data[0]['value'],
+            f'<p>ഓരോ <a linktype="glossary" id="{cell.pk}">കോശത്തിലും</a> ഉണ്ട്.</p>',
+        )
+        self.assertEqual(list(cell.articles()), [first])
+
+        # Importing again updates the same terms.
+        self._import()
+        self.assertEqual(GlossaryTerm.objects.count(), 2)
+        self.assertEqual(GlossaryTerm.objects.get(slug='cell').pk, cell.pk)
 
     def test_board_history_comes_across_without_an_extra_row(self):
         # Attaching a member used to write a "joined today" history row next

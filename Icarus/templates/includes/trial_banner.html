@@ -1,0 +1,18 @@
+{% load i18n %}
+{# Trial mode (Settings → Trial mode, home/trial.py): on every page, for everyone. #}
+{% if trial_mode %}
+<div class="trial-banner" role="status">
+    <span class="trial-banner__label"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> {% translate "ട്രയൽ മോഡ്" %}</span>
+    <span>{% if trial_mode.message %}{{ trial_mode.message }}{% else %}{% translate "ഈ വെബ്സൈറ്റ് ഇപ്പോൾ പരീക്ഷണാടിസ്ഥാനത്തിലാണ്. തിരഞ്ഞെടുത്ത ലക്കങ്ങൾ മാത്രമേ ഇപ്പോൾ ലഭ്യമുള്ളൂ." %}{% endif %}</span>
+    {% if trial_mode.editor %}
+    <span class="trial-banner__note">
+        {% if trial_mode.issue_count %}
+        {% blocktranslate count n=trial_mode.issue_count %}എഡിറ്ററായതിനാൽ നിങ്ങൾക്ക് മുഴുവൻ സൈറ്റും കാണാം. വായനക്കാർക്ക് തിരഞ്ഞെടുത്ത {{ n }} ലക്കം മാത്രമേ കാണാനാകൂ.{% plural %}എഡിറ്ററായതിനാൽ നിങ്ങൾക്ക് മുഴുവൻ സൈറ്റും കാണാം. വായനക്കാർക്ക് തിരഞ്ഞെടുത്ത {{ n }} ലക്കങ്ങൾ മാത്രമേ കാണാനാകൂ.{% endblocktranslate %}
+        {% else %}
+        {% translate "എഡിറ്ററായതിനാൽ നിങ്ങൾക്ക് മുഴുവൻ സൈറ്റും കാണാം. ഇതുവരെ ഒരു ലക്കവും തിരഞ്ഞെടുത്തിട്ടില്ല: വായനക്കാർക്ക് ഒരു ലക്കവും കാണാനാകില്ല." %}
+        {% endif %}
+        {% if trial_mode.settings_url %}<a href="{{ trial_mode.settings_url }}">{% translate "ക്രമീകരണങ്ങൾ" %}</a>{% endif %}
+    </span>
+    {% endif %}
+</div>
+{% endif %}

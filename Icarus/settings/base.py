@@ -125,6 +125,8 @@ INSTALLED_APPS = [
     "kalapila",
     "postbox",
     "the_librarian",
+    "backups",
+    "glossary",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.settings",
@@ -174,6 +176,8 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "kalapila.middleware.UserNotificationMiddleware",
     "axes.middleware.AxesMiddleware",
+    # Trial mode: readers see only the picked issues (home/trial.py).
+    "home.trial.TrialModeMiddleware",
 ]
 
 ROOT_URLCONF = "Icarus.urls"
@@ -191,6 +195,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "home.context_processors.site_theme",
+                "home.context_processors.trial_mode",
             ],
         },
     },
@@ -449,6 +455,44 @@ Q_CLUSTER = {
     # sleeping, so only the first task after a quiet spell waits.
     'poll': 2,
 }
+
+# ── Off-server backups (the backups app) ──────────────────────────────
+# Every night the qcluster worker pg_dumps the database and makes an
+# rsync-style copy of MEDIA_ROOT (only new and changed files travel), and
+# rclone sends both off the server to BACKUP_REMOTE: Google Drive, through a
+# crypt remote that encrypts them first. The dashboard at /admin/backups/
+# starts and watches runs; restore.sh, on the host, brings them back even
+# when the site is down. Setup and the restore runbook: backups/README.md.
+#
+# The rclone remote (and optional path), e.g. "icarus-backup:". Empty means
+# nothing leaves the server: the dump stays local and the health alert nags.
+BACKUP_REMOTE = env.str("BACKUP_REMOTE", default="")
+BACKUP_RCLONE_BINARY = env.str("BACKUP_RCLONE_BINARY", default="rclone")
+# rclone.conf, holding the Drive token and the crypt keys. "" = rclone's own
+# default (~/.config/rclone/rclone.conf). docker-compose.yml mounts it into
+# qcluster only: the internet-facing web container never sees it.
+BACKUP_RCLONE_CONFIG = env.str("BACKUP_RCLONE_CONFIG", default="")
+# Where dumps are written before upload; the newest BACKUP_KEEP_LOCAL stay.
+BACKUP_LOCAL_DIR = env.str("BACKUP_LOCAL_DIR", default=str(BASE_DIR / "local_backups"))
+BACKUP_KEEP_LOCAL = env.int("BACKUP_KEEP_LOCAL", default=3)
+# The .env to include in each snapshot (encrypted remotes only). Without it a
+# restored database is half-useless: SECRET_KEY + SALT_KEY decrypt readers'
+# phone numbers and addresses, PHONE_HASH_KEY logs them in.
+BACKUP_ENV_FILE = env.str("BACKUP_ENV_FILE", default="")
+# Backups hold readers' personal data: refuse a remote that isn't a crypt one.
+BACKUP_REQUIRE_ENCRYPTION = env.bool("BACKUP_REQUIRE_ENCRYPTION", default=True)
+# When the nightly backup runs. Cron, in UTC (TIME_ZONE): 21:00 = 02:30 IST.
+BACKUP_SCHEDULE_CRON = env.str("BACKUP_SCHEDULE_CRON", default="0 21 * * *")
+# Off-server retention: the newest N daily snapshots, plus the first snapshot
+# of each of the newest M months. Counted in snapshots, not days.
+BACKUP_KEEP_DAILY = env.int("BACKUP_KEEP_DAILY", default=30)
+BACKUP_KEEP_MONTHLY = env.int("BACKUP_KEEP_MONTHLY", default=12)
+# Media files deleted or replaced on the server stay off it this long.
+BACKUP_MEDIA_ARCHIVE_DAYS = env.int("BACKUP_MEDIA_ARCHIVE_DAYS", default=30)
+# rclone filter patterns left out of the media copy, comma-separated.
+BACKUP_MEDIA_EXCLUDE = env.list("BACKUP_MEDIA_EXCLUDE", default=[])
+# Email ADMINS once the newest complete backup is older than this.
+BACKUP_MAX_AGE_HOURS = env.int("BACKUP_MAX_AGE_HOURS", default=26)
 
 # ── Cache ─────────────────────────────────────────────────────────────
 # Shared by every gunicorn worker and the qcluster (the default per-process

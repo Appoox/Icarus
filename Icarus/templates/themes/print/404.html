@@ -1,0 +1,14 @@
+{% extends "themes/print/notice.html" %}
+{% load i18n %}
+{# Print-design 404 (see Icarus.views.page_not_found). #}
+
+{% block title %}{% trans "പേജ് കാണാനില്ല" %}{% endblock %}
+{% block pt_notice_code %}404{% endblock %}
+{% block pt_notice_heading %}{% trans "പേജ് കാണാനില്ല" %}{% endblock %}
+{% block pt_notice_body %}
+<p class="pt-notice__body">{% trans "ക്ഷമിക്കണം, ഈ പേജ് കണ്ടെത്താനായില്ല." %}</p>
+{% endblock %}
+{% block pt_notice_actions %}
+<a href="{% url 'wagtail_serve' '' %}" class="pt-btn pt-btn--dark">{% trans "ഹോം പേജിലേക്ക് മടങ്ങുക" %}</a>
+<a href="{% url 'the_librarian:search' %}" class="pt-btn pt-btn--outline">{% trans "ആർക്കൈവിൽ തിരയൂ" %}</a>
+{% endblock %}

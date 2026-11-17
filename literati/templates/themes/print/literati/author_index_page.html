@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  {% translate "ലേഖകർ" as kicker %}
+  {% blocktranslate count n=paginator.count asvar meta %}{{ n }} പേർ{% plural %}{{ n }} പേർ{% endblocktranslate %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=page.title intro=page.intro meta=meta %}
+
+  <section class="pt-list-section">
+    {% if authors %}
+    <ul class="pt-people">
+      {% for author_page in authors %}{% with author=author_page.specific %}{% include "themes/print/includes/person.html" %}{% endwith %}{% endfor %}
+    </ul>
+    {% else %}
+    <p class="pt-list-empty">{% translate "നിലവിൽ വിവരങ്ങൾ ലഭ്യമായിട്ടില്ല." %}</p>
+    {% endif %}
+    {% include "themes/print/includes/pagination.html" with page_obj=page_obj %}
+  </section>
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "ലേഖകർ" %} | ശാസ്ത്രഗതി{% endblock %}

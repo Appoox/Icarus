@@ -1,0 +1,30 @@
+{% load i18n %}
+{# Page navigation in the print style: ← previous · 1 … 4 [5] 6 … 12 · next →  #}
+{# Same windowing as includes/pagination.html. Expects page_obj.               #}
+{% if page_obj.paginator.num_pages > 1 %}
+{% with current=page_obj.number total=page_obj.paginator.num_pages %}
+<nav class="pt-pager" aria-label="{% translate 'പേജ് നാവിഗേഷൻ' %}">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}" class="pt-pager__step" rel="prev">← {% translate "മുമ്പത്തേത്" %}</a>
+  {% else %}
+  <span class="pt-pager__step is-disabled" aria-disabled="true">← {% translate "മുമ്പത്തേത്" %}</span>
+  {% endif %}
+
+  <ol class="pt-pager__pages">
+    {% for i in page_obj.paginator.page_range %}
+      {% if i == 1 or i == total or i >= current|add:"-2" and i <= current|add:"2" %}
+        {% if i == total and current < total|add:"-3" %}<li class="pt-pager__gap" aria-hidden="true">…</li>{% endif %}
+        <li>{% if i == current %}<span class="pt-pager__num is-current" aria-current="page">{{ i }}</span>{% else %}<a href="?page={{ i }}" class="pt-pager__num">{{ i }}</a>{% endif %}</li>
+        {% if i == 1 and current > 4 %}<li class="pt-pager__gap" aria-hidden="true">…</li>{% endif %}
+      {% endif %}
+    {% endfor %}
+  </ol>
+
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}" class="pt-pager__step" rel="next">{% translate "അടുത്തത്" %} →</a>
+  {% else %}
+  <span class="pt-pager__step is-disabled" aria-disabled="true">{% translate "അടുത്തത്" %} →</span>
+  {% endif %}
+</nav>
+{% endwith %}
+{% endif %}

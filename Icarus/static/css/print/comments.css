@@ -1,0 +1,71 @@
+/* Print edition — comments (kalapila), on article and issue pages.
+   The markup keeps the classic class names that comments.js relies on. */
+
+.pt-article__comments { padding: 0 var(--pt-gutter) 56px; }
+.pt-comments { max-width: 740px; display: flex; flex-direction: column; gap: 20px; }
+.pt-comments .pt-section-head { margin: 0; }
+
+.pt-comments__composer { background: var(--panel); padding: 18px; }
+.pt-comments .comment-form__input-wrapper,
+.pt-comments__signin { display: flex; flex-direction: column; gap: 12px; }
+.pt-comments .comment-textarea,
+.pt-comments__signin textarea {
+    min-height: 76px; resize: vertical; width: 100%;
+    border: 1px solid var(--divider); border-radius: 0;
+    background: var(--field); color: var(--ink);
+    padding: 12px 14px;
+    font: 15px/1.6 var(--font-ui);
+}
+.pt-comments .comment-textarea:focus { outline: 2px solid var(--issue); outline-offset: -1px; }
+.pt-comments .comment-form__footer {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    font: 13px/1.4 var(--font-ui); color: var(--subtle);
+}
+.pt-comments .char-counter.warning { color: #b25a12; }
+.pt-comments .char-counter.danger { color: #c62828; }
+.pt-comments .submit-comment-btn { padding: 9px 18px; font-size: 14px; }
+.pt-comments__help { font-size: 13px; color: var(--subtle); }
+.pt-comments__notice { margin: 0; font: 14px/1.5 var(--font-ui); color: var(--muted); }
+
+.pt-comments .comments-list { display: flex; flex-direction: column; }
+.pt-comments .comments-empty-state { font: 15px/1.6 var(--font-ui); color: var(--subtle); padding: 8px 0; }
+
+.pt-comments .comment-card { border-bottom: 1px dashed var(--divider); }
+.pt-comments .replies-list .comment-card { border-bottom: 0; border-top: 1px dashed var(--divider); }
+.pt-comments .comment-card__main {
+    display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px;
+    padding: 16px 0;
+}
+.pt-comments .comment-avatar-img,
+.pt-comments .comment-avatar-placeholder {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--band); color: #fff; object-fit: cover;
+    display: flex; align-items: center; justify-content: center;
+    font: 700 16px/1 var(--font-display);
+}
+.pt-comments .comment-avatar-placeholder--deleted { background: var(--hairline); color: var(--subtle); }
+.pt-comments .comment-card__header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-family: var(--font-ui); }
+.pt-comments .comment-card__author { font-size: 15px; font-weight: 700; color: var(--ink); }
+.pt-comments .comment-card__date { font-size: 13px; color: var(--subtle); }
+.pt-comments .comment-card__body { margin-top: 4px; font: 16px/1.75 var(--font-text); color: var(--body); overflow-wrap: anywhere; }
+.pt-comments .comment-card__body--deleted { font-family: var(--font-ui); font-size: 14px; color: var(--subtle); font-style: italic; }
+.pt-comments .comment-card__actions { display: flex; gap: 16px; margin-top: 6px; }
+.pt-comments .comment-action-btn {
+    background: none; border: 0; padding: 0; cursor: pointer;
+    font: 600 13px/1.4 var(--font-ui); color: var(--subtle);
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.pt-comments .comment-action-btn:hover { color: var(--issue); }
+.pt-comments .comment-action-btn.reported { color: var(--issue); }
+.pt-comments .replies-list { margin-left: 54px; }
+.pt-comments .reply-form { margin: 10px 0 4px; }
+.pt-comments .reply-form__actions { display: flex; gap: 12px; align-items: center; }
+.pt-comments .reply-form .submit-comment-btn {
+    background: var(--ink); color: var(--paper); border: 0; cursor: pointer;
+    font: 700 14px var(--font-ui); padding: 8px 16px;
+}
+.pt-comments .comment-card--highlighted { background: color-mix(in srgb, var(--issue-fill) 12%, transparent); }
+
+@media (max-width: 720px) {
+    .pt-comments .replies-list { margin-left: 24px; }
+}

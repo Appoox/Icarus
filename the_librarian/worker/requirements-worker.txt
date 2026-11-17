@@ -21,19 +21,25 @@ pdf2image
 regex
 langchain-text-splitters
 langchain-core
-sentence-transformers
+sentence-transformers<6   # 6.x needs transformers 5, which surya 0.17 can't load (see below)
 
 # ── Needed only by worker_ui.py, the optional browser control panel.
 #    Skip this line if you're only ever running ingest_worker.py from
 #    the command line.
 flask
 
-# ── Needed by the_librarian/services/ocr_processing.py and
-#    yolo_segmentation.py per the pipeline described in ingestion.py's
-#    docstring (PDF → images → YOLO segmentation → Surya OCR). I don't
-#    have those two files' actual contents in this conversation, so this
-#    section is inferred from your own architecture notes rather than
-#    verified imports — check ocr_processing.py/yolo_segmentation.py
-#    yourself and add/adjust anything I've missed.
-surya-ocr
+# ── Imported by the_librarian/services/ocr_processing.py (surya) and
+#    yolo_segmentation.py (ultralytics). Between them these also bring in
+#    torch, opencv, numpy and Pillow. surya is pinned because
+#    ocr_processing.py uses the 0.17 API: later releases removed
+#    surya.foundation, so the worker would fail on startup. surya 0.17
+#    also fails to load its model under transformers 5 ("SuryaDecoderConfig
+#    object has no attribute pad_token_id"), so transformers is held to 4.x.
+surya-ocr==0.17.1
+transformers>=4.56.1,<5
 ultralytics
+
+# ── Also imported by ocr_processing.py, but not pulled in by either
+#    package above — without them the worker fails on startup.
+scikit-image
+scipy

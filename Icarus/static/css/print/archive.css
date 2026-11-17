@@ -1,0 +1,80 @@
+/* Print edition — archive (design: #archive) */
+
+.pt-archive-intro {
+    margin: 0 var(--pt-gutter);
+    padding: 56px 0 36px;
+    border-bottom: 2px solid var(--ink);
+    display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 40px;
+    align-items: end;
+}
+.pt-archive-intro__text { display: flex; flex-direction: column; gap: 24px; }
+
+.pt-archive-search { display: flex; border: 2px solid var(--ink); background: var(--panel); }
+.pt-archive-search input {
+    flex: 1; min-width: 0;
+    border: 0; background: transparent; color: var(--ink);
+    padding: 13px 16px;
+    font: 16px/1.4 var(--font-ui);
+}
+.pt-archive-search input:focus { outline: 2px solid var(--issue); outline-offset: -2px; }
+.pt-archive-search .pt-btn { border: 0; padding: 13px 22px; }
+
+.pt-archive-body {
+    display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px;
+    padding: 40px var(--pt-gutter) 64px;
+}
+
+/* Year rail */
+.pt-yearrail__label {
+    margin: 0; padding-bottom: 6px;
+    border-bottom: 2px solid var(--ink);
+    font: 700 13px/1.4 var(--font-ui); color: var(--ink);
+}
+.pt-yearrail__label--older { margin-top: 28px; }
+.pt-yearrail ul { list-style: none; margin: 0; padding: 0; }
+.pt-yearrail__year {
+    display: block; padding: 9px 12px 7px;
+    border-bottom: 1px dashed var(--divider);
+    font: 700 24px/1.2 var(--font-display); color: var(--ink);
+}
+.pt-yearrail__decade {
+    display: block; padding: 9px 12px 7px;
+    border-bottom: 1px dashed var(--divider);
+    font: 600 16px/1.4 var(--font-ui); color: var(--ink);
+}
+.pt-yearrail a.is-active { background: var(--issue-fill); color: var(--on-issue); }
+
+/* Year */
+.pt-archive-year__head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; }
+.pt-archive-year__title { margin: 0; font: 800 64px/1 var(--font-display); color: var(--ink); }
+.pt-archive-year__meta { font: 600 15px/1.4 var(--font-ui); color: var(--subtle); white-space: nowrap; }
+.pt-archive-year__rule { flex: 1; border-top: 1px dashed var(--rule); align-self: center; }
+
+.pt-archive-grid {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px 28px;
+}
+.pt-archive-card { display: flex; flex-direction: column; gap: 2px; }
+.pt-archive-card__link { display: flex; flex-direction: column; gap: 14px; color: var(--ink); }
+.pt-archive-card__cover { aspect-ratio: 7 / 10; object-fit: cover; }
+.pt-archive-card .pt-gencover { box-shadow: 6px 6px 0 var(--shadow-ink); }
+.pt-archive-card .pt-gencover__wordmark { font-size: 30px; }
+.pt-archive-card__label { font: 700 16px/1.4 var(--font-ui); }
+.pt-archive-card__meta { font: 13px/1.5 var(--font-ui); color: var(--subtle); }
+.pt-archive-card__theme { font: 700 16px/1.5 var(--font-text); color: var(--issue); }
+
+.pt-archive-empty { padding: 56px var(--pt-gutter); font: 18px/1.6 var(--font-ui); color: var(--subtle); }
+
+@media (max-width: 1024px) {
+    .pt-archive-intro { grid-template-columns: 1fr; }
+    .pt-archive-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+    .pt-archive-intro { padding-top: 32px; }
+    .pt-archive-body { grid-template-columns: 1fr; gap: 28px; padding-top: 28px; }
+    .pt-yearrail__years, .pt-yearrail__decades { display: flex; flex-wrap: wrap; gap: 0 4px; }
+    .pt-yearrail__year { font-size: 18px; border-bottom: 0; }
+    .pt-archive-year__title { font-size: 48px; }
+    .pt-archive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
+}

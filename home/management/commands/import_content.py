@@ -261,11 +261,15 @@ class _Resolver:
 
     # ── Rich text ─────────────────────────────────────────────────────────
 
+    def glossary_pk(self, pk):
+        return self.snippet_pk('glossary.glossaryterm', pk)
+
     def rewrite_richtext(self, html):
-        """Remap <embed embedtype="image">, <a linktype="document|page"> ids."""
+        """Remap <embed embedtype="image">, <a linktype="document|page|glossary"> ids."""
         return rewrite_richtext_refs(
             html, self.image_pk, self.document_pk,
             page_map=self.page_pk if self._page_paths is not None else None,
+            glossary_map=self.glossary_pk if self._snippet_keys is not None else None,
             drop_unmapped=True,
         )
 
@@ -695,6 +699,14 @@ class _SnippetImporter:
         bar = self._console.bar(len(rows), 'topics')
         for row in rows:
             self._upsert(Topic, {'slug': row['slug']}, row)
+            bar.advance(suffix=str(row.get('slug', '')))
+        bar.finish()
+
+    def import_glossary_terms(self, rows):
+        from glossary.models import GlossaryTerm
+        bar = self._console.bar(len(rows), 'glossary terms')
+        for row in rows:
+            self._upsert(GlossaryTerm, {'slug': row['slug']}, row)
             bar.advance(suffix=str(row.get('slug', '')))
         bar.finish()
 
@@ -1449,6 +1461,10 @@ class Command(BaseCommand):
                           lambda: si.import_volumes(snips.get('issue.volume', [])))
                     _step('Importing topics…',
                           lambda: si.import_topics(snips.get('issue.topic', [])))
+                    # Before pages: their rich text points at terms by id.
+                    _step('Importing glossary terms…',
+                          lambda: si.import_glossary_terms(
+                              snips.get('glossary.glossaryterm', [])))
                     _step('Importing site contact settings…',
                           lambda: si.import_site_contact(
                               snips.get('home.sitecontactsettings', [])))

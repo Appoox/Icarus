@@ -138,12 +138,25 @@ services:
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_CREDENTIALS_JSON}
       # Same shared GeoIP volume as web; the monthly refresh schedule runs here.
       GEOIP_PATH: /Icarus/geoip
+      # Off-server backups (backups/README.md) run here, so only this service
+      # gets their config: the paths below are the mounts in `volumes`.
+      BACKUP_RCLONE_CONFIG: /config/rclone/rclone.conf
+      BACKUP_LOCAL_DIR: /Icarus/local_backups
+      BACKUP_ENV_FILE: /config/icarus.env
     # Background tasks may write generated files (e.g. TTS audio) into media.
     volumes:
       - media_volume:/Icarus/media
       - model_volume:/Icarus/models
       - geoip_volume:/Icarus/geoip
       - /opt/Icarus/shared:/opt/Icarus/shared:ro
+      # Backups: dumps waiting to go off the server, the rclone config (the
+      # Google Drive token and the encryption keys; never mounted into the
+      # internet-facing web service) and the .env each snapshot carries.
+      # rclone rewrites rclone.conf whenever it refreshes Google's token, so
+      # that folder must belong to uid 1000, the wagtail user.
+      - backup_volume:/Icarus/local_backups
+      - /opt/icarus/shared/rclone:/config/rclone
+      - /opt/icarus/shared/.env:/config/icarus.env:ro
     command: python manage.py qcluster
     # TTS, PDF rendering and embedding run here; cap them so they can't
     # starve the database. Override in .env.
@@ -174,6 +187,22 @@ services:
     networks:
       - webnet
 
+  # ── rclone for restore.sh (never running) ────────────────────────────────
+  # The "tools" profile keeps `docker compose up -d` (deploy.sh) from starting
+  # it; restore.sh runs it on demand, `docker compose run --rm backup-tools
+  # <rclone arguments>`, so restores work with web and qcluster stopped or not
+  # built yet. Same rclone release as the app image (Dockerfile), same uid as
+  # its wagtail user, same config and volumes as qcluster.
+  backup-tools:
+    image: rclone/rclone:1.75.2
+    profiles: ["tools"]
+    user: "1000:1000"
+    logging: *default-logging
+    volumes:
+      - /opt/icarus/shared/rclone:/config/rclone
+      - backup_volume:/backups
+      - media_volume:/data/media
+
 networks:
   webnet:
     driver: bridge
@@ -187,5 +216,6 @@ volumes:
   media_volume:
   model_volume:
   geoip_volume:
+  backup_volume:
   caddy_data:
   caddy_config:

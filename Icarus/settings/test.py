@@ -65,6 +65,10 @@ CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
 # Uploaded files go to a throwaway directory, never the real media/.
 MEDIA_ROOT = tempfile.mkdtemp(prefix="icarus-test-media-")
 
+# Backups: no remote unless a test sets one, and dumps in a throwaway folder.
+BACKUP_REMOTE = ""
+BACKUP_LOCAL_DIR = tempfile.mkdtemp(prefix="icarus-test-backups-")
+
 # Queued tasks are written to the ORM broker and never executed, so saving
 # an Article does not call Google TTS. Tests that care patch async_task.
 Q_CLUSTER = {**Q_CLUSTER, "name": "IcarusTest", "workers": 1}  # noqa: F405

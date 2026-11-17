@@ -1,0 +1,15 @@
+{% load wagtailimages_tags print_theme %}
+{# One issue in a grid: cover (or a cover drawn in its colour), month, volume, theme. Expects `issue`. #}
+<li class="pt-issuecard pt-own-colour" style="{% pt_issue_style issue %}">
+  <a href="{{ issue.url }}" class="pt-issuecard__link">
+    {% if issue.cover_image %}
+    {% image issue.cover_image fill-420x600 as cover %}
+    <img src="{{ cover.url }}" alt="" width="420" height="600" class="pt-issuecard__cover pt-cover pt-cover--small" loading="lazy" decoding="async">
+    {% else %}
+    {% include "themes/print/includes/generated_cover.html" with issue=issue %}
+    {% endif %}
+    <span class="pt-issuecard__label">{{ issue.date_of_publishing|month_year|default:issue.title }}</span>
+  </a>
+  {% if issue.volume_label %}<span class="pt-issuecard__meta">{{ issue.volume_label }}</span>{% endif %}
+  {% if issue.topic %}<a class="pt-issuecard__theme" href="{% url 'topic_detail' slug=issue.topic.slug %}">{{ issue.topic.name }}</a>{% endif %}
+</li>

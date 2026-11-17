@@ -1,5 +1,6 @@
 import re
 
+from django import forms
 from django.conf import settings
 from django.db import models
 from django.urls import reverse, NoReverseMatch
@@ -9,13 +10,16 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from wagtail.fields import RichTextField, StreamField
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
+from wagtail.admin.forms import WagtailAdminModelForm
 
 from auditlog.models import AbstractLogEntry
 from wagtail.admin.panels import PageChooserPanel
 
-from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
+from wagtail.contrib.settings.models import BaseGenericSetting, BaseSiteSetting, register_setting
 
+from articles.wagtail_widgets import ColorPickerWidget
 from home import layout as home_layout
+from home import theme as site_theme
 from home.blocks import HOMEPAGE_BLOCKS
 
 from hitcount.models import HitCountMixin, HitCount
@@ -31,6 +35,162 @@ class SiteContactSettings(BaseGenericSetting):
 
     class Meta:
         verbose_name = 'Contact Settings'
+
+
+@register_setting(icon='view')
+class SiteThemeSettings(BaseSiteSetting):
+    """
+    Which design the public site is shown in.  See home/theme.py.
+
+    Switching is instant and changes no content: every page keeps its text,
+    images and URLs, only the templates and styles change.  Switch back the
+    same way.
+    """
+
+    theme = models.CharField(
+        max_length=20,
+        choices=site_theme.THEME_CHOICES,
+        default=site_theme.THEME_CLASSIC,
+        verbose_name='Site design',
+        help_text=(
+            'The design every visitor sees. To try a design before switching, '
+            'open any page of the site while logged in to the admin and add '
+            '?theme_preview=print (or ?theme_preview=classic) to its address: '
+            'only you will see it, until you add ?theme_preview=off.'
+        ),
+    )
+    default_issue_colour = models.CharField(
+        max_length=7,
+        default=site_theme.DEFAULT_ISSUE_COLOUR,
+        validators=[site_theme.hex_colour_validator],
+        verbose_name='Default issue colour',
+        help_text=(
+            'Print edition design only. Used for issues that have no colour '
+            'of their own. Each issue picks its colour on its own page.'
+        ),
+    )
+
+    masthead_wordmark = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        verbose_name='Wordmark for the black masthead',
+        help_text=(
+            'Print edition design only. The ശാസ്ത്രഗതി wordmark in white on a '
+            'transparent background (PNG), shown on the black header and '
+            'footer. Empty = the Site Header\'s title image, turned light '
+            'automatically (works best when that image is dark on white).'
+        ),
+    )
+
+    panels = [
+        FieldPanel('theme', widget=forms.RadioSelect),
+        FieldPanel('default_issue_colour', widget=ColorPickerWidget),
+        FieldPanel('masthead_wordmark'),
+    ]
+
+    class Meta:
+        verbose_name = 'Site theme'
+
+
+class TrialModeSettingsForm(WagtailAdminModelForm):
+    """Lists the issues newest first, with their month and whether they are live."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        field = self.fields.get('allowed_issues')
+        if field is not None:
+            from issue.models import Issue
+
+            field.queryset = Issue.objects.order_by('-date_of_publishing', '-pk')
+            field.label_from_instance = self.issue_label
+
+    @staticmethod
+    def issue_label(issue):
+        label = issue.title
+        if issue.date_of_publishing:
+            label += f' ({issue.date_of_publishing:%Y-%m})'
+        if not issue.live:
+            label += ' — not published'
+        return label
+
+
+@register_setting(icon='warning')
+class TrialModeSettings(BaseSiteSetting):
+    """
+    Trial mode: readers see only the picked issues, editors see the whole
+    site, and everyone sees a banner saying the site is on trial.  See
+    home/trial.py.
+    """
+
+    enabled = models.BooleanField(
+        default=False,
+        verbose_name='Trial mode on',
+        help_text=(
+            "Readers and visitors can't open issues that aren't ticked below, "
+            "their articles, or the archive scans of those months: they get the "
+            "'not available' page instead. Everything else stays open, and lists "
+            "still show every issue. Editors (staff, editorial board members and "
+            "anyone who can use this admin) see everything. Everyone sees the "
+            "trial banner."
+        ),
+    )
+    allowed_issues = models.ManyToManyField(
+        'issue.Issue',
+        blank=True,
+        related_name='+',
+        verbose_name='Issues readers can see',
+        help_text=(
+            "Publishing a new issue doesn't add it here: tick it, or readers "
+            "(and the newsletter's links to it) can't open it."
+        ),
+    )
+    banner_message = models.TextField(
+        blank=True,
+        verbose_name='Banner text',
+        help_text=(
+            'Shown in the trial banner at the top of every page. Empty = '
+            '"ഈ വെബ്സൈറ്റ് ഇപ്പോൾ പരീക്ഷണാടിസ്ഥാനത്തിലാണ്. തിരഞ്ഞെടുത്ത '
+            'ലക്കങ്ങൾ മാത്രമേ ഇപ്പോൾ ലഭ്യമുള്ളൂ." (in English on /en/).'
+        ),
+    )
+
+    unavailable_heading = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="'Not available' page heading",
+        help_text=(
+            "Shown to readers who open something closed. Empty = "
+            '"ഇപ്പോൾ ലഭ്യമല്ല" (in English on /en/).'
+        ),
+    )
+    unavailable_message = models.TextField(
+        blank=True,
+        verbose_name="'Not available' page message",
+        help_text=(
+            'Shown under the heading, above the issues readers can open. Empty = '
+            '"പരീക്ഷണ ഘട്ടത്തിൽ ഈ ഉള്ളടക്കം ലഭ്യമല്ല. ഇപ്പോൾ വായിക്കാവുന്ന '
+            'ലക്കങ്ങൾ താഴെ." (in English on /en/).'
+        ),
+    )
+
+    base_form_class = TrialModeSettingsForm
+
+    panels = [
+        FieldPanel('enabled'),
+        FieldPanel('allowed_issues', widget=forms.CheckboxSelectMultiple),
+        FieldPanel('banner_message'),
+        MultiFieldPanel([
+            FieldPanel('unavailable_heading'),
+            FieldPanel('unavailable_message'),
+        ], heading="'Not available' page"),
+    ]
+
+    class Meta:
+        verbose_name = 'Trial mode'
+
 
 @register_snippet
 class SiteHeader(models.Model):
@@ -529,7 +689,7 @@ class SiteFooter(ClusterableModel):
         return "Site Footer"
 
 
-class HomePage(Page, HitCountMixin):
+class HomePage(site_theme.ThemedTemplateMixin, Page, HitCountMixin):
     """
     The homepage.
 
@@ -592,6 +752,12 @@ class HomePage(Page, HitCountMixin):
             hit_count = HitCount.objects.get_for_object(self)
             HitCountViewMixin().hit_count(request, hit_count)
 
+        if site_theme.get_theme(request) == site_theme.THEME_PRINT:
+            # The print edition homepage is a fixed design that fills itself
+            # from the current issue; the canvas sections aren't rendered.
+            context.update(print_home_context(request))
+            return context
+
         from home.curation import RenderContext
 
         # One RenderContext is threaded through every block on the page.  It
@@ -605,6 +771,70 @@ class HomePage(Page, HitCountMixin):
             home_layout.normalise(self.layout, [c.id for c in self.body])
         )
         return context
+
+
+def print_home_context(request):
+    """
+    Everything the print edition homepage shows, worked out from the
+    current issue — so the homepage updates itself when a new issue is
+    published, with nothing to arrange by hand.
+    """
+    from home import curation
+
+    issue = (
+        curation.issue_queryset()
+        .select_related('featured_article')
+        .order_by('-date_of_publishing')
+        .first()
+    )
+    featured = None
+    contents = []
+    if issue is not None:
+        featured = issue.featured_article if issue.featured_article and issue.featured_article.live else None
+        if featured is None and issue.cover_story_articles:
+            featured = issue.cover_story_articles[0]
+        contents = issue.feature_articles[:6]
+
+    shown = [a.pk for a in (issue.print_articles if issue else [])]
+    latest = list(
+        curation.article_queryset()
+        .exclude(pk__in=shown)
+        .order_by('-date', '-first_published_at')[:3]
+    )
+
+    most_read_ids = curation.most_read_ids('articles.Article', 30, 4)
+    most_read = curation.in_id_order(curation.article_queryset(), most_read_ids)
+    if not most_read:
+        most_read = list(curation.article_queryset().order_by('-date', '-first_published_at')[:4])
+
+    # The opening of the cover story, set in three columns under the hero:
+    # its first few paragraphs and subheads, cut at ~110 words.
+    teaser = ''
+    if featured is not None:
+        from django.utils.html import format_html, strip_tags
+        from django.utils.text import Truncator
+
+        parts = []
+        for block in featured.body or []:
+            if block.block_type in ('paragraph', 'rich_text'):
+                parts.append(str(block.value))
+            elif block.block_type == 'text':
+                parts.append(str(format_html('<p>{}</p>', block.value)))
+            elif block.block_type in ('heading', 'colored_heading') and parts:
+                text = block.value.get('text') if block.block_type == 'colored_heading' else strip_tags(str(block.value))
+                parts.append(str(format_html('<h4>{}</h4>', text)))
+            if len(parts) >= 4:
+                break
+        teaser = Truncator(''.join(parts)).words(110, html=True)
+
+    return {
+        'pt_issue': issue,
+        'pt_featured': featured,
+        'pt_teaser': teaser,
+        'pt_contents': contents,
+        'pt_latest': latest,
+        'pt_most_read': most_read,
+    }
 
 
 class CustomLogEntry(AbstractLogEntry):

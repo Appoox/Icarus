@@ -1,0 +1,17 @@
+{% load print_theme %}
+{# A cover drawn in the issue's colour, for an issue with no scan. #}
+{# Expects: bg, stripe, on (text colour), month, year, meta (vol/no), price —   #}
+{# or `issue`;                                                                  #}
+{# optionally wordmark_url (+ wordmark_invert) from {% pt_wordmark %}.            #}
+<div class="pt-gencover{% if on and on != "#ffffff" and on != "#fff" %} pt-gencover--light{% endif %}" style="--gc-bg: {% if issue %}var(--issue-fill){% else %}{{ bg }}{% endif %}; --gc-stripe: {% if issue %}var(--issue-light){% else %}{{ stripe }}{% endif %}; --gc-on: {% if issue %}var(--on-issue){% else %}{{ on|default:"#fff" }}{% endif %};">
+  {% if wordmark_url %}<img class="pt-gencover__wordmark-img{% if wordmark_invert %} pt-on-band-invert{% endif %}" src="{{ wordmark_url }}" alt="">{% else %}<span class="pt-gencover__wordmark">ശാസ്ത്രഗതി</span>{% endif %}
+  <span class="pt-gencover__stripe" aria-hidden="true"></span>
+  <span class="pt-gencover__date">
+    <span class="pt-gencover__month">{% if issue %}{{ issue.date_of_publishing.month|month_name }}{% else %}{{ month }}{% endif %}</span>
+    <span class="pt-gencover__year">{% if issue %}{{ issue.date_of_publishing.year }}{% else %}{{ year }}{% endif %}</span>
+  </span>
+  <span class="pt-gencover__foot">
+    <span>{% if issue %}{{ issue.volume_label }}{% else %}{{ meta }}{% endif %}</span>
+    {% if issue.price %}<span>₹{{ issue.price }}</span>{% elif price %}<span>₹{{ price }}</span>{% endif %}
+  </span>
+</div>

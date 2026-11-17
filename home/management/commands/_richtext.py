@@ -19,7 +19,9 @@ Both problems are handled here:
 
 `<embed embedtype="media" …>` is an external oEmbed URL, not a stored file, so
 it is deliberately ignored. `<a linktype="page" id="N">` carries a page PK
-too; the importer remaps it through the archive's page table.
+too; the importer remaps it through the archive's page table. So does a word
+marked as a glossary term, `<a linktype="glossary" id="N">` (glossary/
+rich_text.py), remapped through the archive's snippet table.
 """
 
 import re
@@ -50,7 +52,7 @@ def _attrs(blob: str) -> dict:
 
 
 def _kind_of(tag: str, attrs: dict):
-    """Return 'image' / 'document' / 'page' for a reference-bearing tag, else None."""
+    """Return 'image' / 'document' / 'page' / 'glossary' for a reference-bearing tag, else None."""
     tag = tag.lower()
     if tag == 'embed' and attrs.get('embedtype', '').lower() == 'image':
         return 'image'
@@ -58,6 +60,8 @@ def _kind_of(tag: str, attrs: dict):
         return 'document'
     if tag == 'a' and attrs.get('linktype', '').lower() == 'page':
         return 'page'
+    if tag == 'a' and attrs.get('linktype', '').lower() == 'glossary':
+        return 'glossary'
     return None
 
 
@@ -92,7 +96,8 @@ def iter_richtext_refs(html, kinds=MEDIA_KINDS):
             continue
 
 
-def rewrite_richtext_refs(html, image_map, doc_map, page_map=None, drop_unmapped=False):
+def rewrite_richtext_refs(html, image_map, doc_map, page_map=None, drop_unmapped=False,
+                          glossary_map=None):
     """
     Return `html` with every reference's PK replaced via the remap tables
     (dicts, or callables taking the old pk). A table of None leaves that kind
@@ -104,7 +109,8 @@ def rewrite_richtext_refs(html, image_map, doc_map, page_map=None, drop_unmapped
     """
     if not html or not isinstance(html, str) or '<' not in html:
         return html
-    tables = {'image': image_map, 'document': doc_map, 'page': page_map}
+    tables = {'image': image_map, 'document': doc_map, 'page': page_map,
+              'glossary': glossary_map}
 
     def replace(match):
         tag, blob = match.group(1), match.group(2)

@@ -95,6 +95,26 @@ class HealthCheckTests(TestCase):
         self.assertNotEqual(response.content, b"ok")
 
 
+class LeftoverServiceWorkerTests(TestCase):
+    """
+    The site has no service worker, but browsers that still had one for this
+    address kept asking for /sw.js (404s in the server log).  /sw.js now
+    answers with a worker that removes itself.
+    """
+
+    def test_sw_js_is_a_worker_that_removes_itself(self):
+        for url in ("/sw.js", "/sw.js?v=2"):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200, url)
+            self.assertEqual(response["Content-Type"].split(";")[0], "text/javascript")
+            self.assertIn("no-store", response["Cache-Control"])
+            body = response.content.decode()
+            self.assertIn("self.registration.unregister()", body)
+            self.assertIn("self.skipWaiting()", body)
+            # It never sits between the reader and the site.
+            self.assertNotIn("addEventListener('fetch'", body)
+
+
 class WorkflowTests(SimpleTestCase):
     """
     Every push to master deploys (deploy.yml), as it always has; ci.yml only

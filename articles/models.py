@@ -5,9 +5,7 @@ from django.utils.html import strip_tags
 from django.utils.text import Truncator
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
-from django.template.loader import render_to_string
 from wagtail.contrib.routable_page.models import RoutablePageMixin, route
-from weasyprint import HTML
 from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
@@ -23,6 +21,7 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from .wagtail_widgets import ColorPickerBlock
+from home.theme import ThemedTemplateMixin
 
 from hitcount.models import HitCountMixin, HitCount
 from django.contrib.contenttypes.fields import GenericRelation
@@ -425,7 +424,13 @@ class ArticleForm(WagtailAdminPageForm):
 
                 
 
-class Article(RoutablePageMixin, Page, HitCountMixin):
+PRINT_LAYOUT_CHOICES = [
+    ('single', 'Single column, with a side rail for boxes'),
+    ('columns', 'Print columns — the text set in three columns'),
+]
+
+
+class Article(ThemedTemplateMixin, RoutablePageMixin, Page, HitCountMixin):
     base_form_class = ArticleForm
 
     hit_count_generic = GenericRelation(
@@ -537,6 +542,43 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
 
     # ── Analytics ─────────────────────────────────────────────────────────
     read_fully_count = models.PositiveIntegerField(default=0, editable=False)
+
+    # ── Print edition design ──────────────────────────────────────────────
+    # Used only when Settings → Site theme is "Print edition".  All optional.
+    standfirst = models.TextField(
+        "Summary",
+        blank=True,
+        help_text="One or two sentences shown under the headline.",
+    )
+    standfirst_en = models.TextField(
+        "Summary (English)",
+        blank=True,
+        help_text="Shown under the English title when a reader switches to English.",
+    )
+    print_page_start = models.PositiveSmallIntegerField(
+        "First page in print", null=True, blank=True,
+        help_text="The page this article starts on in the print issue, e.g. 15.",
+    )
+    print_page_end = models.PositiveSmallIntegerField(
+        "Last page in print", null=True, blank=True,
+        help_text="The page it ends on, e.g. 20.",
+    )
+    kicker = models.CharField(
+        "Column name",
+        max_length=60,
+        blank=True,
+        help_text=(
+            "For a regular column, its name, e.g. പുസ്തകപരിചയം. Shown above "
+            "the title in the contents, and keeps the article out of the "
+            "homepage's list of main articles."
+        ),
+    )
+    print_layout = models.CharField(
+        "Layout",
+        max_length=10,
+        choices=PRINT_LAYOUT_CHOICES,
+        default='single',
+    )
     # ── Admin panels ───────────────────────────────────────────────────────
     content_panels = Page.content_panels + [
         FieldPanel('slug', help_text="The slug is a URL-friendly name for this page. It is used as the end portion of the page's web address (URL), e.g., 'dr-john-watson'. It should only contain lowercase letters, numbers, and hyphens. Changing the slug will change the URL of the page and may break existing links."),
@@ -564,7 +606,17 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
             FieldPanel('read_fully_count', read_only=True),
         ], heading="Analytics"),
         MultiFieldPanel([
+            FieldPanel('standfirst'),
+            FieldPanel('print_page_start'),
+            FieldPanel('print_page_end'),
+            FieldPanel('kicker'),
+            FieldPanel('print_layout'),
+        ], heading="Print edition design",
+           help_text="Used only by the Print edition site design. All optional.",
+           classname="collapsible"),
+        MultiFieldPanel([
             FieldPanel('title_en'),
+            FieldPanel('standfirst_en'),
             FieldPanel('body_en'),
             FieldPanel('title_hi'),
             FieldPanel('body_hi'),
@@ -719,7 +771,65 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
         context['comments'] = [c for c in top_level_comments if c.should_render]
         context['comment_count'] = self.comments.filter(is_approved=True, is_removed=False).count()
 
+        from home.theme import get_theme, THEME_PRINT
+        if get_theme(request) == THEME_PRINT:
+            context.update(self.print_context(context))
+
         return context
+
+    PRINT_LANGUAGES = [
+        ('en', 'English'),
+        ('hi', 'हिन्दी'),
+        ('ta', 'தமிழ்'),
+    ]
+
+    def print_context(self, context):
+        """
+        The print edition template's view of the translations: the languages
+        on offer (Malayalam plus any with a title or body), and one body per
+        language that has its own.  A language with a title but no body of
+        its own shows the Malayalam body under a notice, as designed.
+        """
+        langs = [{
+            'code': 'ml', 'label': 'മലയാളം',
+            'title': self.title, 'standfirst': self.standfirst, 'has_body': True,
+        }]
+        for code, label in self.PRINT_LANGUAGES:
+            title = getattr(self, f'title_{code}', '')
+            body = getattr(self, f'body_{code}', None)
+            if title or body:
+                langs.append({
+                    'code': code, 'label': label,
+                    'title': title or self.title,
+                    'standfirst': getattr(self, f'standfirst_{code}', '') or '',
+                    'has_body': bool(body),
+                })
+
+        without_body = [lang['code'] for lang in langs if not lang['has_body']]
+        paywalled = context.get('show_paywall')
+        bodies = []
+        for lang in langs:
+            if not lang['has_body']:
+                continue
+            code = lang['code']
+            suffix = '' if code == 'ml' else f'_{code}'
+            if paywalled:
+                blocks = context.get(f'truncated_body{suffix}') or []
+            else:
+                blocks = getattr(self, f'body{suffix}') or []
+            shown_for = [code] + (without_body if code == 'ml' else [])
+            bodies.append({'code': code, 'langs': ' '.join(shown_for), 'blocks': blocks})
+
+        # The PDF download is offered to whoever serve_pdf lets through.
+        from Icarus.access import may_read_archive
+        request = context.get('request')
+        return {
+            'pt_langs': langs,
+            'pt_bodies': bodies,
+            'pt_notice_langs': ' '.join(without_body),
+            'pt_single': self.print_layout != 'columns',
+            'pt_can_pdf': bool(request is not None and may_read_archive(request.user)),
+        }
 
     @route(r'^pdf/$')
     def serve_pdf(self, request):
@@ -730,9 +840,10 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
 
         context = self.get_context(request)
         context['lang'] = request.GET.get('lang', 'ml')
-        html_string = render_to_string('articles/article_pdf.html', context)
-        html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
-        pdf = html.write_pdf()
+        # Renders with the Malayalam/Hindi/Tamil fonts bundled in
+        # articles/pdf_fonts/ and this site's images read from disk.
+        from articles.pdf import render_article_pdf
+        pdf = render_article_pdf(self, request, context)
 
         from django.utils.encoding import escape_uri_path
         lang = request.GET.get('lang', 'ml')
@@ -749,6 +860,40 @@ class Article(RoutablePageMixin, Page, HitCountMixin):
         # Use filename*=UTF-8'' to support non-ASCII characters (like Malayalam) in the filename
         response['Content-Disposition'] = f"attachment; filename*=UTF-8''{escape_uri_path(filename)}"
         return response
+
+    # ── Print edition helpers ─────────────────────────────────────────────
+
+    @property
+    def print_pages_label(self):
+        """'15–20', '15', or '' when the print pages aren't known."""
+        start, end = self.print_page_start, self.print_page_end
+        if start and end and end != start:
+            return f"{start}–{end}"
+        return str(start) if start else ''
+
+    @cached_property
+    def reading_minutes(self):
+        """Rough reading time of the Malayalam body, at ~150 words a minute."""
+        words = 0
+        for block in self.body or []:
+            for text in block.block.get_searchable_content(block.value):
+                words += len(strip_tags(str(text)).split())
+        return max(1, round(words / 150)) if words else 0
+
+    @cached_property
+    def authors(self):
+        return [rel.author for rel in self.article_authors.all()]
+
+    def next_in_issue(self, count=3):
+        """The articles after this one in its issue's print order, wrapping round."""
+        if not self.main_issue_id:
+            return []
+        others = self.main_issue.print_articles
+        ids = [a.pk for a in others]
+        if self.pk in ids:
+            at = ids.index(self.pk)
+            others = others[at + 1:] + others[:at]
+        return [a for a in others if a.pk != self.pk][:count]
 
     @property
     def excerpt(self):
@@ -847,7 +992,7 @@ SORT_CHOICES = [
     ('most_read', 'Most Read (30-day views)'),
 ]
 
-class ArticleIndexPage(Page):
+class ArticleIndexPage(ThemedTemplateMixin, Page):
     intro = RichTextField(blank=True)
     tags = ClusterTaggableManager(through=ArticleIndexPageTag, blank=True)
     sort_by = models.CharField(

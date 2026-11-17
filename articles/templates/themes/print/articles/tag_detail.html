@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% blocktranslate %}ടാഗ്: {{ tag_name }}{% endblocktranslate %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/lists.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page">
+  {% translate "ടാഗ്" as kicker %}
+  {% blocktranslate count n=articles|length asvar meta %}{{ n }} ലേഖനം{% plural %}{{ n }} ലേഖനങ്ങൾ{% endblocktranslate %}
+  {% include "themes/print/includes/page_intro.html" with kicker=kicker title=tag_name meta=meta %}
+
+  <section class="pt-list-section">
+    <div class="pt-rows">
+      {% for article in articles %}{% include "themes/print/includes/article_row.html" %}
+      {% empty %}<p class="pt-list-empty">{% translate "ഈ ടാഗിൽ ലേഖനങ്ങളൊന്നും കണ്ടെത്തിയില്ല." %}</p>{% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "ടാഗ്" %} | ശാസ്ത്രഗതി{% endblock %}
+{% block pt_folio_right %}ശാസ്ത്രഗതി | {{ tag_name }}{% endblock %}

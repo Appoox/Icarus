@@ -128,6 +128,8 @@ SNIPPET_NATURAL_KEYS = {
     'issue.volume': ('number',),
     'issue.topic': ('slug',),
     'literati.editorialboard': ('name',),
+    # Referenced from rich text (<a linktype="glossary" id="N">), not by FKs.
+    'glossary.glossaryterm': ('slug',),
 }
 
 
@@ -451,6 +453,7 @@ class ContentExporter:
         ('home.models', 'SiteFooter'),
         ('literati.models', 'EditorialBoard'),
         ('literati.models', 'EditorialBoardMembershipHistory'),
+        ('glossary.models', 'GlossaryTerm'),
     )
 
     def __init__(self, console: Console, include_personal_data=False):
@@ -511,6 +514,10 @@ class ContentExporter:
     def export_topics(self):
         from issue.models import Topic
         return self._serialize_rows(Topic.objects.all(), 'Topic')
+
+    def export_glossary_terms(self):
+        from glossary.models import GlossaryTerm
+        return self._serialize_rows(GlossaryTerm.objects.all(), 'GlossaryTerm')
 
     def export_site_contact(self):
         from home.models import SiteContactSettings
@@ -831,6 +838,7 @@ class Command(BaseCommand):
             'home.sitefooter':                          ex.export_site_footer(),
             'literati.editorialboard':                  ex.export_editorial_boards(),
             'literati.editorialboardmembershiphistory': ex.export_membership_history(),
+            'glossary.glossaryterm':                    ex.export_glossary_terms(),
         }
         ex.bar.finish()
         ex.bar = None

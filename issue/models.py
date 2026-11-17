@@ -15,7 +15,8 @@ from wagtail.embeds.blocks import EmbedBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
-from articles.wagtail_widgets import ColorPickerWidget
+from articles.wagtail_widgets import ColorPickerWidget, OptionalColourWidget
+from home.theme import ThemedTemplateMixin, hex_colour_validator
 from articles.models import AudioBlock, VideoBlock
 from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.models import HitCount
@@ -142,7 +143,13 @@ from wagtail.contrib.routable_page.models import RoutablePageMixin, route
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
 
-class Issue(RoutablePageMixin, Page):
+CONTENTS_ORDER_CHOICES = [
+    ('by_topic', 'By topic — the cover theme first, then each topic'),
+    ('by_page', 'By page — one list in print order'),
+]
+
+
+class Issue(ThemedTemplateMixin, RoutablePageMixin, Page):
     base_form_class = IssueForm
     volume = models.ForeignKey(
         'Volume',
@@ -252,6 +259,66 @@ class Issue(RoutablePageMixin, Page):
         related_query_name='issue_hitcount'
     )
 
+    # ── Print edition design ──────────────────────────────────────────────
+    # Used only when Settings → Site theme is "Print edition".  All optional:
+    # whatever is left empty is simply not shown.
+    colour = models.CharField(
+        "Issue colour",
+        max_length=7,
+        blank=True,
+        validators=[hex_colour_validator],
+        help_text=(
+            "One colour for this issue, used on the issue, its articles and "
+            "(while it is the current issue) the homepage. Stripes, tags, "
+            "buttons, panel borders and covers use it exactly as picked; "
+            "headlines and links use it too, made only as much darker as a "
+            "light colour needs to stay readable on the page. Type it any way "
+            "(#fc0, rgb(…), gold) or pick it with the swatch. Empty = the "
+            "default colour in Settings → Site theme."
+        ),
+    )
+    standfirst = models.TextField(
+        "Summary",
+        blank=True,
+        help_text="Two or three sentences introducing the issue's theme, shown under it.",
+    )
+    page_count = models.PositiveSmallIntegerField(
+        "Pages", null=True, blank=True,
+        help_text="Number of pages in the print edition, e.g. 60.",
+    )
+    price = models.PositiveSmallIntegerField(
+        "Price (₹)", null=True, blank=True,
+        help_text="Cover price in rupees, e.g. 30.",
+    )
+    editorial_heading = models.CharField(
+        max_length=120, blank=True,
+        help_text=(
+            "Heading over the editorial, e.g. ഗസ്റ്റ് എഡിറ്ററുടെ കുറിപ്പ്. "
+            "Empty = മുഖക്കുറിപ്പ്."
+        ),
+    )
+    editorial_signature = models.CharField(
+        max_length=200, blank=True,
+        help_text="Who signed the editorial, e.g. ഡോ. സെബാസ്റ്റ്യൻ കൂത്തോട്ടിൽ, ഗസ്റ്റ് എഡിറ്റർ.",
+    )
+    contents_order = models.CharField(
+        max_length=10,
+        choices=CONTENTS_ORDER_CHOICES,
+        default='by_topic',
+        help_text="How the contents are listed on the issue page.",
+    )
+    next_issue_theme = models.CharField(
+        "Next issue's theme", max_length=120, blank=True,
+        help_text="Announced at the bottom of this issue's page, e.g. ഭൂഗർഭജലം.",
+    )
+    next_issue_colour = models.CharField(
+        "Next issue's colour",
+        max_length=7,
+        blank=True,
+        validators=[hex_colour_validator],
+        help_text="Colour of that announcement. Empty = this issue's colour.",
+    )
+
     editorial = StreamField([
         ('rich_text_import', RichTextImportBlock()),
 
@@ -314,6 +381,112 @@ class Issue(RoutablePageMixin, Page):
         all_articles.sort(key=lambda a: a.topic.name if getattr(a, 'topic', None) else "\uffff")
         
         return all_articles
+
+    # ── Print edition helpers ─────────────────────────────────────────────
+
+    @cached_property
+    def print_articles(self):
+        """
+        Every article in this issue, in print order: by first page, then
+        title.  Articles without a page number go last.  Authors are
+        prefetched, since every list in the print theme shows them.
+        """
+        from articles.models import Article
+
+        primary = list(
+            self.primary_articles.live()
+            .select_related('topic', 'cover_image')
+            .prefetch_related('article_authors__author')
+        )
+        reprint_ids = list(
+            self.reprinted_articles.filter(article__live=True)
+            .values_list('article_id', flat=True)
+        )
+        reprints = list(
+            Article.objects.filter(pk__in=reprint_ids)
+            .select_related('topic', 'cover_image')
+            .prefetch_related('article_authors__author')
+        )
+        articles = primary + [a for a in reprints if a.pk not in {p.pk for p in primary}]
+        articles.sort(key=lambda a: (
+            a.print_page_start is None,
+            a.print_page_start or 0,
+            a.title,
+        ))
+        return articles
+
+    @property
+    def feature_articles(self):
+        """The main articles — everything but the regular columns (which carry a column name)."""
+        return [a for a in self.print_articles if not a.kicker]
+
+    @property
+    def cover_story_articles(self):
+        """The articles on this issue's theme (its topic)."""
+        if not self.topic_id:
+            return []
+        return [a for a in self.print_articles if a.topic_id == self.topic_id]
+
+    @property
+    def cover_story_authors(self):
+        names = []
+        for article in self.cover_story_articles:
+            for rel in article.article_authors.all():
+                if rel.author.title not in names:
+                    names.append(rel.author.title)
+        return names
+
+    @property
+    def contents_groups(self):
+        """
+        The contents as the issue page lists them: one group per topic in
+        "by topic" order (this issue's theme first, the rest in the order
+        they first appear in print, untagged articles last), or a single
+        unheaded group in "by page" order.
+        """
+        articles = self.print_articles
+        if self.contents_order == 'by_page' or not articles:
+            return [{'heading': '', 'is_theme': False, 'items': articles}] if articles else []
+
+        groups = {}
+        order = []
+        for article in articles:
+            key = article.topic_id or 0
+            if key not in groups:
+                groups[key] = {
+                    'heading': article.topic.name if article.topic_id else '',
+                    'is_theme': bool(self.topic_id) and key == self.topic_id,
+                    'items': [],
+                }
+                order.append(key)
+            groups[key]['items'].append(article)
+
+        order.sort(key=lambda key: (not groups[key]['is_theme'], key == 0))
+        return [groups[key] for key in order]
+
+    @property
+    def volume_label(self):
+        """'വാല്യം 60 · ലക്കം 1' (in the reader's language)."""
+        from django.utils.translation import gettext as _
+
+        parts = []
+        if self.volume_id:
+            parts.append(f"{_('വാല്യം')} {self.volume.number}")
+        if self.issue_number:
+            parts.append(f"{_('ലക്കം')} {self.issue_number}")
+        return ' · '.join(parts)
+
+    @cached_property
+    def archive_issue(self):
+        """The scanned PDF in the archive for this issue's month, if any (for the flipbook)."""
+        from the_librarian.models import ArchiveIssue
+
+        if not self.date_of_publishing:
+            return None
+        return ArchiveIssue.objects.filter(
+            year=self.date_of_publishing.year,
+            month=self.date_of_publishing.month,
+        ).first()
 
     @cached_property
     def board_members(self):
@@ -413,6 +586,19 @@ class Issue(RoutablePageMixin, Page):
         FieldPanel('editorial_board'),
         InlinePanel('reprinted_articles', label="Reprinted Articles"),
         FieldPanel('editorial'),
+        MultiFieldPanel([
+            FieldPanel('colour', widget=OptionalColourWidget),
+            FieldPanel('standfirst'),
+            FieldPanel('page_count'),
+            FieldPanel('price'),
+            FieldPanel('editorial_heading'),
+            FieldPanel('editorial_signature'),
+            FieldPanel('contents_order'),
+            FieldPanel('next_issue_theme'),
+            FieldPanel('next_issue_colour', widget=OptionalColourWidget),
+        ], heading="Print edition design",
+           help_text="Used only by the Print edition site design. All optional.",
+           classname="collapsible"),
     ]
 
     promote_panels = [
@@ -545,7 +731,7 @@ SORT_CHOICES = [
     ('most_read', 'Most Read (30-day views)'),
 ]
 
-class IssueIndexPage(Page):
+class IssueIndexPage(ThemedTemplateMixin, Page):
     intro = RichTextField(blank=True)
     sort_by = models.CharField(
         max_length=20,

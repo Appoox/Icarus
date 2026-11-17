@@ -1,0 +1,14 @@
+{% load i18n %}
+{# "Listen to the article": play/pause, progress, time and speed. Expects src. #}
+<div class="pt-listen" data-pt-listen>
+  <audio src="{{ src }}" preload="metadata"></audio>
+  <button type="button" class="pt-listen__play"
+          data-label-play="{% translate 'പ്ലേ ചെയ്യുക' %}" data-label-pause="{% translate 'നിർത്തുക' %}"
+          aria-label="{% translate 'പ്ലേ ചെയ്യുക' %}"><i class="fas fa-play" aria-hidden="true"></i></button>
+  <span class="pt-listen__label">{% firstof label _("ലേഖനം കേൾക്കാം") %}</span>
+  <span class="pt-listen__track" role="slider" tabindex="0" aria-label="{% translate 'സമയം' %}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <span class="pt-listen__fill"></span>
+  </span>
+  <span class="pt-listen__time"><span data-pt-elapsed>0:00</span> / <span data-pt-total>–:––</span></span>
+  <button type="button" class="pt-listen__speed" aria-label="{% translate 'വേഗം' %}">1×</button>
+</div>

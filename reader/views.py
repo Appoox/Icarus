@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 _CHECKOUT_KEYS = 'checkout_idempotency_keys'
 _MAX_OPEN_CHECKOUTS = 5
 
+from home.theme import themed_template
 from .forms import ReaderProfileEditForm, UpdateInterestsForm
 from .models import ReaderUser, PaymentDetails, PLANS
 from django.conf import settings
@@ -58,7 +59,7 @@ def guardian_account_info(request):
     real, linkable content (also linked from the signup form's help text),
     deliberately unlike the under_construction soft-404.
     """
-    return render(request, 'account/guardian_signup.html')
+    return render(request, themed_template(request, 'account/guardian_signup.html'))
 
 
 @login_required(login_url=settings.LOGIN_URL)

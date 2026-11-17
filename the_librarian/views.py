@@ -17,6 +17,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 import logging
 
+from home.theme import themed_template
 from the_librarian.models import (
     ArchiveDocument, DocumentChunk,
     ArchiveIssue, MONTH_CHOICES,
@@ -31,6 +32,7 @@ from the_librarian.services.search import (
 from the_librarian.services.ingestion import persist_ingested_batch
 from the_librarian.services.vector_schema import validate_batch, VectorValidationError
 from the_librarian import page_cache
+from the_librarian.panels import remote_worker_setup_context
 from Icarus.access import archive_access_required, may_read_archive
 
 logger = logging.getLogger(__name__)
@@ -230,7 +232,7 @@ def search_view(request):
 
         results = _redact_for_user(_resolve_pdf_display_titles(results), request.user)
 
-    return render(request, "the_librarian/search.html", {
+    return render(request, themed_template(request, "the_librarian/search.html"), {
         "query": query,
         "results": results,
         "top_k": top_k,
@@ -303,7 +305,7 @@ def viewer_view(request, document_id):
 
     pdf_url = reverse("the_librarian:serve_pdf", args=[document_id])
 
-    return render(request, "the_librarian/viewer.html", {
+    return render(request, themed_template(request, "the_librarian/viewer.html"), {
         "document": doc,
         "page": page,
         "pdf_url": pdf_url,
@@ -350,6 +352,15 @@ def document_page_image(request, document_id, page_number):
 @require_GET
 def archive_list(request):
     """Public archive grid: filterable, sortable Archive Issue cards."""
+    from home.theme import get_theme, THEME_PRINT
+    if get_theme(request) == THEME_PRINT:
+        from the_librarian.print_archive import archive_context
+        return render(
+            request,
+            "themes/print/the_librarian/archive_list.html",
+            archive_context(request),
+        )
+
     def _int_or_none(key):
         try:
             return int(request.GET[key])
@@ -419,7 +430,7 @@ def magazine_viewer(request, issue_id):
 
     pdf_url = reverse("the_librarian:serve_magazine_pdf", args=[issue_id])
 
-    return render(request, "the_librarian/viewer.html", {
+    return render(request, themed_template(request, "the_librarian/viewer.html"), {
         "document": {
             "filename":    issue.title,
             "total_pages": "?",
@@ -506,7 +517,7 @@ def archive_viewer(request, filename):
     """View a raw filesystem PDF from ARCHIVE_DIR via ViewerJS."""
     pdf_url = reverse("the_librarian:archive_download", args=[filename])
 
-    return render(request, "the_librarian/viewer.html", {
+    return render(request, themed_template(request, "the_librarian/viewer.html"), {
         "document": {"filename": filename, "total_pages": "?"},
         "page": 1,
         "pdf_url": pdf_url,
@@ -930,4 +941,7 @@ def remote_worker_admin(request):
         "list_keys_url": reverse("the_librarian:list_api_keys"),
         "create_key_url": reverse("the_librarian:create_api_key"),
         "revoke_key_url_template": revoke_key_url_template,
+        # The setup steps start open until the first key exists, then fold away.
+        "show_setup_open": not LibrarianAPIKey.objects.filter(is_active=True).exists(),
+        **remote_worker_setup_context(request, on_worker_page=True),
     })

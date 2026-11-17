@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static i18n print_theme %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/author.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="pt-page pt-author">
+
+  <section class="pt-author-profile">
+    <div class="pt-author-profile__portrait">
+      {% if page.profile_image %}
+      {% image page.profile_image fill-600x600 as portrait %}
+      <img src="{{ portrait.url }}" alt="{{ page.title }}" width="600" height="600" class="pt-cover">
+      {% else %}
+      <span class="pt-ph pt-author-profile__ph pt-cover" aria-hidden="true">{{ page.title|initials }}</span>
+      {% endif %}
+    </div>
+    <div class="pt-author-profile__text">
+      <span class="pt-tag">{% translate "ലേഖകർ" %}</span>
+      <h1 class="pt-h1 pt-h1--issue">{{ page.title }}</h1>
+      {% if page.role %}<p class="pt-author-profile__role">{{ page.role }}</p>{% endif %}
+      {% if page.bio %}<div class="pt-author-profile__bio">{{ page.bio|richtext }}</div>{% endif %}
+
+      {% if public_email or public_phone or page.social_media_links %}
+      <div class="pt-author-profile__contact">
+        {% if public_email %}<a href="mailto:{{ public_email }}"><i class="fas fa-envelope" aria-hidden="true"></i> {{ public_email }}</a>{% endif %}
+        {% if public_phone %}<span><i class="fas fa-phone" aria-hidden="true"></i> {{ public_phone }}</span>{% endif %}
+        {% for block in page.social_media_links %}
+        <a href="{{ block.value.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ block.value.platform|title }}">
+          {% if block.value.platform == 'facebook' %}<i class="fab fa-facebook-f" aria-hidden="true"></i>
+          {% elif block.value.platform == 'twitter' %}<i class="fab fa-x-twitter" aria-hidden="true"></i>
+          {% elif block.value.platform == 'linkedin' %}<i class="fab fa-linkedin-in" aria-hidden="true"></i>
+          {% elif block.value.platform == 'instagram' %}<i class="fab fa-instagram" aria-hidden="true"></i>
+          {% elif block.value.platform == 'github' %}<i class="fab fa-github" aria-hidden="true"></i>
+          {% else %}<i class="fas fa-globe" aria-hidden="true"></i>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="pt-author-stats">
+        <div class="pt-author-stats__item">
+          <span class="pt-author-stats__n">{{ pt_articles|length }}</span>
+          <span class="pt-author-stats__label">{% translate "ലേഖനങ്ങൾ" %}</span>
+        </div>
+        {% if pt_first_year %}
+        <div class="pt-author-stats__item">
+          <span class="pt-author-stats__n">{{ pt_first_year }}</span>
+          <span class="pt-author-stats__label">{% translate "മുതൽ" %}</span>
+        </div>
+        {% endif %}
+        {% if page.areas_of_interest.all %}
+        <div class="pt-chips pt-author-stats__topics">
+          {% for topic in page.areas_of_interest.all %}<a href="{% url 'topic_detail' topic.slug %}" class="pt-chip">{{ topic.name }}</a>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  {% if pt_latest %}
+  {% with latest=pt_latest issue=pt_latest.main_issue %}
+  <section class="pt-author-latest pt-panel">
+    <div class="pt-author-latest__text">
+      <span class="pt-author-latest__label">
+        {% translate "ഏറ്റവും പുതിയത്" %}{% if issue %} · {{ issue.date_of_publishing|month_year }}{% endif %}{% if latest.print_page_start %} · {% blocktranslate with n=latest.print_page_start %}പേജ് {{ n }}{% endblocktranslate %}{% endif %}
+      </span>
+      <h2 class="pt-author-latest__title"><a href="{{ latest.url }}">{{ latest.title }}</a></h2>
+      {% if latest.standfirst %}<p class="pt-author-latest__standfirst">{{ latest.standfirst }}</p>
+      {% elif latest.meta_description %}<p class="pt-author-latest__standfirst">{{ latest.meta_description }}</p>{% endif %}
+      <a href="{{ latest.url }}" class="pt-more">{% translate "വായിക്കാം" %} →</a>
+    </div>
+    {% if issue.cover_image %}
+    <a href="{{ issue.url }}" class="pt-author-latest__cover" tabindex="-1" aria-hidden="true">
+      {% image issue.cover_image width-360 as cover %}
+      <img src="{{ cover.url }}" alt="" class="pt-cover pt-cover--small" loading="lazy">
+    </a>
+    {% endif %}
+  </section>
+  {% endwith %}
+  {% endif %}
+
+  <section class="pt-author-all" aria-labelledby="pt-author-all-title">
+    <div class="pt-section-head">
+      <h2 class="pt-section-head__title" id="pt-author-all-title">{% translate "എല്ലാ ലേഖനങ്ങളും" %}</h2>
+      <span class="pt-section-head__rule"></span>
+    </div>
+    {% for year, articles in pt_articles_by_year %}
+    <div class="pt-author-year">
+      <h3 class="pt-author-year__n">{% firstof year "—" %}</h3>
+      <ul class="pt-author-year__list">
+        {% for article in articles %}
+        <li>
+          <a href="{{ article.url }}" class="pt-author-row">
+            <span class="pt-author-row__text">
+              <span class="pt-author-row__title">{{ article.title }}</span>
+              <span class="pt-author-row__meta">{% if article.main_issue %}{{ article.main_issue.date_of_publishing|month_year }}{% else %}{{ article.date|month_year }}{% endif %}{% if article.print_page_start %} · {% blocktranslate with n=article.print_page_start %}പേജ് {{ n }}{% endblocktranslate %}{% endif %}</span>
+            </span>
+            {% if article.topic %}<span class="pt-author-row__topic">{{ article.topic.name }}</span>{% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% empty %}
+    <p class="pt-author-empty">{% translate "ഈ എഴുത്തുകാരന്റെ ലേഖനങ്ങളൊന്നും ഇതുവരെ കണ്ടെത്തിയില്ല." %}</p>
+    {% endfor %}
+  </section>
+</main>
+{% endblock %}
+
+{% block pt_folio_left %}{% translate "ലേഖകർ" %} | ശാസ്ത്രഗതി{% endblock %}
+{% block pt_folio_right %}ശാസ്ത്രഗതി | {{ page.title }}{% endblock %}

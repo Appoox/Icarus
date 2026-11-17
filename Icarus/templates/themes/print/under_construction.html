@@ -1,0 +1,11 @@
+{% extends "themes/print/notice.html" %}
+{% load i18n %}
+{# Print-design placeholder for footer links not built yet (Icarus.views.under_construction). #}
+
+{% block title %}{% trans "ഈ പേജ് നിർമ്മാണത്തിലാണ്" %}{% endblock %}
+{% block pt_notice_code_class %}pt-notice__code--word{% endblock %}
+{% block pt_notice_code %}{% trans "ഉടൻ വരുന്നു" %}{% endblock %}
+{% block pt_notice_heading %}{% trans "ഈ പേജ് നിർമ്മാണത്തിലാണ്" %}{% endblock %}
+{% block pt_notice_body %}
+<p class="pt-notice__body">{% trans "ഈ ഭാഗം ഇപ്പോൾ തയ്യാറാക്കിക്കൊണ്ടിരിക്കുകയാണ്. ഉടൻ തന്നെ ഇവിടെ പുതിയ ഉള്ളടക്കം ലഭ്യമാകും." %}</p>
+{% endblock %}

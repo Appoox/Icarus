@@ -1,0 +1,9 @@
+{% load wagtailcore_tags %}
+{# A callout (e.g. a timeline) as a dark box with the issue stripe. Expects `value`. #}
+<aside class="pt-callout pt-callout--{{ value.style }}">
+  <div class="pt-stripe" aria-hidden="true"></div>
+  <div class="pt-callout__inner">
+    {% if value.title %}<h3 class="pt-callout__title">{{ value.title }}</h3>{% endif %}
+    <div class="pt-callout__body">{{ value.text|richtext }}</div>
+  </div>
+</aside>

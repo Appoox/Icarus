@@ -224,6 +224,43 @@ html[data-theme^="d"] .message--error   { background: #331b1e; color: #f28b94; b
 html[data-theme^="d"] .message--info    { background: #16263a; color: #7fb5f0; border-left-color: #58a6ff; }
 html[data-theme^="d"] .message--warning { background: #332413; color: #ffb74d; border-left-color: #ffa040; }
 
+/* ── Trial mode banner (includes/trial_banner.html, both designs) ──── */
+.trial-banner {
+    padding: .5rem 1rem;
+    background: #fff3e0;
+    color: #7a2e00;
+    border-bottom: 3px solid #e65100;
+    font-size: .9rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+}
+.trial-banner__label {
+    margin-right: .5rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.trial-banner__note {
+    display: block;
+    font-size: .85em;
+}
+.trial-banner a {
+    color: inherit;
+    text-decoration: underline;
+    font-weight: 700;
+}
+html[data-theme^="d"] .trial-banner {
+    background: #332413;
+    color: #ffcc80;
+    border-bottom-color: #ffa040;
+}
+@media (max-width: 600px) {
+    .trial-banner { padding: .4rem .75rem; font-size: .85rem; line-height: 1.45; }
+}
+/* Trial mode "not available" page, print design: the issues sit right under the notice. */
+.pt-notice-page:has(+ .pt-trial-issues) { padding-bottom: 24px; }
+.pt-trial-issues .pt-list-section { padding-top: 0; }
+
 .message__close {
     background: none;
     border: none;

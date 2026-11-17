@@ -1,0 +1,14 @@
+{% load wagtailimages_tags print_theme i18n %}
+{# One author in a grid: portrait (or initials), name, role, article count. Expects `author`. #}
+<li class="pt-person">
+  <a href="{{ author.url }}" class="pt-person__link">
+    <span class="pt-avatar pt-person__avatar">
+      {% if author.profile_image %}{% image author.profile_image fill-112x112 as avatar %}<img src="{{ avatar.url }}" alt="" loading="lazy">{% else %}{{ author.title|initials }}{% endif %}
+    </span>
+    <span class="pt-person__text">
+      <span class="pt-person__name">{{ author.title }}</span>
+      {% if author.role %}<span class="pt-person__role">{{ author.role }}</span>{% endif %}
+      {% with n=author.live_article_count %}{% if n %}<span class="pt-person__count">{% blocktranslate count n=n %}{{ n }} ലേഖനം{% plural %}{{ n }} ലേഖനങ്ങൾ{% endblocktranslate %}</span>{% endif %}{% endwith %}
+    </span>
+  </a>
+</li>

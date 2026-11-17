@@ -17,6 +17,7 @@ from reader.models import ReaderUser
 from wagtail.search import index
 from modelcluster.models import ClusterableModel
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from home.theme import ThemedTemplateMixin
 
 
 class SocialMediaBlock(blocks.StructBlock):
@@ -48,7 +49,7 @@ class AuthorIndexPageTag(TaggedItemBase):
         on_delete=models.CASCADE
     )
 
-class Literati(Page, HitCountMixin):
+class Literati(ThemedTemplateMixin, Page, HitCountMixin):
 
     parent_page_types = ['AuthorIndexPage']
 
@@ -139,10 +140,47 @@ class Literati(Page, HitCountMixin):
             hit_count = HitCount.objects.get_for_object(self)
             HitCountViewMixin().hit_count(request, hit_count)
 
+        from home.theme import get_theme, THEME_PRINT
+        if get_theme(request) == THEME_PRINT:
+            articles, by_year = self.print_articles_by_year()
+            context['pt_articles'] = articles
+            context['pt_articles_by_year'] = by_year
+            context['pt_latest'] = articles[0] if articles else None
+            years = [a.date.year for a in articles if a.date]
+            context['pt_first_year'] = min(years) if years else None
+
         return context
 
     def get_articles(self):
         return [rel.page for rel in self.literati_articles.select_related('page').filter(page__live=True)]
+
+    @property
+    def live_article_count(self):
+        return self.literati_articles.filter(page__live=True).values('page').distinct().count()
+
+    def print_articles_by_year(self):
+        """
+        For the print edition author page: this author's live articles,
+        newest first, and the same articles grouped by year.
+
+        Returns (articles, [(year, [article, ...]), ...]).
+        """
+        from articles.models import Article
+
+        articles = list(
+            Article.objects.live()
+            .filter(article_authors__author=self)
+            .select_related('topic', 'main_issue', 'main_issue__cover_image')
+            .order_by('-date', '-first_published_at')
+            .distinct()
+        )
+        groups = []
+        for article in articles:
+            year = article.date.year if article.date else None
+            if not groups or groups[-1][0] != year:
+                groups.append((year, []))
+            groups[-1][1].append(article)
+        return articles, groups
 
     def clean(self):
         super().clean()
@@ -290,7 +328,7 @@ class Literati(Page, HitCountMixin):
     ]
 
 
-class AuthorIndexPage(Page):
+class AuthorIndexPage(ThemedTemplateMixin, Page):
     intro = RichTextField(blank=True)
     tags = ClusterTaggableManager(through=AuthorIndexPageTag, blank=True)
     max_count = 1

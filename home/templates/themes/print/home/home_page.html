@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags i18n print_theme %}
+
+{% block body_class %}homepage pt-home{% endblock %}
+{% block title %}ശാസ്ത്രഗതി{% endblock %}
+{% block title_suffix %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/print/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ശാസ്ത്രഗതി",
+  "alternateName": "Sasthragathy",
+  "url": "https://sasthragathy.org",
+  "logo": "https://sasthragathy.org{% static 'images/favicon.png' %}"
+}
+</script>
+
+<main class="pt-page">
+{% if pt_issue %}
+  {# ── Hero: the current issue's cover story ── #}
+  <section class="pt-home-hero">
+    <div class="pt-home-hero__text">
+      <span class="pt-tag">{% translate "കവർ സ്റ്റോറി" %}</span>
+      <h1 class="pt-h1 pt-h1--home">{% firstof pt_issue.topic.name pt_issue.title %}</h1>
+      {% if pt_issue.standfirst %}<p class="pt-standfirst">{{ pt_issue.standfirst }}</p>{% endif %}
+      {% if pt_issue.cover_story_authors %}
+      <p class="pt-home-hero__authors">{{ pt_issue.cover_story_authors|join:" · " }}</p>
+      {% endif %}
+      {% if pt_featured %}
+      <div class="pt-home-hero__teaser">
+        {% if pt_featured.title != pt_issue.topic.name %}<h2 class="pt-home-hero__teaser-title"><a href="{{ pt_featured.url }}">{{ pt_featured.title }}</a></h2>{% endif %}
+        <div class="pt-dropcap-flow">{{ pt_teaser|safe }}</div>
+        <a href="{{ pt_featured.url }}" class="pt-more">{% translate "തുടർന്നു വായിക്കാം" %} →</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="pt-home-hero__cover">
+      <a href="{{ pt_issue.url }}" class="pt-home-hero__cover-link">
+        {% if pt_issue.cover_image %}
+        {% image pt_issue.cover_image width-840 as cover %}
+        <img src="{{ cover.url }}" width="{{ cover.width }}" height="{{ cover.height }}"
+             alt="{% blocktranslate with title=pt_issue.title %}ശാസ്ത്രഗതി {{ title }} മുഖച്ചിത്രം{% endblocktranslate %}"
+             class="pt-cover" fetchpriority="high">
+        {% else %}
+        {% include "themes/print/includes/generated_cover.html" with label=pt_issue.date_of_publishing|month_year issue=pt_issue %}
+        {% endif %}
+      </a>
+      <div class="pt-cover-meta">
+        <span>{{ pt_issue.date_of_publishing|month_year }}</span>
+        {% if pt_issue.price %}<span>{% blocktranslate with price=pt_issue.price %}വില: {{ price }} രൂപ{% endblocktranslate %}</span>{% endif %}
+      </div>
+      <div class="pt-cover-actions">
+        <a href="{{ pt_issue.url }}" class="pt-btn pt-btn--dark">{% translate "ലക്കം വായിക്കാം" %}</a>
+        {% if pt_issue.archive_issue %}
+        <a href="{% url 'the_librarian:magazine_viewer' pt_issue.archive_issue.pk %}" class="pt-btn pt-btn--outline">{% translate "ഫ്ലിപ്പ്ബുക്ക്" %}</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  {# ── Contents: the main articles ── #}
+  {% if pt_contents %}
+  <section class="pt-contents pt-panel" aria-labelledby="pt-home-contents">
+    <div>
+      <h2 class="pt-contents__title" id="pt-home-contents">{% translate "ഈ ലക്കത്തിൽ" %}</h2>
+      <p class="pt-contents__sub">{% translate "ഉള്ളടക്കം" %}{% if pt_issue.page_count %} · {% blocktranslate with n=pt_issue.page_count %}{{ n }} പേജ്{% endblocktranslate %}{% endif %}</p>
+    </div>
+    <ol class="pt-toc">
+      {% for article in pt_contents %}
+      {% include "themes/print/includes/toc_row.html" %}
+      {% endfor %}
+    </ol>
+  </section>
+  {% endif %}
+{% endif %}
+
+  {# ── Latest articles from outside this issue ── #}
+  {% if pt_latest %}
+  <section class="pt-home-section" aria-labelledby="pt-home-latest">
+    <div class="pt-section-head">
+      <h2 class="pt-section-head__title" id="pt-home-latest">{% translate "ശാസ്ത്രലോകം" %}</h2>
+      <span class="pt-section-head__rule"></span>
+    </div>
+    <div class="pt-cards">
+      {% for article in pt_latest %}
+      <article class="pt-card">
+        <a href="{{ article.url }}" class="pt-card__media" tabindex="-1" aria-hidden="true">
+          {% if article.cover_image %}
+          {% image article.cover_image fill-800x500 as img %}
+          <img src="{{ img.url }}" alt="" width="800" height="500" loading="lazy" decoding="async">
+          {% else %}
+          <span class="pt-ph pt-card__ph"></span>
+          {% endif %}
+        </a>
+        <div class="pt-card__body">
+          {% if article.topic %}<a class="pt-card__topic" href="{% url 'topic_detail' slug=article.topic.slug %}">{{ article.topic.name }}</a>{% endif %}
+          <h3 class="pt-card__title"><a href="{{ article.url }}">{{ article.title }}</a></h3>
+          {% if article.authors %}<span class="pt-card__author">{% for a in article.authors %}{{ a.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ── Most read + subscribe ── #}
+  <section class="pt-home-split">
+    <div>
+      {% if pt_most_read %}
+      <div class="pt-section-head pt-section-head--issue pt-section-head--tight">
+        <h2 class="pt-section-head__title">{% translate "കൂടുതൽ വായിച്ചവ" %}</h2>
+        <span class="pt-section-head__rule"></span>
+      </div>
+      <ol class="pt-ranked">
+        {% for article in pt_most_read %}
+        <li>
+          <a href="{{ article.url }}" class="pt-ranked__row">
+            <span class="pt-ranked__n">{{ forloop.counter }}</span>
+            <span class="pt-ranked__text">
+              <span class="pt-ranked__title">{{ article.title }}</span>
+              {% if article.authors %}<span class="pt-ranked__author">{% for a in article.authors %}{{ a.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+            </span>
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+    </div>
+
+    {% if not request.user.is_subscribed %}
+    <aside class="pt-subscribe">
+      <span class="pt-subscribe__label">{% translate "വരിക്കാരാകൂ" %}</span>
+      <h2 class="pt-subscribe__title">{% translate "എല്ലാ മാസവും ശാസ്ത്രം, മലയാളത്തിൽ" %}</h2>
+      <p class="pt-subscribe__text">{% translate "അച്ചടിപ്പതിപ്പും മുഴുവൻ ഓൺലൈൻ ആർക്കൈവും." %}</p>
+      <div class="pt-subscribe__actions">
+        {% if request.user.is_authenticated %}
+        <a href="{% url 'reader_profile' %}" class="pt-btn pt-btn--dark">{% translate "ഇപ്പോൾതന്നെ വരിക്കാരാകൂ" %}</a>
+        {% else %}
+        <a href="{% url 'account_signup' %}" class="pt-btn pt-btn--dark">{% translate "ഇപ്പോൾതന്നെ വരിക്കാരാകൂ" %}</a>
+        {% endif %}
+      </div>
+    </aside>
+    {% endif %}
+  </section>
+</main>
+{% endblock content %}
+
+{% block pt_folio_left %}{% if pt_issue %}4 | ശാസ്ത്രഗതി | {{ pt_issue.date_of_publishing|month_year }}{% else %}ശാസ്ത്രഗതി{% endif %}{% endblock %}
+{% block pt_folio_right %}{% if pt_issue %}{{ pt_issue.date_of_publishing|month_year }} | ശാസ്ത്രഗതി | 5{% else %}ശാസ്ത്രഗതി{% endif %}{% endblock %}

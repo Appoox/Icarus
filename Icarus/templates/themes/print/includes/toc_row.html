@@ -1,0 +1,11 @@
+{# One contents row: page number, (column name,) title, authors. Expects `article`. #}
+<li>
+  <a href="{{ article.url }}" class="pt-toc__row">
+    <span class="pt-toc__page">{% if article.print_page_start %}{{ article.print_page_start|stringformat:"02d" }}{% endif %}</span>
+    <span class="pt-toc__text">
+      {% if article.kicker %}<span class="pt-toc__kicker">{{ article.kicker }}</span>{% endif %}
+      <span class="pt-toc__title">{{ article.title }}</span>
+      {% if article.authors %}<span class="pt-toc__author">{% for a in article.authors %}{{ a.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+    </span>
+  </a>
+</li>
