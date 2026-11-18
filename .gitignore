@@ -295,3 +295,4 @@ icarus_dumpfile*
 *.patch
 geoip/
 *.zip
+.~lock*
