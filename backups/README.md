@@ -95,10 +95,12 @@ Do this once, on the server, in the checkout `deploy.sh` runs from (the self-hos
    sudo cat /opt/icarus/shared/rclone/rclone.conf
    ```
 
-4. **Let the worker read the `.env`**, so each snapshot carries a copy:
+4. **Let the worker read the `.env`**, so each snapshot carries a copy. It must stay owned by
+   `github-runner`, the user `deploy.sh` runs as (otherwise deploys fail with *permission denied*), with
+   read access for group 1000, the app's user:
 
    ```bash
-   sudo chgrp 1000 /opt/icarus/shared/.env
+   sudo chown github-runner:1000 /opt/icarus/shared/.env
    ```
 
    ```bash
@@ -203,7 +205,7 @@ Files deleted or replaced on the server in the last 30 days are in the archive o
    ```
 
    ```bash
-   sudo install -g 1000 -m 640 env.restored /opt/icarus/shared/.env && rm env.restored
+   sudo install -o github-runner -g 1000 -m 640 env.restored /opt/icarus/shared/.env && rm env.restored
    ```
 
 4. The database (this starts the db container on its own), then the media:
@@ -236,6 +238,9 @@ The dashboard shows each run's log and setup checks, and every failure says what
 
 - **A run stays "Queued"**: the worker isn't running. `docker compose ps qcluster`, then
   `docker compose logs --tail 50 qcluster`.
+- **A deploy fails with `open …/.env: permission denied`**: the user `deploy.sh` runs as can't read the
+  `.env`. Give it back: `sudo chown github-runner:1000 /opt/icarus/shared/.env`, then
+  `sudo chmod 640 /opt/icarus/shared/.env`.
 - **"rclone.conf must be readable and writable by uid 1000"**: `sudo chown -R 1000:1000 /opt/icarus/shared/rclone`.
 - **"pg_dump N cannot dump a PostgreSQL M server"**: the database image was upgraded; raise
   `postgresql-client-N` in the Dockerfile to match.

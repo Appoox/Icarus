@@ -49,6 +49,9 @@ usage() { sed -n '2,/^$/s/^# \{0,1\}//p' "$0" >&2; exit "${1:-0}"; }
 if [ ! -e .env ] && [ -f "$SHARED_DIR/.env" ]; then
     ln -s "$SHARED_DIR/.env" .env
 fi
+if [ -e .env ] && [ ! -r .env ]; then
+    die ".env is not readable by $(id -un). Run this as the user deploy.sh runs as (github-runner), or with sudo."
+fi
 
 # A value from the .env, read rather than sourced: values such as
 # DEFAULT_FROM_EMAIL=ശാസ്ത്രഗതി <noreply@…> are not valid shell.
@@ -91,11 +94,21 @@ require_db_settings() {
 
 # ── Docker ──────────────────────────────────────────────────────────────────
 
+# Run once, up front: rclone_cfg runs inside pipelines, where a failure would
+# only end the subshell and leave a vaguer error to follow.
+require_rclone_config() {
+    # The folder belongs to uid 1000, so the deploy user may not see into it;
+    # Docker mounts it all the same. Check only what this user can see.
+    [ -d "$RCLONE_CONFIG_DIR" ] \
+        || die "$RCLONE_CONFIG_DIR not found. Put back rclone.conf from your password manager (backups/README.md)."
+    if [ -x "$RCLONE_CONFIG_DIR" ] && [ ! -f "$RCLONE_CONFIG_DIR/rclone.conf" ]; then
+        die "$RCLONE_CONFIG_DIR/rclone.conf not found. Put back the copy from your password manager (backups/README.md)."
+    fi
+}
+
 # rclone with nothing but its config: enough for list and env, which must
 # work on a server that has no .env yet.
 rclone_cfg() {
-    [ -f "$RCLONE_CONFIG_DIR/rclone.conf" ] \
-        || die "$RCLONE_CONFIG_DIR/rclone.conf not found. Put back the copy from your password manager (backups/README.md)."
     docker run --rm -i --user 1000:1000 -v "$RCLONE_CONFIG_DIR:/config/rclone" "$RCLONE_IMAGE" "$@"
 }
 
@@ -449,6 +462,12 @@ set -- ${args[@]+"${args[@]}"}
 
 command -v docker >/dev/null || die "Docker is not installed."
 [ -n "$RCLONE_IMAGE" ] || die "Could not find the rclone image in docker-compose.yml."
+
+# Everything but restoring from a local dump reads the remote.
+case "$command" in
+    list | drill | media | env) require_rclone_config ;;
+    db) [[ " $* " == *" --local "* ]] || require_rclone_config ;;
+esac
 
 case "$command" in
     list) cmd_list "$@" ;;

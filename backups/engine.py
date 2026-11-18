@@ -554,8 +554,9 @@ def check_env_file(checks, encrypted):
     if not os.access(path, os.R_OK):
         checks.add(
             name, WARN,
-            f"{path} is not readable by uid {os.getuid()}, so it is not backed up. On the host: "
-            "sudo chgrp 1000 /opt/icarus/shared/.env && sudo chmod 640 /opt/icarus/shared/.env",
+            f"{path} is not readable by uid {os.getuid()}, so it is not backed up. On the host, keeping "
+            "the deploy user as its owner: sudo chown github-runner:1000 /opt/icarus/shared/.env "
+            "&& sudo chmod 640 /opt/icarus/shared/.env",
         )
         return None
     if not encrypted:
