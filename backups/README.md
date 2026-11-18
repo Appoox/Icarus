@@ -41,6 +41,28 @@ Do this once, on the server, in the checkout `deploy.sh` runs from (the self-hos
    Gmail and Photos. Roughly, you need the media folder's size, plus 40 database dumps, plus the media
    changed in a month. The dashboard shows what is used and free once it runs.
 
+   **Then make your own Google client ID.** rclone's shared one is being retired during 2026, so
+   rclone now requires your own ([rclone's instructions](https://rclone.org/drive/#making-your-own-client-id)).
+   In the [Google Cloud console](https://console.cloud.google.com/), signed in as the backup account:
+
+   - Create a project (e.g. `icarus-backups`). *APIs & Services* → *Enable APIs and Services* →
+     enable **Google Drive API**.
+   - *Credentials* (the left panel, not *Create credentials*) → *Configure consent screen* →
+     *Get started*: app name `rclone`, your support email, audience **External**, contact email, *Create*.
+   - **Data Access** → *Add or remove scopes*: add `https://www.googleapis.com/auth/docs`,
+     `https://www.googleapis.com/auth/drive` and `https://www.googleapis.com/auth/drive.metadata.readonly`;
+     *Update*, *Save*.
+   - **Audience** → *Add users*: add your own address.
+   - **Overview** → *Create OAuth client*, type **Desktop app**. Keep the client ID and secret for step 2
+     (and in the password manager).
+   - **Audience** → **Publish app**. Do not skip this: in *Testing* Google expires the sign-in after a
+     week, and the nightly backups stop. If the button is greyed out, give a home page and a privacy
+     policy link under **Branding** (the site's own pages), add the domain under *Authorized domains*,
+     save, and publish.
+
+   Google never verifies a personal app like this, so the sign-in in step 2 warns that it is unverified:
+   *Advanced* → *Go to rclone (unsafe)*. You only see that once.
+
 2. **Create the rclone config.** The folder must belong to uid 1000, the app's user, because rclone
    rewrites the file whenever it refreshes Google's access token:
 
@@ -54,20 +76,17 @@ Do this once, on the server, in the checkout `deploy.sh` runs from (the self-hos
 
    Make two remotes:
 
-   - `n` (new remote), name **`gdrive`**, storage **`drive`**. Leave `client_id` and `client_secret`
-     empty, scope **`drive`**, leave `service_account_file` empty, no advanced config.
+   - `n` (new remote), name **`gdrive`**, storage **`drive`**. Paste your `client_id` and
+     `client_secret` from step 1 (not blank: the shared ones stop working), scope **`drive`**, leave
+     `service_account_file` empty, no advanced config.
      *Use web browser to automatically authenticate?* **`n`**: the server has no browser. rclone prints
-     an `rclone authorize "drive" "…"` command: run it on a computer with a browser and rclone installed
-     ([rclone.org/downloads](https://rclone.org/downloads/)), sign in with the backup account, and paste
-     the token it prints back into the server. Not a shared drive.
+     an `rclone authorize "drive" "…"` command, your client ID included: run it on a computer with a
+     browser and rclone installed ([rclone.org/downloads](https://rclone.org/downloads/)), sign in with
+     the backup account, and paste the token it prints back into the server. Not a shared drive.
    - `n` again, name **`icarus-backup`**, storage **`crypt`**, remote **`gdrive:icarus-backups`**,
      `filename_encryption` **standard**, `directory_name_encryption` **true**. For both passwords choose
      **`g`** (generate), **256** bits, and keep them.
    - `q` to quit.
-
-   If you use your own Google OAuth client ID instead of rclone's, set its publishing status to
-   **In production** in the Google Cloud console. A client left in *Testing* has its tokens expire after
-   7 days, and the backups stop (the alert email then tells you).
 
 3. **Save `rclone.conf` in your password manager, now.** It holds the encryption passwords: without them
    nobody, you included, can read the backups, and they are not in the backups.
@@ -103,6 +122,10 @@ Do this once, on the server, in the checkout `deploy.sh` runs from (the self-hos
    ```bash
    docker compose exec qcluster python manage.py backup
    ```
+
+   Make the **first** backup this way, from the command line: Google Drive takes only about two new files
+   a second, so the first upload of a large media folder can take hours, longer than a background task
+   is allowed to run. Later nights upload only what changed.
 
 8. **Rehearse a restore**, and repeat every few months: it restores the newest snapshot into a scratch
    database, checks it and drops it, touching nothing live.
@@ -235,3 +258,4 @@ The dashboard shows each run's log and setup checks, and every failure says what
   need a shell on the server.
 - Anyone with the Google account and `rclone.conf` can read the backups, and delete them. Keep both in
   the password manager and nowhere else; don't sign in to the backup account for anything else.
+
